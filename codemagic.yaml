@@ -1,12 +1,27 @@
 workflows:
   ios-workflow:
     name: iOS Workflow
+    max_build_duration: 120
+    instance_type: mac_mini_m2
+
+    integrations:
+      app_store_connect: Codemagic
 
     environment:
       flutter: 3.19.1
       xcode: 16.2
 
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.sesan.app
+
     scripts:
+      - name: Verify build environment
+        script: |
+          flutter --version
+          dart --version
+          xcodebuild -version
+
       - name: Get Flutter packages
         script: |
           flutter pub get
@@ -14,17 +29,28 @@ workflows:
       - name: Install CocoaPods
         script: |
           cd ios
-          rm -rf Pods
-          rm -f Podfile.lock
           pod install
           cd ..
 
-      - name: Build IPA
+      - name: Apply App Store signing profile
         script: |
-          flutter build ipa --release
+          xcode-project use-profiles
+
+      - name: Verify selected signing settings
+        script: |
+          cat /Users/builder/export_options.plist
+          grep -n "PRODUCT_BUNDLE_IDENTIFIER\|PROVISIONING_PROFILE_SPECIFIER\|CODE_SIGN_STYLE\|DEVELOPMENT_TEAM" \
+            ios/Runner.xcodeproj/project.pbxproj | tail -40 || true
+
+      - name: Build signed IPA
+        script: |
+          flutter build ipa --release \
+            --export-options-plist=/Users/builder/export_options.plist
 
     artifacts:
       - build/ios/ipa/*.ipa
+      - build/ios/archive/*.xcarchive
+      - /tmp/xcodebuild_logs/*.log
 
     publishing:
       email:
