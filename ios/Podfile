@@ -15,7 +15,7 @@ def flutter_root
   )
 
   unless File.exist?(generated_xcode_build_settings_path)
-    raise "#{generated_xcode_build_settings_path} must exist. If you're running pod install manually, make sure flutter pub get is executed first"
+    raise "#{generated_xcode_build_settings_path} must exist. Run flutter pub get first."
   end
 
   File.foreach(generated_xcode_build_settings_path) do |line|
@@ -27,22 +27,26 @@ def flutter_root
 end
 
 require File.expand_path(
-  File.join('packages', 'flutter_tools', 'bin', 'podhelper'),
+  File.join(
+    'packages',
+    'flutter_tools',
+    'bin',
+    'podhelper'
+  ),
   flutter_root
 )
 
 flutter_ios_podfile_setup
 
 target 'Runner' do
-  use_frameworks!
-  use_modular_headers!
+  use_frameworks! :linkage => :static
 
-  # Keep SDWebImage compatible with your local Xcode 14.2
+  # Keep SDWebImage compatible with Xcode 14.2
   pod 'SDWebImage', '5.19.7'
   pod 'SDWebImageWebPCoder', '0.14.0'
 
-  flutter_install_all_ios_pods File.dirname(
-    File.realpath(__FILE__)
+  flutter_install_all_ios_pods(
+    File.dirname(File.realpath(__FILE__))
   )
 end
 
@@ -51,10 +55,25 @@ post_install do |installer|
     flutter_additional_ios_build_settings(target)
 
     target.build_configurations.each do |config|
-      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
-      config.build_settings['ENABLE_USER_SCRIPT_SANDBOXING'] = 'NO'
-      config.build_settings['CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER'] = 'NO'
-      config.build_settings['SWIFT_VERSION'] = '5.0'
+      config.build_settings[
+        'IPHONEOS_DEPLOYMENT_TARGET'
+      ] = '14.0'
+
+      config.build_settings[
+        'ENABLE_USER_SCRIPT_SANDBOXING'
+      ] = 'NO'
+
+      config.build_settings[
+        'CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER'
+      ] = 'NO'
+
+      config.build_settings[
+        'CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES'
+      ] = 'YES'
+
+      config.build_settings[
+        'SWIFT_VERSION'
+      ] = '5.0'
     end
 
     # Fix BoringSSL-GRPC unsupported option '-G' on Xcode 16
@@ -65,19 +84,14 @@ post_install do |installer|
 
         flags = build_file.settings['COMPILER_FLAGS']
 
-        if flags.is_a?(String)
-          flags = flags.gsub(
-            '-GCC_WARN_INHIBIT_ALL_WARNINGS',
-            ''
-          )
+        next unless flags.is_a?(String)
 
-          flags = flags.gsub(
-            'GCC_WARN_INHIBIT_ALL_WARNINGS',
-            ''
-          )
+        flags = flags.gsub(
+          '-GCC_WARN_INHIBIT_ALL_WARNINGS',
+          ''
+        )
 
-          build_file.settings['COMPILER_FLAGS'] = flags.strip
-        end
+        build_file.settings['COMPILER_FLAGS'] = flags.strip
       end
     end
   end
