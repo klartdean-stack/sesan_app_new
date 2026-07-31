@@ -37,9 +37,9 @@ target 'Runner' do
   use_frameworks!
   use_modular_headers!
 
-  # Fix SDWebImage for Xcode compatibility
-  pod 'SDWebImage', '~> 5.19'
-  pod 'SDWebImageWebPCoder', '~> 0.14'
+ # Fix SDWebImage for Xcode compatibility
+ pod 'SDWebImage', '5.19.7'
+ pod 'SDWebImageWebPCoder', '0.14.0'
 
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
 end
