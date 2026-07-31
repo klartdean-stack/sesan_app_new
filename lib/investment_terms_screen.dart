@@ -1,0 +1,788 @@
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+
+class InvestmentTermsScreen extends StatefulWidget {
+  const InvestmentTermsScreen({super.key});
+
+
+  @override
+  State<InvestmentTermsScreen> createState() => _InvestmentTermsScreenState();
+}
+
+
+class _InvestmentTermsScreenState extends State<InvestmentTermsScreen> {
+  bool _isAgreed = false;
+  bool _hasReadAll = false;
+  final ScrollController _scrollController = ScrollController();
+
+
+  @override
+  void initState() {
+    super.initState();
+    _checkPreviousAgreement();
+    _scrollController.addListener(_onScroll);
+  }
+
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+
+  void _onScroll() {
+    if (_scrollController.offset >=
+        _scrollController.position.maxScrollExtent - 100) {
+      if (!_hasReadAll) {
+        setState(() => _hasReadAll = true);
+      }
+    }
+  }
+
+
+  Future<void> _checkPreviousAgreement() async {
+    final prefs = await SharedPreferences.getInstance();
+    bool previouslyAgreed = prefs.getBool('terms_agreed') ?? false;
+    if (previouslyAgreed && mounted) {
+      // បើធ្លាប់យល់ព្រមហើយ អាចរំលងបាន
+    }
+  }
+
+
+  Future<void> _saveAgreement() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('terms_agreed', true);
+    await prefs.setString(
+      'terms_agreed_date',
+      DateTime.now().toIso8601String(),
+    );
+
+
+    if (mounted) {
+      Navigator.pop(context, true);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          backgroundColor: Colors.green,
+          content: Text(
+            "✅ អ្នកបានយល់ព្រមលើលក្ខខណ្ឌវិនិយោគដោយជោគជ័យ",
+            style: TextStyle(fontFamily: 'Siemreap'),
+          ),
+        ),
+      );
+    }
+  }
+
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFF0A0E21),
+      appBar: AppBar(
+        title: const Text(
+          "លក្ខខណ្ឌ និងគោលការណ៍វិនិយោគ",
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+            fontFamily: 'Siemreap',
+          ),
+        ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
+      ),
+      body: Column(
+        children: [
+          // Progress indicator
+          LinearProgressIndicator(
+            value: _hasReadAll ? 1.0 : 0.3,
+            backgroundColor: Colors.white.withOpacity(0.1),
+            valueColor: const AlwaysStoppedAnimation<Color>(Colors.blueAccent),
+          ),
+
+
+          Expanded(
+            child: SingleChildScrollView(
+              controller: _scrollController,
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header
+                  Center(
+                    child: Column(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(15),
+                          decoration: BoxDecoration(
+                            color: Colors.blue.withOpacity(0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.gavel,
+                            size: 40,
+                            color: Colors.blueAccent,
+                          ),
+                        ),
+                        const SizedBox(height: 15),
+                        const Text(
+                          "លក្ខខណ្ឌវិនិយោគភាគហ៊ុន",
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            fontFamily: 'Siemreap',
+                          ),
+                        ),
+                        const SizedBox(height: 5),
+                        Text(
+                          "ជំរាបជូនអ្នកវិនិយោគជាទីគោរព",
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.white.withOpacity(0.6),
+                            fontFamily: 'Siemreap',
+                          ),
+                        ),
+                        const SizedBox(height: 5),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.orange.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Text(
+                            "ឯកសារសំខាន់ - សូមអានឲ្យចប់",
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.orangeAccent,
+                              fontFamily: 'Siemreap',
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+
+                  const SizedBox(height: 30),
+
+
+                  // ផ្នែកទី១៖ ការណែនាំទូទៅ
+                  _buildMainSection(
+                    "ផ្នែកទី១ ការណែនាំទូទៅ (General Introduction)",
+                    Icons.info_outline,
+                  ),
+                  _buildParagraph(
+                    "សូមស្វាគមន៍មកកាន់ក្រុមហ៊ុន SESAN ឯ.ក (ខាងក្រោមហៅកាត់ថា \"ក្រុមហ៊ុន\") ដែលជាសហគ្រាសបច្ចេកវិទ្យាកសិកម្មឈានមុខគេនៅព្រះរាជាណាចក្រកម្ពុជា។ "
+                        "កិច្ចសន្យាវិនិយោគនេះ (ខាងក្រោមហៅកាត់ថា \"កិច្ចសន្យា\") ត្រូវបានរៀបចំឡើងស្របតាមបទបញ្ជាផ្ទៃក្នុងរបស់ក្រុមហ៊ុន និងច្បាប់ជាធរមាននៃព្រះរាជាណាចក្រកម្ពុជា។ "
+                        "ដោយចុច \"យល់ព្រម\" ឬបន្តដំណើរការវិនិយោគ អ្នកវិនិយោគ (ខាងក្រោមហៅកាត់ថា \"អ្នក\") បានយល់ព្រមជាគោលការណ៍ទទួលខុសត្រូវចំពោះលក្ខខណ្ឌ និងល័ក្ខខ័ណ្ឌទាំងអស់ដែលបានចែងខាងក្រោម។",
+                  ),
+
+
+                  const SizedBox(height: 25),
+
+
+                  // ផ្នែកទី២៖ និយមន័យ
+                  _buildMainSection(
+                    "ផ្នែកទី២ និយមន័យ (Definitions)",
+                    Icons.menu_book,
+                  ),
+                  _buildBulletPoint(
+                    "\"ភាគហ៊ុន\" មានន័យថា ឯកសារឬកំណត់ត្រាឌីជីថលដែលបញ្ជាក់ការកាន់កាប់ផ្នែកមួយនៃមូលធនចុះបញ្ជីរបស់ក្រុមហ៊ុន SESAN ឯ.ក។",
+                  ),
+                  _buildBulletPoint(
+                    "\"អ្នកវិនិយោគ\" មានន័យថា បុគ្គលឬសហគ្រាសណាមួយដែលបានទិញ និងកាន់កាប់ភាគហ៊ុនរបស់ក្រុមហ៊ុនតាមរយៈប្រព័ន្ធឌីជីថល។",
+                  ),
+                  _buildBulletPoint(
+                    "\"ភាគលាភ\" មានន័យថា ការចែកចាយប្រាក់ចំណេញសុទ្ធរបស់ក្រុមហ៊ុនដល់អ្នកវិនិយោគ ស្របតាមសមាមាត្រនៃភាគហ៊ុនដែលបានកាន់កាប់។",
+                  ),
+                  _buildBulletPoint(
+                    "\"តម្លៃដើម\" មានន័យថា តម្លៃទិញមួយភាគហ៊ុនដំបូងដែលក្រុមហ៊ុនបានកំណត់ បច្ចុប្បន្នស្មើនឹង ៤១,០០០ រៀលក្នុងមួយហ៊ុន។",
+                  ),
+                  _buildBulletPoint(
+                    "\"រយៈពេលចាក់សោ\" មានន័យថា រយៈពេលអប្បបរមាដែលអ្នកវិនិយោគត្រូវរក្សាទុកភាគហ៊ុនមុននឹងអាចធ្វើការផ្ទេរ ឬលក់ដូរបាន។",
+                  ),
+
+
+                  const SizedBox(height: 25),
+
+
+                  // ផ្នែកទី៣៖ លក្ខខណ្ឌវិនិយោគ
+                  _buildMainSection(
+                    "ផ្នែកទី៣ លក្ខខណ្ឌវិនិយោគ (Investment Terms)",
+                    Icons.account_balance_wallet,
+                  ),
+
+
+                  _buildSubSection(
+                    "៣.១ ការទិញភាគហ៊ុន",
+                    "អ្នកអាចទិញភាគហ៊ុនរបស់ក្រុមហ៊ុនតាមរយៈកម្មវិធី SESAN ដោយប្រើប្រាស់ប្រព័ន្ធទូទាត់ដែលក្រុមហ៊ុនបានអនុម័ត (ABA Pay, Wing, ឬធនាគារដែលបានចុះឈ្មោះ)។ "
+                        "ការទិញភាគហ៊ុនត្រូវបានគិតជាការទទួលខុសត្រូវចុងក្រោយ ហើយមិនអាចបោះបង់ឬសងប្រាក់វិញបានឡើយ លើកលែងតែមានការយល់ព្រមជាលាយលក្ខណ៍អក្សរពីក្រុមហ៊ុន។ "
+                        "ក្រុមហ៊ុននឹងចេញប័ណ្ណបញ្ជាក់ការទូទាត់ (Payment Receipt) និងប័ណ្ណបញ្ជាក់កម្មសិទ្ធិភាគហ៊ុន (Share Certificate) ក្នុងរយៈពេល ៧ ថ្ងៃការងារ។",
+                  ),
+
+
+                  _buildSubSection(
+                    "៣.២ តម្លៃភាគហ៊ុន",
+                    "តម្លៃភាគហ៊ុនដំបូងត្រូវបានកំណត់ជាថ្មី ៤១,០០០ រៀលក្នុងមួយហ៊ុន។ "
+                        "ក្រុមហ៊ុនរក្សាសិទ្ធិក្នុងការកែប្រែតម្លៃភាគហ៊ុនទៅតាមស្ថានភាពទីផ្សារ និងតម្លៃវាយតម្លៃក្រុមហ៊ុន (Valuation) ដោយត្រូវជូនដំណឹងដល់អ្នកវិនិយោគយ៉ាងតិច ៣០ ថ្ងៃមុនការកែប្រែមានប្រសិទ្ធភាព។ "
+                        "តម្លៃថ្មីនឹងមិនប៉ះពាល់ដល់ភាគហ៊ុនដែលបានទិញមុននោះទេ។",
+                  ),
+
+
+                  _buildSubSection(
+                    "៣.៣ ចំនួនភាគហ៊ុនអប្បបរមា និងអតិបរមា",
+                    "អ្នកវិនិយោគអាចទិញភាគហ៊ុនចាប់ពី ១ ហ៊ុនឡើងទៅ ដោយគ្មានដែនកំណត់អតិបរមាសម្រាប់អ្នកវិនិយោគធម្មតា។ "
+                        "ក្នុងករណីអ្នកវិនិយោគចង់ទិញលើសពី ១,០០០ ហ៊ុន ត្រូវបំពេញបែបបទពិនិត្យប្រភពធនធាន (Source of Funds Verification) តាមច្បាប់ប្រឆាំងការលាងលុយកខ្វក់ (AML)។",
+                  ),
+
+
+                  const SizedBox(height: 25),
+
+
+                  // ផ្នែកទី៤៖ សិទ្ធិអ្នកវិនិយោគ
+                  _buildMainSection(
+                    "ផ្នែកទី៤ សិទ្ធិអ្នកវិនិយោគ (Investor Rights)",
+                    Icons.verified_user,
+                  ),
+
+
+                  _buildSubSection(
+                    "៤.១ សិទ្ធិទទួលបានភាគលាភ",
+                    "អ្នកមានសិទ្ធិទទួលបានការបែងចែកភាគលាភ (Dividends) ប្រចាំឆ្នាំ ឬប្រចាំត្រីមាស តាមការសម្រេចរបស់ក្រុមប្រឹក្សាភិបាល។ "
+                        "ការបែងចែកភាគលាភអាស្រ័យលើប្រាក់ចំណេញសុទ្ធរបស់ក្រុមហ៊ុន និងយុទ្ធសាស្ត្របង្វិលមូលធន (Capital Reinvestment Strategy)។ "
+                        "ក្រុមហ៊ុននឹងជូនដំណឹងពីអត្រាភាគលាភប្រចាំឆ្នាំតាមរយៈកម្មវិធី និងអ៊ីមែលយ៉ាងតិច ១៥ ថ្ងៃមុនថ្ងៃបែងចែក។",
+                  ),
+
+
+                  _buildSubSection(
+                    "៤.២ សិទ្ធិទទួលបានព័ត៌មាន",
+                    "អ្នកមានសិទ្ធិទទួលបានរបាយការណ៍ហិរញ្ញវត្ថុប្រចាំត្រីមាស (Quarterly Financial Report) របាយការណ៍ប្រតិបត្តិការប្រចាំឆ្នាំ (Annual Operational Report) និងរបាយការណ៍វឌ្ឍនភាពគម្រោង (Project Progress Report)។ "
+                        "ព័ត៌មានទាំងនេះនឹងត្រូវបានបង្ហោះក្នុងកម្មវិធី SESAN ផ្នែក \"របាយការណ៍ក្រុមហ៊ុន\" ដែលអ្នកអាចចូលមើលបានគ្រប់ពេលវេលា។",
+                  ),
+
+
+                  _buildSubSection(
+                    "៤.៣ សិទ្ធិបោះឆ្នោត",
+                    "អ្នកមានសិទ្ធិបោះឆ្នោតក្នុងការប្រជុំភាគហ៊ុនឆ្នាំ (Annual General Meeting - AGM) ស្របតាមសមាមាត្រភាគហ៊ុនដែលបានកាន់កាប់ (មួយហ៊ុន = មួយសម្លេងបោះឆ្នោត)។ "
+                        "ការប្រជុំនឹងត្រូវបានរៀបចំយ៉ាងតិចមួយដងក្នុងមួយឆ្នាំ ហើយអ្នកនឹងទទួលបានការជូនដំណឹងយ៉ាងតិច ៣០ ថ្ងៃមុនថ្ងៃប្រជុំ។",
+                  ),
+
+
+                  _buildSubSection(
+                    "៤.៤ សិទ្ធិផ្ទេរភាគហ៊ុន",
+                    "បន្ទាប់ពីរយៈពេលចាក់សោ ១២ ខែ អ្នកមានសិទ្ធិផ្ទេរភាគហ៊ុនទៅអ្នកវិនិយោគផ្សេង ឬលក់ត្រឡប់ទៅក្រុមហ៊ុនតាមតម្លៃទីផ្សារបច្ចុប្បន្ន។ "
+                        "ការផ្ទេរត្រូវបានអនុវត្តតាមប្រព័ន្ធឌីជីថលរបស់ក្រុមហ៊ុន និងត្រូវបានកត់ត្រាក្នុងប្រព័ន្ធ Blockchain ដើម្បីធានាភាពត្រឹមត្រូវ។",
+                  ),
+
+
+                  const SizedBox(height: 25),
+
+
+                  // ផ្នែកទី៥៖ កាតព្វកិច្ចអ្នកវិនិយោគ
+                  _buildMainSection(
+                    "ផ្នែកទី៥ កាតព្វកិច្ចអ្នកវិនិយោគ (Investor Obligations)",
+                    Icons.assignment_ind,
+                  ),
+
+
+                  _buildSubSection(
+                    "៥.១ ការផ្តល់ព័ត៌មានពិតប្រាកដ",
+                    "អ្នកត្រូវធានាថាព័ត៌មានទាំងអស់ដែលបានផ្តល់ឱ្យក្រុមហ៊ុន (ឈ្មោះ លេខអត្តសញ្ញាណប័ណ្ណ អាសយដ្ឋាន លេខទូរស័ព្ទ អ៊ីមែល ព័ត៌មានធនាគារ) ជាព័ត៌មានពិតប្រាកដ និងទាន់សម័យ។ "
+                        "ប្រសិនបើមានការផ្លាស់ប្តូរព័ត៌មានណាមួយ អ្នកត្រូវជូនដំណឹងដល់ក្រុមហ៊ុនក្នុងរយៈពេល ៧ ថ្ងៃ។",
+                  ),
+
+
+                  _buildSubSection(
+                    "៥.២ ការរក្សាសម្ងាត់",
+                    "អ្នកត្រូវគោរពការរក្សាសម្ងាត់ព័ត៌មានសម្ងាត់របស់ក្រុមហ៊ុន រួមបញ្ចូលប៉ុន្តែមិនកំណត់ត្រឹមរបាយការណ៍ហិរញ្ញវត្ថុមិនទាន់ប្រកាស យុទ្ធសាស្ត្រអាជីវកម្ម ព័ត៌មានអតិថិជន និងបច្ចេកវិទ្យាសំខាន់ៗ។ "
+                        "ការបែកធ្លាយព័ត៌មានសម្ងាត់អាចនាំឱ្យមានការដាក់ពិន័យផ្លូវច្បាប់ និង/ឬការផ្តាច់ចោលកិច្ចសន្យា។",
+                  ),
+
+
+                  _buildSubSection(
+                    "៥.៣ ការប្រើប្រាស់ប្រព័ន្ធឌីជីថល",
+                    "អ្នកត្រូវទទួលខុសត្រូវចំពោះសុវត្ថិភាពគណនីរបស់ខ្លួន (Username, Password, OTP, PIN)។ "
+                        "ក្រុមហ៊ុនមិនទទួលខុសត្រូវចំពោះការខាតបង់ណាមួយដែលបណ្តាលមកពីការប្រើប្រាស់គណនីដោយភាគីទីបីដែលបានអនុញ្ញាតពីអ្នកឡើយ។",
+                  ),
+
+
+                  const SizedBox(height: 25),
+
+
+                  // ផ្នែកទី៦៖ រយៈពេលចាក់សោ
+                  _buildMainSection(
+                    "ផ្នែកទី៦ រយៈពេលចាក់សោ (Lock-in Period)",
+                    Icons.lock_clock,
+                  ),
+
+
+                  _buildSubSection(
+                    "៦.១ រយៈពេលអប្បបរមា",
+                    "អ្នកត្រូវយល់ព្រមរក្សាទុកភាគហ៊ុនយ៉ាងតិច ១២ ខែ (Twelve Months Lock-in Period) គិតចាប់ពីថ្ងៃទិញភាគហ៊ុនដំបូង។ "
+                        "ក្នុងរយៈពេលនេះ អ្នកមិនអាចធ្វើការផ្ទេរ លក់ ឬដកភាគហ៊ុនបានឡើយ លើកលែងតែមានការយល់ព្រមពិសេសពីក្រុមប្រឹក្សាភិបាលក្រុមហ៊ុន។",
+                  ),
+
+
+                  _buildSubSection(
+                    "៦.២ ការលើកលែង",
+                    "ការលើកលែងពីរយៈពេលចាក់សោអាចត្រូវបានពិចារណាក្នុងករណីពិសេសដូចជា៖ ការព្យាបាលជំងឺធ្ងន់ធ្ងរ ការសង្រ្គោះបន្ទាន់ផ្នែកហិរញ្ញវត្ថុ ឬកាលៈទេសៈដែលមិនអាចជៀសវាងបាន (Force Majeure)។ "
+                        "ការស្នើសុំលើកលែងត្រូវដាក់ជាលាយលក្ខណ៍អក្សរជាមួយឯកសារបញ្ជាក់ ហើយក្រុមហ៊ុននឹងឆ្លើយតបក្នុងរយៈពេល ១៤ ថ្ងៃការងារ។",
+                  ),
+
+
+                  const SizedBox(height: 25),
+
+
+                  // ផ្នែកទី៧៖ ការទូទាត់ភាគលាភ
+                  _buildMainSection(
+                    "ផ្នែកទី៧ ការទូទាត់ភាគលាភ (Dividend Distribution)",
+                    Icons.payments,
+                  ),
+
+
+                  _buildSubSection(
+                    "៧.១ កាលវិភាគបែងចែក",
+                    "ក្រុមហ៊ុននឹងពិចារណាបែងចែកភាគលាភប្រចាំឆ្នាំ (Annual Dividend) ឬប្រចាំត្រីមាស (Quarterly Dividend) អាស្រ័យលើទិដ្ឋភាពហិរញ្ញវត្ថុ។ "
+                        "ការបែងចែកភាគលាភត្រូវបានអនុម័តដោយក្រុមប្រឹក្សាភិបាល និងត្រូវបានប្រកាសជាសាធារណៈក្នុងការប្រជុំភាគហ៊ុន។",
+                  ),
+
+
+                  _buildSubSection(
+                    "៧.២ វិធីសាស្ត្រទូទាត់",
+                    "ភាគលាភនឹងត្រូវបានផ្ញើទៅគណនីធនាគារដែលអ្នកបានចុះឈ្មោះ ឬតាមរយៈប្រព័ន្ធទូទាត់ឌីជីថលដែលបានអនុម័ត (ABA, Wing, TrueMoney)។ "
+                        "ក្រុមហ៊ុននឹងទូទាត់ការកាត់ពន្ធតាមច្បាប់ជាធរមាន ហើយផ្តល់ប័ណ្ណបង់ពន្ធដល់អ្នកវិនិយោគ។",
+                  ),
+
+
+                  const SizedBox(height: 25),
+
+
+                  // ផ្នែកទី៨៖ ការផ្តាច់ចោល និងការដោះស្រាយវិវាទ
+                  _buildMainSection(
+                    "ផ្នែកទី៨ ការផ្តាច់ចោល និងការដោះស្រាយវិវាទ (Termination & Dispute)",
+                    Icons.gavel,
+                  ),
+
+
+                  _buildSubSection(
+                    "៨.១ ការផ្តាច់ចោលដោយភាគីទាំងពីរ",
+                    "កិច្ចសន្យានេះអាចត្រូវបានផ្តាច់ចោលដោយភាពយល់ព្រមទៅវិញទៅមករវាងអ្នក និងក្រុមហ៊ុន។ "
+                        "ក្នុងករណីនេះ ក្រុមហ៊ុននឹងធ្វើការទូទាត់ប្រាក់សងតាមតម្លៃទីផ្សារបច្ចុប្បន្ន ឬតម្លៃដើម (យោងលើលក្ខខណ្ឌដែលបានកំណត់) ក្នុងរយៈពេល ៣០ ថ្ងៃការងារ។",
+                  ),
+
+
+                  _buildSubSection(
+                    "៨.២ ការផ្តាច់ចោលដោយក្រុមហ៊ុន",
+                    "ក្រុមហ៊ុនអាចផ្តាច់ចោលកិច្ចសន្យានេះប្រសិនបើអ្នកបំពានលក្ខខណ្ឌសំខាន់ៗ ក្នុងករណីនេះក្រុមហ៊ុននឹងជូនដំណឹងជាលាយលក្ខណ៍អក្សរយ៉ាងតិច ៣០ ថ្ងៃមុនការផ្តាច់ចោលមានប្រសិទ្ធភាព។",
+                  ),
+
+
+                  _buildSubSection(
+                    "៨.៣ ការដោះស្រាយវិវាទ",
+                    "ភាគីទាំងពីរត្រូវធ្វើការចរចាដោះស្រាយវិវាទដោយសន្តិវិធីជាមុនសិន។ "
+                        "ប្រសិនបើការចរចាមិនបានសម្រេចក្នុងរយៈពេល ៦០ ថ្ងៃ ភាគីណាមួយអាចនាំយកវិវាទនេះទៅដោះស្រាយដោយអាជ្ញាសវនាការដែលបានជ្រើសរើសដោយភាពយល់ព្រមទៅវិញទៅមក ឬតាមច្បាប់ជាធរមាននៃព្រះរាជាណាចក្រកម្ពុជា។",
+                  ),
+
+
+                  const SizedBox(height: 25),
+
+
+                  // ផ្នែកទី៩៖ ការប្រកាសជាសាធារណៈ
+                  _buildMainSection(
+                    "ផ្នែកទី៩ ការប្រកាសជាសាធារណៈ (Public Disclosure)",
+                    Icons.campaign,
+                  ),
+
+
+                  _buildSubSection(
+                    "៩.១ ការប្រកាសព័ត៌មាន",
+                    "ក្រុមហ៊ុននឹងប្រកាសព័ត៌មានសំខាន់ៗដល់អ្នកវិនិយោគតាមរយៈ៖ កម្មវិធី SESAN អ៊ីមែល សារខ្លី (SMS) និងគេហទំព័រផ្លូវការរបស់ក្រុមហ៊ុន។ "
+                        "អ្នកត្រូវធានាថាព័ត៌មានទំនាក់ទំនងរបស់អ្នកទាន់សម័យជានិច្ច។",
+                  ),
+
+
+                  _buildSubSection(
+                    "៩.២ ការប្រកាសផ្លូវច្បាប់",
+                    "ក្រុមហ៊ុននឹងប្រកាសរបាយការណ៍ហិរញ្ញវត្ថុប្រចាំឆ្នាំដល់អង្គភាពពាក់ព័ន្ធតាមច្បាប់ (ឧទាហរណ៖ ក្រសួងសេដ្ឋកិច្ច និងហិរញ្ញវត្ថុ ឬគណៈកម្មាធិការមូលបត្រកម្ពុជា)។",
+                  ),
+
+
+                  const SizedBox(height: 25),
+
+
+                  // ផ្នែកទី១០៖ ការកែប្រែលក្ខខណ្ឌ
+                  _buildMainSection(
+                    "ផ្នែកទី១០ ការកែប្រែលក្ខខណ្ឌ (Amendments)",
+                    Icons.edit_note,
+                  ),
+
+
+                  _buildSubSection(
+                    "១០.១ ការកែប្រែ",
+                    "ក្រុមហ៊ុនរក្សាសិទ្ធិក្នុងការកែប្រែ ឬធ្វើបច្ចុប្បន្នភាពលក្ខខណ្ឌទាំងនេះដោយជូនដំណឹងដល់អ្នកយ៉ាងតិច ៣០ ថ្ងៃមុនការកែប្រែមានប្រសិទ្ធភាព។ "
+                        "ប្រសិនបើអ្នកមិនយល់ព្រមនឹងការកែប្រែ អ្នកមានសិទ្ធិផ្តាច់ចោលកិច្ចសន្យាក្នុងរយៈពេល ១៤ ថ្ងៃបន្ទាប់ពីការកែប្រែមានប្រសិទ្ធភាព។",
+                  ),
+
+
+                  _buildSubSection(
+                    "១០.២ ការយល់ព្រមជាបន្ត",
+                    "ការបន្តប្រើប្រាស់សេវាកម្មរបស់ក្រុមហ៊ុនបន្ទាប់ពីការកែប្រែលក្ខខណ្ឌមានប្រសិទ្ធភាព ត្រូវបានគិតជាការយល់ព្រមជាគោលការណ៍ចំពោះការកែប្រែនោះ។",
+                  ),
+
+
+                  const SizedBox(height: 25),
+
+
+                  // ផ្នែកទី១១៖ ការលើកលែងការទទួលខុសត្រូវ
+                  _buildMainSection(
+                    "ផ្នែកទី១១ ការលើកលែងការទទួលខុសត្រូវ (Liability & Indemnification)",
+                    Icons.shield,
+                  ),
+
+
+                  _buildSubSection(
+                    "១១.១ ការលើកលែង",
+                    "ក្រុមហ៊ុនមិនទទួលខុសត្រូវចំពោះការខាតបង់ណាមួយដែលបណ្តាលមកពីកត្តាដែលមិនអាចគ្រប់គ្រងបាន (Force Majeure) ដូចជា គ្រោះធម្មជាតិ សង្គ្រាម ការបិទខ្ទប់ប្រទេស ការផ្តាច់ចរន្តអ៊ីនធឺណិត ឬការវាយប្រហារសាយប័រសុវត្ថិភាពដែលមិនអាចជៀសវាងបាន។",
+                  ),
+
+
+                  _buildSubSection(
+                    "១១.២ ការធានារ៉ាប់រង",
+                    "អ្នកយល់ព្រមថានឹងទទួលខុសត្រូវ និងការពារក្រុមហ៊ុនពីការទាមទារសំណងណាមួយដែលបណ្តាលមកពីការប្រើប្រាស់ខុសច្បាប់ ឬការបំពានលក្ខខណ្ឌរបស់អ្នក។",
+                  ),
+
+
+                  const SizedBox(height: 25),
+
+
+                  // ផ្នែកទី១២៖ បទបញ្ជាផ្សេងៗ
+                  _buildMainSection(
+                    "ផ្នែកទី១២ បទបញ្ជាផ្សេងៗ (Miscellaneous)",
+                    Icons.more_horiz,
+                  ),
+
+
+                  _buildSubSection(
+                    "១២.១ កិច្ចសន្យាទាំងមូល",
+                    "កិច្ចសន្យានេះបង្ហាញពីកិច្ចព្រមព្រៀមទាំងមូលរវាងភាគីទាំងពីរ និងសំអាត់រាល់កិច្ចព្រមព្រៀមមុនៗ។",
+                  ),
+
+
+                  _buildSubSection(
+                    "១២.២ ច្បាប់ដែលគ្រប់គ្រង",
+                    "កិច្ចសន្យានេះត្រូវបានគ្រប់គ្រង និងពិចារណាតាមច្បាប់ជាធរមាននៃព្រះរាជាណាចក្រកម្ពុជា។",
+                  ),
+
+
+                  _buildSubSection(
+                    "១២.៣ ការបំបែកភាគី",
+                    "ប្រសិនបើប្រការណាមួយនៃកិច្ចសន្យានេះត្រូវបានចាត់ទុកជាមិនស្របច្បាប់ ឬមិនអាចអនុវត្តបាន នោះប្រការដែលនៅសល់នៅតែមានសុពលភាពពេញលេញ។",
+                  ),
+
+
+                  _buildSubSection(
+                    "១២.៤ ការប្រគល់សិទ្ធិ",
+                    "អ្នកមិនអាចប្រគល់សិទ្ធិ ឬភារកិច្ចរបស់អ្នកតាមកិច្ចសន្យានេះទៅឱ្យភាគីទីបីបានឡើយ លើកលែងតែមានការយល់ព្រមជាលាយលក្ខណ៍អក្សរពីក្រុមហ៊ុន។",
+                  ),
+
+
+                  const SizedBox(height: 40),
+
+
+                  // សេចក្តីបញ្ជាក់ចុងក្រោយ
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.blue.withOpacity(0.1),
+                          Colors.purple.withOpacity(0.05),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: Colors.blueAccent.withOpacity(0.2),
+                      ),
+                    ),
+                    child: Column(
+                      children: [
+                        const Icon(
+                          Icons.info_outline,
+                          color: Colors.blueAccent,
+                          size: 30,
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          "សូមអានលក្ខខណ្ឌទាំងអស់ដោយយកចិត្តទុកដាក់។ "
+                              "ប្រសិនបើមានចម្ងល់ សូមទំនាក់ទំនងមកក្រុមហ៊ុនតាមរយៈកម្មវិធី ឬអ៊ីមែល support@sesan.com មុននឹងចុច \"យល់ព្រម\"។",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.7),
+                            fontSize: 12,
+                            height: 1.6,
+                            fontFamily: 'Siemreap',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+
+                  const SizedBox(height: 30),
+                ],
+              ),
+            ),
+          ),
+
+
+          // ផ្នែកប៊ូតុងយល់ព្រម
+          _buildAgreementSection(),
+        ],
+      ),
+    );
+  }
+
+
+  // Helper Widgets
+  Widget _buildMainSection(String title, IconData icon) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 15),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.blueAccent.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: Colors.blueAccent, size: 20),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              title,
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+                color: Colors.blueAccent,
+                fontFamily: 'Siemreap',
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+
+  Widget _buildSubSection(String title, String content) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 15, left: 5),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 13,
+              color: Colors.white,
+              fontFamily: 'Siemreap',
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            content,
+            style: TextStyle(
+              fontSize: 12.5,
+              color: Colors.white.withOpacity(0.7),
+              height: 1.7,
+              fontFamily: 'Siemreap',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+
+  Widget _buildParagraph(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 15),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 12.5,
+          color: Colors.white.withOpacity(0.7),
+          height: 1.7,
+          fontFamily: 'Siemreap',
+        ),
+      ),
+    );
+  }
+
+
+  Widget _buildBulletPoint(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10, left: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            margin: const EdgeInsets.only(top: 6),
+            width: 6,
+            height: 6,
+            decoration: const BoxDecoration(
+              color: Colors.blueAccent,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(
+                fontSize: 12.5,
+                color: Colors.white.withOpacity(0.7),
+                height: 1.6,
+                fontFamily: 'Siemreap',
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+
+  Widget _buildAgreementSection() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1A1F3D),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.3),
+            blurRadius: 20,
+            offset: const Offset(0, -5),
+          ),
+        ],
+        border: Border(top: BorderSide(color: Colors.white.withOpacity(0.1))),
+      ),
+      child: SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Progress hint
+            if (!_hasReadAll)
+              Container(
+                margin: const EdgeInsets.only(bottom: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.warning_amber_rounded,
+                      color: Colors.orangeAccent,
+                      size: 14,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      "សូមរំកិលអានឲ្យចប់មុនពេលយល់ព្រម",
+                      style: TextStyle(
+                        color: Colors.orangeAccent,
+                        fontSize: 11,
+                        fontFamily: 'Siemreap',
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+
+            Row(
+              children: [
+                Checkbox(
+                  value: _isAgreed,
+                  onChanged: _hasReadAll
+                      ? (val) => setState(() => _isAgreed = val!)
+                      : null,
+                  activeColor: Colors.blueAccent,
+                  checkColor: Colors.white,
+                  side: BorderSide(
+                    color: _hasReadAll
+                        ? Colors.blueAccent
+                        : Colors.white.withOpacity(0.3),
+                  ),
+                ),
+                Expanded(
+                  child: Text(
+                    "ខ្ញុំបានអាន និងយល់ព្រមលើលក្ខខណ្ឌវិនិយោគទាំងអស់ខាងលើ ហើយយល់ព្រមទទួលខុសត្រូវតាមច្បាប់។",
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: _hasReadAll
+                          ? Colors.white
+                          : Colors.white.withOpacity(0.4),
+                      fontFamily: 'Siemreap',
+                      height: 1.5,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 15),
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _isAgreed
+                      ? Colors.blueAccent
+                      : Colors.white.withOpacity(0.1),
+                  foregroundColor: _isAgreed ? Colors.white : Colors.white54,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: _isAgreed ? 5 : 0,
+                ),
+                onPressed: _isAgreed ? _saveAgreement : null,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.check_circle),
+                    const SizedBox(width: 8),
+                    const Text(
+                      "យល់ព្រម និងបន្ត",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        fontFamily: 'Siemreap',
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+
+
