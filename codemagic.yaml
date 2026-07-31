@@ -32,6 +32,40 @@ workflows:
           pod install
           cd ..
 
+      - name: Fix BoringSSL compiler flag
+        script: |
+          python3 <<'PY'
+          from pathlib import Path
+          
+          file_path = Path(
+              "ios/Pods/Pods.xcodeproj/project.pbxproj"
+          )
+          
+          if not file_path.exists():
+              raise SystemExit(
+                  f"Pods project not found: {file_path}"
+              )
+          
+          content = file_path.read_text()
+          flag = "-GCC_WARN_INHIBIT_ALL_WARNINGS"
+          count = content.count(flag)
+          
+          content = content.replace(flag, "")
+          file_path.write_text(content)
+          
+          print(f"Removed {count} invalid BoringSSL flags")
+          
+          remaining = file_path.read_text().count(flag)
+          if remaining != 0:
+              raise SystemExit(
+                  f"Patch failed: {remaining} flags remain"
+              )
+          PY
+          
+          echo "===== VERIFY BORINGSSL FLAGS ====="
+          grep -R -- "-GCC_WARN_INHIBIT_ALL_WARNINGS" \
+            ios/Pods/Pods.xcodeproj/project.pbxproj || true
+
       - name: Apply App Store signing profile
         script: |
           xcode-project use-profiles
@@ -39,8 +73,6 @@ workflows:
       - name: Verify selected signing settings
         script: |
           cat /Users/builder/export_options.plist
-          grep -n "PRODUCT_BUNDLE_IDENTIFIER\|PROVISIONING_PROFILE_SPECIFIER\|CODE_SIGN_STYLE\|DEVELOPMENT_TEAM" \
-            ios/Runner.xcodeproj/project.pbxproj | tail -40 || true
 
       - name: Build signed IPA
         script: |
