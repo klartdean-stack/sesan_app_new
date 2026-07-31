@@ -36,35 +36,44 @@ workflows:
         script: |
           python3 <<'PY'
           from pathlib import Path
-          
+
           file_path = Path(
               "ios/Pods/Pods.xcodeproj/project.pbxproj"
           )
-          
+
           if not file_path.exists():
               raise SystemExit(
                   f"Pods project not found: {file_path}"
               )
-          
+
           content = file_path.read_text()
-          flag = "-GCC_WARN_INHIBIT_ALL_WARNINGS"
-          count = content.count(flag)
-          
-          content = content.replace(flag, "")
+          bad_flag = "-GCC_WARN_INHIBIT_ALL_WARNINGS"
+          count = content.count(bad_flag)
+
+          print(f"Found {count} invalid BoringSSL flags")
+
+          content = content.replace(bad_flag, "")
           file_path.write_text(content)
-          
-          print(f"Removed {count} invalid BoringSSL flags")
-          
-          remaining = file_path.read_text().count(flag)
+
+          remaining = file_path.read_text().count(bad_flag)
+
           if remaining != 0:
               raise SystemExit(
                   f"Patch failed: {remaining} flags remain"
               )
+
+          print("BoringSSL invalid flags removed successfully")
           PY
-          
+
           echo "===== VERIFY BORINGSSL FLAGS ====="
-          grep -R -- "-GCC_WARN_INHIBIT_ALL_WARNINGS" \
-            ios/Pods/Pods.xcodeproj/project.pbxproj || true
+
+          if grep -R -- "-GCC_WARN_INHIBIT_ALL_WARNINGS" \
+            ios/Pods/Pods.xcodeproj/project.pbxproj; then
+            echo "ERROR: BoringSSL invalid flag still exists"
+            exit 1
+          else
+            echo "VERIFY OK: no invalid BoringSSL flag remains"
+          fi
 
       - name: Apply App Store signing profile
         script: |
