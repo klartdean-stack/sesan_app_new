@@ -41,7 +41,7 @@ flutter_ios_podfile_setup
 target 'Runner' do
   use_frameworks! :linkage => :static
 
-  # Keep SDWebImage compatible with Xcode 14.2
+  # Keep these versions compatible with local Xcode 14.2
   pod 'SDWebImage', '5.19.7'
   pod 'SDWebImageWebPCoder', '0.14.0'
 
@@ -51,6 +51,45 @@ target 'Runner' do
 end
 
 post_install do |installer|
+
+  # =========================================================
+  # Fix firebase_messaging non-modular Firebase umbrella import
+  # =========================================================
+  messaging_headers = [
+    File.join(
+      __dir__,
+      '.symlinks',
+      'plugins',
+      'firebase_messaging',
+      'ios',
+      'Classes',
+      'FLTFirebaseMessagingPlugin.h'
+    ),
+    File.join(
+      installer.sandbox.root.to_s,
+      'Headers',
+      'Public',
+      'firebase_messaging',
+      'FLTFirebaseMessagingPlugin.h'
+    )
+  ]
+
+  messaging_headers.each do |header_path|
+    next unless File.exist?(header_path)
+
+    content = File.read(header_path)
+
+    old_import = '#import <Firebase/Firebase.h>'
+    new_import = '#import <FirebaseMessaging/FirebaseMessaging.h>'
+
+    if content.include?(old_import)
+      content = content.gsub(old_import, new_import)
+      File.write(header_path, content)
+
+      puts "✅ Patched firebase_messaging header: #{header_path}"
+    end
+  end
+
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
 
@@ -74,16 +113,43 @@ post_install do |installer|
       config.build_settings[
         'SWIFT_VERSION'
       ] = '5.0'
+
+      # Do not convert non-modular-header warning into fatal error
+      if target.name == 'firebase_messaging'
+        config.build_settings[
+          'CLANG_WARN_NON_MODULAR_INCLUDE_IN_FRAMEWORK_MODULE'
+        ] = 'NO'
+
+        config.build_settings[
+          'GCC_TREAT_WARNINGS_AS_ERRORS'
+        ] = 'NO'
+
+        other_cflags = config.build_settings['OTHER_CFLAGS']
+
+        if other_cflags.is_a?(String)
+          other_cflags = other_cflags.gsub(
+            '-Werror=non-modular-include-in-framework-module',
+            ''
+          )
+
+          config.build_settings['OTHER_CFLAGS'] = other_cflags
+        elsif other_cflags.is_a?(Array)
+          other_cflags.delete(
+            '-Werror=non-modular-include-in-framework-module'
+          )
+        end
+      end
     end
 
+    # =========================================================
     # Fix BoringSSL-GRPC unsupported option '-G' on Xcode 16
+    # =========================================================
     if target.name == 'BoringSSL-GRPC'
       target.source_build_phase.files.each do |build_file|
         next unless build_file.settings
         next unless build_file.settings['COMPILER_FLAGS']
 
         flags = build_file.settings['COMPILER_FLAGS']
-
         next unless flags.is_a?(String)
 
         flags = flags.gsub(
