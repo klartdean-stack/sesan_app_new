@@ -7,17 +7,6 @@ workflows:
       xcode: 16.2
 
     scripts:
-      - name: VERIFY FLUTTER VERSION
-        script: |
-          echo "===== FLUTTER PATH ====="
-          which flutter
-
-          echo "===== FLUTTER VERSION ====="
-          flutter --version
-
-          echo "===== DART VERSION ====="
-          dart --version
-
       - name: Get Flutter packages
         script: |
           flutter pub get
@@ -27,7 +16,6 @@ workflows:
           cd ios
           rm -rf Pods
           rm -f Podfile.lock
-          pod repo update
           pod install
           cd ..
 
