@@ -1,40 +1,44 @@
 workflows:
   ios-workflow:
     name: iOS Workflow
+
     environment:
       flutter: 3.19.1
       xcode: 16.2
-      groups:
-        - appstore_credentials
+
     scripts:
       - name: Check Flutter and Dart version
         script: |
           echo "===== FLUTTER ====="
           which flutter
           flutter --version
+
+          echo "===== DART ====="
+          dart --version
+
+          echo "===== SDWebImage LOCK ====="
+          grep -A3 -B3 "SDWebImage (" ios/Podfile.lock
+
       - name: Get Flutter packages
         script: |
           flutter pub get
+
       - name: Install CocoaPods
         script: |
           cd ios
-          rm -rf Pods
-          rm -f Podfile.lock
           pod install --repo-update
           cd ..
-      - name: Build IPA for App Store
+
+      - name: Build IPA
         script: |
-          flutter clean
-          # បន្ទាត់សំខាន់៖ យើងត្រូវដក --codesign ចេញ 
-          # ព្រោះយើងបានធ្វើ Manual Signing ហើយ ហើយ export-options-plist ក៏មិនបាច់ដែរ
-          flutter build ipa --release
+          flutter build ipa \
+            --release \
+            --export-options-plist /Users/builder/export_options.plist
+
     artifacts:
       - build/ios/ipa/*.ipa
+
     publishing:
-      app_store_connect:
-        api_key: $APP_STORE_CONNECT_PRIVATE_KEY
-        key_id: $APP_STORE_CONNECT_KEY_IDENTIFIER
-        issuer_id: $APP_STORE_CONNECT_ISSUER_ID
-        submit_to_testflight: true
-        beta_groups:
-          - "Internal Testers"
+      email:
+        recipients:
+          - klartdean@gmail.com
