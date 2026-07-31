@@ -7,17 +7,16 @@ workflows:
       xcode: 16.2
 
     scripts:
-      - name: Check Flutter and Dart version
+      - name: VERIFY FLUTTER VERSION
         script: |
-          echo "===== FLUTTER ====="
+          echo "===== FLUTTER PATH ====="
           which flutter
+
+          echo "===== FLUTTER VERSION ====="
           flutter --version
 
-          echo "===== DART ====="
+          echo "===== DART VERSION ====="
           dart --version
-
-          echo "===== SDWebImage LOCK ====="
-          grep -A3 -B3 "SDWebImage (" ios/Podfile.lock
 
       - name: Get Flutter packages
         script: |
@@ -26,14 +25,15 @@ workflows:
       - name: Install CocoaPods
         script: |
           cd ios
-          pod install --repo-update
+          rm -rf Pods
+          rm -f Podfile.lock
+          pod repo update
+          pod install
           cd ..
 
       - name: Build IPA
         script: |
-          flutter build ipa \
-            --release \
-            --export-options-plist /Users/builder/export_options.plist
+          flutter build ipa --release
 
     artifacts:
       - build/ios/ipa/*.ipa
