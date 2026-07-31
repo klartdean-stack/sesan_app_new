@@ -79,15 +79,26 @@ post_install do |installer|
 
     content = File.read(header_path)
 
-    old_import = '#import <Firebase/Firebase.h>'
-    new_import = '#import <FirebaseMessaging/FirebaseMessaging.h>'
+    firebase_umbrella_import = '#import <Firebase/Firebase.h>'
+    firebase_messaging_import = '#import <FirebaseMessaging/FirebaseMessaging.h>'
+    firebase_auth_import = '#import <FirebaseAuth/FirebaseAuth.h>'
 
-    if content.include?(old_import)
-      content = content.gsub(old_import, new_import)
-      File.write(header_path, content)
-
-      puts "✅ Patched firebase_messaging header: #{header_path}"
+    if content.include?(firebase_umbrella_import)
+      content = content.gsub(
+        firebase_umbrella_import,
+        "#{firebase_messaging_import}\n#{firebase_auth_import}"
+      )
+    elsif content.include?(firebase_messaging_import) &&
+          !content.include?(firebase_auth_import)
+      content = content.gsub(
+        firebase_messaging_import,
+        "#{firebase_messaging_import}\n#{firebase_auth_import}"
+      )
     end
+
+    File.write(header_path, content)
+
+    puts "✅ Patched Firebase Messaging/Auth imports: #{header_path}"
   end
 
   installer.pods_project.targets.each do |target|
