@@ -33,9 +33,20 @@ jobs:
         run: |
           cd ios
           rm -rf Pods
-          rm -f Podfile.lock
           pod install --repo-update
           cd ..
+
+          echo "===== FIX gRPC MODULE MAP ====="
+
+          mkdir -p ios/Pods/Headers/Private/grpc
+
+          cp \
+            ios/Pods/gRPC-Core/include/grpc/module.modulemap \
+            ios/Pods/Headers/Private/grpc/gRPC-Core.modulemap
+
+          echo "===== VERIFY gRPC MODULE MAP ====="
+
+          ls -l ios/Pods/Headers/Private/grpc/gRPC-Core.modulemap
 
       - name: Verify BoringSSL flag
         run: |
