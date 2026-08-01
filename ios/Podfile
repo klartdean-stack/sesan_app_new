@@ -39,7 +39,7 @@ require File.expand_path(
 flutter_ios_podfile_setup
 
 target 'Runner' do
-  use_modular_headers!
+  use_frameworks! :linkage => :static
 
   pod 'SDWebImage', '5.19.7'
   pod 'SDWebImageWebPCoder', '0.14.0'
