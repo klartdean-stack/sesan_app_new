@@ -273,6 +273,16 @@ jobs:
       - name: Get Flutter packages
         run: flutter pub get
 
+
+      - name: Set iOS deployment target
+        run: |
+          sed -i '' \
+            's/IPHONEOS_DEPLOYMENT_TARGET = 14.0;/IPHONEOS_DEPLOYMENT_TARGET = 15.0;/g' \
+            ios/Runner.xcodeproj/project.pbxproj
+
+          grep -n "IPHONEOS_DEPLOYMENT_TARGET" \
+            ios/Runner.xcodeproj/project.pbxproj
+
       # =====================================================
       # 8. COCOAPODS + gRPC FIX
       # =====================================================
