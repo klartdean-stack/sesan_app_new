@@ -703,7 +703,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                   onTap: () async {
                     final Uri url = Uri.parse(
-                      'https://www.facebook.com/share/1811KLjz6q/',
+                      'https://www.facebook.com/share/1EBrJfNXP4/',
                     );
                     if (!await launchUrl(
                       url,
