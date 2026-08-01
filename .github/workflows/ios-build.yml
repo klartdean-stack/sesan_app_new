@@ -425,14 +425,31 @@ jobs:
 
           mkdir -p build/ios/archive
 
-          xcodebuild \
+          LOG_FILE="$RUNNER_TEMP/xcode-archive.log"
+
+          if ! xcodebuild \
             -workspace ios/Runner.xcworkspace \
             -scheme Runner \
             -configuration Release \
             -destination "generic/platform=iOS" \
             -archivePath "$PWD/build/ios/archive/Runner.xcarchive" \
             archive \
-            | tee "$RUNNER_TEMP/xcode-archive.log"
+            > "$LOG_FILE" 2>&1; then
+
+            echo "===== ARCHIVE FAILED — LAST 300 LINES ====="
+            tail -300 "$LOG_FILE"
+
+            echo "===== IMPORTANT FAILURE LINES ====="
+            grep -n -E \
+              "error|failed|failure|fatal|killed|terminated|signal|No space|File name too long|Operation not permitted" \
+              "$LOG_FILE" \
+              | tail -100 || true
+
+            exit 1
+          fi
+
+          echo "===== ARCHIVE SUCCEEDED ====="
+          tail -30 "$LOG_FILE"
       # =====================================================
       # 13. EXPORT SIGNED IPA
       # =====================================================
