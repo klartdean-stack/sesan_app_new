@@ -292,9 +292,14 @@ jobs:
 
           echo "===== VERIFY gRPC XCODE 26 PATCH ====="
 
-          grep -n "CallSeqFactory<>" \
-            ios/Pods/gRPC-Core/src/core/lib/promise/detail/basic_seq.h
-
+         GRPC_FILE="ios/Pods/gRPC-Core/src/core/lib/promise/detail/basic_seq.h"
+  
+         if [ -f "$GRPC_FILE" ]; then
+         grep -n "CallSeqFactory<>" "$GRPC_FILE"
+         echo "Old gRPC file patched successfully"
+         else
+         echo "Old gRPC-Core is not installed — patch not needed"
+         fi
       # =====================================================
       # 9. VERIFY BORINGSSL
       # =====================================================
