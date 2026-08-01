@@ -333,7 +333,7 @@ jobs:
             <string>export</string>
 
             <key>signingStyle</key>
-            <string>automatic</string>
+           <string>manual</string>
 
             <key>teamID</key>
             <string>$TEAM_ID</string>
@@ -381,21 +381,59 @@ jobs:
       # =====================================================
       # 12. CREATE SIGNED XCODE ARCHIVE
       # =====================================================
+      - name: Configure Runner manual signing
+        run: |
+          set -e
+
+          ruby <<'RUBY'
+          require 'xcodeproj'
+
+          project_path = 'ios/Runner.xcodeproj'
+          project = Xcodeproj::Project.open(project_path)
+
+          runner = project.targets.find { |target| target.name == 'Runner' }
+
+          if runner.nil?
+            abort 'Runner target not found'
+          end
+
+          runner.build_configurations.each do |config|
+            next unless ['Release', 'Profile'].include?(config.name)
+
+            config.build_settings['CODE_SIGN_STYLE'] = 'Manual'
+            config.build_settings['DEVELOPMENT_TEAM'] = ENV['TEAM_ID']
+            config.build_settings['CODE_SIGN_IDENTITY'] = 'Apple Distribution'
+            config.build_settings['PROVISIONING_PROFILE_SPECIFIER'] =
+              ENV['PROFILE_NAME']
+
+            puts "Configured #{config.name} manual signing"
+          end
+
+          project.save
+          RUBY
+
+          echo "===== RUNNER SIGNING SETTINGS ====="
+
+          xcodebuild \
+            -project ios/Runner.xcodeproj \
+            -target Runner \
+            -configuration Release \
+            -showBuildSettings \
+            | grep -E \
+              "CODE_SIGN_STYLE|DEVELOPMENT_TEAM|CODE_SIGN_IDENTITY|PROVISIONING_PROFILE_SPECIFIER"
+
       - name: Create signed Xcode archive
         run: |
           set -o pipefail
-          
+
           mkdir -p build/ios/archive
-          
+
           xcodebuild \
             -workspace ios/Runner.xcworkspace \
             -scheme Runner \
             -configuration Release \
             -destination "generic/platform=iOS" \
             -archivePath "$PWD/build/ios/archive/Runner.xcarchive" \
-            DEVELOPMENT_TEAM="$TEAM_ID" \
-            CODE_SIGN_STYLE=Automatic \
-            -allowProvisioningUpdates \
             archive \
             | tee "$RUNNER_TEMP/xcode-archive.log"
       # =====================================================
