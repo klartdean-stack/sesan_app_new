@@ -1,4 +1,4 @@
-name: Build iOS
+name: Build and Upload iOS IPA
 
 on:
   workflow_dispatch:
@@ -8,10 +8,20 @@ jobs:
     runs-on: macos-14
     timeout-minutes: 120
 
+    env:
+      TEAM_ID: YUKK89TARL
+      BUNDLE_ID: com.sesan.app
+
     steps:
+      # =====================================================
+      # 1. DOWNLOAD PROJECT
+      # =====================================================
       - name: Checkout source
         uses: actions/checkout@v4
 
+      # =====================================================
+      # 2. INSTALL FLUTTER
+      # =====================================================
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
@@ -19,18 +29,256 @@ jobs:
           channel: stable
           cache: true
 
-      - name: Verify versions
+      - name: Verify build environment
         run: |
           flutter --version
           dart --version
           xcodebuild -version
           pod --version
 
+      # =====================================================
+      # 3. RESTORE SIGNING FILES FROM GITHUB SECRETS
+      # =====================================================
+      - name: Decode signing files
+        env:
+          BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
+          BUILD_PROVISION_PROFILE_BASE64: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
+          APPSTORE_API_KEY: ${{ secrets.APPSTORE_API_KEY }}
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+        run: |
+          set -e
+
+          CERTIFICATE_PATH="$RUNNER_TEMP/build_certificate.p12"
+          PROFILE_PATH="$RUNNER_TEMP/build_profile.mobileprovision"
+
+          printf '%s' "$BUILD_CERTIFICATE_BASE64" \
+            | base64 --decode > "$CERTIFICATE_PATH"
+
+          printf '%s' "$BUILD_PROVISION_PROFILE_BASE64" \
+            | base64 --decode > "$PROFILE_PATH"
+
+          mkdir -p "$HOME/.appstoreconnect/private_keys"
+
+          printf '%s' "$APPSTORE_API_KEY" \
+            | base64 --decode \
+            > "$HOME/.appstoreconnect/private_keys/AuthKey_${APPSTORE_KEY_ID}.p8"
+
+          chmod 600 \
+            "$HOME/.appstoreconnect/private_keys/AuthKey_${APPSTORE_KEY_ID}.p8"
+
+          test -s "$CERTIFICATE_PATH"
+          test -s "$PROFILE_PATH"
+          test -s "$HOME/.appstoreconnect/private_keys/AuthKey_${APPSTORE_KEY_ID}.p8"
+
+          echo "Signing files decoded successfully"
+
+      # =====================================================
+      # 4. VERIFY CERTIFICATE MATCHES PROFILE
+      # Fails quickly before spending time compiling.
+      # =====================================================
+      - name: Verify certificate and profile match
+        env:
+          P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
+        run: |
+          set -e
+
+          CERTIFICATE_PATH="$RUNNER_TEMP/build_certificate.p12"
+          PROFILE_PATH="$RUNNER_TEMP/build_profile.mobileprovision"
+          PROFILE_PLIST="$RUNNER_TEMP/profile.plist"
+          CERTIFICATE_PEM="$RUNNER_TEMP/certificate.pem"
+          CERTIFICATE_DER="$RUNNER_TEMP/certificate.der"
+
+          security cms -D \
+            -i "$PROFILE_PATH" \
+            > "$PROFILE_PLIST"
+
+          PROFILE_NAME=$(
+            /usr/libexec/PlistBuddy \
+              -c "Print :Name" \
+              "$PROFILE_PLIST"
+          )
+
+          PROFILE_APP_ID=$(
+            /usr/libexec/PlistBuddy \
+              -c "Print :Entitlements:application-identifier" \
+              "$PROFILE_PLIST"
+          )
+
+          echo "Profile name: $PROFILE_NAME"
+          echo "Profile application identifier: $PROFILE_APP_ID"
+
+          if [ "$PROFILE_APP_ID" != "$TEAM_ID.$BUNDLE_ID" ]; then
+            echo "ERROR: Provisioning profile has wrong Bundle ID"
+            echo "Expected: $TEAM_ID.$BUNDLE_ID"
+            echo "Found: $PROFILE_APP_ID"
+            exit 1
+          fi
+
+          if ! openssl pkcs12 \
+            -in "$CERTIFICATE_PATH" \
+            -clcerts \
+            -nokeys \
+            -passin env:P12_PASSWORD \
+            -out "$CERTIFICATE_PEM"; then
+
+            openssl pkcs12 \
+              -legacy \
+              -in "$CERTIFICATE_PATH" \
+              -clcerts \
+              -nokeys \
+              -passin env:P12_PASSWORD \
+              -out "$CERTIFICATE_PEM"
+          fi
+
+          openssl x509 \
+            -in "$CERTIFICATE_PEM" \
+            -outform DER \
+            -out "$CERTIFICATE_DER"
+
+          python3 <<'PY'
+          import os
+          import plistlib
+          import sys
+
+          runner_temp = os.environ["RUNNER_TEMP"]
+
+          profile_plist = os.path.join(
+              runner_temp,
+              "profile.plist",
+          )
+
+          certificate_der = os.path.join(
+              runner_temp,
+              "certificate.der",
+          )
+
+          with open(profile_plist, "rb") as file:
+              profile = plistlib.load(file)
+
+          with open(certificate_der, "rb") as file:
+              certificate = file.read()
+
+          profile_certificates = profile.get(
+              "DeveloperCertificates",
+              [],
+          )
+
+          if certificate not in profile_certificates:
+              print(
+                  "ERROR: The exported .p12 certificate "
+                  "is not included in this provisioning profile."
+              )
+              print(
+                  "Download or recreate an App Store profile "
+                  "using the Jul 29, 2027 distribution certificate."
+              )
+              sys.exit(1)
+
+          print(
+              "Certificate and provisioning profile match successfully."
+          )
+          PY
+
+      # =====================================================
+      # 5. IMPORT CERTIFICATE INTO TEMPORARY KEYCHAIN
+      # =====================================================
+      - name: Install distribution certificate
+        env:
+          P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
+        run: |
+          set -e
+
+          CERTIFICATE_PATH="$RUNNER_TEMP/build_certificate.p12"
+          KEYCHAIN_PATH="$RUNNER_TEMP/github-actions.keychain-db"
+          KEYCHAIN_PASSWORD=$(openssl rand -base64 24)
+
+          security create-keychain \
+            -p "$KEYCHAIN_PASSWORD" \
+            "$KEYCHAIN_PATH"
+
+          security set-keychain-settings \
+            -lut 21600 \
+            "$KEYCHAIN_PATH"
+
+          security unlock-keychain \
+            -p "$KEYCHAIN_PASSWORD" \
+            "$KEYCHAIN_PATH"
+
+          security import "$CERTIFICATE_PATH" \
+            -P "$P12_PASSWORD" \
+            -A \
+            -t cert \
+            -f pkcs12 \
+            -k "$KEYCHAIN_PATH"
+
+          security list-keychains \
+            -d user \
+            -s "$KEYCHAIN_PATH" login.keychain-db
+
+          security default-keychain \
+            -d user \
+            -s "$KEYCHAIN_PATH"
+
+          security set-key-partition-list \
+            -S apple-tool:,apple:,codesign: \
+            -s \
+            -k "$KEYCHAIN_PASSWORD" \
+            "$KEYCHAIN_PATH"
+
+          echo "===== AVAILABLE CODE SIGNING IDENTITIES ====="
+
+          security find-identity \
+            -v \
+            -p codesigning \
+            "$KEYCHAIN_PATH"
+
+      # =====================================================
+      # 6. INSTALL PROVISIONING PROFILE
+      # =====================================================
+      - name: Install App Store provisioning profile
+        run: |
+          set -e
+
+          PROFILE_PATH="$RUNNER_TEMP/build_profile.mobileprovision"
+          PROFILE_PLIST="$RUNNER_TEMP/profile.plist"
+
+          PROFILE_UUID=$(
+            /usr/libexec/PlistBuddy \
+              -c "Print :UUID" \
+              "$PROFILE_PLIST"
+          )
+
+          PROFILE_NAME=$(
+            /usr/libexec/PlistBuddy \
+              -c "Print :Name" \
+              "$PROFILE_PLIST"
+          )
+
+          mkdir -p \
+            "$HOME/Library/MobileDevice/Provisioning Profiles"
+
+          cp "$PROFILE_PATH" \
+            "$HOME/Library/MobileDevice/Provisioning Profiles/$PROFILE_UUID.mobileprovision"
+
+          echo "PROFILE_UUID=$PROFILE_UUID" >> "$GITHUB_ENV"
+          echo "PROFILE_NAME=$PROFILE_NAME" >> "$GITHUB_ENV"
+
+          echo "Installed profile: $PROFILE_NAME"
+          echo "Profile UUID: $PROFILE_UUID"
+
+      # =====================================================
+      # 7. FLUTTER PACKAGES
+      # =====================================================
       - name: Get Flutter packages
         run: flutter pub get
 
+      # =====================================================
+      # 8. COCOAPODS + gRPC FIX
+      # =====================================================
       - name: Install CocoaPods
         run: |
+          set -e
+
           cd ios
           rm -rf Pods
           pod install --repo-update
@@ -46,24 +294,164 @@ jobs:
 
           echo "===== VERIFY gRPC MODULE MAP ====="
 
-          ls -l ios/Pods/Headers/Private/grpc/gRPC-Core.modulemap
+          test -f \
+            ios/Pods/Headers/Private/grpc/gRPC-Core.modulemap
 
+          ls -l \
+            ios/Pods/Headers/Private/grpc/gRPC-Core.modulemap
+
+      # =====================================================
+      # 9. VERIFY BORINGSSL
+      # =====================================================
       - name: Verify BoringSSL flag
         run: |
-          if grep -R -- "-GCC_WARN_INHIBIT_ALL_WARNINGS" ios/Pods/Pods.xcodeproj/project.pbxproj; then
-            echo "Invalid BoringSSL flag still exists"
+          if grep -R -- \
+            "-GCC_WARN_INHIBIT_ALL_WARNINGS" \
+            ios/Pods/Pods.xcodeproj/project.pbxproj; then
+
+            echo "ERROR: Invalid BoringSSL flag still exists"
             exit 1
           else
             echo "BoringSSL flag is clean"
           fi
 
-      - name: Build iOS without signing
+      # =====================================================
+      # 10. CREATE EXPORT OPTIONS
+      # =====================================================
+      - name: Create App Store export options
         run: |
-          flutter build ios --release --no-codesign
+          cat > "$RUNNER_TEMP/ExportOptions.plist" <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+          "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>app-store</string>
 
-      - name: Upload unsigned iOS build
+            <key>destination</key>
+            <string>export</string>
+
+            <key>signingStyle</key>
+            <string>manual</string>
+
+            <key>teamID</key>
+            <string>$TEAM_ID</string>
+
+            <key>stripSwiftSymbols</key>
+            <true/>
+
+            <key>uploadBitcode</key>
+            <false/>
+
+            <key>manageAppVersionAndBuildNumber</key>
+            <false/>
+
+            <key>provisioningProfiles</key>
+            <dict>
+              <key>$BUNDLE_ID</key>
+              <string>$PROFILE_NAME</string>
+            </dict>
+          </dict>
+          </plist>
+          EOF
+
+          plutil -lint "$RUNNER_TEMP/ExportOptions.plist"
+          cat "$RUNNER_TEMP/ExportOptions.plist"
+
+      # =====================================================
+      # 11. PREPARE FLUTTER BUILD CONFIGURATION
+      # Build number is automatically higher than old build 2.
+      # =====================================================
+      - name: Prepare Flutter iOS configuration
+        run: |
+          BUILD_NUMBER=$((GITHUB_RUN_NUMBER + 2))
+
+          echo "BUILD_NUMBER=$BUILD_NUMBER" >> "$GITHUB_ENV"
+          echo "Using App Store build number: $BUILD_NUMBER"
+
+          flutter build ios \
+            --release \
+            --config-only \
+            --build-number="$BUILD_NUMBER"
+
+      # =====================================================
+      # 12. CREATE SIGNED ARCHIVE
+      # =====================================================
+      - name: Create signed Xcode archive
+        run: |
+          set -o pipefail
+
+          mkdir -p build/ios/archive
+
+          xcodebuild \
+            -workspace ios/Runner.xcworkspace \
+            -scheme Runner \
+            -configuration Release \
+            -destination "generic/platform=iOS" \
+            -archivePath "$PWD/build/ios/archive/Runner.xcarchive" \
+            DEVELOPMENT_TEAM="$TEAM_ID" \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="iPhone Distribution" \
+            PROVISIONING_PROFILE_SPECIFIER="$PROFILE_NAME" \
+            archive \
+            | tee "$RUNNER_TEMP/xcode-archive.log"
+
+      # =====================================================
+      # 13. EXPORT SIGNED IPA
+      # =====================================================
+      - name: Export signed IPA
+        run: |
+          set -o pipefail
+
+          mkdir -p build/ios/ipa
+
+          xcodebuild \
+            -exportArchive \
+            -archivePath "$PWD/build/ios/archive/Runner.xcarchive" \
+            -exportPath "$PWD/build/ios/ipa" \
+            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" \
+            | tee "$RUNNER_TEMP/xcode-export.log"
+
+          echo "===== GENERATED IPA ====="
+
+          find build/ios/ipa \
+            -type f \
+            -name "*.ipa" \
+            -print
+
+          IPA_PATH=$(find build/ios/ipa -type f -name "*.ipa" | head -1)
+
+          if [ -z "$IPA_PATH" ]; then
+            echo "ERROR: IPA file was not created"
+            exit 1
+          fi
+
+          echo "IPA_PATH=$IPA_PATH" >> "$GITHUB_ENV"
+
+      # =====================================================
+      # 14. SAVE IPA AS GITHUB ARTIFACT
+      # =====================================================
+      - name: Upload signed IPA artifact
         uses: actions/upload-artifact@v4
         with:
-          name: sesan-ios-unsigned
-          path: build/ios/iphoneos/Runner.app
-          retention-days: 7
+          name: sesan-app-signed-ipa
+          path: build/ios/ipa/*.ipa
+          retention-days: 14
+
+      # =====================================================
+      # 15. UPLOAD TO APP STORE CONNECT
+      # =====================================================
+      - name: Upload IPA to App Store Connect
+        env:
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+        run: |
+          set -e
+
+          xcrun altool \
+            --upload-app \
+            --type ios \
+            --file "$IPA_PATH" \
+            --apiKey "$APPSTORE_KEY_ID" \
+            --apiIssuer "$APPSTORE_ISSUER_ID"
