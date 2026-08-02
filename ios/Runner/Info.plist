@@ -45,5 +45,19 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+    <key>NSCameraUsageDescription</key>
+    <string>Sesan App uses the camera to scan QR codes and add product photos.</string>
+
+    <key>NSMicrophoneUsageDescription</key>
+    <string>Sesan App uses the microphone to record and send voice messages.</string>
+
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>Sesan App accesses the photo library so you can select and upload product photos and chat images.</string>
+
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>Sesan App uses your location while the app is open to help show and select relevant locations.</string>
+
+    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+    <string>Sesan App uses location access to support location-based features when permitted by you.</string>
 </dict>
 </plist>
