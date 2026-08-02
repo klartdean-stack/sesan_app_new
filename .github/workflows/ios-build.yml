@@ -364,7 +364,7 @@ jobs:
       # =====================================================
       - name: Prepare Flutter iOS configuration
         run: |
-          BUILD_NUMBER=$((GITHUB_RUN_NUMBER + 10))
+          BUILD_NUMBER=$((GITHUB_RUN_NUMBER + 20))
 
           echo "BUILD_NUMBER=$BUILD_NUMBER" >> "$GITHUB_ENV"
           echo "Using App Store build number: $BUILD_NUMBER"
