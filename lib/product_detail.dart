@@ -1346,7 +1346,6 @@ Android: $androidPlayStoreLink
                                     child: Opacity(
                                       opacity: _isSubmittingRating ? 0.5 : 1.0,
                                       child: RatingBar.builder(
-                                        key: ValueKey('rating_$uid_$myRating'),
                                         initialRating: myRating,
                                         minRating: 1,
                                         direction: Axis.horizontal,
