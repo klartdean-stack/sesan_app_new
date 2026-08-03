@@ -15,6 +15,8 @@ import 'auction_add_screen.dart';
 import 'location_data.dart' hide showLocationPicker;
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:video_compress/video_compress.dart';
+import 'package:image_cropper/image_cropper.dart';
+import 'package:video_player/video_player.dart';
 
 
 class AddProductPage extends StatefulWidget {
@@ -48,6 +50,8 @@ class _AddProductPageState extends State<AddProductPage> {
   final ImagePicker _picker = ImagePicker();
   final formatter = NumberFormat('#,###');
   final UploadController uploadController = Get.put(UploadController());
+  VideoPlayerController? _videoPreviewController;
+  bool _isVideoPreviewReady = false;
 
 
   String? selectedCategory;
@@ -167,6 +171,168 @@ class _AddProductPageState extends State<AddProductPage> {
     }
   }
 
+  @override
+  void dispose() {
+    _videoPreviewController?.dispose();
+
+    nameController.dispose();
+    descriptionController.dispose();
+    priceController.dispose();
+    phone1Controller.dispose();
+    phone2Controller.dispose();
+    locationController.dispose();
+
+    super.dispose();
+  }
+
+  Future<void> _cropImage(int index) async {
+    if (index < 0 || index >= selectedImages.length) return;
+
+    try {
+      final croppedFile = await ImageCropper().cropImage(
+        sourcePath: selectedImages[index].path,
+        uiSettings: [
+          AndroidUiSettings(
+            toolbarTitle: 'កាត់តរូបភាព',
+            toolbarColor: Colors.green,
+            toolbarWidgetColor: Colors.white,
+            initAspectRatio: CropAspectRatioPreset.original,
+            lockAspectRatio: false,
+          ),
+          IOSUiSettings(
+            title: 'កាត់តរូបភាព',
+            aspectRatioLockEnabled: false,
+            resetAspectRatioEnabled: true,
+          ),
+        ],
+      );
+
+      if (croppedFile == null || !mounted) return;
+
+      setState(() {
+        selectedImages[index] = XFile(croppedFile.path);
+      });
+    } catch (e) {
+      debugPrint('Crop image error: $e');
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('មិនអាចកាត់តរូបភាពបាន៖ $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _previewVideo() async {
+    if (selectedVideo == null) return;
+
+    try {
+      await _videoPreviewController?.dispose();
+
+      final controller = VideoPlayerController.file(
+        File(selectedVideo!.path),
+      );
+
+      _videoPreviewController = controller;
+      _isVideoPreviewReady = false;
+
+      await controller.initialize();
+
+      if (!mounted) {
+        await controller.dispose();
+        return;
+      }
+
+      setState(() {
+        _isVideoPreviewReady = true;
+      });
+
+      await controller.play();
+
+      await showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (dialogContext) {
+          return StatefulBuilder(
+            builder: (dialogContext, setDialogState) {
+              return AlertDialog(
+                contentPadding: EdgeInsets.zero,
+                content: Container(
+                  width: MediaQuery.of(context).size.width * 0.9,
+                  height: MediaQuery.of(context).size.height * 0.5,
+                  color: Colors.black,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      if (_isVideoPreviewReady)
+                        Center(
+                          child: AspectRatio(
+                            aspectRatio: controller.value.aspectRatio,
+                            child: VideoPlayer(controller),
+                          ),
+                        )
+                      else
+                        const CircularProgressIndicator(
+                          color: Colors.white,
+                        ),
+
+                      Positioned(
+                        bottom: 16,
+                        child: IconButton(
+                          iconSize: 48,
+                          color: Colors.white,
+                          icon: Icon(
+                            controller.value.isPlaying
+                                ? Icons.pause_circle_filled
+                                : Icons.play_circle_fill,
+                          ),
+                          onPressed: () async {
+                            if (controller.value.isPlaying) {
+                              await controller.pause();
+                            } else {
+                              await controller.play();
+                            }
+
+                            setDialogState(() {});
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () async {
+                      await controller.pause();
+
+                      if (dialogContext.mounted) {
+                        Navigator.pop(dialogContext);
+                      }
+                    },
+                    child: const Text('បិទ'),
+                  ),
+                ],
+              );
+            },
+          );
+        },
+      );
+    } catch (e) {
+      debugPrint('Preview video error: $e');
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('មិនអាចបើកវីដេអូបាន៖ $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
 
   Future<void> pickManyImages() async {
     // 🎯 កែសម្រួល Line នេះ៖ បន្ថែម maxWidth, maxHeight, imageQuality
@@ -469,13 +635,56 @@ class _AddProductPageState extends State<AddProductPage> {
                       clipBehavior: Clip.none, // ឱ្យប៊ូតុងលុបអាចលយចេញក្រៅបាន
                       children: [
                         // ១. បង្ហាញរូបថត
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: Image.file(
-                            File(selectedImages[index].path),
-                            width: 90,
-                            height: 90,
-                            fit: BoxFit.cover,
+                        GestureDetector(
+                          onTap: () => _cropImage(index),
+                          child: Stack(
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: Image.file(
+                                  File(selectedImages[index].path),
+                                  width: 90,
+                                  height: 90,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+
+                              Positioned(
+                                bottom: 0,
+                                left: 0,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 3,
+                                  ),
+                                  decoration: const BoxDecoration(
+                                    color: Colors.black54,
+                                    borderRadius: BorderRadius.only(
+                                      topRight: Radius.circular(8),
+                                      bottomLeft: Radius.circular(12),
+                                    ),
+                                  ),
+                                  child: const Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.crop,
+                                        color: Colors.white,
+                                        size: 13,
+                                      ),
+                                      SizedBox(width: 2),
+                                      Text(
+                                        'Crop',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 9,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
 
@@ -521,18 +730,56 @@ class _AddProductPageState extends State<AddProductPage> {
 
             const SizedBox(height: 15),
 
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildMediaButton(
+                        onTap: pickVideo,
+                        icon: Icons.video_library,
+                        label: selectedVideo == null
+                            ? 'រើសវីដេអូបង្ហាញទំនិញ'
+                            : 'រើសវីដេអូរួចរាល់ ✅',
+                        color: Colors.orange.shade50,
+                        textColor: Colors.orange,
+                      ),
+                    ),
 
-            // ប៊ូតុងរើសវីដេអូ
-            _buildMediaButton(
-              // កែជួរ ៤៨៧
-              onTap: () => pickVideo(),
-              icon: Icons.video_library,
-              label: selectedVideo == null
-                  ? "រើសវីដេអូបង្ហាញទំនិញ"
-                  : "រើសវីដេអូរួចរាល់ ✅",
-              color: Colors.orange.shade50,
-              textColor: Colors.orange,
-            ),
+                    if (selectedVideo != null) ...[
+                      const SizedBox(width: 8),
+
+                      IconButton(
+                        onPressed: _previewVideo,
+                        tooltip: 'មើលវីដេអូ',
+                        icon: const Icon(
+                          Icons.play_circle_fill,
+                          color: Colors.green,
+                          size: 40,
+                        ),
+                      ),
+
+                      IconButton(
+                        tooltip: 'លុបវីដេអូ',
+                        onPressed: () async {
+                          await _videoPreviewController?.pause();
+                          await _videoPreviewController?.dispose();
+
+                          if (!mounted) return;
+
+                          setState(() {
+                            selectedVideo = null;
+                            _videoPreviewController = null;
+                            _isVideoPreviewReady = false;
+                          });
+                        },
+                        icon: const Icon(
+                          Icons.close,
+                          color: Colors.red,
+                          size: 30,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
 
 
             const SizedBox(height: 20),
