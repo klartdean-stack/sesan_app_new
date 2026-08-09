@@ -77,9 +77,9 @@ dependencies:
   video_thumbnail: ^0.5.6
 
 dependency_overrides:
-  # Flutter 3.19/Dart 3.3 compatible implementation. Newer 1.6.x uses
-  # Swift concurrency checks that fail on this local simulator toolchain.
-  local_auth_darwin: 1.4.1
+  # Supports intl 0.20.x while staying on the pre-Swift implementation.
+  # Newer 1.6.x triggers Swift concurrency errors on this simulator toolchain.
+  local_auth_darwin: 1.4.2
   video_player_avfoundation: 2.5.7
   video_player_android: 2.4.3
   video_player_platform_interface: 6.2.2
