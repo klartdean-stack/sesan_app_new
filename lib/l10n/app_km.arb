@@ -1,0 +1,30 @@
+{
+  "@@locale": "km",
+  "appTitle": "Sesan Marketplace",
+  "loginSubtitle": "ចូលប្រើប្រាស់គណនីរបស់អ្នក",
+  "phoneNumber": "លេខទូរសព្ទ",
+  "phoneHint": "ឧទាហរណ៍ 088XXXXXXX",
+  "phoneRequired": "សូមបញ្ចូលលេខទូរសព្ទ",
+  "phoneInvalid": "លេខទូរសព្ទមិនត្រឹមត្រូវ",
+  "password": "លេខសម្ងាត់",
+  "passwordHint": "បញ្ចូលលេខសម្ងាត់របស់អ្នក",
+  "passwordRequired": "សូមបញ្ចូលលេខសម្ងាត់",
+  "passwordMinimum": "លេខសម្ងាត់ត្រូវមានយ៉ាងតិច 6 ខ្ទង់",
+  "rememberPhone": "ចង់ចាំលេខទូរសព្ទ",
+  "forgotPassword": "ភ្លេចលេខសម្ងាត់?",
+  "login": "ចូលប្រើប្រាស់",
+  "noAccount": "មិនទាន់មានគណនី? ",
+  "registerHere": "ចុះឈ្មោះនៅទីនេះ",
+  "continueAsGuest": "ចូលមើលសិន",
+  "accountNotFound": "❌ រកមិនឃើញគណនីនេះទេ",
+  "incorrectPassword": "🔑 លេខសម្ងាត់មិនត្រឹមត្រូវទេ",
+  "loginSuccess": "✅ ចូលប្រើប្រាស់ជោគជ័យ",
+  "genericError": "⚠️ កំហុស: {error}",
+  "@genericError": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "khmer": "ខ្មែរ",
+  "english": "English"
+}

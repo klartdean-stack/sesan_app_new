@@ -9,6 +9,7 @@ import 'package:my_app/product_list.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'forgot_password_screen.dart';
 import 'user_service.dart' hide UserService;
+import 'l10n/app_localizations.dart';
 
 
 class LoginScreen extends StatefulWidget {
@@ -71,7 +72,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
     // ✅ លុប SharedPreferences ចាស់មុន login ថ្មី!
     final prefs = await SharedPreferences.getInstance();
+    final selectedLanguage = prefs.getString('app_language') ?? 'km';
     await prefs.clear();
+    await prefs.setString('app_language', selectedLanguage);
     UserService.clearCache(); // សម្អាត cache ផង
 
 
@@ -106,7 +109,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (query.docs.isEmpty) {
         if (mounted) {
           setState(() => _isLoading = false);
-          _showSnackBar('❌ រកមិនឃើញគណនីនេះទេ', isError: true);
+          _showSnackBar(AppLocalizations.of(context).accountNotFound, isError: true);
         }
         return;
       }
@@ -120,7 +123,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (dbPassword != password) {
         if (mounted) {
           setState(() => _isLoading = false);
-          _showSnackBar('🔑 លេខសម្ងាត់មិនត្រឹមត្រូវទេ', isError: true);
+          _showSnackBar(AppLocalizations.of(context).incorrectPassword, isError: true);
         }
         return;
       }
@@ -151,7 +154,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (mounted) {
         setState(() => _isLoading = false);
-        _showSnackBar('✅ ចូលប្រើប្រាស់ជោគជ័យ');
+        _showSnackBar(AppLocalizations.of(context).loginSuccess);
 
 
         // 🎯 ថែមជួរនេះ៖ ដាស់ AuthController ឱ្យដឹងថាមាន User បាន Login ហើយ
@@ -167,7 +170,10 @@ class _LoginScreenState extends State<LoginScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        _showSnackBar('⚠️ កំហុស: $e', isError: true);
+        _showSnackBar(
+          AppLocalizations.of(context).genericError(e.toString()),
+          isError: true,
+        );
       }
     }
   }
@@ -175,6 +181,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -186,6 +193,49 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: PopupMenuButton<String>(
+                      tooltip: 'Language',
+                      onSelected: (languageCode) async {
+                        final prefs = await SharedPreferences.getInstance();
+                        await prefs.setString('app_language', languageCode);
+                        Get.updateLocale(Locale(languageCode));
+                      },
+                      itemBuilder: (context) => [
+                        PopupMenuItem(value: 'km', child: Text(l10n.khmer)),
+                        PopupMenuItem(value: 'en', child: Text(l10n.english)),
+                      ],
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.green.shade50,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: Colors.green.shade200),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.language, color: Colors.green, size: 20),
+                            const SizedBox(width: 6),
+                            Text(
+                              Localizations.localeOf(context).languageCode == 'en'
+                                  ? l10n.english
+                                  : l10n.khmer,
+                              style: const TextStyle(
+                                color: Colors.green,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const Icon(Icons.arrow_drop_down, color: Colors.green),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
                   const SizedBox(height: 20),
 
 
@@ -223,7 +273,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'ចូលប្រើប្រាស់គណនីរបស់អ្នក',
+                    l10n.loginSubtitle,
                     style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                   ),
                   const SizedBox(height: 40),
@@ -232,14 +282,14 @@ class _LoginScreenState extends State<LoginScreen> {
                   // ── លេខទូរសព្ទ ───────────────────────────
                   _buildTextField(
                     controller: _phoneController,
-                    label: 'លេខទូរសព្ទ',
-                    hint: 'ឧទាហរណ៍ 088XXXXXXX',
+                    label: l10n.phoneNumber,
+                    hint: l10n.phoneHint,
                     icon: Icons.phone_android,
                     isNumber: true,
                     validator: (v) {
-                      if (v == null || v.isEmpty) return 'សូមបញ្ចូលលេខទូរសព្ទ';
+                      if (v == null || v.isEmpty) return l10n.phoneRequired;
                       if (!RegExp(r'^(0|\+855)[0-9]{8,9}$').hasMatch(v)) {
-                        return 'លេខទូរសព្ទមិនត្រឹមត្រូវ';
+                        return l10n.phoneInvalid;
                       }
                       return null;
                     },
@@ -250,14 +300,14 @@ class _LoginScreenState extends State<LoginScreen> {
                   // ── លេខសម្ងាត់ ────────────────────────────
                   _buildTextField(
                     controller: _passwordController,
-                    label: 'លេខសម្ងាត់',
-                    hint: 'បញ្ចូលលេខសម្ងាត់របស់អ្នក',
+                    label: l10n.password,
+                    hint: l10n.passwordHint,
                     icon: Icons.lock_outline,
                     isPassword: true,
                     validator: (v) {
-                      if (v == null || v.isEmpty) return 'សូមបញ្ចូលលេខសម្ងាត់';
+                      if (v == null || v.isEmpty) return l10n.passwordRequired;
                       if (v.length < 6)
-                        return 'លេខសម្ងាត់ត្រូវមានយ៉ាងតិច 6 ខ្ទង់';
+                        return l10n.passwordMinimum;
                       return null;
                     },
                   ),
@@ -273,9 +323,9 @@ class _LoginScreenState extends State<LoginScreen> {
                             setState(() => _rememberPhone = v ?? false),
                         activeColor: Colors.green,
                       ),
-                      const Text(
-                        'ចង់ចាំលេខទូរសព្ទ',
-                        style: TextStyle(fontSize: 13),
+                      Text(
+                        l10n.rememberPhone,
+                        style: const TextStyle(fontSize: 13),
                       ),
                       const Spacer(),
                       TextButton(
@@ -284,7 +334,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           MaterialPageRoute(builder: (_) => const ForgotPasswordScreen()),
                         ),
                         child: Text(
-                          'ភ្លេចលេខសម្ងាត់?',
+                          l10n.forgotPassword,
                           style: TextStyle(
                             color: Colors.green[700],
                             fontSize: 13,
@@ -319,9 +369,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           strokeWidth: 2.5,
                         ),
                       )
-                          : const Text(
-                        'ចូលប្រើប្រាស់',
-                        style: TextStyle(
+                          : Text(
+                        l10n.login,
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
@@ -336,14 +386,14 @@ class _LoginScreenState extends State<LoginScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        'មិនទាន់មានគណនី? ',
+                        l10n.noAccount,
                         style: TextStyle(color: Colors.grey[600]),
                       ),
                       GestureDetector(
                         onTap: () => Navigator.pushNamed(context, '/signup'),
-                        child: const Text(
-                          'ចុះឈ្មោះនៅទីនេះ',
-                          style: TextStyle(
+                        child: Text(
+                          l10n.registerHere,
+                          style: const TextStyle(
                             color: Colors.green,
                             fontWeight: FontWeight.bold,
                           ),
@@ -361,9 +411,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       Get.offAllNamed('/home-guest'); // Guest mode
                     },
                     icon: const Icon(Icons.person_outline, color: Colors.green),
-                    label: const Text(
-                      'ចូលមើលសិន',
-                      style: TextStyle(
+                    label: Text(
+                      l10n.continueAsGuest,
+                      style: const TextStyle(
                         fontSize: 16,
                         color: Colors.green,
                         fontWeight: FontWeight.w600,

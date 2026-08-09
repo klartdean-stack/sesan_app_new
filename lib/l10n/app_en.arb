@@ -1,0 +1,30 @@
+{
+  "@@locale": "en",
+  "appTitle": "Sesan Marketplace",
+  "loginSubtitle": "Sign in to your account",
+  "phoneNumber": "Phone number",
+  "phoneHint": "Example: 088XXXXXXX",
+  "phoneRequired": "Please enter your phone number",
+  "phoneInvalid": "The phone number is invalid",
+  "password": "Password",
+  "passwordHint": "Enter your password",
+  "passwordRequired": "Please enter your password",
+  "passwordMinimum": "Password must contain at least 6 characters",
+  "rememberPhone": "Remember phone number",
+  "forgotPassword": "Forgot password?",
+  "login": "Sign in",
+  "noAccount": "Don't have an account? ",
+  "registerHere": "Register here",
+  "continueAsGuest": "Continue as guest",
+  "accountNotFound": "❌ This account was not found",
+  "incorrectPassword": "🔑 Incorrect password",
+  "loginSuccess": "✅ Signed in successfully",
+  "genericError": "⚠️ Error: {error}",
+  "@genericError": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "khmer": "ខ្មែរ",
+  "english": "English"
+}

@@ -13,6 +13,7 @@ import 'signup_screen.dart';
 import 'package:get/get.dart';
 import 'package:flutter/foundation.dart';
 import 'firebase_options.dart';
+import 'l10n/app_localizations.dart';
 
 const AndroidNotificationChannel channel = AndroidNotificationChannel(
   'order_channel',
@@ -63,7 +64,9 @@ void main() async {
     }
   }
 
-  runApp(const MyApp());
+  final prefs = await SharedPreferences.getInstance();
+  final savedLanguage = prefs.getString('app_language') ?? 'km';
+  runApp(MyApp(initialLocale: Locale(savedLanguage)));
 }
 
 // បំបែក Function នេះចេញដើម្បីកុំឱ្យកូដធំពេក
@@ -129,7 +132,9 @@ Future<void> _setupMobileNotifications() async {
 
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  const MyApp({super.key, required this.initialLocale});
+
+  final Locale initialLocale;
 
 
   @override
@@ -137,14 +142,15 @@ class MyApp extends StatelessWidget {
     return GetMaterialApp(
       navigatorKey: navigatorKey,
       debugShowCheckedModeBanner: false,
-      title: 'Sesan Marketplace',
+      onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
       localizationsDelegates: const [
+        AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      supportedLocales: const [Locale('km', 'KH')],
-      locale: const Locale('km', 'KH'),
+      supportedLocales: AppLocalizations.supportedLocales,
+      locale: initialLocale,
       theme: ThemeData(
         useMaterial3: true,
         primarySwatch: Colors.green,
@@ -229,6 +235,5 @@ class _AuthWrapperState extends State<AuthWrapper> {
     return _cachedScreen!;
   }
 }
-
 
 
