@@ -28,6 +28,7 @@ import 'order_management_screen.dart';
 import 'wallet_logic.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'logout_button.dart';
+import 'settings_screen.dart';
 
 
 class ProfileScreen extends StatefulWidget {
@@ -205,6 +206,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
           automaticallyImplyLeading: false,
           title: const Text('គណនី', style: TextStyle(fontFamily: 'Siemreap')),
           backgroundColor: Colors.green[700],
+          actions: [
+            IconButton(
+              tooltip: 'Settings',
+              icon: const Icon(Icons.settings_rounded),
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const SettingsScreen()),
+              ),
+            ),
+          ],
         ),
         body: Center(
           child: Column(
@@ -245,6 +256,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
         elevation: 0,
         centerTitle: true,
         actions: [
+          IconButton(
+            tooltip: 'Settings',
+            icon: const Icon(Icons.settings_rounded, color: Colors.white),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const SettingsScreen()),
+            ),
+          ),
           StreamBuilder<QuerySnapshot>(
             stream: _orderStream,
             builder: (context, snapshot) {
