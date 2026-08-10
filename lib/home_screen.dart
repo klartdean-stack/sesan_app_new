@@ -24,6 +24,7 @@ import 'product_list.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart'; // ថែមតែមួយជួរនេះ
 import 'package:firebase_messaging/firebase_messaging.dart'; // ថែមជួរនេះ
+import 'l10n/app_localizations.dart';
 
 
 
@@ -66,7 +67,6 @@ String? name;
       _checkAndRequestPermission();
     }
   }
-
 
   Future<void> loadUser() async {
     try {
@@ -241,6 +241,7 @@ String? name;
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final UploadController uploadController = Get.find<UploadController>();
     final user = FirebaseAuth.instance.currentUser;
 
@@ -288,7 +289,7 @@ String? name;
                     setState(() => _searchQuery = value.trim());
                   },
                   decoration: InputDecoration(
-                    hintText: "ស្វែងរកទំនិញ...",
+                    hintText: l10n.searchProducts,
                     hintStyle: const TextStyle(
                       fontFamily: 'Siemreap',
                       fontSize: 13,
@@ -477,17 +478,18 @@ String? name;
 
   // ៣. បង្កើត Dialog សម្រាប់ដេញភ្ញៀវទៅ Login (ដាក់នៅខាងក្រោម build)
   void _showLoginRequiredDialog(BuildContext context, String actionText) {
+    final l10n = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder: (context) =>
           AlertDialog(
-            title: const Text("សូមចូលប្រើប្រាស់"),
-            content: Text("$actionText មេត្រូវចូលប្រើប្រាស់គណនីជាមុនសិន។"),
+            title: Text(l10n.loginRequired),
+            content: Text(l10n.loginRequiredMessage),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text(
-                    "មើលសិន", style: TextStyle(color: Colors.grey)),
+                child: Text(
+                    l10n.browseOnly, style: const TextStyle(color: Colors.grey)),
               ),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
@@ -495,9 +497,9 @@ String? name;
                   Navigator.pop(context);
                   Navigator.pushNamed(context, '/login');
                 },
-                child: const Text(
-                  "ទៅ Login",
-                  style: TextStyle(color: Colors.white),
+                child: Text(
+                  l10n.goToLogin,
+                  style: const TextStyle(color: Colors.white),
                 ),
               ),
             ],
@@ -507,6 +509,7 @@ String? name;
 
 
   Widget _navBtn(IconData icon, int index, bool isGuest) {
+    final l10n = AppLocalizations.of(context);
     final currentUserId = FirebaseAuth.instance.currentUser?.uid;
 
 
@@ -514,16 +517,16 @@ String? name;
     String label = "";
     switch (index) {
       case 0:
-        label = "ទំព័រដើម";
+        label = l10n.home;
         break;
       case 1:
-        label = "កន្ត្រក";
+        label = l10n.cart;
         break;
       case 3:
-        label = "ឆាត";
+        label = l10n.chat;
         break;
       case 4:
-        label = "គណនី";
+        label = l10n.account;
         break;
     }
 
@@ -615,6 +618,7 @@ String? name;
 
 
   Widget _buildMainHome() {
+    final l10n = AppLocalizations.of(context);
     return DefaultTabController(
       length: 3,
       child: Builder(
@@ -658,9 +662,9 @@ String? name;
                                   .spaceBetween,
                               // រុញអក្សរទៅឆ្វេង ប៊ូតុងទៅស្តាំ
                               children: [
-                                const Text(
-                                  "ប្រភេទផលិតផល",
-                                  style: TextStyle(
+                                Text(
+                                  l10n.productCategories,
+                                  style: const TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
                                     fontFamily: 'Siemreap',
@@ -708,9 +712,9 @@ String? name;
                                           color: Colors.white,
                                         ),
                                         const SizedBox(width: 5),
-                                        const Text(
-                                          'ចូលដេញថ្លៃ',
-                                          style: TextStyle(
+                                        Text(
+                                          l10n.openAuction,
+                                          style: const TextStyle(
                                             color: Colors.white,
                                             fontWeight: FontWeight.w700,
                                             fontSize: 12,
@@ -736,11 +740,11 @@ String? name;
                             unselectedLabelColor: Colors.grey,
                             indicatorColor: Colors.green,
                             indicatorWeight: 3,
-                            tabs: const [
+                            tabs: [
                               Tab(
                                 child: Text(
-                                  "ទំនិញថ្មីៗ",
-                                  style: TextStyle(
+                                  l10n.latestProducts,
+                                  style: const TextStyle(
                                     fontFamily: 'Siemreap',
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -748,8 +752,8 @@ String? name;
                               ),
                               Tab(
                                 child: Text(
-                                  "លក់មុន",
-                                  style: TextStyle(
+                                  l10n.preOrder,
+                                  style: const TextStyle(
                                     fontFamily: 'Siemreap',
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -757,8 +761,8 @@ String? name;
                               ),
                               Tab(
                                 child: Text(
-                                  "ប្រកាសទិញ",
-                                  style: TextStyle(
+                                  l10n.wanted,
+                                  style: const TextStyle(
                                     fontFamily: 'Siemreap',
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -821,9 +825,9 @@ String? name;
                           );
                         }
                       },
-                      label: const Text(
-                        "ប្រកាសទិញ",
-                        style: TextStyle(fontFamily: 'Siemreap'),
+                      label: Text(
+                        l10n.postWanted,
+                        style: const TextStyle(fontFamily: 'Siemreap'),
                       ),
                       icon: const Icon(Icons.campaign),
                       backgroundColor: Colors.blue[700],
@@ -838,7 +842,7 @@ String? name;
                 builder: (context, child) {
                   if (tabController.index == 2) {
                     return _buildFloatingBtn(
-                      "ប្រកាសទិញ",
+                      l10n.postWanted,
                       Icons.campaign,
                       Colors.blue[700]!,
                       const AddWantedScreen(),
@@ -846,7 +850,7 @@ String? name;
                   } else if (tabController.index == 1) {
                     // 🎯 បង្ហាញប៊ូតុង "ចុះឈ្មោះលក់មុន" ពេលនៅ Tab ទី ៣
                     return _buildFloatingBtn(
-                      "ចុះឈ្មោះលក់មុន",
+                      l10n.registerPreOrder,
                       Icons.timer_outlined,
                       Colors.orange[800]!,
                       const AddPreOrderScreen(),
@@ -892,6 +896,7 @@ String? name;
 
 
   Widget _buildCategoryGrid() {
+    final l10n = AppLocalizations.of(context);
     // 🎯 ១. ឆែកមើលទំហំអេក្រង់ជាមុន
     double screenWidth = MediaQuery
         .of(context)
@@ -947,7 +952,7 @@ String? name;
               ),
               const SizedBox(height: 8),
               Text(
-                item['name'],
+                _localizedCategoryName(l10n, item['name']),
                 style: TextStyle(
                   fontSize: isDesktop
                       ? 13
@@ -966,6 +971,21 @@ String? name;
     );
   }
 
+  String _localizedCategoryName(AppLocalizations l10n, String category) {
+    switch (category) {
+      case 'ទាំងអស់': return l10n.all;
+      case 'គ្រឿងចក្រ': return l10n.machinery;
+      case 'សម្ភារៈកសិកម្ម': return l10n.farmSupplies;
+      case 'ពូជដំណាំ': return l10n.cropSeeds;
+      case 'ពូជសត្វចិញ្ចឹម': return l10n.livestockBreeds;
+      case 'ជីនិងថ្នាំ': return l10n.fertilizersAndChemicals;
+      case 'បន្លែផ្លែឈើ': return l10n.fruitsAndVegetables;
+      case 'ត្រីសាច់': return l10n.fishAndMeat;
+      case 'សេវាកម្ម': return l10n.services;
+      default: return l10n.other;
+    }
+  }
+
 
   // ✅ ដាក់កូដនេះនៅទីនេះ (ក្នុង class _HomeScreenState)
   void _checkAndRequestPermission() async {
@@ -978,14 +998,15 @@ String? name;
     var status = await Permission.notification.status;
     if (status.isDenied || status.isPermanentlyDenied) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context);
         showDialog(
           context: context,
           barrierDismissible: false,
           builder: (context) =>
               AlertDialog(
-                title: Text("បើកការជូនដំណឹង"),
+                title: Text(l10n.enableNotifications),
                 content: Text(
-                  "ដើម្បីទទួលបានសារកម្ម៉ង់ភ្លាមៗ សូមមេចុច 'បើក' រួច Switch លើពាក្យ 'Allow notifications' ផង!",
+                  l10n.notificationPermissionMessage,
                 ),
                 actions: [
                   TextButton(
@@ -993,7 +1014,7 @@ String? name;
                       Navigator.pop(context);
                       prefs.setBool('has_shown_notification_dialog', true);
                     },
-                    child: Text("ក្រោយមក"),
+                    child: Text(l10n.later),
                   ),
                   ElevatedButton(
                     onPressed: () async {
@@ -1001,7 +1022,7 @@ String? name;
                       prefs.setBool('has_shown_notification_dialog', true);
                       await openAppSettings();
                     },
-                    child: Text("ទៅបើកឥឡូវនេះ"),
+                    child: Text(l10n.enableNow),
                   ),
                 ],
               ),
