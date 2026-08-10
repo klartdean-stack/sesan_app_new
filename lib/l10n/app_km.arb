@@ -89,5 +89,11 @@
   "comments": "មតិយោបល់",
   "noProductData": "មិនមានទិន្នន័យផលិតផល",
   "addToCart": "ដាក់កន្ត្រក់",
-  "buyNow": "ទិញឥឡូវ"
+  "buyNow": "ទិញឥឡូវ",
+  "settings": "ការកំណត់",
+  "language": "ភាសា",
+  "chooseAppLanguage": "ជ្រើសរើសភាសាដែលប្រើនៅក្នុង Sesan App។",
+  "khmerLanguageDescription": "ប្រើប្រាស់ Sesan App ជាភាសាខ្មែរ",
+  "englishLanguageDescription": "ប្រើប្រាស់ Sesan App ជាភាសាអង់គ្លេស",
+  "languageChanged": "បានប្ដូរភាសាដោយជោគជ័យ"
 }
