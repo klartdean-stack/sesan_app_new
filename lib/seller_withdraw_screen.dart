@@ -28,6 +28,9 @@ class _SellerWithdrawScreenState extends State<SellerWithdrawScreen> {
   bool _isLoading = false;
   double _canWithdraw = 0;
 
+  String _t(String km, String en) =>
+      Localizations.localeOf(context).languageCode == 'en' ? en : km;
+
 
   @override
   void initState() {
@@ -69,13 +72,13 @@ class _SellerWithdrawScreenState extends State<SellerWithdrawScreen> {
               // 🛡️ ឆែកមើលថា តើគាត់បានបំពេញព័ត៌មានធនាគារក្នុង Profile ហើយឬនៅ?
               if (userData['bank_account_number'] == null || userData['password'] == null) {
                 return AlertDialog(
-                  title: const Text("ព័ត៌មានមិនទាន់គ្រប់គ្រាន់", style: TextStyle(fontFamily: 'KHMEROS')),
-                  content: const Text("សូមបំពេញព័ត៌មានធនាគារ និងលេខសម្ងាត់ ៦ ខ្ទង់ ជាមុនសិន ទើបអាចដកប្រាក់បាន។"),
+                  title: Text(_t("ព័ត៌មានមិនទាន់គ្រប់គ្រាន់", "Information required"), style: const TextStyle(fontFamily: 'KHMEROS')),
+                  content: Text(_t("សូមបំពេញព័ត៌មានធនាគារ និងលេខសម្ងាត់ ៦ ខ្ទង់ ជាមុនសិន ទើបអាចដកប្រាក់បាន។", "Please add your bank details and 6-digit password before requesting a withdrawal.")),
                   actions: [
                     // ប៊ូតុងបោះបង់
                     TextButton(
                       onPressed: () => Navigator.pop(context),
-                      child: const Text("បោះបង់", style: TextStyle(color: Colors.grey)),
+                      child: Text(_t("បោះបង់", "Cancel"), style: const TextStyle(color: Colors.grey)),
                     ),
                     // ប៊ូតុងដែលនឹងនាំទៅកាន់ទំព័រ Profile ផ្ទាល់តែម្តង
                     ElevatedButton(
@@ -92,7 +95,7 @@ class _SellerWithdrawScreenState extends State<SellerWithdrawScreen> {
                           ),
                         );
                       },
-                      child: const Text("ទៅបំពេញព័ត៌មាន", style: TextStyle(color: Colors.white)),
+                      child: Text(_t("ទៅបំពេញព័ត៌មាន", "Complete profile"), style: const TextStyle(color: Colors.white)),
                     ),
                   ],
                 );
@@ -101,7 +104,7 @@ class _SellerWithdrawScreenState extends State<SellerWithdrawScreen> {
               return StatefulBuilder(
                   builder: (context, setDialogState) => AlertDialog(
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                      title: const Text("បញ្ជាក់ការដកប្រាក់", style: TextStyle(fontFamily: 'Siemreap', fontWeight: FontWeight.bold)),
+                      title: Text(_t("បញ្ជាក់ការដកប្រាក់", "Confirm withdrawal"), style: const TextStyle(fontFamily: 'Siemreap', fontWeight: FontWeight.bold)),
                       content: SingleChildScrollView(
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
@@ -117,7 +120,7 @@ class _SellerWithdrawScreenState extends State<SellerWithdrawScreen> {
                               ),
                             ),
                             const SizedBox(height: 20),
-                            const Text("បញ្ចូលលេខសម្ងាត់ ៦ ខ្ទង់"),
+                            Text(_t("បញ្ចូលលេខសម្ងាត់ ៦ ខ្ទង់", "Enter your 6-digit password")),
                             const SizedBox(height: 10),
                             TextField(
                               controller: pinController,
@@ -135,7 +138,7 @@ class _SellerWithdrawScreenState extends State<SellerWithdrawScreen> {
                         ),
                       ),
                       actions: [
-                      TextButton(onPressed: () => Navigator.pop(context), child: const Text("បោះបង់")),
+                      TextButton(onPressed: () => Navigator.pop(context), child: Text(_t("បោះបង់", "Cancel"))),
               ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
               onPressed: isSubmitting ? null : () async {
@@ -160,15 +163,15 @@ class _SellerWithdrawScreenState extends State<SellerWithdrawScreen> {
 
               Navigator.pop(context);
               _amountController.clear();
-              _showSnackBar("✅ សំណើដកប្រាក់ត្រូវបានបញ្ជូន!");
+              _showSnackBar(_t("✅ សំណើដកប្រាក់ត្រូវបានបញ្ជូន!", "✅ Withdrawal request submitted!"));
               } catch (e) {
-                _showSnackBar("❌ កំហុសបច្ចេកទេស៖ $e", isError: true);
+                _showSnackBar(_t("❌ កំហុសបច្ចេកទេស៖ $e", "❌ Technical error: $e"), isError: true);
               }
               } else {
-                _showSnackBar("❌ លេខសម្ងាត់មិនត្រឹមត្រូវ!", isError: true);
+                _showSnackBar(_t("❌ លេខសម្ងាត់មិនត្រឹមត្រូវ!", "❌ Incorrect password!"), isError: true);
               }
               },
-                child: isSubmitting ? const CircularProgressIndicator(color: Colors.white) : const Text("យល់ព្រម"),
+                child: isSubmitting ? const CircularProgressIndicator(color: Colors.white) : Text(_t("យល់ព្រម", "Confirm")),
               ),
                       ],
                   ),
@@ -202,9 +205,9 @@ class _SellerWithdrawScreenState extends State<SellerWithdrawScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text(
-          "ដកប្រាក់ចំណូល",
-          style: TextStyle(fontFamily: 'Siemreap'),
+        title: Text(
+          _t("ដកប្រាក់ចំណូល", "Withdraw earnings"),
+          style: const TextStyle(fontFamily: 'Siemreap'),
         ),
         centerTitle: true,
         elevation: 0,
@@ -220,7 +223,7 @@ class _SellerWithdrawScreenState extends State<SellerWithdrawScreen> {
           if (snapshot.connectionState == ConnectionState.waiting)
             return const Center(child: CircularProgressIndicator());
           if (!snapshot.hasData || !snapshot.data!.exists)
-            return const Center(child: Text("រកមិនឃើញគណនី"));
+            return Center(child: Text(_t("រកមិនឃើញគណនី", "Account not found")));
 
 
           var data = snapshot.data!.data() as Map<String, dynamic>? ?? {};
@@ -252,9 +255,9 @@ class _SellerWithdrawScreenState extends State<SellerWithdrawScreen> {
                   ),
                   child: Column(
                     children: [
-                      const Text(
-                        "សមតុល្យដែលអាចដកបាន",
-                        style: TextStyle(
+                      Text(
+                        _t("សមតុល្យដែលអាចដកបាន", "Available to withdraw"),
+                        style: const TextStyle(
                           color: Colors.white70,
                           fontFamily: 'Siemreap',
                         ),
@@ -272,9 +275,9 @@ class _SellerWithdrawScreenState extends State<SellerWithdrawScreen> {
                   ),
                 ),
                 const SizedBox(height: 40),
-                const Text(
-                  "ចំនួនទឹកប្រាក់ដែលចង់ដក",
-                  style: TextStyle(
+                Text(
+                  _t("ចំនួនទឹកប្រាក់ដែលចង់ដក", "Withdrawal amount"),
+                  style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontFamily: 'Siemreap',
                   ),
@@ -333,14 +336,14 @@ class _SellerWithdrawScreenState extends State<SellerWithdrawScreen> {
                       if (amount < 5000) {
                         // កំណត់ឱ្យដកយ៉ាងតិច ៥ពាន់
                         _showSnackBar(
-                          "⚠️ ចំនួនដកត្រូវតែចាប់ពី ៥,០០០៛ ឡើងទៅ",
+                          _t("⚠️ ចំនួនដកត្រូវតែចាប់ពី ៥,០០០៛ ឡើងទៅ", "⚠️ The minimum withdrawal is 5,000 riel"),
                           isError: true,
                         );
                         return;
                       }
                       if (amount > _canWithdraw) {
                         _showSnackBar(
-                          "⚠️ លុយក្នុងកាបូបមិនគ្រប់គ្រាន់ទេ!",
+                          _t("⚠️ លុយក្នុងកាបូបមិនគ្រប់គ្រាន់ទេ!", "⚠️ Insufficient wallet balance!"),
                           isError: true,
                         );
                         return;
@@ -354,9 +357,9 @@ class _SellerWithdrawScreenState extends State<SellerWithdrawScreen> {
                       ),
                       elevation: 0,
                     ),
-                    child: const Text(
-                      "បញ្ជាក់ការដកប្រាក់",
-                      style: TextStyle(
+                    child: Text(
+                      _t("បញ្ជាក់ការដកប្រាក់", "Confirm withdrawal"),
+                      style: const TextStyle(
                         fontSize: 18,
                         color: Colors.white,
                         fontFamily: 'Siemreap',

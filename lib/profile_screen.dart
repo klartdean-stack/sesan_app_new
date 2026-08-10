@@ -1418,6 +1418,7 @@ class AboutMeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: const Color(0xFFF0F4F0),
       body: CustomScrollView(
@@ -1476,9 +1477,9 @@ class AboutMeScreen extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 14),
-                      const Text(
-                        'សេសាន',
-                        style: TextStyle(
+                      Text(
+                        l10n.sesan,
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 28,
                           fontWeight: FontWeight.w800,
@@ -1499,9 +1500,9 @@ class AboutMeScreen extends StatelessWidget {
                             color: Colors.white.withOpacity(0.3),
                           ),
                         ),
-                        child: const Text(
-                          'ដើម្បីកសិករខ្មែរ • For Khmer Farmers',
-                          style: TextStyle(
+                        child: Text(
+                          l10n.forKhmerFarmers,
+                          style: const TextStyle(
                             color: Colors.white70,
                             fontSize: 12,
                             fontFamily: 'Siemreap',
@@ -1519,17 +1520,14 @@ class AboutMeScreen extends StatelessWidget {
               padding: const EdgeInsets.all(20),
               child: Column(
                 children: [
-                  _buildQuoteCard(),
+                  _buildQuoteCard(l10n),
                   const SizedBox(height: 20),
 
 
                   _buildCard(
                     emoji: '🌾',
-                    title: 'ដីស្រែ — ទ្រព្យសម្បត្តិមហាសាល',
-                    content:
-                    'កម្ពុជាជាប្រទេសកសិកម្ម — យើងមានដីដ៏សម្បូរបែប មានប្រភពទឹកគ្រប់គ្រាន់ និងពន្លឺថ្ងៃចែងចាំងពេញមួយឆ្នាំ។\n\n'
-                        'ប៉ុន្តែហេតុអ្វីបានជាយើងនៅតែនាំចូលសូម្បីតែ ស្លឹកគ្រៃ ខ្ទឹមស ជីដំណាំ ឬសម្ភារកសិកម្មពីបរទេស? ហេតុអ្វីក្រុមហ៊ុនបរទេសមកបើកកសិដ្ឋានចិញ្ចឹមសត្វខ្នាតធំលើដីខ្មែរ ហើយប្រាក់ចំណេញហូរត្រឡប់ទៅប្រទេសគេអស់?\n\n'
-                        'ចំណែកឯកូនខ្មែរដែលកើតលើដីស្រែ បែរជាត្រូវចំណាកស្រុកទៅធ្វើពលករឱ្យគេ ដើម្បីធ្វើស្រែចម្ការលើដីអ្នកដទៃទៅវិញ?',
+                    title: l10n.aboutLandTitle,
+                    content: l10n.aboutLandContent,
                     color: const Color(0xFF1B5E20),
                   ),
                   const SizedBox(height: 16),
@@ -1537,11 +1535,8 @@ class AboutMeScreen extends StatelessWidget {
 
                   _buildCard(
                     emoji: '👨‍🌾',
-                    title: 'កសិករ — អ្នកផ្ដល់ដង្ហើមជីវិត',
-                    content:
-                    'រាល់អាហារដែលយើងទទួលទានរាល់ថ្ងៃ សុទ្ធតែចេញពីកម្លាំងញើសឈាមរបស់កសិករ។ មិនថាអង្ករ បន្លែ ត្រី សាច់ គឺកសិករជាអ្នកហាលក្ដៅហាលភ្លៀង ដើម្បីផ្គត់ផ្គង់ដល់យើងគ្រប់គ្នា។\n\n'
-                        'ប៉ុន្តែហេតុអ្វីអ្នកផលិតអាហារទ្រទ្រង់ជីវិត បែរជាត្រូវរស់ក្នុងភាពក្រីក្រ និងមានបំណុលវណ្ឌក? ហេតុអ្វីអ្នកជួញដូរកណ្តាលដែលមិនបាននឿយហត់ក្នុងស្រែ បែរជាមានជីវភាពធូរធារជាង?\n\n'
-                        'នេះគឺជាភាពអយុត្តិធម៌ក្នុងខ្សែសង្វាក់ផលិតកម្ម ដែលយើងត្រូវរួមគ្នាផ្លាស់ប្ដូរ។',
+                    title: l10n.aboutFarmersTitle,
+                    content: l10n.aboutFarmersContent,
                     color: const Color(0xFFE65100),
                   ),
                   const SizedBox(height: 16),
@@ -1549,10 +1544,8 @@ class AboutMeScreen extends StatelessWidget {
 
                   _buildCard(
                     emoji: '💚',
-                    title: 'តម្លៃនៃកម្លាំងញើសឈាម',
-                    content:
-                    'បងប្អូនកសិករទាំងអស់ — ការងាររបស់បងប្អូនមានតម្លៃខ្ពង់ខ្ពស់បំផុត ព្រោះបងប្អូនគឺជាអ្នកចិញ្ចឹមមនុស្សលោក។ បើគ្មានបងប្អូនទេ ទោះយើងមានលុយច្រើនប៉ុណ្ណា ក៏មិនអាចរស់បានដែរ។\n\n'
-                        'ដោយសារយើងយល់ច្បាស់ពីតម្លៃនៃជំហានពីដីស្រែ ដល់តុអាហារ ទើបយើងបង្កើត "សេសាន" ឡើង ដើម្បីជាស្ពានតភ្ជាប់រវាងអ្នកផលិត និងអ្នកប្រើប្រាស់ដោយផ្ទាល់។',
+                    title: l10n.aboutWorkValueTitle,
+                    content: l10n.aboutWorkValueContent,
                     color: const Color(0xFF1565C0),
                   ),
                   const SizedBox(height: 16),
@@ -1560,13 +1553,8 @@ class AboutMeScreen extends StatelessWidget {
 
                   _buildCard(
                     emoji: '🎯',
-                    title: 'សេសាន — គោលបំណងរបស់យើង',
-                    content:
-                    'យើងមិនបង្កើត App នេះឡើងដើម្បីតែផលចំណេញផ្ទាល់ខ្លួននោះទេ។ យើងបង្កើតសេសានដើម្បី៖\n\n'
-                        '✦ ឱ្យកសិករអាចលក់ផលិតផលបានដោយផ្ទាល់ មិនបាច់ឆ្លងកាត់ឈ្មួញកណ្ដាលដែលកេងចំណេញហួសហេតុ\n\n'
-                        '✦ ឱ្យអ្នកទិញទទួលបានផលិតផលស្រស់ៗពីចម្ការ ក្នុងតម្លៃសមរម្យ និងមានសុវត្ថិភាព\n\n'
-                        '✦ រក្សាប្រាក់ចំណេញឱ្យនៅស្ថិតក្នុងដៃកសិករខ្មែរ ដើម្បីពង្រឹងសេដ្ឋកិច្ចគ្រួសារ និងសង្គមជាតិ\n\n'
-                        '✦ លើកកម្ពស់កសិកម្មខ្មែរ ឱ្យក្លាយជាមោទនភាពជាតិពិតប្រាកដ។',
+                    title: l10n.aboutMissionTitle,
+                    content: l10n.aboutMissionContent,
                     color: const Color(0xFF6A1B9A),
                   ),
                   const SizedBox(height: 16),
@@ -1574,10 +1562,8 @@ class AboutMeScreen extends StatelessWidget {
 
                   _buildCard(
                     emoji: '🙏',
-                    title: 'សេចក្ដីថ្លែងអំណរគុណ',
-                    content:
-                    'សូមអរគុណដល់បងប្អូនកសិករគ្រប់រូប ដែលភ្ញាក់ពីព្រលឹម ចុះស្រែចុះចម្ការ ដើម្បីផ្ដល់ចំណីអាហារដល់ប្រជាជនទូទាំងប្រទេស។\n\n'
-                        'បងប្អូនគឺជាវីរជនលាក់មុខដែលទ្រទ្រង់សេដ្ឋកិច្ចជាតិ។ "សេសាន" នឹងនៅក្បែរបងប្អូនជានិច្ច ដើម្បីការពារផលប្រយោជន៍ និងតម្លៃនៃកម្លាំងពលកម្មរបស់បងប្អូន។',
+                    title: l10n.aboutThanksTitle,
+                    content: l10n.aboutThanksContent,
                     color: const Color(0xFF2E7D32),
                   ),
                   const SizedBox(height: 30),
@@ -1592,8 +1578,8 @@ class AboutMeScreen extends StatelessWidget {
                             color: const Color(0xFF2E7D32).withOpacity(0.2),
                           ),
                         ),
-                        child: const Text(
-                          '"ដីខ្មែរ ដៃខ្មែរ ផលិតផលខ្មែរ ដល់ចានបាយខ្មែរ"\n\nសេសាន — កសិ-បច្ចេកវិទ្យា ដើម្បីអនាគតកសិករខ្មែរ',
+                        child: Text(
+                          l10n.aboutSlogan,
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 14,
@@ -1623,7 +1609,7 @@ class AboutMeScreen extends StatelessWidget {
   }
 
 
-  Widget _buildQuoteCard() {
+  Widget _buildQuoteCard(AppLocalizations l10n) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
@@ -1646,10 +1632,10 @@ class AboutMeScreen extends StatelessWidget {
         children: [
           const Text('❓', style: TextStyle(fontSize: 32)),
           const SizedBox(height: 12),
-          const Text(
-            'ហេតុអ្វីប្រទេសកសិកម្ម\nនៅតែត្រូវការនាំចូល\nផលិតផលកសិកម្ម?',
+          Text(
+            l10n.aboutQuestion,
             textAlign: TextAlign.center,
-            style: TextStyle(
+            style: const TextStyle(
               color: Colors.white,
               fontSize: 20,
               fontWeight: FontWeight.w800,
@@ -1660,10 +1646,10 @@ class AboutMeScreen extends StatelessWidget {
           const SizedBox(height: 12),
           Container(height: 2, width: 60, color: Colors.white38),
           const SizedBox(height: 12),
-          const Text(
-            'សំណួរដ៏សាមញ្ញមួយនេះហើយ\nដែលជំរុញឱ្យយើងបង្កើត "សេសាន"',
+          Text(
+            l10n.aboutQuestionAnswer,
             textAlign: TextAlign.center,
-            style: TextStyle(
+            style: const TextStyle(
               color: Colors.white70,
               fontSize: 13,
               fontFamily: 'Siemreap',

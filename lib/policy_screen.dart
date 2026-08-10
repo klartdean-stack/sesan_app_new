@@ -37,6 +37,60 @@ class _PolicyScreenState extends State<PolicyScreen> {
 
   static const _currentVersion = '2026.04.21';
 
+  bool get _isEnglish =>
+      Localizations.localeOf(context).languageCode == 'en';
+
+  String _t(String km, String en) => _isEnglish ? en : km;
+
+  static const List<String> _englishTitles = [
+    'Acceptance of the agreement and legal validity',
+    'Protection of financial transactions',
+    'Service fees and payment conditions',
+    'Seller responsibilities and legal penalties',
+    'Data privacy and dispute resolution',
+    'Logistics and delivery risks',
+    'Control of information and market prices',
+    'Account suspension and penalties',
+    'Intellectual property and platform identity',
+    'Force majeure',
+    'Anti-money laundering and unlawful activity',
+    'Amendments and validity of provisions',
+    'Digital records and evidence',
+    'Invalid transactions',
+    'Product-quality disclaimer',
+    'Auction conditions',
+  ];
+
+  static const List<String> _englishContents = [
+    'Accessing Sesan or placing an order constitutes legal acceptance of this electronic agreement.\n\n• Users must comply with every stated condition.\n• Users remain legally responsible for violations.\n• Continued use after an update constitutes acceptance of the updated terms.',
+    'For payment security and fraud prevention, customers must use the Sesan cart and the payment methods provided inside the app.\n\n• Transaction funds are kept in a protected system.\n• A customer may file a complaint and request a hold within 4 days when an item materially differs from its listing.\n• Sesan is not responsible for losses or disputes arising from transactions completed outside the platform.',
+    '• Standard fee: Sesan deducts a 7% management fee from orders completed through the cart.\n• Zero-fee option: sellers of high-value products may disable the cart and arrange a direct purchase.\n• A grey cart button means online checkout is disabled; contact the seller by chat.\n• Platform payments remain pending for 5 days.\n• If no complaint is filed during the first 4 days, funds become available to the seller on day 6.\n• Cancelled payments are refunded after applicable administrative charges.',
+    '• Sellers must provide accurate product information and deliver the quality advertised.\n• False information or fabricated evidence is a serious violation.\n• Sesan may permanently suspend an account and refer conduct for action under applicable Cambodian civil and criminal law.',
+    '• Personal information is kept confidential and handled according to applicable privacy requirements.\n• Sesan Admin reviews platform disputes using transaction records and submitted evidence.\n• Users may still exercise any rights available to them under Cambodian law.',
+    '• Delivery time, cost and method must be clearly agreed by the buyer and seller.\n• Responsibility for loss or damage follows the selected delivery arrangement and available evidence.\n• Buyers should inspect the parcel promptly and report a problem within the complaint period.',
+    '• Sesan may moderate, correct or remove misleading, unlawful or harmful listings.\n• Sellers remain responsible for their own prices and product claims.\n• Manipulation of prices, reviews or platform data is prohibited.',
+    '• Sesan may temporarily freeze an account or transaction while investigating fraud, abuse, chargebacks or policy violations.\n• Serious or repeated violations may lead to permanent suspension and financial or legal consequences.\n• Users may contact support and provide evidence for review.',
+    '• Users may upload only content they own or are legally allowed to use.\n• Copying another person’s images, text, trademarks or other protected work is prohibited.\n• The Sesan name and marks may not be used to mislead the public or obtain unauthorized benefit.',
+    'Sesan is not liable for failure or delay caused by events outside reasonable control, including natural disasters, armed conflict, major power or telecommunications outages, cyberattacks, epidemics or national emergencies. Sesan will notify users where practical and work to restore service promptly.',
+    '• Sesan wallets and services must not be used for money laundering, terrorist financing or any unlawful activity.\n• Suspicious accounts may be suspended immediately and reported to competent authorities.\n• Sesan will cooperate with a lawful official investigation.',
+    '• Sesan may amend these terms when necessary and notify users through the app, notification or email.\n• Continued use after an amendment constitutes acceptance of the new terms.\n• If one provision is invalid, the remaining provisions continue in full force.',
+    '• Product photos, parcel-opening videos, chat history and transaction records may be used as digital evidence in a dispute.\n• Delivery staff and recipients are encouraged to record the handover.\n• Clear digital evidence will be considered during dispute resolution.',
+    '• Admin may invalidate a fraudulent transaction or one that exploits the platform.\n• A refund may be issued to the buyer, less applicable administrative charges, within 7 working days.\n• A fraudulent seller remains responsible for the amount, fees and resulting losses.',
+    'Sesan provides a marketplace and transaction-facilitation service. It does not independently guarantee the quality, safety or legality of products posted by sellers. Product-related loss remains a matter between buyer and seller under applicable law, although Sesan may assist with dispute resolution.',
+    '• A confirmed bid cannot be withdrawn.\n• The winner must pay within 24 hours after the auction ends or the result may be cancelled.\n• Auction listing fees—15,000 KHR for 48 hours or 25,000 KHR for Premium 72 hours—are non-refundable.\n• Admin may remove an auction that violates policy without refunding the listing fee.\n• The seller and winner must coordinate payment and delivery within the required time.',
+  ];
+
+  List<Map<String, dynamic>> get _localizedSections {
+    if (!_isEnglish) return _sections;
+    return List.generate(_sections.length, (index) {
+      final section = Map<String, dynamic>.from(_sections[index]);
+      section['number'] = '${index + 1}';
+      section['title'] = _englishTitles[index];
+      section['content'] = _englishContents[index];
+      return section;
+    });
+  }
+
 
   @override
   void initState() {
@@ -395,7 +449,7 @@ class _PolicyScreenState extends State<PolicyScreen> {
 
   void _filterSections(String query) {
     setState(() {
-      _filteredSections = _sections
+      _filteredSections = _localizedSections
           .where(
             (s) =>
         s['title'].toString().contains(query) ||
@@ -437,7 +491,10 @@ class _PolicyScreenState extends State<PolicyScreen> {
                   const SizedBox(height: 16),
                   _buildWarningCard(),
                   const SizedBox(height: 20),
-                  ..._filteredSections.map(_buildSectionCard),
+                  ...(_searchController.text.isEmpty
+                          ? _localizedSections
+                          : _filteredSections)
+                      .map(_buildSectionCard),
                   const SizedBox(height: 20),
                   _buildFooter(),
                   const SizedBox(height: 30),
@@ -458,9 +515,9 @@ class _PolicyScreenState extends State<PolicyScreen> {
       elevation: 0,
       centerTitle: true,
       iconTheme: const IconThemeData(color: Colors.white),
-      title: const Text(
-        'គោលការណ៍ និងលក្ខខណ្ឌច្បាប់',
-        style: TextStyle(
+      title: Text(
+        _t('គោលការណ៍ និងលក្ខខណ្ឌច្បាប់', 'Policies and legal terms'),
+        style: const TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.bold,
           fontFamily: 'Siemreap',
@@ -477,7 +534,7 @@ class _PolicyScreenState extends State<PolicyScreen> {
             onChanged: _filterSections,
             style: const TextStyle(color: Colors.white),
             decoration: InputDecoration(
-              hintText: 'ស្វែងរកប្រការ...',
+              hintText: _t('ស្វែងរកប្រការ...', 'Search terms...'),
               hintStyle: TextStyle(color: Colors.white.withOpacity(0.6)),
               prefixIcon: Icon(
                 Icons.search,
@@ -518,7 +575,7 @@ class _PolicyScreenState extends State<PolicyScreen> {
           ),
           const SizedBox(height: 14),
           Text(
-            'លក្ខខណ្ឌប្រើប្រាស់ និងកិច្ចសន្យាផ្លូវច្បាប់',
+            _t('លក្ខខណ្ឌប្រើប្រាស់ និងកិច្ចសន្យាផ្លូវច្បាប់', 'Terms of use and legal agreement'),
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 17,
@@ -529,7 +586,7 @@ class _PolicyScreenState extends State<PolicyScreen> {
           ),
           const SizedBox(height: 4),
           Text(
-            'សេសាន (Sesan) — កសិ-បច្ចេកវិទ្យា',
+            _t('សេសាន (Sesan) — កសិ-បច្ចេកវិទ្យា', 'Sesan — Agricultural technology'),
             style: TextStyle(color: Colors.grey[600], fontSize: 12),
           ),
         ],
@@ -562,7 +619,7 @@ class _PolicyScreenState extends State<PolicyScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'ចំណាំសំខាន់',
+                  _t('ចំណាំសំខាន់', 'Important notice'),
                   style: TextStyle(
                     color: Colors.orange[800],
                     fontWeight: FontWeight.bold,
@@ -572,10 +629,10 @@ class _PolicyScreenState extends State<PolicyScreen> {
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  'សូមអានប្រការទាំង ១៦ ឱ្យចប់ '
-                      'មុនពេលចុចយល់ព្រម។ '
-                      'ការយល់ព្រមមានសុពលភាពតាមច្បាប់'
-                      'ជាធរមានរបស់ព្រះរាជាណាចក្រកម្ពុជា។',
+                  _t(
+                    'សូមអានប្រការទាំង ១៦ ឱ្យចប់ មុនពេលចុចយល់ព្រម។ ការយល់ព្រមមានសុពលភាពតាមច្បាប់ជាធរមានរបស់ព្រះរាជាណាចក្រកម្ពុជា។',
+                    'Please read all 16 sections before accepting. Your acceptance has legal effect under the applicable laws of Cambodia.',
+                  ),
                   style: TextStyle(
                     color: Colors.orange[700],
                     fontSize: 11,
@@ -623,7 +680,7 @@ class _PolicyScreenState extends State<PolicyScreen> {
           ),
         ),
         title: Text(
-          'ប្រការ ${section['number']}',
+          _t('ប្រការ ${section['number']}', 'Section ${section['number']}'),
           style: TextStyle(color: Colors.grey[500], fontSize: 11),
         ),
         subtitle: Text(
@@ -661,8 +718,7 @@ class _PolicyScreenState extends State<PolicyScreen> {
           Container(height: 1, color: Colors.green.withOpacity(0.2)),
           const SizedBox(height: 14),
           Text(
-            'ធ្វើបច្ចុប្បន្នភាពចុងក្រោយ៖ '
-                'ថ្ងៃទី ២១ ខែមេសា ឆ្នាំ ២០២៦',
+            _t('ធ្វើបច្ចុប្បន្នភាពចុងក្រោយ៖ ថ្ងៃទី ២១ ខែមេសា ឆ្នាំ ២០២៦', 'Last updated: 21 April 2026'),
             style: TextStyle(
               color: Colors.grey[500],
               fontSize: 12,
@@ -671,7 +727,7 @@ class _PolicyScreenState extends State<PolicyScreen> {
           ),
           const SizedBox(height: 5),
           Text(
-            '© 2026 Sesan Agriculture. រក្សាសិទ្ធិគ្រប់យ៉ាង',
+            _t('© 2026 Sesan Agriculture. រក្សាសិទ្ធិគ្រប់យ៉ាង', '© 2026 Sesan Agriculture. All rights reserved.'),
             style: TextStyle(color: Colors.grey[400], fontSize: 11),
           ),
         ],
@@ -719,7 +775,7 @@ class _PolicyScreenState extends State<PolicyScreen> {
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      'សូមរំកិលអានឱ្យចប់មុនពេលយល់ព្រម',
+                      _t('សូមរំកិលអានឱ្យចប់មុនពេលយល់ព្រម', 'Scroll to the end before accepting'),
                       style: TextStyle(
                         color: Colors.orange[700],
                         fontSize: 11,
@@ -744,9 +800,10 @@ class _PolicyScreenState extends State<PolicyScreen> {
                 ),
                 Expanded(
                   child: Text(
-                    'ខ្ញុំបានអាន និងយល់ព្រមលើប្រការទាំង ១៦ '
-                        'ហើយទទួលស្គាល់ទំនួលខុសត្រូវ'
-                        'ស្របតាមច្បាប់ជាធរមាន។',
+                    _t(
+                      'ខ្ញុំបានអាន និងយល់ព្រមលើប្រការទាំង ១៦ ហើយទទួលស្គាល់ទំនួលខុសត្រូវស្របតាមច្បាប់ជាធរមាន។',
+                      'I have read and accept all 16 sections and acknowledge my responsibilities under applicable law.',
+                    ),
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
@@ -782,9 +839,9 @@ class _PolicyScreenState extends State<PolicyScreen> {
                       size: 20,
                     ),
                     const SizedBox(width: 8),
-                    const Text(
-                      'បញ្ជាក់ការយល់ព្រម',
-                      style: TextStyle(
+                    Text(
+                      _t('បញ្ជាក់ការយល់ព្រម', 'Accept and continue'),
+                      style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
                         fontFamily: 'Siemreap',
@@ -817,7 +874,7 @@ class _PolicyScreenState extends State<PolicyScreen> {
 
       // ✅ ប្រសិនបើនៅតែគ្មាន UID ទេ បង្ហាញ Error
       if (uid == null || uid.isEmpty) {
-        throw Exception('មិនអាចកំណត់អត្តសញ្ញាណអ្នកប្រើប្រាស់បានទេ។ សូមចូលប្រើប្រាស់គណនីឡើងវិញ។');
+        throw Exception(_t('មិនអាចកំណត់អត្តសញ្ញាណអ្នកប្រើប្រាស់បានទេ។ សូមចូលប្រើប្រាស់គណនីឡើងវិញ។', 'Could not identify your account. Please sign in again.'));
       }
 
       final now = DateTime.now();
@@ -840,9 +897,9 @@ class _PolicyScreenState extends State<PolicyScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             backgroundColor: _lightGreen,
-            content: const Text(
-              '✅ បានយល់ព្រមដោយជោគជ័យ!',
-              style: TextStyle(fontFamily: 'Siemreap'),
+            content: Text(
+              _t('✅ បានយល់ព្រមដោយជោគជ័យ!', '✅ Terms accepted successfully!'),
+              style: const TextStyle(fontFamily: 'Siemreap'),
             ),
           ),
         );
@@ -854,7 +911,7 @@ class _PolicyScreenState extends State<PolicyScreen> {
           SnackBar(
             backgroundColor: Colors.redAccent,
             content: Text(
-              '❌ មានបញ្ហា: $e',
+              '${_t('❌ មានបញ្ហា', '❌ Error')}: $e',
               style: const TextStyle(fontFamily: 'Siemreap'),
             ),
           ),
@@ -916,7 +973,7 @@ class _PolicyScreenState extends State<PolicyScreen> {
             Icon(Icons.check_circle_rounded, color: _lightGreen, size: 64),
             const SizedBox(height: 20),
             Text(
-              'អ្នកបានយល់ព្រម\nលើលក្ខខណ្ឌរួចរាល់ហើយ',
+              _t('អ្នកបានយល់ព្រម\nលើលក្ខខណ្ឌរួចរាល់ហើយ', 'You have already accepted\nthese terms'),
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: _primaryGreen,
@@ -927,7 +984,7 @@ class _PolicyScreenState extends State<PolicyScreen> {
             ),
             const SizedBox(height: 10),
             Text(
-              'កំពុងបញ្ជូនទៅទំព័របន្ទាប់...',
+              _t('កំពុងបញ្ជូនទៅទំព័របន្ទាប់...', 'Taking you to the next page...'),
               style: TextStyle(color: Colors.grey[600], fontSize: 12),
             ),
           ],

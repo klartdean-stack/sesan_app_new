@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:my_app/otp_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'l10n/app_localizations.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -105,6 +106,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   // ─── រក្សាទុក Profile មូលដ្ឋាន (ឈ្មោះ, លេខទូរស័ព្ទ, រូបថត) ────────────
   Future<void> _saveBasicProfile() async {
+    final l10n = AppLocalizations.of(context)!;
     setState(() => _isLoading = true);
     try {
       String finalImageUrl = _currentImageUrl ?? '';
@@ -123,14 +125,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("✅ រក្សាទុក Profile ជោគជ័យ"),
+          SnackBar(content: Text(l10n.profileSaved),
               backgroundColor: Colors.green),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("❌ បញ្ហា: $e")));
+            SnackBar(content: Text(l10n.errorMessage(e.toString()))));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -139,6 +141,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   // ─── រក្សាទុកព័ត៌មានដកប្រាក់ ──────────
   Future<void> _saveWithdrawalInfo() async {
+    final l10n = AppLocalizations.of(context)!;
     if (!_formKey.currentState!.validate()) return;
 
     String idNumber = _idNumberController.text.trim();
@@ -148,8 +151,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     if (_storedNationalId != null && _storedNationalId!.isNotEmpty) {
       if (idNumber != _storedNationalId!.trim()) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text("លេខអត្តសញ្ញាណមិនត្រឹមត្រូវ មិនអាចកែប្រែបាន"),
+          SnackBar(
+              content: Text(l10n.invalidNationalIdLocked),
               backgroundColor: Colors.red),
         );
         return;
@@ -157,21 +160,21 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     } else {
       if (idNumber.isEmpty || idNumberConfirm.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("សូមបំពេញលេខអត្តសញ្ញាណឲ្យបានពីរដង"),
+          SnackBar(content: Text(l10n.enterNationalIdTwice),
               backgroundColor: Colors.red),
         );
         return;
       }
       if (idNumber != idNumberConfirm) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("លេខអត្តសញ្ញាណមិនត្រូវគ្នា"),
+          SnackBar(content: Text(l10n.nationalIdMismatch),
               backgroundColor: Colors.red),
         );
         return;
       }
       if (idNumber.length != 9) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("លេខអត្តសញ្ញាណត្រូវមាន ៩ ខ្ទង់"),
+          SnackBar(content: Text(l10n.nationalIdNineDigits),
               backgroundColor: Colors.red),
         );
         return;
@@ -206,14 +209,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("✅ រក្សាទុកព័ត៌មានដកប្រាក់ជោគជ័យ"),
+          SnackBar(content: Text(l10n.withdrawalInfoSaved),
               backgroundColor: Colors.green),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("❌ បញ្ហា: $e")));
+            SnackBar(content: Text(l10n.errorMessage(e.toString()))));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -222,6 +225,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   // ផ្លាស់ប្តូរលេខសម្ងាត់
   void _showChangePasswordDialog() {
+    final l10n = AppLocalizations.of(context)!;
     final oldPassController = TextEditingController();
     final newPassController = TextEditingController();
     final confirmPassController = TextEditingController();
@@ -231,22 +235,22 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       context: context,
       builder: (context) =>
           AlertDialog(
-            title: const Text("ប្ដូរលេខសម្ងាត់ ៦ ខ្ទង់",
-                style: TextStyle(fontFamily: 'KHMEROS')),
+            title: Text(l10n.changeSixDigitPassword,
+                style: const TextStyle(fontFamily: 'KHMEROS')),
             content: Form(
               key: formKeyDialog,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  _buildDialogInput(oldPassController, "លេខសម្ងាត់ចាស់"),
-                  _buildDialogInput(newPassController, "លេខសម្ងាត់ថ្មី"),
-                  _buildDialogInput(confirmPassController, "បញ្ជាក់លេខថ្មី"),
+                  _buildDialogInput(oldPassController, l10n.oldPassword),
+                  _buildDialogInput(newPassController, l10n.newPassword),
+                  _buildDialogInput(confirmPassController, l10n.confirmNewPassword),
                 ],
               ),
             ),
             actions: [
               TextButton(onPressed: () => Navigator.pop(context),
-                  child: const Text("បោះបង់")),
+                  child: Text(l10n.cancel)),
               ElevatedButton(
                 onPressed: () {
                   if (formKeyDialog.currentState!.validate()) {
@@ -259,8 +263,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 },
                 style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green[700]),
-                child: const Text(
-                    "រក្សាទុក", style: TextStyle(color: Colors.white)),
+                child: Text(
+                    l10n.save, style: const TextStyle(color: Colors.white)),
               ),
             ],
           ),
@@ -269,10 +273,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   Future<void> _updateTransactionPassword(String oldP, String newP,
       String confirmP) async {
+    final l10n = AppLocalizations.of(context)!;
     if (newP != confirmP) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text("❌ លេខថ្មីមិនស៊ីគ្នា"), backgroundColor: Colors.red),
+        SnackBar(
+            content: Text(l10n.newPasswordsMismatch), backgroundColor: Colors.red),
       );
       return;
     }
@@ -290,18 +295,18 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         });
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text("✅ ប្ដូរជោគជ័យ"), backgroundColor: Colors.green),
+          SnackBar(
+              content: Text(l10n.passwordChanged), backgroundColor: Colors.green),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("❌ លេខចាស់មិនត្រឹមត្រូវ"),
+          SnackBar(content: Text(l10n.oldPasswordIncorrect),
               backgroundColor: Colors.red),
         );
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("❌ បញ្ហា: $e")));
+          SnackBar(content: Text(l10n.errorMessage(e.toString()))));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -316,17 +321,20 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         maxLength: 6,
         obscureText: true,
         decoration: InputDecoration(labelText: label),
-        validator: (value) => value!.length < 6 ? "ត្រូវមាន ៦ ខ្ទង់" : null,
+        validator: (value) => value!.length < 6
+            ? AppLocalizations.of(context)!.passwordMustBeSixDigits
+            : null,
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text("កែប្រែព័ត៌មានផ្ទាល់ខ្លួន",
-            style: TextStyle(fontFamily: 'KHMEROS')),
+        title: Text(l10n.editPersonalInformation,
+            style: const TextStyle(fontFamily: 'KHMEROS')),
         backgroundColor: Colors.green[700],
       ),
       body: _isLoading
@@ -370,9 +378,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               ),
               const SizedBox(height: 30),
               // Basic info fields (no validation)
-              _buildInput(_nameController, "ឈ្មោះបង្ហាញ", Icons.person),
+              _buildInput(_nameController, l10n.displayName, Icons.person),
               _buildInput(
-                  _phoneController, "លេខទូរស័ព្ទ", Icons.phone, isNumber: true),
+                  _phoneController, l10n.phoneNumber, Icons.phone, isNumber: true),
               const SizedBox(height: 20),
 
               // Save Basic Profile button
@@ -385,8 +393,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10)),
                   ),
-                  child: const Text("រក្សាទុក Profile",
-                      style: TextStyle(color: Colors.white, fontSize: 16)),
+                  child: Text(l10n.saveProfile,
+                      style: const TextStyle(color: Colors.white, fontSize: 16)),
                 ),
               ),
 
@@ -395,24 +403,24 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               const SizedBox(height: 15),
 
               // Withdrawal info section
-              const Text("ព័ត៌មានសម្រាប់ដកប្រាក់ (បំពេញម្តងគត់)",
-                  style: TextStyle(
+              Text(l10n.withdrawalInformation,
+                  style: const TextStyle(
                       fontWeight: FontWeight.bold, color: Colors.blueGrey)),
               const SizedBox(height: 15),
 
               // Full name (required)
-              _buildInput(_fullNameKhController, "ឈ្មោះពិត (អក្សរឡាតាំង/ខ្មែរ)",
+              _buildInput(_fullNameKhController, l10n.legalFullName,
                   Icons.badge,
                   validator: (v) =>
                   (v == null || v
                       .trim()
-                      .isEmpty) ? "សូមបំពេញឈ្មោះពិត" : null),
+                      .isEmpty) ? l10n.enterLegalFullName : null),
 
               // Bank dropdown (required implicitly)
               DropdownButtonFormField<String>(
                 value: _selectedBank,
                 decoration: InputDecoration(
-                  labelText: "រើសធនាគារ",
+                  labelText: l10n.chooseBank,
                   prefixIcon: const Icon(
                       Icons.account_balance, color: Colors.green),
                   border: OutlineInputBorder(
@@ -427,16 +435,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               const SizedBox(height: 20),
 
               // Bank account number (required)
-              _buildInput(_bankAccountNumberController, "លេខគណនីធនាគារ (តែ ៛)",
+              _buildInput(_bankAccountNumberController, l10n.bankAccountNumber,
                   Icons.credit_card, isNumber: true,
                   validator: (v) =>
                   (v == null || v
                       .trim()
-                      .isEmpty) ? "សូមបំពេញលេខគណនី" : null),
+                      .isEmpty) ? l10n.enterBankAccountNumber : null),
 
               const SizedBox(height: 20),
-              const Text("លេខអត្តសញ្ញាណ (សម្រាប់សុវត្ថិភាព)",
-                  style: TextStyle(fontWeight: FontWeight.bold)),
+              Text(l10n.nationalIdForSecurity,
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 10),
               // National ID field
               TextFormField(
@@ -448,7 +456,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   LengthLimitingTextInputFormatter(9)
                 ],
                 decoration: InputDecoration(
-                  labelText: "លេខអត្តសញ្ញាណ (9 ខ្ទង់)",
+                  labelText: l10n.nationalIdNineDigitLabel,
                   prefixIcon: const Icon(Icons.credit_card),
                   counterText: "",
                   border: OutlineInputBorder(
@@ -460,17 +468,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     // Must match old ID
                     if (v == null || v
                         .trim()
-                        .isEmpty) return "សូមបញ្ចូលលេខអត្តសញ្ញាណចាស់";
+                        .isEmpty) return l10n.enterOldNationalId;
                     if (v.trim() != _storedNationalId!.trim())
-                      return "លេខអត្តសញ្ញាណមិនត្រឹមត្រូវ";
+                      return l10n.invalidNationalId;
                   } else {
                     // First time: must not be empty and 9 digits
                     if (v == null || v
                         .trim()
-                        .isEmpty) return "សូមបញ្ចូលលេខអត្តសញ្ញាណ";
+                        .isEmpty) return l10n.enterNationalId;
                     if (v
                         .trim()
-                        .length != 9) return "ត្រូវមាន ៩ ខ្ទង់";
+                        .length != 9) return l10n.nationalIdNineDigits;
                   }
                   return null;
                 },
@@ -487,7 +495,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     LengthLimitingTextInputFormatter(9)
                   ],
                   decoration: InputDecoration(
-                    labelText: "បញ្ជាក់លេខអត្តសញ្ញាណ",
+                    labelText: l10n.confirmNationalId,
                     prefixIcon: const Icon(Icons.credit_card),
                     counterText: "",
                     border: OutlineInputBorder(
@@ -496,16 +504,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   validator: (v) {
                     if (v == null || v
                         .trim()
-                        .isEmpty) return "សូមបញ្ជាក់លេខអត្តសញ្ញាណ";
+                        .isEmpty) return l10n.confirmNationalIdRequired;
                     if (v.trim() != _idNumberController.text.trim())
-                      return "មិនត្រូវគ្នា";
+                      return l10n.doesNotMatch;
                     return null;
                   },
                 ),
               ],
 
               const SizedBox(height: 20),
-              const Text("រូបភាព KHQR សម្រាប់ទទួលលុយ"),
+              Text(l10n.khqrForReceivingMoney),
               const SizedBox(height: 10),
               GestureDetector(
                 onTap: () async {
@@ -542,8 +550,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10)),
                   ),
-                  child: const Text("រក្សាទុកព័ត៌មានដកប្រាក់",
-                      style: TextStyle(color: Colors.white, fontSize: 16)),
+                  child: Text(l10n.saveWithdrawalInformation,
+                      style: const TextStyle(color: Colors.white, fontSize: 16)),
                 ),
               ),
 
@@ -554,7 +562,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               OutlinedButton.icon(
                 onPressed: _showChangePasswordDialog,
                 icon: const Icon(Icons.lock_outline),
-                label: const Text("ប្ដូរលេខសម្ងាត់ ៦ ខ្ទង់"),
+                label: Text(l10n.changeSixDigitPassword),
                 style: OutlinedButton.styleFrom(
                   minimumSize: const Size(double.infinity, 50),
                   foregroundColor: Colors.green[700],
@@ -568,7 +576,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   String phoneNumber = _phoneController.text.trim();
                   if (phoneNumber.isEmpty) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("សូមបំពេញលេខទូរស័ព្ទសិន!")),
+                      SnackBar(content: Text(l10n.enterPhoneFirst)),
                     );
                     return;
                   }
@@ -586,7 +594,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       Navigator.pop(context);
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text(
-                            "ផ្ញើសារមិនជោគជ័យ៖ ${e.message}")),
+                            l10n.smsFailed(e.message ?? ''))),
                       );
                     },
                     codeSent: (String verificationId, int? resendToken) {
@@ -607,8 +615,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     codeAutoRetrievalTimeout: (String verificationId) {},
                   );
                 },
-                child: const Text("ភ្លេចលេខសម្ងាត់? កំណត់ឡើងវិញតាម OTP",
-                    style: TextStyle(color: Colors.grey,
+                child: Text(l10n.forgotPasswordResetOtp,
+                    style: const TextStyle(color: Colors.grey,
                         fontSize: 14,
                         fontFamily: 'KHMEROS')),
               ),
