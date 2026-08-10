@@ -89,5 +89,11 @@
   "comments": "Comments",
   "noProductData": "Product data is unavailable",
   "addToCart": "Add to cart",
-  "buyNow": "Buy now"
+  "buyNow": "Buy now",
+  "settings": "Settings",
+  "language": "Language",
+  "chooseAppLanguage": "Choose the language used throughout Sesan App.",
+  "khmerLanguageDescription": "Use Sesan App in Khmer",
+  "englishLanguageDescription": "Use Sesan App in English",
+  "languageChanged": "Language changed successfully"
 }
