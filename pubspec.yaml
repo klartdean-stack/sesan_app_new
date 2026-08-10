@@ -64,7 +64,7 @@ dependencies:
   file_picker: ^8.0.5
   get: ^4.6.6
   permission_handler: ^11.3.1
-  screenshot: ^2.1.0
+  screenshot: 3.0.0
   geolocator: ^12.0.0
   math_expressions: ^2.6.0
   mobile_scanner: ^5.1.1
@@ -80,6 +80,8 @@ dependency_overrides:
   # Supports intl 0.20.x while staying on the pre-Swift implementation.
   # Newer 1.6.x triggers Swift concurrency errors on this simulator toolchain.
   local_auth_darwin: 1.4.2
+  # win32 5.5.0 uses an API removed from the current Dart SDK.
+  win32: 5.10.1
   video_player_avfoundation: 2.5.7
   video_player_android: 2.4.3
   video_player_platform_interface: 6.2.2
