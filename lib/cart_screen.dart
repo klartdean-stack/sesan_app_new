@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'receipt_screen.dart';
 import 'package:intl/intl.dart';
 import 'order_tracking_screen.dart';
+import 'l10n/app_localizations.dart';
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
@@ -152,8 +153,8 @@ class _CartScreenState extends State<CartScreen>
       child: Scaffold(
         backgroundColor: const Color(0xFFF5F5F7),
         appBar: AppBar(
-          title: const Text(
-            "កន្ត្រករបស់ខ្ញុំ",
+          title: Text(
+            AppLocalizations.of(context)!.myCart,
             style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
           ),
           backgroundColor: Colors.green,
@@ -195,9 +196,9 @@ class _CartScreenState extends State<CartScreen>
                       child: CircularProgressIndicator(color: Colors.green),
                     )
                   : _currentUserId == null
-                      ? const Center(
+                      ? Center(
                           child: Text(
-                            "មិនអាចទាញព័ត៌មានអ្នកប្រើបាន",
+                            AppLocalizations.of(context)!.couldNotLoadUser,
                             style: TextStyle(color: Colors.grey),
                           ),
                         )
@@ -352,7 +353,8 @@ class _CartScreenState extends State<CartScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  item['product_name'] ?? 'គ្មានឈ្មោះ',
+                  item['product_name'] ??
+                      AppLocalizations.of(context)!.unnamedProduct,
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 Text(
@@ -519,7 +521,9 @@ class _CartScreenState extends State<CartScreen>
             ),
           )
               : Text(
-            "បន្តទៅការទូទាត់ (${currencyFormat.format(total)} ៛)",
+            AppLocalizations.of(context)!.continueToCheckout(
+              '${currencyFormat.format(total)} ៛',
+            ),
             style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -532,9 +536,9 @@ class _CartScreenState extends State<CartScreen>
   }
 
   Widget _buildEmptyCart() {
-    return const Center(
+    return Center(
       child: Text(
-        "មិនទាន់មានទំនិញក្នុងកន្ត្រកទេ",
+        AppLocalizations.of(context)!.cartEmpty,
         style: TextStyle(color: Colors.grey),
       ),
     );
