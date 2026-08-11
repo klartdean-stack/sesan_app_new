@@ -17,6 +17,9 @@ class SellerAccountingScreen extends StatefulWidget {
 class _SellerAccountingScreenState extends State<SellerAccountingScreen> {
   final currencyFormat = NumberFormat('#,###');
 
+  String _t(String km, String en) =>
+      Localizations.localeOf(context).languageCode == 'en' ? en : km;
+
   // 🎯 Stream រួមបញ្ចូលគ្នា (Orders + Withdraw Requests)
   Stream<List<Map<String, dynamic>>> _getCombinedTransactions() {
     // ១. Stream លុយចូល (ទាញពី Collection orders)
@@ -94,9 +97,9 @@ class _SellerAccountingScreenState extends State<SellerAccountingScreen> {
       backgroundColor: const Color(0xFFF4F7FA),
       appBar: AppBar(
         elevation: 0,
-        title: const Text(
-          "មជ្ឈមណ្ឌលហិរញ្ញវត្ថុ",
-          style: TextStyle(
+        title: Text(
+          _t("មជ្ឈមណ្ឌលហិរញ្ញវត្ថុ", "Finance Center"),
+          style: const TextStyle(
             fontFamily: 'KHMEROS',
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -155,11 +158,11 @@ class _SellerAccountingScreenState extends State<SellerAccountingScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Padding(
-                            padding: EdgeInsets.fromLTRB(25, 25, 25, 10),
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(25, 25, 25, 10),
                             child: Text(
-                              "ប្រតិបត្តិការថ្មីៗ",
-                              style: TextStyle(
+                              _t("ប្រតិបត្តិការថ្មីៗ", "Recent transactions"),
+                              style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
                                 color: Color(0xFF1A237E),
@@ -200,9 +203,9 @@ class _SellerAccountingScreenState extends State<SellerAccountingScreen> {
       decoration: const BoxDecoration(color: Color(0xFF1A237E)),
       child: Column(
         children: [
-          const Text(
-            "សមតុល្យសរុប",
-            style: TextStyle(color: Colors.white70, fontSize: 14),
+          Text(
+            _t("សមតុល្យសរុប", "Total balance"),
+            style: const TextStyle(color: Colors.white70, fontSize: 14),
           ),
           const SizedBox(height: 10),
           Text(
@@ -217,14 +220,14 @@ class _SellerAccountingScreenState extends State<SellerAccountingScreen> {
           Row(
             children: [
               _buildFlowCard(
-                "ចំណូលថ្ងៃនេះ",
+                _t("ចំណូលថ្ងៃនេះ", "Today's income"),
                 today,
                 Icons.arrow_downward,
                 Colors.greenAccent,
               ),
               const SizedBox(width: 15),
               _buildFlowCard(
-                "ដកប្រាក់សរុប",
+                _t("ដកប្រាក់សរុប", "Total withdrawn"),
                 withdraw,
                 Icons.arrow_upward,
                 Colors.orangeAccent,
@@ -349,7 +352,9 @@ class _SellerAccountingScreenState extends State<SellerAccountingScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      isWithdraw ? "ដកប្រាក់ចេញ" : "ចំណូលបានពីការលក់",
+                      isWithdraw
+                          ? _t("ដកប្រាក់ចេញ", "Withdrawal")
+                          : _t("ចំណូលបានពីការលក់", "Sales income"),
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
@@ -361,7 +366,7 @@ class _SellerAccountingScreenState extends State<SellerAccountingScreen> {
                     Text(
                       ts != null
                           ? DateFormat('dd/MM/yyyy • HH:mm').format(ts.toDate())
-                          : "មិនទាន់មានកាលបរិច្ឆេទ",
+                          : _t("មិនទាន់មានកាលបរិច្ឆេទ", "Date unavailable"),
                       style: TextStyle(color: Colors.grey[500], fontSize: 11),
                     ),
                   ],
@@ -402,9 +407,9 @@ class _SellerAccountingScreenState extends State<SellerAccountingScreen> {
         children: [
           Icon(Icons.history_rounded, size: 60, color: Colors.grey[300]),
           const SizedBox(height: 10),
-          const Text(
-            "មិនទាន់មានប្រតិបត្តិការនៅឡើយ",
-            style: TextStyle(color: Colors.grey),
+          Text(
+            _t("មិនទាន់មានប្រតិបត្តិការនៅឡើយ", "No transactions yet"),
+            style: const TextStyle(color: Colors.grey),
           ),
         ],
       ),
