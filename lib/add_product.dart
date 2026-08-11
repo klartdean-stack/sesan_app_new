@@ -33,6 +33,35 @@ class AddProductPage extends StatefulWidget {
 
 
 class _AddProductPageState extends State<AddProductPage> {
+  String _t(String km, String en) =>
+      Localizations.localeOf(context).languageCode == 'en' ? en : km;
+
+  String _optionLabel(String value) {
+    if (Localizations.localeOf(context).languageCode != 'en') return value;
+    const labels = <String, String>{
+      'គ្រឿងចក្រ': 'Machinery',
+      'សម្ភារៈកសិកម្ម': 'Farm supplies',
+      'ពូជដំណាំ': 'Crop seeds',
+      'ពូជសត្វចិញ្ចឹម': 'Livestock breeds',
+      'ជីនិងថ្នាំ': 'Fertilizers & chemicals',
+      'បន្លែផ្លែឈើ': 'Fruits & vegetables',
+      'ត្រីសាច់': 'Fish & meat',
+      'សេវាកម្ម': 'Services',
+      'ផ្សេងៗ': 'Other',
+      'ទាំងអស់': 'All',
+      'ថ្មី': 'New',
+      'មួយទឹក': 'Used',
+      'កាប់សាច់': 'For parts',
+      'គ្រឿងបន្លាស់': 'Spare parts',
+      'ម៉ាស៊ីន': 'Machines',
+      'ឧបករណ៍': 'Equipment',
+      'ឈើហូបផ្លែ': 'Fruit trees',
+      'បន្លែ': 'Vegetables',
+      'ផ្ការ': 'Flowers',
+      'ឈើព្រៃ': 'Forest trees',
+    };
+    return labels[value] ?? value;
+  }
   // --- Controllers ---
   final TextEditingController nameController = TextEditingController();
   final TextEditingController descriptionController = TextEditingController();
@@ -193,14 +222,14 @@ class _AddProductPageState extends State<AddProductPage> {
         sourcePath: selectedImages[index].path,
         uiSettings: [
           AndroidUiSettings(
-            toolbarTitle: 'កាត់តរូបភាព',
+            toolbarTitle: _t('កាត់តរូបភាព', 'Crop image'),
             toolbarColor: Colors.green,
             toolbarWidgetColor: Colors.white,
             initAspectRatio: CropAspectRatioPreset.original,
             lockAspectRatio: false,
           ),
           IOSUiSettings(
-            title: 'កាត់តរូបភាព',
+            title: _t('កាត់តរូបភាព', 'Crop image'),
             aspectRatioLockEnabled: false,
             resetAspectRatioEnabled: true,
           ),
@@ -219,7 +248,10 @@ class _AddProductPageState extends State<AddProductPage> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('មិនអាចកាត់តរូបភាពបាន៖ $e'),
+          content: Text(_t(
+            'មិនអាចកាត់តរូបភាពបាន៖ $e',
+            'Could not crop the image: $e',
+          )),
           backgroundColor: Colors.red,
         ),
       );
@@ -312,7 +344,7 @@ class _AddProductPageState extends State<AddProductPage> {
                         Navigator.pop(dialogContext);
                       }
                     },
-                    child: const Text('បិទ'),
+                    child: Text(_t('បិទ', 'Close')),
                   ),
                 ],
               );
@@ -327,7 +359,10 @@ class _AddProductPageState extends State<AddProductPage> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('មិនអាចបើកវីដេអូបាន៖ $e'),
+          content: Text(_t(
+            'មិនអាចបើកវីដេអូបាន៖ $e',
+            'Could not open the video: $e',
+          )),
           backgroundColor: Colors.red,
         ),
       );
@@ -356,7 +391,12 @@ class _AddProductPageState extends State<AddProductPage> {
 
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('យើងកាត់យកត្រឹម ១០ សន្លឹកដំបូងជូនមេ!')),
+          SnackBar(
+            content: Text(_t(
+              'អាចជ្រើសរើសបានត្រឹម ១០ រូបដំបូងប៉ុណ្ណោះ។',
+              'Only the first 10 images were selected.',
+            )),
+          ),
         );
       } else {
         setState(() {
@@ -380,7 +420,12 @@ class _AddProductPageState extends State<AddProductPage> {
       final info = await VideoCompress.getMediaInfo(video.path);
       if (info.duration != null && info.duration! > 61000) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('វីដេអូមិនអាចលើសពី ៦០ វិនាទីឡើយ!')),
+          SnackBar(
+            content: Text(_t(
+              'វីដេអូមិនអាចលើសពី ៦០ វិនាទីឡើយ!',
+              'The product video cannot exceed 60 seconds.',
+            )),
+          ),
         );
         return;
       }
@@ -524,12 +569,12 @@ class _AddProductPageState extends State<AddProductPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('បញ្ហាបង្ហោះ'),
-        content: Text('មិនអាចបង្ហោះបានទេ ដោយសារ៖ $message'),
+        title: Text(_t('បញ្ហាបង្ហោះ', 'Upload problem')),
+        content: Text(_t('មិនអាចបង្ហោះបានទេ ដោយសារ៖ $message', 'Could not upload: $message')),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('យល់ព្រម'),
+            child: Text(_t('យល់ព្រម', 'OK')),
           ),
         ],
       ),
@@ -542,7 +587,9 @@ class _AddProductPageState extends State<AddProductPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          widget.productId != null ? 'កែប្រែទំនិញ' : 'បន្ថែមទំនិញថ្មី',
+          widget.productId != null
+              ? _t('កែប្រែទំនិញ', 'Edit product')
+              : _t('បន្ថែមទំនិញថ្មី', 'Add new product'),
         ),
         backgroundColor: Colors.green,
         // 🎯 ដាក់ក្នុង actions: [] របស់ AppBar ក្នុងទំព័រ Add Product
@@ -577,12 +624,12 @@ class _AddProductPageState extends State<AddProductPage> {
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
-                  children: const [
-                    Icon(Icons.stars_rounded, color: Colors.black, size: 18),
-                    SizedBox(width: 4),
+                  children: [
+                    const Icon(Icons.stars_rounded, color: Colors.black, size: 18),
+                    const SizedBox(width: 4),
                     Text(
-                      "ដាក់ដេញថ្លៃ",
-                      style: TextStyle(
+                      _t("ដាក់ដេញថ្លៃ", "Create auction"),
+                      style: const TextStyle(
                         color: Colors.black,
                         fontWeight: FontWeight.w900,
                         fontSize: 11,
@@ -611,8 +658,8 @@ class _AddProductPageState extends State<AddProductPage> {
               },
               icon: Icons.collections,
               label: selectedImages.length >= 10
-                  ? "រូបភាពគ្រប់ចំនួនហើយ (១០/១០)"
-                  : "រើសរូបភាព (${selectedImages.length}/10)",
+                  ? _t("រូបភាពគ្រប់ចំនួនហើយ (១០/១០)", "Image limit reached (10/10)")
+                  : _t("រើសរូបភាព (${selectedImages.length}/10)", "Choose images (${selectedImages.length}/10)"),
               // 🎯 កែពណ៌ឱ្យទៅជាប្រផេះ បើគ្រប់ ១០ សន្លឹក
               color: selectedImages.length >= 10
                   ? Colors.grey.shade300
@@ -737,8 +784,8 @@ class _AddProductPageState extends State<AddProductPage> {
                         onTap: pickVideo,
                         icon: Icons.video_library,
                         label: selectedVideo == null
-                            ? 'រើសវីដេអូបង្ហាញទំនិញ'
-                            : 'រើសវីដេអូរួចរាល់ ✅',
+                            ? _t('រើសវីដេអូបង្ហាញទំនិញ', 'Choose product video')
+                            : _t('រើសវីដេអូរួចរាល់ ✅', 'Video selected ✅'),
                         color: Colors.orange.shade50,
                         textColor: Colors.orange,
                       ),
@@ -749,7 +796,7 @@ class _AddProductPageState extends State<AddProductPage> {
 
                       IconButton(
                         onPressed: _previewVideo,
-                        tooltip: 'មើលវីដេអូ',
+                        tooltip: _t('មើលវីដេអូ', 'Preview video'),
                         icon: const Icon(
                           Icons.play_circle_fill,
                           color: Colors.green,
@@ -758,7 +805,7 @@ class _AddProductPageState extends State<AddProductPage> {
                       ),
 
                       IconButton(
-                        tooltip: 'លុបវីដេអូ',
+                        tooltip: _t('លុបវីដេអូ', 'Remove video'),
                         onPressed: () async {
                           await _videoPreviewController?.pause();
                           await _videoPreviewController?.dispose();
@@ -783,14 +830,14 @@ class _AddProductPageState extends State<AddProductPage> {
 
 
             const SizedBox(height: 20),
-            _buildTextField('ឈ្មោះទំនិញ *', Icons.shopping_bag, nameController),
+            _buildTextField(_t('ឈ្មោះទំនិញ *', 'Product name *'), Icons.shopping_bag, nameController),
             const SizedBox(height: 10),
             _buildCategoryDropdown(),
             const SizedBox(height: 10),
             _buildPriceSection(),
             const SizedBox(height: 10),
             _buildTextField(
-              'បរិយាយទំនិញ',
+              _t('បរិយាយទំនិញ', 'Product description'),
               Icons.description,
               descriptionController,
               maxLines: 3,
@@ -853,7 +900,7 @@ class _AddProductPageState extends State<AddProductPage> {
                           Expanded(
                             child: Text(
                               locationController.text.isEmpty
-                                  ? "ជ្រើសទីតាំង *"
+                                  ? _t("ជ្រើសទីតាំង *", "Choose location *")
                                   : locationController.text,
                               style: TextStyle(
                                 fontSize: 16,
@@ -926,8 +973,8 @@ class _AddProductPageState extends State<AddProductPage> {
                     phone1Controller.text.isEmpty ||
                     locationController.text.isEmpty) {
                   Get.snackbar(
-                    'ខ្វះព័ត៌មាន',
-                    'សូមមេមេ ជួយបំពេញព័ត៌មាន និងដាក់រូបថតឱ្យគ្រប់សិន!',
+                    _t('ខ្វះព័ត៌មាន', 'Missing information'),
+                    _t('សូមមេមេ ជួយបំពេញព័ត៌មាន និងដាក់រូបថតឱ្យគ្រប់សិន!', 'Please complete all required fields and add at least one image.'),
                     backgroundColor: Colors.redAccent,
                     colorText: Colors.white,
                   );
@@ -935,8 +982,8 @@ class _AddProductPageState extends State<AddProductPage> {
                 }
                 if (_shippingIncluded == null) {
                   Get.snackbar(
-                    'ខ្វះព័ត៌មាន',
-                    'សូមជ្រើសរើសថាតើតម្លៃនេះបូកថ្លៃផ្ញើរួចឬនៅ?',
+                    _t('ខ្វះព័ត៌មាន', 'Missing information'),
+                    _t('សូមជ្រើសរើសថាតើតម្លៃនេះបូកថ្លៃផ្ញើរួចឬនៅ?', 'Please specify whether delivery is included in the price.'),
                     backgroundColor: Colors.redAccent,
                     colorText: Colors.white,
                   );
@@ -1002,8 +1049,8 @@ class _AddProductPageState extends State<AddProductPage> {
                 // ៥. នាំផ្លូវទៅ Home និងបង្ហាញសារ
                 Get.offAllNamed('/home');
                 Get.snackbar(
-                  '🚀 កំពុងបង្ហោះ...',
-                  'ទំនិញរបស់មេកំពុងបង្ហោះហើយ!',
+                  _t('🚀 កំពុងបង្ហោះ...', '🚀 Uploading...'),
+                  _t('ទំនិញរបស់អ្នកកំពុងបង្ហោះហើយ!', 'Your product is being uploaded.'),
                   snackPosition: SnackPosition.BOTTOM,
                   backgroundColor: Colors.black54,
                   colorText: Colors.white,
@@ -1013,9 +1060,9 @@ class _AddProductPageState extends State<AddProductPage> {
                 minimumSize: const Size(double.infinity, 50),
                 backgroundColor: Colors.green,
               ),
-              child: const Text(
-                'រក្សាទុកការផុស',
-                style: TextStyle(color: Colors.white, fontSize: 16),
+              child: Text(
+                _t('រក្សាទុកការផុស', 'Publish product'),
+                style: const TextStyle(color: Colors.white, fontSize: 16),
               ),
             ),
           ],
@@ -1073,12 +1120,12 @@ class _AddProductPageState extends State<AddProductPage> {
         DropdownButtonFormField<String>(
           value: selectedCategory,
           decoration: InputDecoration(
-            labelText: 'ប្រភេទលក់ *',
+            labelText: _t('ប្រភេទលក់ *', 'Category *'),
             prefixIcon: const Icon(Icons.category, color: Colors.green),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
           ),
           items: categories
-              .map((c) => DropdownMenuItem(value: c, child: Text(c)))
+              .map((c) => DropdownMenuItem(value: c, child: Text(_optionLabel(c))))
               .toList(),
           onChanged: (val) {
             setState(() {
@@ -1132,7 +1179,7 @@ class _AddProductPageState extends State<AddProductPage> {
       child: DropdownButtonFormField<String>(
         value: selectedSubCategory,
         decoration: InputDecoration(
-          labelText: 'ប្រភេទរង (ស្រេចចិត្ត)',
+          labelText: _t('ប្រភេទរង (ស្រេចចិត្ត)', 'Subcategory (optional)'),
           prefixIcon: const Icon(
             Icons.subdirectory_arrow_right,
             color: Colors.orange,
@@ -1140,7 +1187,7 @@ class _AddProductPageState extends State<AddProductPage> {
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
         ),
         items: subList
-            .map((sub) => DropdownMenuItem(value: sub, child: Text(sub)))
+            .map((sub) => DropdownMenuItem(value: sub, child: Text(_optionLabel(sub))))
             .toList(),
         onChanged: (val) {
           setState(() {
@@ -1172,7 +1219,7 @@ class _AddProductPageState extends State<AddProductPage> {
       child: DropdownButtonFormField<String>(
         value: selectedSubSubCategory,
         decoration: InputDecoration(
-          labelText: 'លក្ខខណ្ឌ (ស្រេចចិត្ត)',
+          labelText: _t('លក្ខខណ្ឌ (ស្រេចចិត្ត)', 'Condition (optional)'),
           prefixIcon: const Icon(
             Icons.subdirectory_arrow_right,
             color: Colors.red,
@@ -1180,7 +1227,7 @@ class _AddProductPageState extends State<AddProductPage> {
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
         ),
         items: subSubList
-            .map((sub) => DropdownMenuItem(value: sub, child: Text(sub)))
+            .map((sub) => DropdownMenuItem(value: sub, child: Text(_optionLabel(sub))))
             .toList(),
         onChanged: (val) {
           setState(() => selectedSubSubCategory = val);
@@ -1212,7 +1259,7 @@ class _AddProductPageState extends State<AddProductPage> {
             }
           },
           decoration: InputDecoration(
-            labelText: 'តម្លៃ (៛) *',
+            labelText: _t('តម្លៃ (៛) *', 'Price (KHR) *'),
             prefixIcon: const Icon(Icons.money, color: Colors.green),
             suffixText: "៛",
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
@@ -1226,9 +1273,9 @@ class _AddProductPageState extends State<AddProductPage> {
           children: [
             Expanded(
               child: RadioListTile<bool?>(
-                title: const Text(
-                  'បានបូកទាំងថ្លៃផ្ញើ',
-                  style: TextStyle(fontSize: 11, fontFamily: 'Siemreap'),
+                title: Text(
+                  _t('បានបូកទាំងថ្លៃផ្ញើ', 'Delivery included'),
+                  style: const TextStyle(fontSize: 11, fontFamily: 'Siemreap'),
                 ),
                 value: true,
                 groupValue: _shippingIncluded,
@@ -1242,9 +1289,9 @@ class _AddProductPageState extends State<AddProductPage> {
             ),
             Expanded(
               child: RadioListTile<bool?>(
-                title: const Text(
-                  'មិនទាន់បូកថ្លៃផ្ញើ',
-                  style: TextStyle(fontSize: 11, fontFamily: 'Siemreap'),
+                title: Text(
+                  _t('មិនទាន់បូកថ្លៃផ្ញើ', 'Delivery not included'),
+                  style: const TextStyle(fontSize: 11, fontFamily: 'Siemreap'),
                 ),
                 value: false,
                 groupValue: _shippingIncluded,
@@ -1266,12 +1313,12 @@ class _AddProductPageState extends State<AddProductPage> {
     return Row(
       children: [
         Expanded(
-          child: _buildTextField('លេខទី១ *', Icons.phone, phone1Controller),
+          child: _buildTextField(_t('លេខទី១ *', 'Primary phone *'), Icons.phone, phone1Controller),
         ),
         const SizedBox(width: 10),
         Expanded(
           child: _buildTextField(
-            'លេខទី២',
+            _t('លេខទី២', 'Second phone'),
             Icons.phone_android,
             phone2Controller,
           ),
