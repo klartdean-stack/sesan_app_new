@@ -29,6 +29,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:video_player/video_player.dart';
+import 'l10n/app_localizations.dart';
 
 
 
@@ -712,22 +713,23 @@ Android: $androidPlayStoreLink
 
   // ── Submit Rating: User ម្នាក់ = Rating មួយ ─────────────────────
   Future<void> _submitRating(double rating) async {
+    final l10n = AppLocalizations.of(context);
     if (_isSubmittingRating) return;
 
     if (rating < 1 || rating > 5) {
-      _showSnack('សូមជ្រើសរើសពិន្ទុពី 1 ដល់ 5', Colors.orange);
+      _showSnack(l10n.chooseRating, Colors.orange);
       return;
     }
 
     final uid = _currentUserId ?? FirebaseAuth.instance.currentUser?.uid;
     if (uid == null || uid.isEmpty) {
-      _showSnack('សូម Login មុនពេលផ្ដល់ពិន្ទុ', Colors.orange);
+      _showSnack(l10n.loginBeforeRating, Colors.orange);
       return;
     }
 
     final productId = widget.product['id']?.toString() ?? '';
     if (productId.isEmpty) {
-      _showSnack('រកមិនឃើញ Product ID', Colors.red);
+      _showSnack(l10n.productIdNotFound, Colors.red);
       return;
     }
 
@@ -807,11 +809,11 @@ Android: $androidPlayStoreLink
         _myRating = rating;
       });
 
-      _showSnack('សូមអរគុណសម្រាប់ការផ្ដល់ពិន្ទុ! ✅', Colors.green);
+      _showSnack(l10n.ratingThanks, Colors.green);
     } catch (e) {
       debugPrint("Error submitting rating: $e");
       if (mounted) {
-        _showSnack('❌ ផ្ដល់ពិន្ទុមិនបាន៖ $e', Colors.red);
+        _showSnack(l10n.ratingFailed(e.toString()), Colors.red);
       }
     } finally {
       if (mounted) {
@@ -875,6 +877,7 @@ Android: $androidPlayStoreLink
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final bool isAddToCartDisabled =
         widget.product['is_locked'] == true ||
             widget.product['shipping_included'] == false;
@@ -910,7 +913,7 @@ Android: $androidPlayStoreLink
           onPressed: () => Navigator.maybePop(context),
         ),
         title: Text(
-          widget.product['product_name'] ?? 'លម្អិតទំនិញ',
+          widget.product['product_name'] ?? l10n.productDetails,
           style: const TextStyle(color: Colors.white), // ✅ បន្ថែម
         ),
         backgroundColor: Colors.blue,
@@ -1137,8 +1140,8 @@ Android: $androidPlayStoreLink
                                 Flexible(
                                   child: Text(
                                     widget.product['shipping_included'] == true
-                                        ? 'បូកថ្លៃដឹកជញ្ជូនរួចរាល់'
-                                        : 'មិនទាន់បូកថ្លៃដឹកជញ្ជូន',
+                                        ? l10n.shippingIncluded
+                                        : l10n.shippingNotIncluded,
                                     style: TextStyle(
                                       color:
                                       widget.product['shipping_included'] ==
@@ -1156,7 +1159,7 @@ Android: $androidPlayStoreLink
                           ),
                         ],
                         Text(
-                          widget.product['product_name'] ?? 'គ្មានឈ្មោះ',
+                          widget.product['product_name'] ?? l10n.unnamedProduct,
                           style: const TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.bold,
@@ -1318,7 +1321,7 @@ Android: $androidPlayStoreLink
                                       const SizedBox(width: 8),
                                       Text(
                                         '${avgRating.toStringAsFixed(1)} '
-                                            '($totalReviews នាក់)',
+                                            '${l10n.reviewCount(totalReviews)}',
                                         style: const TextStyle(
                                           fontSize: 13,
                                           fontWeight: FontWeight.bold,
@@ -1330,8 +1333,8 @@ Android: $androidPlayStoreLink
                                   const SizedBox(height: 8),
                                   Text(
                                     myRating > 0
-                                        ? 'ពិន្ទុរបស់អ្នក៖ ${myRating.toStringAsFixed(1)}'
-                                        : 'ចុចផ្កាយដើម្បីផ្ដល់ពិន្ទុ',
+                                        ? l10n.yourRating(myRating.toStringAsFixed(1))
+                                        : l10n.tapStarsToRate,
                                     style: TextStyle(
                                       fontSize: 12,
                                       color: myRating > 0
@@ -1411,9 +1414,9 @@ Android: $androidPlayStoreLink
                         const Divider(
                           height: 30,
                         ), // ៤. ចំនួនកម្ម៉ង់ និង តម្លៃសរុប
-                        const Text(
-                          "ជ្រើសរើសចំនួន៖",
-                          style: TextStyle(
+                        Text(
+                          l10n.chooseQuantity,
+                          style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
                           ),
@@ -1497,9 +1500,9 @@ Android: $androidPlayStoreLink
                                         setState(() => _tempQty++);
                                     }),
                                     const SizedBox(width: 10),
-                                    const Text(
-                                      "ចំនួន",
-                                      style: TextStyle(
+                                    Text(
+                                      l10n.quantity,
+                                      style: const TextStyle(
                                         color: Colors.grey,
                                         fontFamily: 'Siemreap',
                                       ),
@@ -1520,9 +1523,9 @@ Android: $androidPlayStoreLink
                                     mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                     children: [
-                                      const Text(
-                                        "តម្លៃសរុប៖",
-                                        style: TextStyle(
+                                      Text(
+                                        l10n.totalPrice,
+                                        style: const TextStyle(
                                           fontSize: 16,
                                           fontWeight: FontWeight.w500,
                                           fontFamily: 'Siemreap',
@@ -1556,15 +1559,15 @@ Android: $androidPlayStoreLink
 
 
                         const Divider(height: 30),
-                        const Text(
-                          "ការពិពណ៌នា៖",
-                          style: TextStyle(
+                        Text(
+                          l10n.descriptionLabel,
+                          style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                         Text(
-                          widget.product['description'] ?? 'មិនមានការពិពណ៌នា...',
+                          widget.product['description'] ?? l10n.noDescription,
                           style: const TextStyle(fontSize: 16),
                         ),
 
@@ -1592,7 +1595,7 @@ Android: $androidPlayStoreLink
                                       ),
                                       const SizedBox(width: 8),
                                       Text(
-                                        "ព័ត៌មានអ្នកលក់",
+                                        l10n.sellerInformation,
                                         style: TextStyle(
                                           fontSize: 18,
                                           fontWeight: FontWeight.bold,
@@ -1616,7 +1619,7 @@ Android: $androidPlayStoreLink
                                                 sellerName:
                                                 widget
                                                     .product['seller_name'] ??
-                                                    'អ្នកលក់',
+                                                    l10n.seller,
                                               ),
                                         ),
                                       );
@@ -1625,7 +1628,7 @@ Android: $androidPlayStoreLink
                                       Icons.arrow_forward,
                                       size: 16,
                                     ),
-                                    label: const Text("មើលហាង"),
+                                    label: Text(l10n.viewShop),
                                     style: TextButton.styleFrom(
                                       foregroundColor: Colors.blue,
                                     ),
@@ -1644,7 +1647,7 @@ Android: $androidPlayStoreLink
                                         widget.product['seller_id'] ?? '',
                                         sellerName:
                                         widget.product['seller_name'] ??
-                                            'អ្នកលក់',
+                                            l10n.seller,
                                       ),
                                     ),
                                   );
@@ -1676,7 +1679,7 @@ Android: $androidPlayStoreLink
                                     children: [
                                       Flexible(
                                         child: Text(
-                                          widget.product['seller_name'] ?? 'មិនមានឈ្មោះ',
+                                          widget.product['seller_name'] ?? l10n.unknownName,
                                           style: const TextStyle(
                                             fontWeight: FontWeight.bold,
                                             fontSize: 16,
@@ -1709,8 +1712,8 @@ Android: $androidPlayStoreLink
                                   ),
                                   subtitle: Text(
                                     widget.product['updated_at'] != null
-                                        ? "ផុសនៅ៖ ${DateFormat('dd-MM-yyyy HH:mm').format((widget.product['updated_at'] as Timestamp).toDate())}"
-                                        : "ម្ចាស់ចំការ / អ្នកលក់",
+                                        ? l10n.postedAt(DateFormat('dd-MM-yyyy HH:mm').format((widget.product['updated_at'] as Timestamp).toDate()))
+                                        : l10n.farmerOrSeller,
                                     style: TextStyle(
                                       fontSize: 12,
                                       color: Colors.grey.shade600,
@@ -1730,7 +1733,7 @@ Android: $androidPlayStoreLink
                                   color: Colors.orange,
                                 ),
                                 title: Text(
-                                  widget.product['phone1'] ?? 'អត់មានលេខ',
+                                  widget.product['phone1'] ?? l10n.noPhone,
                                 ),
                                 trailing: IconButton(
                                   icon: const Icon(
@@ -1778,7 +1781,7 @@ Android: $androidPlayStoreLink
                                   color: Colors.red,
                                 ),
                                 title: Text(
-                                  widget.product['location'] ?? 'មិនមានទីតាំង',
+                                  widget.product['location'] ?? l10n.noLocation,
                                 ),
                               ),
                             ],
@@ -1786,11 +1789,11 @@ Android: $androidPlayStoreLink
                         ),
                         // 🎯 ដាក់ចូលក្នុងជួរ 598 (ចន្លោះ ListTile ទីតាំង និង RelatedProducts)
                         const SizedBox(height: 20),
-                        const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 16),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
                           child: Text(
-                            "មតិយោបល់",
-                            style: TextStyle(
+                            l10n.comments,
+                            style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                             ),
@@ -1808,7 +1811,7 @@ Android: $androidPlayStoreLink
                             currentUserId: _currentUserId, // ✅ បន្ថែមអង្គនេះ
                           )
                         else
-                          const Center(child: Text("មិនមានទិន្នន័យផលិតផល")),
+                          Center(child: Text(l10n.noProductData)),
                         const SizedBox(height: 30),
                         // ៦. Related Products
                         RelatedProductsWidget(
@@ -1867,9 +1870,9 @@ Android: $androidPlayStoreLink
                 onPressed: isAddToCartDisabled
                     ? null
                     : () => _addToCart(widget.product),
-                child: const Text(
-                  "ដាក់កន្ត្រក់",
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                child: Text(
+                  l10n.addToCart,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
               ),
             ),
@@ -1896,9 +1899,9 @@ Android: $androidPlayStoreLink
                     );
                   }
                 },
-                child: const Text(
-                  "ទិញឥឡូវ",
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                child: Text(
+                  l10n.buyNow,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
               ),
             ),
