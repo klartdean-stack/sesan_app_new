@@ -1,0 +1,43 @@
+name: One-time sync stock management into iOS branch
+
+on:
+  push:
+    branches:
+      - ios-sync-chat-order-ai
+    paths:
+      - .github/workflows/sync-stock-ios.yml
+
+permissions:
+  contents: write
+
+jobs:
+  sync-stock:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout iOS working branch
+        uses: actions/checkout@v4
+        with:
+          ref: ios-sync-chat-order-ai
+          fetch-depth: 0
+
+      - name: Download latest Android Stock Management source
+        run: |
+          curl -fL "https://raw.githubusercontent.com/klartdean-stack/sesan_app_android/english-local-android/lib/stock_management_screen.dart" -o lib/stock_management_screen.dart
+
+      - name: Verify required iOS-compatible localization helper usage
+        run: |
+          grep -q "localized_text.dart" lib/stock_management_screen.dart
+          grep -q "class StockManagementScreen" lib/stock_management_screen.dart
+          grep -q "kIsWeb" lib/stock_management_screen.dart
+
+      - name: Commit synced Stock Management
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add lib/stock_management_screen.dart
+          if git diff --cached --quiet; then
+            echo "Stock Management already matches Android source."
+            exit 0
+          fi
+          git commit -m "Sync latest Stock Management into iOS working branch"
+          git push origin HEAD:ios-sync-chat-order-ai
