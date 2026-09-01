@@ -3,13 +3,22 @@ import 'package:ai_barcode_scanner/ai_barcode_scanner.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class OrderScannerService {
-  // មុខងារបើកកាមេរ៉ាស្កែន
   static void startScan(BuildContext context, String currentSellerId) {
-
-
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => AiBarcodeScanner(
+          onDetect: (BarcodeCapture capture) {
+            final String? value = capture.barcodes.first.rawValue;
+            if (value != null) {
+              Navigator.pop(context);
+              _processScannedOrder(context, value, currentSellerId);
+            }
+          },
+        ),
+      ),
+    );
   }
 
-  // មុខងារឆែកទិន្នន័យបន្ទាប់ពីស្កែនបាន ID
   static void _processScannedOrder(
     BuildContext context,
     String orderId,
@@ -26,7 +35,6 @@ class OrderScannerService {
     }
 
     var data = doc.data() as Map<String, dynamic>;
-    // ឆែកថាមាន Seller ID របស់គាត់ក្នុងបុងហ្នឹងអត់ (ករណី ១ បុង ច្រើន Seller)
     List sellerIds = data['seller_ids'] ?? [];
 
     if (!sellerIds.contains(sellerId)) {
@@ -34,7 +42,6 @@ class OrderScannerService {
       return;
     }
 
-    // បង្ហាញផ្ទាំង Update
     _showUpdateDialog(context, orderId, data);
   }
 
@@ -64,8 +71,8 @@ class OrderScannerService {
   }
 
   static void _showMsg(BuildContext context, String msg, Color color) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(msg), backgroundColor: color));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(msg), backgroundColor: color),
+    );
   }
 }
