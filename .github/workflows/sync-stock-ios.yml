@@ -20,55 +20,42 @@ jobs:
           ref: ios-sync-chat-order-ai
           fetch-depth: 0
 
-      - name: Port Stock Management localization and stock labels safely
+      - name: Finish Stock Management localization safely
         run: |
           python3 - <<'PY'
           from pathlib import Path
+          import re
           p = Path('lib/stock_management_screen.dart')
           s = p.read_text(encoding='utf-8')
 
-          if "import 'localized_text.dart';" not in s:
-              s = s.replace("import 'package:flutter/material.dart';\n", "import 'package:flutter/material.dart';\nimport 'localized_text.dart';\n", 1)
+          # appText is runtime/localized, so Text widgets containing it cannot be const.
+          s = re.sub(r'const\s+Text\(\s*(appText\()', r'Text(\n                  \1', s)
 
-          helper = r'''\nString _stockLabel(BuildContext context, String value) {\n  const labels = <String, String>{\n    'ទូទៅ': 'General',\n    'គ្រឿង': 'items',\n    'គ្រាប់': 'pieces',\n    'កញ្ចប់': 'packs',\n    'បាវ': 'bags',\n    'ដប': 'bottles',\n    'ដើម': 'plants',\n    'ដុំ': 'pieces',\n    'គីឡូ': 'kg',\n    'ធុង': 'containers',\n    'ឡូ': 'dozen',\n    'កេះ': 'cases',\n    'យួរ': 'bundles',\n    'ផ្សេង': 'Other',\n    'ផ្សេងៗ': 'Other',\n    'គ្រឿងចក្រ': 'Machinery',\n    'ម៉ាស៊ីន': 'Machines',\n    'ឧបករណ៍': 'Tools',\n    'ដំណាំ': 'Crops',\n    'ជី': 'Fertilizer',\n    'ថ្នាំ': 'Pesticide',\n    'គ្រឿងអេឡិចត្រូនិច': 'Electronics',\n    'សម្ភារះប្រើប្រាស់': 'Supplies',\n    'ទិញបន្ថែម': 'Restock purchase',\n    'ទទួលពីបរទេស': 'Received from supplier',\n    'ត្រឡប់ពីអតិថិជន': 'Customer return',\n    'លក់': 'Sale',\n    'ខូច/បាត់': 'Damaged/lost',\n    'ប្រើប្រាស់': 'Used',\n    'បន្ថែម': 'Added',\n    'កាត់': 'Deducted',\n  };\n  return appText(context, km: value, en: labels[value] ?? value);\n}\n'''.replace('\\n','\n')
-          if 'String _stockLabel(BuildContext context' not in s:
-              marker = 'class StockManagementScreen extends StatefulWidget {'
-              s = s.replace(marker, helper + '\n' + marker, 1)
-
-          replacements = {
-              "title: const Text(\n          'គ្រប់គ្រងស្តុកទំនិញ',": "title: Text(\n          appText(context, km: 'គ្រប់គ្រងស្តុកទំនិញ', en: 'Stock Management'),",
-              "tabs: const [\n            Tab(icon: Icon(Icons.inventory_2_outlined), text: 'ស្តុក'),\n            Tab(icon: Icon(Icons.history), text: 'ប្រវត្តិ'),\n          ],": "tabs: [\n            Tab(icon: const Icon(Icons.inventory_2_outlined), text: appText(context, km: 'ស្តុក', en: 'Stock')),\n            Tab(icon: const Icon(Icons.history), text: appText(context, km: 'ប្រវត្តិ', en: 'History')),\n          ],",
-              "hintText: 'ស្វែងរកទំនិញ...',": "hintText: appText(context, km: 'ស្វែងរកទំនិញ...', en: 'Search products...'),",
-              "Text(\n                        'មិនទាន់មានទំនិញ\\nចុច + ដើម្បីបន្ថែម',": "Text(\n                        appText(context, km: 'មិនទាន់មានទំនិញ\\nចុច + ដើម្បីបន្ថែម', en: 'No products yet\\nTap + to add one'),",
-              "? '❌ អស់ស្តុក'\n                                : isLow\n                                ? '⚠️ ជិតអស់'\n                                : '✅ មាន'": "? appText(context, km: '❌ អស់ស្តុក', en: '❌ Out of stock')\n                                : isLow\n                                ? appText(context, km: '⚠️ ជិតអស់', en: '⚠️ Low stock')\n                                : appText(context, km: '✅ មាន', en: '✅ In stock')",
-              "'$quantity ${data['unit'] ?? ''}'": "'$quantity ${_stockLabel(context, (data['unit'] ?? '').toString())}'",
-              "'មិនទាន់មានប្រវត្តិ'": "appText(context, km: 'មិនទាន់មានប្រវត្តិ', en: 'No history yet')",
-              "const Text(\n                  'បន្ថែមទំនិញថ្មី',": "Text(\n                  appText(context, km: 'បន្ថែមទំនិញថ្មី', en: 'Add new product'),",
-              "'រូបភាព'": "appText(context, km: 'រូបភាព', en: 'Image')",
-              "'ឈ្មោះទំនិញ *'": "appText(context, km: 'ឈ្មោះទំនិញ *', en: 'Product name *')",
-              "'ចំនួន'": "appText(context, km: 'ចំនួន', en: 'Quantity')",
-              "'ឯកតា'": "appText(context, km: 'ឯកតា', en: 'Unit')",
-              "'តម្លៃ'": "appText(context, km: 'តម្លៃ', en: 'Price')",
-              "'រូបិយប័ណ្ណ'": "appText(context, km: 'រូបិយប័ណ្ណ', en: 'Currency')",
-              "'ប្រភេទ'": "appText(context, km: 'ប្រភេទ', en: 'Category')",
-              "'ព្រមានបើស្តុកដល់'": "appText(context, km: 'ព្រមានបើស្តុកដល់', en: 'Low-stock alert at')",
-              "'សូមបញ្ចូលឈ្មោះទំនិញ'": "appText(context, km: 'សូមបញ្ចូលឈ្មោះទំនិញ', en: 'Please enter a product name')",
-              "'✅ បានបន្ថែមទំនិញ'": "appText(context, km: '✅ បានបន្ថែមទំនិញ', en: '✅ Product added')",
-              "'រក្សាទុក'": "appText(context, km: 'រក្សាទុក', en: 'Save')",
-              "'បន្ថែមស្តុក'": "appText(context, km: 'បន្ថែមស្តុក', en: 'Add stock')",
-              "'កាត់ស្តុក'": "appText(context, km: 'កាត់ស្តុក', en: 'Deduct stock')",
-              "'មូលហេតុ'": "appText(context, km: 'មូលហេតុ', en: 'Reason')",
-              "'ចំណាំបន្ថែម (ជម្រើស)'": "appText(context, km: 'ចំណាំបន្ថែម (ជម្រើស)', en: 'Additional note (optional)')",
-              "'សូមបញ្ចូលចំនួន'": "appText(context, km: 'សូមបញ្ចូលចំនួន', en: 'Please enter a quantity')",
-              "'ស្តុកមិនគ្រប់គ្រាន់!'": "appText(context, km: 'ស្តុកមិនគ្រប់គ្រាន់!', en: 'Insufficient stock!')",
-              "title: const Text('កែប្រែ'": "title: Text(appText(context, km: 'កែប្រែ', en: 'Edit')",
-              "title: const Text('លុបទំនិញ'": "title: Text(appText(context, km: 'លុបទំនិញ', en: 'Delete product')",
+          pairs = {
+            "const DropdownMenuItem(\n                                    value: 'custom',\n                                    child: Text(\n                                      '✏️ សរសេរដោយដៃ',": "DropdownMenuItem(\n                                    value: 'custom',\n                                    child: Text(\n                                      appText(context, km: '✏️ សរសេរដោយដៃ', en: '✏️ Enter manually'),",
+            "title: const Text(\n                                            'ឯកតាផ្សេង',": "title: Text(\n                                            appText(context, km: 'ឯកតាផ្សេង', en: 'Other unit'),",
+            "decoration: const InputDecoration(\n                                              hintText: 'សរសេរឯកតា...',": "decoration: InputDecoration(\n                                              hintText: appText(context, km: 'សរសេរឯកតា...', en: 'Enter unit...'),",
+            "child: const Text('បោះបង់'),": "child: Text(appText(context, km: 'បោះបង់', en: 'Cancel')),",
+            "child: const Text('យល់ព្រម'),": "child: Text(appText(context, km: 'យល់ព្រម', en: 'Confirm')),",
+            "const DropdownMenuItem(\n                              value: 'custom',\n                              child: Text(\n                                '✏️ សរសេរដោយដៃ',": "DropdownMenuItem(\n                              value: 'custom',\n                              child: Text(\n                                appText(context, km: '✏️ សរសេរដោយដៃ', en: '✏️ Enter manually'),",
+            "title: const Text(\n                                      'ប្រភេទផ្សេង',": "title: Text(\n                                      appText(context, km: 'ប្រភេទផ្សេង', en: 'Other category'),",
+            "decoration: const InputDecoration(\n                                        hintText: 'សរសេរប្រភេទ...',": "decoration: InputDecoration(\n                                        hintText: appText(context, km: 'សរសេរប្រភេទ...', en: 'Enter category...'),",
+            "_showSnack('❌ មានបញ្ហា: $e', Colors.red);": "_showSnack('${appText(context, km: '❌ មានបញ្ហា', en: '❌ Error')}: $e', Colors.red);",
+            "child: Text(\n                          r,": "child: Text(\n                          _stockLabel(context, r),",
+            "? '✅ បន្ថែម $amount ${data['unit'] ?? ''}'\n                              : '✅ កាត់ $amount ${data['unit'] ?? ''}'": "? '✅ ${appText(context, km: 'បន្ថែម', en: 'Added')} $amount ${_stockLabel(context, (data['unit'] ?? '').toString())}'\n                              : '✅ ${appText(context, km: 'កាត់', en: 'Deducted')} $amount ${_stockLabel(context, (data['unit'] ?? '').toString())}'",
+            "'មិនទាន់មានប្រវត្តិស្តុក'": "appText(context, km: 'មិនទាន់មានប្រវត្តិស្តុក', en: 'No stock history yet')",
+            "'គ្មានឈ្មោះ'": "appText(context, km: 'គ្មានឈ្មោះ', en: 'Unnamed product')",
           }
-          for a, b in replacements.items():
-              s = s.replace(a, b)
+          for a,b in pairs.items():
+              s = s.replace(a,b)
 
-          # Translate stock-history reason values at display time without changing stored Khmer data.
-          s = s.replace("data['reason'],\n                    style:", "_stockLabel(context, data['reason'].toString()),\n                    style:")
+          # Remove any const from widgets whose subtree now calls appText directly.
+          s = s.replace("const Text(\n                      appText(context, km: 'រក្សាទុក', en: 'Save'),", "Text(\n                      appText(context, km: 'រក្សាទុក', en: 'Save'),")
+          s = s.replace("const Text(\n                  appText(context, km: 'មូលហេតុ', en: 'Reason'),", "Text(\n                  appText(context, km: 'មូលហេតុ', en: 'Reason'),")
+
+          # Sanity checks for compile-time const misuse introduced by localization.
+          if re.search(r'const\s+Text\(\s*appText\(', s):
+              raise SystemExit('Found invalid const Text(appText(...))')
 
           p.write_text(s, encoding='utf-8')
           PY
@@ -79,7 +66,8 @@ jobs:
           grep -q "String _stockLabel" lib/stock_management_screen.dart
           grep -q "Stock Management" lib/stock_management_screen.dart
           grep -q "Out of stock" lib/stock_management_screen.dart
-          grep -q "No history yet" lib/stock_management_screen.dart
+          grep -q "Enter manually" lib/stock_management_screen.dart
+          grep -q "Insufficient stock" lib/stock_management_screen.dart
 
       - name: Commit Stock Management port
         run: |
@@ -87,8 +75,8 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add lib/stock_management_screen.dart
           if git diff --cached --quiet; then
-            echo "No Stock Management changes needed."
+            echo "No additional Stock Management changes needed."
             exit 0
           fi
-          git commit -m "Port localized Stock Management into iOS working branch"
+          git commit -m "Finish Stock Management localization for iOS"
           git push origin HEAD:ios-sync-chat-order-ai
