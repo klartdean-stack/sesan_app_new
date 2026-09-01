@@ -207,5 +207,14 @@
   "enterPhoneFirst": "សូមបំពេញលេខទូរស័ព្ទសិន!",
   "smsFailed": "ផ្ញើសារមិនជោគជ័យ៖ {error}",
   "@smsFailed": {"placeholders": {"error": {"type": "String"}}},
-  "forgotPasswordResetOtp": "ភ្លេចលេខសម្ងាត់? កំណត់ឡើងវិញតាម OTP"
+  "forgotPasswordResetOtp": "ភ្លេចលេខសម្ងាត់? កំណត់ឡើងវិញតាម OTP",
+  "myCart": "កន្ត្រករបស់ខ្ញុំ",
+  "couldNotLoadUser": "មិនអាចទាញព័ត៌មានអ្នកប្រើបាន",
+  "continueToCheckout": "បន្តទៅការទូទាត់ ({amount})",
+  "@continueToCheckout": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "cartEmpty": "មិនទាន់មានទំនិញក្នុងកន្ត្រកទេ"
 }

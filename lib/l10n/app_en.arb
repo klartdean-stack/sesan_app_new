@@ -207,5 +207,14 @@
   "enterPhoneFirst": "Please enter your phone number first!",
   "smsFailed": "Could not send the message: {error}",
   "@smsFailed": {"placeholders": {"error": {"type": "String"}}},
-  "forgotPasswordResetOtp": "Forgot password? Reset it with OTP"
+  "forgotPasswordResetOtp": "Forgot password? Reset it with OTP",
+  "myCart": "My cart",
+  "couldNotLoadUser": "Could not load user information",
+  "continueToCheckout": "Continue to checkout ({amount})",
+  "@continueToCheckout": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "cartEmpty": "Your cart is empty"
 }
