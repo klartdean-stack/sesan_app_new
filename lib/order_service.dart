@@ -4,7 +4,6 @@ import 'package:flutter/foundation.dart';
 class OrderService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  // ថែមមុខងារនេះចូលក្នុង Class OrderService
   Stream<QuerySnapshot> getPendingOrders() {
     return _db
         .collection('orders')
@@ -13,7 +12,6 @@ class OrderService {
         .snapshots();
   }
 
-  // ១. Function បង្កើត Order (បំបែកបុងតាមអ្នកលក់ និងកាត់ 7% ស្វ័យប្រវត្តិ)
   Future<bool> createOrder({
     required List<Map<String, dynamic>> cartItems,
     required double totalAmount,
@@ -24,101 +22,155 @@ class OrderService {
     String? paymentImage,
   }) async {
     try {
-      // កំណត់យក ID អ្នកលក់ប្លែកៗគ្នា
       final sellerIds = cartItems
           .map((item) => item['seller_id']?.toString() ?? 'UNKNOWN')
           .toSet();
 
-      WriteBatch batch = _db.batch();
-
-      for (String sId in sellerIds) {
-        // ចម្រាញ់យកទំនិញរបស់អ្នកលក់ម្នាក់ៗ
-        List<Map<String, dynamic>> specificItems = cartItems
-            .where(
-              (item) => (item['seller_id']?.toString() ?? 'UNKNOWN') == sId,
-            )
-            .toList();
-
-        // ទាញយកលេខទូរស័ព្ទអ្នកលក់ចេញពីទំនិញដំបូង (សម្រាប់ទុកឱ្យ Admin តេតាមដាន)
-        String sPhone =
-            specificItems.first['seller_phone']?.toString() ?? 'គ្មានលេខ';
-
-        double subTotal = specificItems.fold(0, (sum, item) {
-          double price =
-              double.tryParse(item['price'].toString().replaceAll(',', '')) ??
-              0.0;
-          int qty = int.tryParse(item['quantity'].toString()) ?? 1;
-          return sum + (price * qty);
-        });
-
-        double adminCommission = subTotal * 0.07; // កាត់ 7%
-        double sellerEarnings = subTotal - adminCommission; // 93%
-
-        DocumentReference orderRef = _db.collection('orders').doc();
-
-        batch.set(orderRef, {
-          'order_id': orderRef.id,
-          // ក្នុង batch.set នៃ collection 'orders'
-          'is_settled': false,
-          'items': specificItems.map((item) {
-            return {
-              'product_name': item['product_name'] ?? 'គ្មានឈ្មោះ',
-              'price':
-                  double.tryParse(
-                    item['price'].toString().replaceAll(',', ''),
-                  ) ??
-                  0.0,
-              'quantity': int.tryParse(item['quantity'].toString()) ?? 1,
-              'seller_id': item['seller_id'] ?? sId,
-              // កែត្រង់នេះ៖ ប្រាប់វាថា បើកន្ត្រកមាន seller_phone ឱ្យយកមក
-              // បើអត់ទេ ឱ្យឆែកមើលក្នុង phone1 ក្រែងលោជាទំនិញចាស់
-              'seller_phone': item['seller_phone'] ?? item['phone1'] ?? sPhone,
-              'category': item['category'] ?? 'ទូទៅ',
-              'image_url': item['image_url'] ?? '', // រូបភាពទំនិញ
-            };
-          }).toList(),
-
-          'total_amount': subTotal,
-          'admin_commission': adminCommission,
-          'seller_earnings': sellerEarnings,
-
-          // ព័ត៌មានអ្នកលក់ និងអតិថិជន (Tracking)
-          'seller_id': sId,
-          'seller_phone': sPhone, // បន្ថែមលេខអ្នកលក់ក្នុងបុងរួម
-          'customer_id': customerId,
-          'customer_name': customerName,
-          'phone_number': phoneNumber,
-          'shipping_address': shippingAddress,
-          'payment_image': paymentImage ?? "",
-
-          'status': 'pending',
-          'payment_status': 'paid',
-          'created_at': FieldValue.serverTimestamp(),
-
-          // សម្រាប់ Report ប្រើបានវែងឆ្ងាយ
-          'month_key':
-              "${DateTime.now().year}-${DateTime.now().month.toString().padLeft(2, '0')}",
-          'date_key':
-              "${DateTime.now().year}-${DateTime.now().month.toString().padLeft(2, '0')}-${DateTime.now().day.toString().padLeft(2, '0')}",
-        });
+      final Map<String, int> requestedByProduct = {};
+      for (final item in cartItems) {
+        final productId = item['product_id']?.toString() ?? '';
+        if (productId.isEmpty) continue;
+        final qty = int.tryParse(item['quantity']?.toString() ?? '') ?? 1;
+        requestedByProduct[productId] =
+            (requestedByProduct[productId] ?? 0) + qty;
       }
-      await batch.commit();
+
+      await _db.runTransaction((transaction) async {
+        final Map<String, DocumentSnapshot<Map<String, dynamic>>> products = {};
+
+        for (final productId in requestedByProduct.keys) {
+          final ref = _db.collection('products').doc(productId);
+          products[productId] = await transaction.get(ref);
+        }
+
+        for (final entry in requestedByProduct.entries) {
+          final productId = entry.key;
+          final requestedQty = entry.value;
+          final snapshot = products[productId];
+          final data = snapshot?.data();
+
+          if (snapshot == null || !snapshot.exists || data == null) {
+            continue;
+          }
+
+          if (data['track_stock'] == true) {
+            final available = data['stock_quantity'] is num
+                ? (data['stock_quantity'] as num).toInt()
+                : int.tryParse(data['stock_quantity']?.toString() ?? '') ?? 0;
+
+            if (requestedQty <= 0 || available < requestedQty) {
+              final name = data['product_name']?.toString() ?? productId;
+              throw StateError(
+                'OUT_OF_STOCK: $name (available: $available, requested: $requestedQty)',
+              );
+            }
+
+            final remaining = available - requestedQty;
+            transaction.update(snapshot.reference, {
+              'stock_quantity': remaining,
+              'sold_quantity': FieldValue.increment(requestedQty),
+              'is_available': remaining > 0,
+              'stock_updated_at': FieldValue.serverTimestamp(),
+            });
+          }
+        }
+
+        for (final sId in sellerIds) {
+          final specificItems = cartItems
+              .where(
+                (item) =>
+                    (item['seller_id']?.toString() ?? 'UNKNOWN') == sId,
+              )
+              .toList();
+
+          final sPhone =
+              specificItems.first['seller_phone']?.toString() ?? 'គ្មានលេខ';
+
+          final subTotal = specificItems.fold<double>(0, (sum, item) {
+            final price = double.tryParse(
+                  item['price'].toString().replaceAll(',', ''),
+                ) ??
+                0.0;
+            final qty = int.tryParse(item['quantity'].toString()) ?? 1;
+            return sum + (price * qty);
+          });
+
+          final adminCommission = subTotal * 0.07;
+          final sellerEarnings = subTotal - adminCommission;
+          final orderRef = _db.collection('orders').doc();
+
+          transaction.set(orderRef, {
+            'order_id': orderRef.id,
+            'is_settled': false,
+            'stock_restored': false,
+            'items': specificItems.map((item) {
+              final productId = item['product_id']?.toString() ?? '';
+              final productData = products[productId]?.data();
+
+              return {
+                'product_id': productId,
+                'product_name': item['product_name'] ?? 'គ្មានឈ្មោះ',
+                'price': double.tryParse(
+                      item['price'].toString().replaceAll(',', ''),
+                    ) ??
+                    0.0,
+                'quantity': int.tryParse(item['quantity'].toString()) ?? 1,
+                'stock_tracked': productData?['track_stock'] == true,
+                'stock_unit':
+                    productData?['stock_unit'] ?? item['stock_unit'] ?? 'item',
+                'seller_id': item['seller_id'] ?? sId,
+                'seller_name': item['seller_name'] ?? 'អាជីវករ សេសាន',
+                'seller_photo': item['seller_photo'] ?? '',
+                'seller_phone':
+                    item['seller_phone'] ?? item['phone1'] ?? sPhone,
+                'category': item['category'] ?? 'ទូទៅ',
+                'image_url': item['image_url'] ?? '',
+              };
+            }).toList(),
+            'total_amount': subTotal,
+            'admin_commission': adminCommission,
+            'seller_earnings': sellerEarnings,
+            'seller_id': sId,
+            'seller_phone': sPhone,
+            'customer_id': customerId,
+            'customer_name': customerName,
+            'phone_number': phoneNumber,
+            'shipping_address': shippingAddress,
+            'payment_image': paymentImage ?? '',
+            'status': 'pending',
+            'payment_status': 'paid',
+            'created_at': FieldValue.serverTimestamp(),
+            'month_key':
+                "${DateTime.now().year}-${DateTime.now().month.toString().padLeft(2, '0')}",
+            'date_key':
+                "${DateTime.now().year}-${DateTime.now().month.toString().padLeft(2, '0')}-${DateTime.now().day.toString().padLeft(2, '0')}",
+          });
+        }
+      });
+
       return true;
     } catch (e) {
-      debugPrint("Firebase Order Split Error: $e");
+      debugPrint("Firebase Order Split/Stock Error: $e");
       return false;
     }
   }
 
-  // ៥. Function សម្អាតកន្ត្រកក្រោយទិញរួច (ម៉ត់ចត់តាម UID)
   Future<void> clearCart(String userId) async {
     try {
-      var snapshots = await _db
-          .collection('carts')
-          .where('user_id', isEqualTo: userId)
-          .get();
-      WriteBatch batch = _db.batch();
-      for (var doc in snapshots.docs) {
+      final results = await Future.wait([
+        _db.collection('carts').where('customer_id', isEqualTo: userId).get(),
+        _db.collection('carts').where('user_id', isEqualTo: userId).get(),
+      ]);
+
+      final docsByPath = <String, QueryDocumentSnapshot<Map<String, dynamic>>>{};
+      for (final snapshot in results) {
+        for (final doc in snapshot.docs) {
+          docsByPath[doc.reference.path] = doc;
+        }
+      }
+
+      final batch = _db.batch();
+      for (final doc in docsByPath.values) {
         batch.delete(doc.reference);
       }
       await batch.commit();
@@ -127,29 +179,23 @@ class OrderService {
     }
   }
 
-  // ៥. មុខងារទាញយក "ប្រវត្តិកម្ម៉ង់" ដែលជោគជ័យសម្រាប់ភ្ញៀវ
   Stream<QuerySnapshot> getOrderHistory(String userId) {
     return _db
         .collection('orders')
         .where('customer_id', isEqualTo: userId)
-        .where(
-          'status',
-          isEqualTo: 'confirmed',
-        ) // 🔥 ទាញយកតែបុងដែល Admin បញ្ជាក់រួច
-        .orderBy('created_at', descending: true) // តម្រៀបពីថ្មីទៅចាស់
+        .where('status', isEqualTo: 'confirmed')
+        .orderBy('created_at', descending: true)
         .snapshots();
   }
 
   Future<void> confirmPayment(String orderId) async {}
-} // ជំនួយសម្រាប់ Format កាលបរិច្ឆេទ
+}
 
 extension DateFormatter on DateTime {
   String format(String pattern) {
-    // មេអាចប្រើ intl package បើចង់បាន patterns ច្រើន
     return "${this.year}-${this.month.toString().padLeft(2, '0')}";
   }
 
-  // ថែមមុខងារប្តូរ Status ទៅ Packing និងបូកលុយចូលកាបូបអ្នកលក់
   Future<bool> updateStatusToPacking({
     required String orderId,
     required String sellerId,
@@ -165,20 +211,15 @@ extension DateFormatter on DateTime {
           .collection('users')
           .doc(sellerId);
 
-      // ១. ប្តូរ Status Order និងកំណត់ថ្ងៃចាប់ផ្តើមវេចខ្ចប់
       batch.update(orderRef, {
         'status': 'packing',
-        'packing_date': FieldValue.serverTimestamp(), // 🎯 សម្រាប់រាប់ ៥ ថ្ងៃ
-        'is_settled': false, // រក្សាទុកដដែល ដើម្បីឱ្យ Cloud Function ដឹង
+        'packing_date': FieldValue.serverTimestamp(),
+        'is_settled': false,
       });
 
-      // ២. បាញ់លុយចូលកាបូបអ្នកលក់ភ្លាមៗ (Wallet)
-      // វាបូកបញ្ចូលទាំង សរុប (balance) និង រង់ចាំ (wallet_balance)
       batch.update(userRef, {
-        'balance': FieldValue.increment(sellerEarnings), // បូកចូលកញ្ចប់សរុប
-        'wallet_balance': FieldValue.increment(
-          sellerEarnings,
-        ), // បូកចូលកញ្ចប់រង់ចាំ
+        'balance': FieldValue.increment(sellerEarnings),
+        'wallet_balance': FieldValue.increment(sellerEarnings),
       });
 
       await batch.commit();
