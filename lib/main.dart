@@ -14,6 +14,7 @@ import 'package:get/get.dart';
 import 'package:flutter/foundation.dart';
 import 'firebase_options.dart';
 import 'l10n/app_localizations.dart';
+import 'ios_sync_translations.dart';
 
 const AndroidNotificationChannel channel = AndroidNotificationChannel(
   'order_channel',
@@ -25,7 +26,7 @@ const AndroidNotificationChannel channel = AndroidNotificationChannel(
 );
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-FlutterLocalNotificationsPlugin();
+    FlutterLocalNotificationsPlugin();
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -45,7 +46,6 @@ void main() async {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
-    // ✅ លុប setPersistence ចេញ (មិនចាំបាច់ ព្រោះ Firebase Auth រក្សា session ដោយស្វ័យប្រវត្តិ)
   } catch (e) {
     debugPrint("Firebase init error: $e");
   }
@@ -54,9 +54,7 @@ void main() async {
   final authController = Get.put(AuthController());
   await authController.checkLoginStatus();
 
-// ✅ ហៅ setup notifications តែនៅពេលមិនមែន Web
   if (!kIsWeb) {
-    // រុំក្នុង try-catch ដើម្បីកុំឲ្យ App គាំងបើមាន error (ឧ. Free Account)
     try {
       await _setupMobileNotifications();
     } catch (e) {
@@ -69,7 +67,6 @@ void main() async {
   runApp(MyApp(initialLocale: Locale(savedLanguage)));
 }
 
-// បំបែក Function នេះចេញដើម្បីកុំឱ្យកូដធំពេក
 Future<void> _setupMobileNotifications() async {
   FirebaseMessaging messaging = FirebaseMessaging.instance;
   await messaging.requestPermission(alert: true, badge: true, sound: true);
@@ -77,7 +74,7 @@ Future<void> _setupMobileNotifications() async {
 
   await flutterLocalNotificationsPlugin
       .resolvePlatformSpecificImplementation<
-      AndroidFlutterLocalNotificationsPlugin>()
+          AndroidFlutterLocalNotificationsPlugin>()
       ?.createNotificationChannel(channel);
 
   await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
@@ -86,9 +83,6 @@ Future<void> _setupMobileNotifications() async {
     sound: true,
   );
 
-  // Subscribe ទៅកាន់ Topic
-  // ប្រសិនបើអ្នកកំពុងប្រើ Free Account, subscribeToTopic នឹងបរាជ័យ
-  // ប៉ុន្តែវាមិនប៉ះពាល់ដល់មុខងារដទៃទេ
   try {
     await messaging.subscribeToTopic('admin_orders');
     await messaging.subscribeToTopic('all_users');
@@ -100,7 +94,7 @@ Future<void> _setupMobileNotifications() async {
     final RemoteNotification? notification = message.notification;
 
     const AndroidNotificationDetails androidPlatformChannelSpecifics =
-    AndroidNotificationDetails(
+        AndroidNotificationDetails(
       'order_channel',
       'ការកម្ម៉ង់ទំនិញថ្មី',
       channelDescription: 'ជូនដំណឹងដល់ម្ចាស់ហាងពេលមានភ្ញៀវកម្ម៉ង់',
@@ -111,7 +105,7 @@ Future<void> _setupMobileNotifications() async {
     );
 
     const DarwinNotificationDetails iOSPlatformChannelSpecifics =
-    DarwinNotificationDetails(
+        DarwinNotificationDetails(
       presentAlert: true,
       presentBadge: true,
       presentSound: true,
@@ -120,7 +114,8 @@ Future<void> _setupMobileNotifications() async {
     const NotificationDetails platformChannelSpecifics = NotificationDetails(
       android: androidPlatformChannelSpecifics,
       iOS: iOSPlatformChannelSpecifics,
-    );await flutterLocalNotificationsPlugin.show(
+    );
+    await flutterLocalNotificationsPlugin.show(
       0,
       notification?.title ?? 'គ្មានចំណងជើង',
       notification?.body ?? 'គ្មានខ្លឹមសារ',
@@ -130,18 +125,18 @@ Future<void> _setupMobileNotifications() async {
   });
 }
 
-
 class MyApp extends StatelessWidget {
   const MyApp({super.key, required this.initialLocale});
 
   final Locale initialLocale;
-
 
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
       navigatorKey: navigatorKey,
       debugShowCheckedModeBanner: false,
+      translations: IosSyncTranslations(),
+      fallbackLocale: const Locale('km'),
       onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
       localizationsDelegates: const [
         AppLocalizations.delegate,
@@ -164,34 +159,27 @@ class MyApp extends StatelessWidget {
           },
         ),
       ),
-      // ✅ FIXED: ប្រើ Widget ធម្មតាជំនួស Obx ដើម្បីចៀសវាង loop
       home: const AuthWrapper(),
       routes: {
         '/login': (context) => const LoginScreen(),
         '/home': (context) => const HomeScreen(guestMode: false),
-        '/home-guest': (context) =>
-        const HomeScreen(guestMode: true), // ✅ បន្ថែម
+        '/home-guest': (context) => const HomeScreen(guestMode: true),
         '/signup': (context) => const SignUpScreen(),
       },
     );
   }
 }
 
-
-// ✅ បន្ថែម Widget នេះ (ដាក់ក្នុង main.dart ឬ file ផ្សេង)
 class AuthWrapper extends StatefulWidget {
   const AuthWrapper({super.key});
-
 
   @override
   State<AuthWrapper> createState() => _AuthWrapperState();
 }
 
-
 class _AuthWrapperState extends State<AuthWrapper> {
   Widget? _cachedScreen;
   bool _initialized = false;
-
 
   @override
   void initState() {
@@ -199,18 +187,13 @@ class _AuthWrapperState extends State<AuthWrapper> {
     _checkAuth();
   }
 
-
   Future<void> _checkAuth() async {
     final prefs = await SharedPreferences.getInstance();
     final uid = prefs.getString('user_uid');
     final isGuest = prefs.getBool('is_guest') ?? false;
 
-
-    // ✅ កុំ set AuthController state នៅទីនេះ
-    // ទុកតែជា local variable
     final bool loggedIn = uid != null && uid.isNotEmpty;
     final bool guest = isGuest;
-
 
     if (mounted) {
       setState(() {
@@ -226,7 +209,6 @@ class _AuthWrapperState extends State<AuthWrapper> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
     if (!_initialized) {
@@ -235,5 +217,3 @@ class _AuthWrapperState extends State<AuthWrapper> {
     return _cachedScreen!;
   }
 }
-
-
