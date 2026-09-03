@@ -45,6 +45,14 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
   // ✅ Cache សម្រាប់ _getCurrentUid
   String? _cachedCurrentUid;
   bool _isCheckingFollow = false;
+  bool _showSellerPhone = false;
+
+  String _maskSellerPhone(String phone) {
+    final value = phone.trim().replaceAll(RegExp(r'\s+'), '');
+    if (value.isEmpty) return '';
+    if (value.length <= 4) return '••••';
+    return '${value.substring(0, value.length - 4)}••••';
+  }
   final ScreenshotController _screenshotController = ScreenshotController();
 
   @override
@@ -1174,7 +1182,7 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
                 if (phone.isNotEmpty) ...[
                   const SizedBox(height: 4),
                   Text(
-                    '📞 $phone',
+                    '📞 ${_maskSellerPhone(phone)}',
                     style: const TextStyle(fontSize: 13, color: Colors.black54),
                   ),
                 ],
@@ -1899,14 +1907,29 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
                               size: 20,
                             ),
                             const SizedBox(width: 8),
-                            Text(
-                              phone,
-                              style: TextStyle(
-                                color: Colors.green[700],
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
+                            Expanded(
+                              child: Text(
+                                _showSellerPhone ? phone : _maskSellerPhone(phone),
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: Colors.green[700],
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
                               ),
                             ),
+                            if (_currentUserId != widget.sellerId)
+                              TextButton.icon(
+                                onPressed: () => setState(() => _showSellerPhone = !_showSellerPhone),
+                                icon: Icon(
+                                  _showSellerPhone ? Icons.visibility_off : Icons.visibility,
+                                  size: 16,
+                                ),
+                                label: Text(
+                                  _showSellerPhone ? 'លាក់លេខ' : 'បង្ហាញលេខ',
+                                  style: const TextStyle(fontFamily: 'Siemreap', fontSize: 11),
+                                ),
+                              ),
                           ],
                         ),
                       ),

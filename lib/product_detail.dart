@@ -52,6 +52,13 @@ class ProductDetailScreen extends StatefulWidget {
 }
 
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
+  String _maskSellerPhone(dynamic value) {
+    final phone = (value ?? '').toString().trim();
+    if (phone.isEmpty) return '';
+    final digits = phone.replaceAll(RegExp(r'\s+'), '');
+    if (digits.length <= 4) return '••••';
+    return '${digits.substring(0, digits.length - 4)}••••';
+  }
   int _currentPage = 0; // 🎯 បន្ថែមសម្រាប់រាប់លេខរូបភាព
   int _tempQty = 1; // 🎯 ប្តូរពី static មកជា variable ធម្មតាវិញ
   bool isSaved = false; // ស្ថានភាពដំបូង
@@ -2452,20 +2459,17 @@ Android: $androidPlayStoreLink
                                   color: Colors.orange,
                                 ),
                                 title: Text(
-                                  widget.product['phone1'] ?? l10n.noPhone,
+                                  _maskSellerPhone(widget.product['phone1']).isEmpty
+                                      ? l10n.noPhone
+                                      : _maskSellerPhone(widget.product['phone1']),
                                 ),
-                                trailing: IconButton(
-                                  icon: const Icon(
-                                    Icons.call,
-                                    color: Colors.green,
+                                subtitle: Text(
+                                  appText(
+                                    context,
+                                    km: 'សូមឆាត ឬទិញតាមកន្ត្រកក្នុង Sesan',
+                                    en: 'Chat or order through the Sesan cart',
                                   ),
-                                  onPressed: () async {
-                                    final url = Uri.parse(
-                                      "tel:${widget.product['phone1']}",
-                                    );
-                                    if (await canLaunchUrl(url))
-                                      await launchUrl(url);
-                                  },
+                                  style: const TextStyle(fontSize: 11, fontFamily: 'Siemreap'),
                                 ),
                               ),
                               if (widget.product['phone2'] != null &&
@@ -2479,20 +2483,7 @@ Android: $androidPlayStoreLink
                                     color: Colors.orange,
                                   ),
                                   title: Text(
-                                    widget.product['phone2'].toString(),
-                                  ),
-                                  trailing: IconButton(
-                                    icon: const Icon(
-                                      Icons.call,
-                                      color: Colors.green,
-                                    ),
-                                    onPressed: () async {
-                                      final url = Uri.parse(
-                                        "tel:${widget.product['phone2']}",
-                                      );
-                                      if (await canLaunchUrl(url))
-                                        await launchUrl(url);
-                                    },
+                                    _maskSellerPhone(widget.product['phone2']),
                                   ),
                                 ),
                               ListTile(
