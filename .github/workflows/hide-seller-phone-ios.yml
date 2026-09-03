@@ -1,0 +1,75 @@
+name: One-time seller phone privacy patch
+
+on:
+  push:
+    branches: [ios-sync-chat-order-ai]
+    paths: [.github/workflows/hide-seller-phone-ios.yml]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ios-sync-chat-order-ai
+          fetch-depth: 0
+      - name: Hide seller phone on Product Detail and Seller Shop
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          # ---------- Product Detail ----------
+          p = Path('lib/product_detail.dart')
+          s = p.read_text(encoding='utf-8')
+          anchor = "class _ProductDetailScreenState extends State<ProductDetailScreen> {\n"
+          helper = """class _ProductDetailScreenState extends State<ProductDetailScreen> {\n  String _maskSellerPhone(dynamic value) {\n    final phone = (value ?? '').toString().trim();\n    if (phone.isEmpty) return '';\n    final digits = phone.replaceAll(RegExp(r'\\s+'), '');\n    if (digits.length <= 4) return '••••';\n    return '${digits.substring(0, digits.length - 4)}••••';\n  }\n"""
+          if '_maskSellerPhone' not in s:
+              if anchor not in s: raise SystemExit('ProductDetail state anchor not found')
+              s = s.replace(anchor, helper, 1)
+
+          old1 = """                              ListTile(\n                                contentPadding: EdgeInsets.zero,\n                                leading: const Icon(\n                                  Icons.phone,\n                                  color: Colors.orange,\n                                ),\n                                title: Text(\n                                  widget.product['phone1'] ?? l10n.noPhone,\n                                ),\n                                trailing: IconButton(\n                                  icon: const Icon(\n                                    Icons.call,\n                                    color: Colors.green,\n                                  ),\n                                  onPressed: () async {\n                                    final url = Uri.parse(\n                                      \"tel:${widget.product['phone1']}\",\n                                    );\n                                    if (await canLaunchUrl(url))\n                                      await launchUrl(url);\n                                  },\n                                ),\n                              ),"""
+          new1 = """                              ListTile(\n                                contentPadding: EdgeInsets.zero,\n                                leading: const Icon(\n                                  Icons.phone,\n                                  color: Colors.orange,\n                                ),\n                                title: Text(\n                                  _maskSellerPhone(widget.product['phone1']).isEmpty\n                                      ? l10n.noPhone\n                                      : _maskSellerPhone(widget.product['phone1']),\n                                ),\n                                subtitle: Text(\n                                  appText(\n                                    context,\n                                    km: 'សូមឆាត ឬទិញតាមកន្ត្រកក្នុង Sesan',\n                                    en: 'Chat or order through the Sesan cart',\n                                  ),\n                                  style: const TextStyle(fontSize: 11, fontFamily: 'Siemreap'),\n                                ),\n                              ),"""
+          if old1 not in s: raise SystemExit('Product phone1 block not found')
+          s = s.replace(old1, new1, 1)
+
+          old2 = """                                ListTile(\n                                  contentPadding: EdgeInsets.zero,\n                                  leading: const Icon(\n                                    Icons.phone_android,\n                                    color: Colors.orange,\n                                  ),\n                                  title: Text(\n                                    widget.product['phone2'].toString(),\n                                  ),\n                                  trailing: IconButton(\n                                    icon: const Icon(\n                                      Icons.call,\n                                      color: Colors.green,\n                                    ),\n                                    onPressed: () async {\n                                      final url = Uri.parse(\n                                        \"tel:${widget.product['phone2']}\",\n                                      );\n                                      if (await canLaunchUrl(url))\n                                        await launchUrl(url);\n                                    },\n                                  ),\n                                ),"""
+          new2 = """                                ListTile(\n                                  contentPadding: EdgeInsets.zero,\n                                  leading: const Icon(\n                                    Icons.phone_android,\n                                    color: Colors.orange,\n                                  ),\n                                  title: Text(\n                                    _maskSellerPhone(widget.product['phone2']),\n                                  ),\n                                ),"""
+          if old2 not in s: raise SystemExit('Product phone2 block not found')
+          s = s.replace(old2, new2, 1)
+          p.write_text(s, encoding='utf-8')
+
+          # ---------- Seller Shop ----------
+          p = Path('lib/seller_profile_screen.dart')
+          s = p.read_text(encoding='utf-8')
+          anchor = "  bool _isCheckingFollow = false;\n"
+          addition = """  bool _isCheckingFollow = false;\n  bool _showSellerPhone = false;\n\n  String _maskSellerPhone(String phone) {\n    final value = phone.trim().replaceAll(RegExp(r'\\s+'), '');\n    if (value.isEmpty) return '';\n    if (value.length <= 4) return '••••';\n    return '${value.substring(0, value.length - 4)}••••';\n  }\n"""
+          if '_showSellerPhone' not in s:
+              if anchor not in s: raise SystemExit('Seller state anchor not found')
+              s = s.replace(anchor, addition, 1)
+
+          # Never leak full number into shared shop watermark.
+          s = s.replace("'📞 $phone',", "'📞 ${_maskSellerPhone(phone)}',", 1)
+
+          old = """                            Text(\n                              phone,\n                              style: TextStyle(\n                                color: Colors.green[700],\n                                fontWeight: FontWeight.bold,\n                                fontSize: 16,\n                              ),\n                            ),"""
+          new = """                            Expanded(\n                              child: Text(\n                                _showSellerPhone ? phone : _maskSellerPhone(phone),\n                                textAlign: TextAlign.center,\n                                style: TextStyle(\n                                  color: Colors.green[700],\n                                  fontWeight: FontWeight.bold,\n                                  fontSize: 16,\n                                ),\n                              ),\n                            ),\n                            if (_currentUserId != widget.sellerId)\n                              TextButton.icon(\n                                onPressed: () => setState(() => _showSellerPhone = !_showSellerPhone),\n                                icon: Icon(\n                                  _showSellerPhone ? Icons.visibility_off : Icons.visibility,\n                                  size: 16,\n                                ),\n                                label: Text(\n                                  _showSellerPhone ? 'លាក់លេខ' : 'បង្ហាញលេខ',\n                                  style: const TextStyle(fontFamily: 'Siemreap', fontSize: 11),\n                                ),\n                              ),"""
+          if old not in s: raise SystemExit('Seller phone display block not found')
+          s = s.replace(old, new, 1)
+          p.write_text(s, encoding='utf-8')
+          PY
+      - name: Verify privacy patch
+        run: |
+          grep -q "_maskSellerPhone" lib/product_detail.dart
+          grep -q "Chat or order through the Sesan cart" lib/product_detail.dart
+          grep -q "_showSellerPhone" lib/seller_profile_screen.dart
+          grep -q "បង្ហាញលេខ" lib/seller_profile_screen.dart
+          if grep -q "tel:\${widget.product\['phone1'\]}" lib/product_detail.dart; then exit 1; fi
+      - name: Commit patch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add lib/product_detail.dart lib/seller_profile_screen.dart
+          git commit -m "Hide seller phone behind in-app purchase flow"
+          git push origin HEAD:ios-sync-chat-order-ai
