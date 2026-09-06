@@ -24,7 +24,7 @@ const AndroidNotificationChannel channel = AndroidNotificationChannel(
 );
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-FlutterLocalNotificationsPlugin();
+    FlutterLocalNotificationsPlugin();
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -44,37 +44,38 @@ void main() async {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
-    // ✅ លុប setPersistence ចេញ (មិនចាំបាច់ ព្រោះ Firebase Auth រក្សា session ដោយស្វ័យប្រវត្តិ)
+    // Native iOS/Android Firebase Auth persists sessions automatically.
+    // Explicit setPersistence is only needed on web.
+    if (kIsWeb) {
+      await FirebaseAuth.instance.setPersistence(Persistence.LOCAL);
+    }
   } catch (e) {
-    debugPrint("Firebase init error: $e");
+    debugPrint('Firebase init error: $e');
   }
 
   Get.put(UploadController());
   final authController = Get.put(AuthController());
   await authController.checkLoginStatus();
 
-// ✅ ហៅ setup notifications តែនៅពេលមិនមែន Web
   if (!kIsWeb) {
-    // រុំក្នុង try-catch ដើម្បីកុំឲ្យ App គាំងបើមាន error (ឧ. Free Account)
     try {
       await _setupMobileNotifications();
     } catch (e) {
-      debugPrint("Notification setup error (Free Account likely): $e");
+      debugPrint('Notification setup error: $e');
     }
   }
 
   runApp(const MyApp());
 }
 
-// បំបែក Function នេះចេញដើម្បីកុំឱ្យកូដធំពេក
 Future<void> _setupMobileNotifications() async {
-  FirebaseMessaging messaging = FirebaseMessaging.instance;
+  final messaging = FirebaseMessaging.instance;
   await messaging.requestPermission(alert: true, badge: true, sound: true);
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
   await flutterLocalNotificationsPlugin
       .resolvePlatformSpecificImplementation<
-      AndroidFlutterLocalNotificationsPlugin>()
+          AndroidFlutterLocalNotificationsPlugin>()
       ?.createNotificationChannel(channel);
 
   await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
@@ -83,21 +84,18 @@ Future<void> _setupMobileNotifications() async {
     sound: true,
   );
 
-  // Subscribe ទៅកាន់ Topic
-  // ប្រសិនបើអ្នកកំពុងប្រើ Free Account, subscribeToTopic នឹងបរាជ័យ
-  // ប៉ុន្តែវាមិនប៉ះពាល់ដល់មុខងារដទៃទេ
   try {
     await messaging.subscribeToTopic('admin_orders');
     await messaging.subscribeToTopic('all_users');
   } catch (e) {
-    debugPrint("Subscribe to topic failed (Free Account): $e");
+    debugPrint('Subscribe to topic failed: $e');
   }
 
   FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
     final RemoteNotification? notification = message.notification;
 
     const AndroidNotificationDetails androidPlatformChannelSpecifics =
-    AndroidNotificationDetails(
+        AndroidNotificationDetails(
       'order_channel',
       'ការកម្ម៉ង់ទំនិញថ្មី',
       channelDescription: 'ជូនដំណឹងដល់ម្ចាស់ហាងពេលមានភ្ញៀវកម្ម៉ង់',
@@ -108,7 +106,7 @@ Future<void> _setupMobileNotifications() async {
     );
 
     const DarwinNotificationDetails iOSPlatformChannelSpecifics =
-    DarwinNotificationDetails(
+        DarwinNotificationDetails(
       presentAlert: true,
       presentBadge: true,
       presentSound: true,
@@ -117,7 +115,9 @@ Future<void> _setupMobileNotifications() async {
     const NotificationDetails platformChannelSpecifics = NotificationDetails(
       android: androidPlatformChannelSpecifics,
       iOS: iOSPlatformChannelSpecifics,
-    );await flutterLocalNotificationsPlugin.show(
+    );
+
+    await flutterLocalNotificationsPlugin.show(
       0,
       notification?.title ?? 'គ្មានចំណងជើង',
       notification?.body ?? 'គ្មានខ្លឹមសារ',
@@ -127,10 +127,8 @@ Future<void> _setupMobileNotifications() async {
   });
 }
 
-
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
-
 
   @override
   Widget build(BuildContext context) {
@@ -158,34 +156,27 @@ class MyApp extends StatelessWidget {
           },
         ),
       ),
-      // ✅ FIXED: ប្រើ Widget ធម្មតាជំនួស Obx ដើម្បីចៀសវាង loop
       home: const AuthWrapper(),
       routes: {
         '/login': (context) => const LoginScreen(),
         '/home': (context) => const HomeScreen(guestMode: false),
-        '/home-guest': (context) =>
-        const HomeScreen(guestMode: true), // ✅ បន្ថែម
+        '/home-guest': (context) => const HomeScreen(guestMode: true),
         '/signup': (context) => const SignUpScreen(),
       },
     );
   }
 }
 
-
-// ✅ បន្ថែម Widget នេះ (ដាក់ក្នុង main.dart ឬ file ផ្សេង)
 class AuthWrapper extends StatefulWidget {
   const AuthWrapper({super.key});
-
 
   @override
   State<AuthWrapper> createState() => _AuthWrapperState();
 }
 
-
 class _AuthWrapperState extends State<AuthWrapper> {
   Widget? _cachedScreen;
   bool _initialized = false;
-
 
   @override
   void initState() {
@@ -193,42 +184,70 @@ class _AuthWrapperState extends State<AuthWrapper> {
     _checkAuth();
   }
 
-
   Future<void> _checkAuth() async {
     final prefs = await SharedPreferences.getInstance();
-    final uid = prefs.getString('user_uid');
+    final savedUid = prefs.getString('user_uid');
+    final savedLoggedIn = prefs.getBool('is_logged_in') ?? false;
     final isGuest = prefs.getBool('is_guest') ?? false;
 
+    User? firebaseUser = FirebaseAuth.instance.currentUser;
 
-    // ✅ កុំ set AuthController state នៅទីនេះ
-    // ទុកតែជា local variable
-    final bool loggedIn = uid != null && uid.isNotEmpty;
-    final bool guest = isGuest;
+    // Give native Firebase Auth a short startup window to restore its session.
+    if (firebaseUser == null && !kIsWeb) {
+      try {
+        firebaseUser = await FirebaseAuth.instance
+            .authStateChanges()
+            .where((user) => user != null)
+            .cast<User>()
+            .first
+            .timeout(const Duration(seconds: 2));
+      } catch (_) {
+        firebaseUser = FirebaseAuth.instance.currentUser;
+      }
+    }
 
+    if (!mounted) return;
+
+    final authController = Get.find<AuthController>();
+
+    if (firebaseUser != null) {
+      await prefs.setString('user_uid', firebaseUser.uid);
+      await prefs.setBool('is_logged_in', true);
+      await prefs.setBool('is_guest', false);
+      authController.isLoggedIn = true;
+      authController.isGuest = false;
+      authController.userId = firebaseUser.uid;
+      _cachedScreen = const HomeScreen(guestMode: false);
+    } else if (savedLoggedIn && savedUid != null && savedUid.isNotEmpty) {
+      // Keep Sesan's saved local session if Firebase restoration is delayed.
+      authController.isLoggedIn = true;
+      authController.isGuest = false;
+      authController.userId = savedUid;
+      _cachedScreen = const HomeScreen(guestMode: false);
+    } else if (isGuest) {
+      authController.isLoggedIn = false;
+      authController.isGuest = true;
+      authController.userId = '';
+      _cachedScreen = const HomeScreen(guestMode: true);
+    } else {
+      authController.isLoggedIn = false;
+      authController.isGuest = false;
+      authController.userId = '';
+      _cachedScreen = const LoginScreen();
+    }
 
     if (mounted) {
-      setState(() {
-        if (loggedIn) {
-          _cachedScreen = const HomeScreen(guestMode: false);
-        } else if (guest) {
-          _cachedScreen = const HomeScreen(guestMode: true);
-        } else {
-          _cachedScreen = const LoginScreen();
-        }
-        _initialized = true;
-      });
+      setState(() => _initialized = true);
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
     if (!_initialized) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
     }
     return _cachedScreen!;
   }
 }
-
-
-
