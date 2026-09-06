@@ -25,6 +25,7 @@ import 'video_player_screen.dart';
 import 'related_products_widget.dart';
 import 'chat_screen.dart';
 import 'cart_screen.dart';
+import 'product_detail_marketplace_actions.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
@@ -1723,53 +1724,25 @@ Android: $androidPlayStoreLink
                                 ),
                               ),
                               // ... កូដផ្នែកលេខទូរស័ព្ទ និងទីតាំងរបស់មេទុកដដែល
-                              ListTile(
-                                contentPadding: EdgeInsets.zero,
-                                leading: const Icon(
-                                  Icons.phone,
-                                  color: Colors.orange,
-                                ),
-                                title: Text(
-                                  widget.product['phone1'] ?? 'អត់មានលេខ',
-                                ),
-                                trailing: IconButton(
-                                  icon: const Icon(
-                                    Icons.call,
-                                    color: Colors.green,
-                                  ),
-                                  onPressed: () async {
-                                    final url = Uri.parse(
-                                      "tel:${widget.product['phone1']}",
-                                    );
-                                    if (await canLaunchUrl(url))
-                                      await launchUrl(url);
-                                  },
-                                ),
+                              SellerPhonePrivacyTile(
+                                phone: (widget.product['phone1'] ??
+                                        widget.product['seller_phone'] ??
+                                        '')
+                                    .toString(),
+                                onReveal: () => ProductDetailMarketplaceActions(
+                                  product: widget.product,
+                                  currentUserId: _currentUserId,
+                                ).logPhoneReveal(),
                               ),
                               if (widget.product['phone2'] != null &&
                                   widget.product['phone2'].toString().isNotEmpty)
-                                ListTile(
-                                  contentPadding: EdgeInsets.zero,
-                                  leading: const Icon(
-                                    Icons.phone_android,
-                                    color: Colors.orange,
-                                  ),
-                                  title: Text(
-                                    widget.product['phone2'].toString(),
-                                  ),
-                                  trailing: IconButton(
-                                    icon: const Icon(
-                                      Icons.call,
-                                      color: Colors.green,
-                                    ),
-                                    onPressed: () async {
-                                      final url = Uri.parse(
-                                        "tel:${widget.product['phone2']}",
-                                      );
-                                      if (await canLaunchUrl(url))
-                                        await launchUrl(url);
-                                    },
-                                  ),
+                                SellerPhonePrivacyTile(
+                                  phone: widget.product['phone2'].toString(),
+                                  secondary: true,
+                                  onReveal: () => ProductDetailMarketplaceActions(
+                                    product: widget.product,
+                                    currentUserId: _currentUserId,
+                                  ).logPhoneReveal(),
                                 ),
                               ListTile(
                                 contentPadding: EdgeInsets.zero,
@@ -1837,7 +1810,12 @@ Android: $androidPlayStoreLink
         ),
         child: Row(
           children: [
-            _actionIcon(Icons.chat, Colors.orange, () {
+            _actionIcon(Icons.chat, Colors.orange, () async {
+              await ProductDetailMarketplaceActions(
+                product: widget.product,
+                currentUserId: _currentUserId,
+              ).logSellerChat();
+              if (!context.mounted) return;
               Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -2037,6 +2015,11 @@ Android: $androidPlayStoreLink
         'seller_phone': widget.product['seller_phone'] ?? '',
         'seller_photo': widget.product['seller_photo'] ?? '',
       });
+
+      await ProductDetailMarketplaceActions(
+        product: widget.product,
+        currentUserId: userId,
+      ).logAddToCart();
 
 
       if (mounted) {
