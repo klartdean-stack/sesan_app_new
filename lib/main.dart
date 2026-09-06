@@ -6,6 +6,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:my_app/upload_controller.dart';
 import 'package:my_app/controllers/auth_controller.dart';
+import 'package:my_app/localization/app_translations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'home_screen.dart';
 import 'login_screen.dart';
@@ -29,9 +30,7 @@ final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   if (Firebase.apps.isEmpty) {
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
+    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   }
 }
 
@@ -39,13 +38,8 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
   try {
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
-    // Native iOS/Android Firebase Auth persists sessions automatically.
-    // Explicit setPersistence is only needed on web.
+    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
     if (kIsWeb) {
       await FirebaseAuth.instance.setPersistence(Persistence.LOCAL);
     }
@@ -53,6 +47,8 @@ void main() async {
     debugPrint('Firebase init error: $e');
   }
 
+  final languageController = await LanguageController.create();
+  Get.put(languageController);
   Get.put(UploadController());
   final authController = Get.put(AuthController());
   await authController.checkLoginStatus();
@@ -64,7 +60,6 @@ void main() async {
       debugPrint('Notification setup error: $e');
     }
   }
-
   runApp(const MyApp());
 }
 
@@ -74,8 +69,7 @@ Future<void> _setupMobileNotifications() async {
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
   await flutterLocalNotificationsPlugin
-      .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin>()
+      .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
       ?.createNotificationChannel(channel);
 
   await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
@@ -94,8 +88,7 @@ Future<void> _setupMobileNotifications() async {
   FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
     final RemoteNotification? notification = message.notification;
 
-    const AndroidNotificationDetails androidPlatformChannelSpecifics =
-        AndroidNotificationDetails(
+    const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
       'order_channel',
       'ការកម្ម៉ង់ទំនិញថ្មី',
       channelDescription: 'ជូនដំណឹងដល់ម្ចាស់ហាងពេលមានភ្ញៀវកម្ម៉ង់',
@@ -104,24 +97,21 @@ Future<void> _setupMobileNotifications() async {
       icon: 'ic_stat_sesan',
       sound: RawResourceAndroidNotificationSound('order_sound'),
     );
-
-    const DarwinNotificationDetails iOSPlatformChannelSpecifics =
-        DarwinNotificationDetails(
+    const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
       presentAlert: true,
       presentBadge: true,
       presentSound: true,
     );
-
-    const NotificationDetails platformChannelSpecifics = NotificationDetails(
-      android: androidPlatformChannelSpecifics,
-      iOS: iOSPlatformChannelSpecifics,
+    const NotificationDetails details = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
     );
 
     await flutterLocalNotificationsPlugin.show(
       0,
-      notification?.title ?? 'គ្មានចំណងជើង',
-      notification?.body ?? 'គ្មានខ្លឹមសារ',
-      platformChannelSpecifics,
+      notification?.title ?? 'Sesan App',
+      notification?.body ?? '',
+      details,
       payload: message.data.toString(),
     );
   });
@@ -136,13 +126,18 @@ class MyApp extends StatelessWidget {
       navigatorKey: navigatorKey,
       debugShowCheckedModeBanner: false,
       title: 'Sesan Marketplace',
+      translations: AppTranslations(),
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      supportedLocales: const [Locale('km', 'KH')],
-      locale: const Locale('km', 'KH'),
+      supportedLocales: const [
+        Locale('km', 'KH'),
+        Locale('en', 'US'),
+      ],
+      locale: Get.find<LanguageController>().currentLocale,
+      fallbackLocale: const Locale('km', 'KH'),
       theme: ThemeData(
         useMaterial3: true,
         primarySwatch: Colors.green,
@@ -191,8 +186,6 @@ class _AuthWrapperState extends State<AuthWrapper> {
     final isGuest = prefs.getBool('is_guest') ?? false;
 
     User? firebaseUser = FirebaseAuth.instance.currentUser;
-
-    // Give native Firebase Auth a short startup window to restore its session.
     if (firebaseUser == null && !kIsWeb) {
       try {
         firebaseUser = await FirebaseAuth.instance
@@ -207,7 +200,6 @@ class _AuthWrapperState extends State<AuthWrapper> {
     }
 
     if (!mounted) return;
-
     final authController = Get.find<AuthController>();
 
     if (firebaseUser != null) {
@@ -219,7 +211,6 @@ class _AuthWrapperState extends State<AuthWrapper> {
       authController.userId = firebaseUser.uid;
       _cachedScreen = const HomeScreen(guestMode: false);
     } else if (savedLoggedIn && savedUid != null && savedUid.isNotEmpty) {
-      // Keep Sesan's saved local session if Firebase restoration is delayed.
       authController.isLoggedIn = true;
       authController.isGuest = false;
       authController.userId = savedUid;
@@ -236,17 +227,13 @@ class _AuthWrapperState extends State<AuthWrapper> {
       _cachedScreen = const LoginScreen();
     }
 
-    if (mounted) {
-      setState(() => _initialized = true);
-    }
+    if (mounted) setState(() => _initialized = true);
   }
 
   @override
   Widget build(BuildContext context) {
     if (!_initialized) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
     return _cachedScreen!;
   }
