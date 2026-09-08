@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:app_links/app_links.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:gal/gal.dart';
@@ -26,6 +27,7 @@ import 'related_products_widget.dart';
 import 'chat_screen.dart';
 import 'cart_screen.dart';
 import 'product_detail_marketplace_actions.dart';
+import 'sesan_ai_assistant_screen.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
@@ -45,6 +47,13 @@ class ProductDetailScreen extends StatefulWidget {
 
 
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
+  String _maskSellerPhone(dynamic value) {
+    final phone = (value ?? '').toString().trim().replaceAll(RegExp(r'\s+'), '');
+    if (phone.isEmpty) return '';
+    if (phone.length <= 3) return 'XXX';
+    return '${phone.substring(0, phone.length - 3)}XXX';
+  }
+
   int _currentPage = 0; // 🎯 បន្ថែមសម្រាប់រាប់លេខរូបភាព
   int _tempQty = 1; // 🎯 ប្តូរពី static មកជា variable ធម្មតាវិញ
   bool isSaved = false; // ស្ថានភាពដំបូង
@@ -53,6 +62,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   bool _isSubmittingRating = false;
   int _quantity = 1;
   bool _wasPaused = false; // ✅ បន្ថែម
+  bool _showTranslatedProduct = false;
+  bool _isTranslatingProduct = false;
+  String? _translatedProductName;
+  String? _translatedDescription;
 
 
   // ១. ប្រកាស variable នេះនៅខាងលើក្នុង Class _ProductDetailScreenState
@@ -156,6 +169,89 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   }
 
 
+
+  String _shownProductName(String fallback) {
+    if (_showTranslatedProduct && (_translatedProductName?.trim().isNotEmpty ?? false)) return _translatedProductName!.trim();
+    final value = (widget.product['product_name'] ?? '').toString().trim();
+    return value.isEmpty ? fallback : value;
+  }
+
+  String _shownProductDescription(String fallback) {
+    if (_showTranslatedProduct && (_translatedDescription?.trim().isNotEmpty ?? false)) return _translatedDescription!.trim();
+    final value = (widget.product['description'] ?? '').toString().trim();
+    return value.isEmpty ? fallback : value;
+  }
+
+  String _firstProductImage() {
+    final images = widget.product['image_urls'];
+    if (images is List && images.isNotEmpty) return images.first.toString();
+    return (widget.product['image_url'] ?? '').toString();
+  }
+
+  Future<void> _toggleProductTranslation() async {
+    if (_showTranslatedProduct) { setState(() => _showTranslatedProduct = false); return; }
+    if (_translatedProductName != null || _translatedDescription != null) { setState(() => _showTranslatedProduct = true); return; }
+    if (_isTranslatingProduct) return;
+    setState(() => _isTranslatingProduct = true);
+    final locale = Localizations.localeOf(context).languageCode == 'en' ? 'en' : 'km';
+    try {
+      final callable = FirebaseFunctions.instanceFor(region: 'asia-southeast1').httpsCallable('generateProductAiContent');
+      final result = await callable.call(<String, dynamic>{
+        'productName': (widget.product['product_name'] ?? '').toString(),
+        'notes': (widget.product['description'] ?? '').toString(),
+        'locale': locale,
+        'images': const <String>[],
+      });
+      final data = Map<String, dynamic>.from(result.data as Map);
+      if (!mounted) return;
+      setState(() {
+        _translatedProductName = (data[locale == 'en' ? 'title_en' : 'title_km'] ?? '').toString();
+        _translatedDescription = (data[locale == 'en' ? 'description_en' : 'description_km'] ?? '').toString();
+        _showTranslatedProduct = true;
+      });
+    } catch (error) {
+      debugPrint('Product translation error: $error');
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(
+        Localizations.localeOf(context).languageCode == 'en'
+          ? 'Could not translate this product. Please try again.'
+          : 'មិនអាចបកប្រែទំនិញនេះបានទេ សូមសាកម្ដងទៀត។')));
+    } finally {
+      if (mounted) setState(() => _isTranslatingProduct = false);
+    }
+  }
+
+  void _openProductAssistant() {
+    final english = Localizations.localeOf(context).languageCode == 'en';
+    final productId = (widget.product['id'] ?? '').toString();
+    final name = (widget.product['product_name'] ?? '').toString();
+    final description = (widget.product['description'] ?? '').toString();
+    final price = (widget.product['price'] ?? '').toString();
+    final currency = (widget.product['currency'] ?? '៛').toString();
+    final category = (widget.product['category'] ?? '').toString();
+    final seller = (widget.product['seller_name'] ?? widget.product['shop_name'] ?? widget.product['seller_id'] ?? '').toString();
+    final prompt = english
+      ? '''I am considering buying this product on Sesan App.
+Product ID: $productId
+Product: $name
+Description: $description
+Price: $price $currency
+Category: $category
+Seller/Shop: $seller
+
+Please inspect the attached product image and the information above. Explain its likely uses, what I should verify with the seller, and important cautions before buying. Do not invent missing details.'''
+      : '''ខ្ញុំកំពុងពិចារណាទិញទំនិញនេះនៅក្នុង Sesan App។
+Product ID៖ $productId
+ឈ្មោះទំនិញ៖ $name
+បរិយាយ៖ $description
+តម្លៃ៖ $price $currency
+ប្រភេទ៖ $category
+អ្នកលក់/ហាង៖ $seller
+
+សូមពិនិត្យរូបទំនិញដែលបានភ្ជាប់ និងព័ត៌មានខាងលើ។ ជួយពន្យល់ការប្រើប្រាស់ ចំណុចដែលគួរសួរបញ្ជាក់ពីអ្នកលក់ និងអ្វីត្រូវប្រុងប្រយ័ត្នមុនទិញ។ កុំបង្កើតព័ត៌មានដែលមិនមាន។''';
+    Navigator.push(context, MaterialPageRoute(builder: (_) => SesanAiAssistantScreen(
+      initialPrompt: prompt, initialRole: 'agriculture', initialImageUrl: _firstProductImage())));
+  }
+
   // ── Screenshot Controller ────────────────────────────────────────
   final ScreenshotController _screenshotController = ScreenshotController();
 
@@ -215,7 +311,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        "ទំនាក់ទំនង៖ $sellerPhone",
+                        "ទំនាក់ទំនង៖ ${_maskSellerPhone(sellerPhone)}",
                         style: const TextStyle(
                           fontSize: 12,
                           color: Colors.black54,
@@ -1157,13 +1253,28 @@ Android: $androidPlayStoreLink
                           ),
                         ],
                         Text(
-                          widget.product['product_name'] ?? 'គ្មានឈ្មោះ',
+                          _shownProductName('គ្មានឈ្មោះ'),
                           style: const TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
 
+
+
+                        const SizedBox(height: 8),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: OutlinedButton.icon(
+                            onPressed: _isTranslatingProduct ? null : _toggleProductTranslation,
+                            icon: _isTranslatingProduct
+                                ? const SizedBox(width: 15, height: 15, child: CircularProgressIndicator(strokeWidth: 2))
+                                : Icon(_showTranslatedProduct ? Icons.undo_rounded : Icons.translate_rounded),
+                            label: Text(_showTranslatedProduct
+                                ? (Localizations.localeOf(context).languageCode == 'en' ? 'Original' : 'អត្ថបទដើម')
+                                : (Localizations.localeOf(context).languageCode == 'en' ? 'Translate Product' : 'បកប្រែទំនិញ')),
+                          ),
+                        ),
 
                         // ✅ បន្ថែមពីទីនេះ - បង្ហាញ Category និង Sub Category
                         const SizedBox(height: 6),
@@ -1565,10 +1676,27 @@ Android: $androidPlayStoreLink
                           ),
                         ),
                         Text(
-                          widget.product['description'] ?? 'មិនមានការពិពណ៌នា...',
+                          _shownProductDescription('មិនមានការពិពណ៌នា...'),
                           style: const TextStyle(fontSize: 16),
                         ),
 
+
+                        const SizedBox(height: 12),
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton.icon(
+                            onPressed: _openProductAssistant,
+                            icon: const Icon(Icons.auto_awesome_rounded),
+                            label: Text(Localizations.localeOf(context).languageCode == 'en'
+                                ? 'Ask Sesan AI about this product'
+                                : 'សួរ Sesan AI អំពីទំនិញនេះ'),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: Colors.green.shade700,
+                              side: BorderSide(color: Colors.green.shade300),
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                            ),
+                          ),
+                        ),
 
                         // --- ផ្នែកព័ត៌មានអ្នកលក់ (Update ថ្មី អាចចុចចូលមើល Profile បាន) ---
                         Container(
