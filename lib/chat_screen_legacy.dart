@@ -30,6 +30,7 @@ import 'package:video_compress/video_compress.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'dart:async'; // ✅ បន្ថែមនៅខាងលើ
 import 'location_picker_sheet.dart';
+import 'localized_text.dart';
 
 class ChatScreen extends StatefulWidget {
   final String productId;
@@ -199,15 +200,15 @@ class _ChatScreenState extends State<ChatScreen>
       }
     }
   }
-  final List<String> _quickReplies = [
-    "តម្លៃប៉ុន្មាន?",
-    "ទីតាំងនៅណាដែរ?",
-    "នៅមានស្តុកទេ?",
-    "បាទ/ចា៎វានៅមាន",
-    "សួស្ដីបង! តើសួរទំនិញមួយណាដែរ?",
-    "សុំលេខ និងទីតាំងទទួលឥវ៉ាន់ផងបង",
-    "ជួយចេញបុងអោយផង",
-    "បាទ/ចា៎បានទទួល! សូមអរគុណច្រើន!🙏",
+  List<String> get _quickReplies => [
+    appText(context, km: 'តម្លៃប៉ុន្មាន?', en: 'How much is it?'),
+    appText(context, km: 'ទីតាំងនៅណាដែរ?', en: 'Where are you located?'),
+    appText(context, km: 'នៅមានស្តុកទេ?', en: 'Is it still in stock?'),
+    appText(context, km: 'បាទ/ចា៎វានៅមាន', en: 'Yes, it is available.'),
+    appText(context, km: 'សួស្ដីបង! តើសួរទំនិញមួយណាដែរ?', en: 'Hello! Which product are you asking about?'),
+    appText(context, km: 'សុំលេខ និងទីតាំងទទួលឥវ៉ាន់ផងបង', en: 'Please send your phone number and delivery location.'),
+    appText(context, km: 'ជួយចេញបុងអោយផង', en: 'Please create an invoice.'),
+    appText(context, km: 'បាទ/ចា៎បានទទួល! សូមអរគុណច្រើន!🙏', en: 'Received. Thank you! 🙏'),
   ];
 
   String getChatRoomId(String a, String b) =>
@@ -963,7 +964,7 @@ class _ChatScreenState extends State<ChatScreen>
                             ),
                             const SizedBox(width: 8),
                             Text(
-                              'ទំនិញដែលចង់ទិញ (${items.length})',
+                              appText(context, km: 'ទំនិញដែលចង់ទិញ (${items.length})', en: 'Cart items (${items.length})'),
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 color: Colors.orange[700],
@@ -977,8 +978,8 @@ class _ChatScreenState extends State<ChatScreen>
                                   await item.reference.delete();
                                 }
                               },
-                              child: const Text(
-                                'លុបទាំងអស់',
+                              child: Text(
+                                appText(context, km: 'លុបទាំងអស់', en: 'Clear all'),
                                 style: TextStyle(fontSize: 12, color: Colors.red),
                               ),
                             ),
@@ -1060,7 +1061,7 @@ class _ChatScreenState extends State<ChatScreen>
                                             ),
                                             if (addedByName.isNotEmpty)
                                               Text(
-                                                addedByMe ? 'ខ្លួនឯង' : addedByName,
+                                                addedByMe ? appText(context, km: 'ខ្លួនឯង', en: 'You') : addedByName,
                                                 maxLines: 1,
                                                 overflow: TextOverflow.ellipsis,
                                                 style: TextStyle(
@@ -1709,8 +1710,8 @@ class _ChatScreenState extends State<ChatScreen>
                   keyboardType: TextInputType.multiline,
                   textCapitalization: TextCapitalization.sentences,
                   onChanged: (_) => setState(() {}),
-                  decoration: const InputDecoration(
-                    hintText: 'សរសេរសារ...',
+                  decoration: InputDecoration(
+                    hintText: appText(context, km: 'សរសេរសារ...', en: 'Write a message...'),
                     hintStyle: TextStyle(fontFamily: 'Siemreap'),
                     border: InputBorder.none,
                     contentPadding: EdgeInsets.symmetric(
@@ -1806,7 +1807,7 @@ class _ChatScreenState extends State<ChatScreen>
             // ✅ ឈ្មោះថ្មី + លុបមួយចេញ
             ListTile(
               leading: const Icon(Icons.photo_library, color: Colors.purple),
-              title: const Text("ជ្រើសរើសរូបភាពពី Gallery"), // ឈ្មោះថ្មី
+              title: Text(appText(context, km: "ជ្រើសរើសរូបភាពពី Gallery", en: "Choose photos from Gallery")), // ឈ្មោះថ្មី
               subtitle: const Text(
                 "ជ្រើសរើសបានច្រើនសន្លឹកក្នុងពេលតែមួយ",
                 style: TextStyle(fontSize: 12, color: Colors.grey),
@@ -1818,7 +1819,7 @@ class _ChatScreenState extends State<ChatScreen>
             ),
             ListTile(
               leading: const Icon(Icons.camera_alt, color: Colors.green),
-              title: const Text("ថតរូបថ្មី"),
+              title: Text(appText(context, km: "ថតរូបថ្មី", en: "Take a photo")),
               onTap: () {
                 Navigator.pop(context);
                 _pickMedia(ImageSource.camera, false);
@@ -1826,7 +1827,7 @@ class _ChatScreenState extends State<ChatScreen>
             ),
             ListTile(
               leading: const Icon(Icons.video_library, color: Colors.orange),
-              title: const Text("វីដេអូពី Gallery"),
+              title: Text(appText(context, km: "វីដេអូពី Gallery", en: "Choose video from Gallery")),
               onTap: () {
                 Navigator.pop(context);
                 _pickMedia(ImageSource.gallery, true);
@@ -1834,7 +1835,7 @@ class _ChatScreenState extends State<ChatScreen>
             ),
             ListTile(
               leading: const Icon(Icons.videocam, color: Colors.red),
-              title: const Text("ថតវីដេអូថ្មី"),
+              title: Text(appText(context, km: "ថតវីដេអូថ្មី", en: "Record a video")),
               onTap: () {
                 Navigator.pop(context);
                 _pickMedia(ImageSource.camera, true);
@@ -1906,8 +1907,8 @@ class _ChatScreenState extends State<ChatScreen>
                 color: Colors.white,
                 size: 16,
               ),
-              label: const Text(
-                "បង្កើតបុង",
+              label: Text(
+                appText(context, km: "បង្កើតបុង", en: "Create invoice"),
                 style: TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
