@@ -28,6 +28,8 @@ import 'order_management_screen.dart';
 import 'wallet_logic.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'logout_button.dart';
+import 'settings_screen.dart';
+import 'admin_marketplace_analytics_screen.dart';
 
 
 class ProfileScreen extends StatefulWidget {
@@ -349,6 +351,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             context,
                             MaterialPageRoute(
                               builder: (context) => const AdminConfirmPage(),
+                            ),
+                          ),
+                        ),
+
+
+                      if (_loggedUid == adminUID)
+                        _buildMenuCard(
+                          title: "វិភាគ Marketplace / Marketplace Analytics",
+                          subtitle: "តាមដាន Show number, Chat, Cart, Checkout និង Order",
+                          icon: Icons.insights_rounded,
+                          color: Colors.indigo,
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const AdminMarketplaceAnalyticsScreen(),
                             ),
                           ),
                         ),
@@ -691,6 +708,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
 
 
+                Card(
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: ListTile(
+                    leading: const Icon(
+                      Icons.settings_rounded,
+                      color: Colors.green,
+                    ),
+                    title: const Text(
+                      "ការកំណត់ / Settings",
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    subtitle: const Text("Language & account settings"),
+                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const SettingsScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                const Divider(height: 1, indent: 70),
                 ListTile(
                   leading: const Icon(
                     Icons.help_outline_rounded,
@@ -703,7 +747,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                   onTap: () async {
                     final Uri url = Uri.parse(
-                      'https://www.facebook.com/share/1EBrJfNXP4/',
+                      'https://about.sesanshop.com',
                     );
                     if (!await launchUrl(
                       url,
