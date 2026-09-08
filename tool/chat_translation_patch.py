@@ -17,3 +17,4 @@ r('title: const Text("វីដេអូពី Gallery")','title: Text(appText(c
 r('title: const Text("ថតវីដេអូថ្មី")','title: Text(appText(context, km: "ថតវីដេអូថ្មី", en: "Record a video"))','record video')
 r('label: const Text(\n                "បង្កើតបុង",','label: Text(\n                appText(context, km: "បង្កើតបុង", en: "Create invoice"),','invoice')
 p.write_text(s,encoding='utf-8')
+# trigger v2
