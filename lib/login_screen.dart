@@ -7,7 +7,7 @@ import 'package:my_app/controllers/auth_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'account_deletion_service.dart';
 import 'forgot_password_screen.dart';
-import 'user_service.dart' hide UserService;
+import 'user_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -167,7 +167,6 @@ class _LoginScreenState extends State<LoginScreen> {
     final savedRememberPhone = prefsBeforeLogin.getBool('remember_phone') ?? false;
     final savedPhone = prefsBeforeLogin.getString('remembered_phone');
 
-    // Clear stale session only; restore user preferences below.
     await prefsBeforeLogin.clear();
     if (savedLanguage != null) {
       await prefsBeforeLogin.setString('app_language', savedLanguage);
@@ -222,7 +221,6 @@ class _LoginScreenState extends State<LoginScreen> {
       final canContinue = await _handlePendingDeletion(userDoc, userData);
       if (!canContinue) return;
 
-      // Refresh after possible restore so session values reflect current data.
       final refreshedDoc = await FirebaseFirestore.instance
           .collection('users')
           .doc(userDoc.id)
@@ -253,13 +251,9 @@ class _LoginScreenState extends State<LoginScreen> {
       if (mounted) {
         setState(() => _isLoading = false);
         _showSnackBar('✅ ចូលប្រើប្រាស់ជោគជ័យ');
-
         await Get.find<AuthController>().loginWithUid(userDoc.id);
-
         await Future.delayed(const Duration(milliseconds: 500));
-        if (mounted) {
-          Get.offAllNamed('/home');
-        }
+        if (mounted) Get.offAllNamed('/home');
       }
     } catch (e) {
       if (mounted) {
@@ -303,158 +297,38 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  const Text(
-                    'SESAN APP',
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.green,
-                      letterSpacing: 2,
-                    ),
-                  ),
+                  const Text('SESAN APP', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.green, letterSpacing: 2)),
                   const SizedBox(height: 8),
-                  Text(
-                    'ចូលប្រើប្រាស់គណនីរបស់អ្នក',
-                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                  ),
+                  Text('ចូលប្រើប្រាស់គណនីរបស់អ្នក', style: TextStyle(fontSize: 14, color: Colors.grey[600])),
                   const SizedBox(height: 40),
-                  _buildTextField(
-                    controller: _phoneController,
-                    label: 'លេខទូរសព្ទ',
-                    hint: 'ឧទាហរណ៍ 088XXXXXXX',
-                    icon: Icons.phone_android,
-                    isNumber: true,
-                    validator: (v) {
-                      if (v == null || v.isEmpty) return 'សូមបញ្ចូលលេខទូរសព្ទ';
-                      if (!RegExp(r'^(0|\+855)[0-9]{8,9}$').hasMatch(v)) {
-                        return 'លេខទូរសព្ទមិនត្រឹមត្រូវ';
-                      }
-                      return null;
-                    },
-                  ),
+                  _buildTextField(controller: _phoneController, label: 'លេខទូរសព្ទ', hint: 'ឧទាហរណ៍ 088XXXXXXX', icon: Icons.phone_android, isNumber: true, validator: (v) {
+                    if (v == null || v.isEmpty) return 'សូមបញ្ចូលលេខទូរសព្ទ';
+                    if (!RegExp(r'^(0|\+855)[0-9]{8,9}$').hasMatch(v)) return 'លេខទូរសព្ទមិនត្រឹមត្រូវ';
+                    return null;
+                  }),
                   const SizedBox(height: 16),
-                  _buildTextField(
-                    controller: _passwordController,
-                    label: 'លេខសម្ងាត់',
-                    hint: 'បញ្ចូលលេខសម្ងាត់របស់អ្នក',
-                    icon: Icons.lock_outline,
-                    isPassword: true,
-                    validator: (v) {
-                      if (v == null || v.isEmpty) return 'សូមបញ្ចូលលេខសម្ងាត់';
-                      if (v.length < 6) {
-                        return 'លេខសម្ងាត់ត្រូវមានយ៉ាងតិច 6 ខ្ទង់';
-                      }
-                      return null;
-                    },
-                  ),
+                  _buildTextField(controller: _passwordController, label: 'លេខសម្ងាត់', hint: 'បញ្ចូលលេខសម្ងាត់របស់អ្នក', icon: Icons.lock_outline, isPassword: true, validator: (v) {
+                    if (v == null || v.isEmpty) return 'សូមបញ្ចូលលេខសម្ងាត់';
+                    if (v.length < 6) return 'លេខសម្ងាត់ត្រូវមានយ៉ាងតិច 6 ខ្ទង់';
+                    return null;
+                  }),
                   const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Checkbox(
-                        value: _rememberPhone,
-                        onChanged: (v) =>
-                            setState(() => _rememberPhone = v ?? false),
-                        activeColor: Colors.green,
-                      ),
-                      const Text(
-                        'ចង់ចាំលេខទូរសព្ទ',
-                        style: TextStyle(fontSize: 13),
-                      ),
-                      const Spacer(),
-                      TextButton(
-                        onPressed: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const ForgotPasswordScreen(),
-                          ),
-                        ),
-                        child: Text(
-                          'ភ្លេចលេខសម្ងាត់?',
-                          style: TextStyle(
-                            color: Colors.green[700],
-                            fontSize: 13,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                  Row(children: [
+                    Checkbox(value: _rememberPhone, onChanged: (v) => setState(() => _rememberPhone = v ?? false), activeColor: Colors.green),
+                    const Text('ចង់ចាំលេខទូរសព្ទ', style: TextStyle(fontSize: 13)),
+                    const Spacer(),
+                    TextButton(onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ForgotPasswordScreen())), child: Text('ភ្លេចលេខសម្ងាត់?', style: TextStyle(color: Colors.green[700], fontSize: 13))),
+                  ]),
                   const SizedBox(height: 24),
                   SizedBox(
                     width: double.infinity,
                     height: 55,
                     child: ElevatedButton(
                       onPressed: _isLoading ? null : _handleLogin,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
-                        foregroundColor: Colors.white,
-                        elevation: 2,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                      ),
+                      style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white, elevation: 2, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15))),
                       child: _isLoading
-                          ? const SizedBox(
-                              height: 24,
-                              width: 24,
-                              child: CircularProgressIndicator(
-                                color: Colors.white,
-                                strokeWidth: 2.5,
-                              ),
-                            )
-                          : const Text(
-                              'ចូលប្រើប្រាស់',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                    ),
-                  ),
-                  const SizedBox(height: 32),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'មិនទាន់មានគណនី? ',
-                        style: TextStyle(color: Colors.grey[600]),
-                      ),
-                      GestureDetector(
-                        onTap: () => Navigator.pushNamed(context, '/signup'),
-                        child: const Text(
-                          'ចុះឈ្មោះនៅទីនេះ',
-                          style: TextStyle(
-                            color: Colors.green,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-                  OutlinedButton.icon(
-                    onPressed: () async {
-                      await Get.find<AuthController>().loginAsGuest();
-                      Get.offAllNamed('/home-guest');
-                    },
-                    icon: const Icon(Icons.person_outline, color: Colors.green),
-                    label: const Text(
-                      'ចូលមើលសិន',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.green,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 32,
-                        vertical: 14,
-                      ),
-                      side: const BorderSide(color: Colors.green, width: 1.5),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                      backgroundColor: Colors.green.shade50.withOpacity(0.3),
+                          ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
+                          : const Text('ចូលប្រើប្រាស់', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -472,79 +346,38 @@ class _LoginScreenState extends State<LoginScreen> {
     required String label,
     required String hint,
     required IconData icon,
-    bool isNumber = false,
     bool isPassword = false,
+    bool isNumber = false,
     String? Function(String?)? validator,
   }) {
     return TextFormField(
       controller: controller,
-      obscureText: isPassword ? !_isPasswordVisible : false,
+      obscureText: isPassword && !_isPasswordVisible,
       keyboardType: isNumber ? TextInputType.phone : TextInputType.text,
       validator: validator,
-      style: const TextStyle(fontSize: 15),
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
         prefixIcon: Icon(icon, color: Colors.green),
         suffixIcon: isPassword
             ? IconButton(
-                icon: Icon(
-                  _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
-                  color: Colors.grey[600],
-                ),
-                onPressed: () => setState(
-                  () => _isPasswordVisible = !_isPasswordVisible,
-                ),
+                icon: Icon(_isPasswordVisible ? Icons.visibility : Icons.visibility_off),
+                onPressed: () => setState(() => _isPasswordVisible = !_isPasswordVisible),
               )
             : null,
-        filled: true,
-        fillColor: Colors.grey[50],
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 16,
-        ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(15),
-          borderSide: BorderSide.none,
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(15),
-          borderSide: BorderSide(color: Colors.grey.shade200),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(15),
-          borderSide: const BorderSide(color: Colors.green, width: 2),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(15),
-          borderSide: const BorderSide(color: Colors.red, width: 1),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(15),
-          borderSide: const BorderSide(color: Colors.red, width: 2),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: const BorderSide(color: Colors.green, width: 2)),
       ),
     );
   }
 
   void _showSnackBar(String message, {bool isError = false}) {
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Row(
-          children: [
-            Icon(
-              isError ? Icons.error_outline : Icons.check_circle_outline,
-              color: Colors.white,
-            ),
-            const SizedBox(width: 10),
-            Expanded(child: Text(message)),
-          ],
-        ),
-        backgroundColor: isError ? Colors.redAccent : Colors.green[700],
+        content: Text(message),
+        backgroundColor: isError ? Colors.red : Colors.green,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        margin: const EdgeInsets.all(16),
-        duration: const Duration(seconds: 3),
       ),
     );
   }
