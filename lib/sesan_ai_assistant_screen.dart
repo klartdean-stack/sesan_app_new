@@ -45,10 +45,22 @@ class _SesanAiAssistantScreenState extends State<SesanAiAssistantScreen> {
     if (url.isEmpty) return;
     try {
       final response = await http.get(Uri.parse(url)).timeout(const Duration(seconds: 15));
-      if (response.statusCode < 200 || response.statusCode >= 300 || response.bodyBytes.isEmpty || response.bodyBytes.length > 8 * 1024 * 1024) return;
-      final type = (response.headers['content-type'] ?? 'image/jpeg').split(';').first;
+      if (response.statusCode < 200 ||
+          response.statusCode >= 300 ||
+          response.bodyBytes.isEmpty ||
+          response.bodyBytes.length > 8 * 1024 * 1024) return;
+      final rawType = (response.headers['content-type'] ?? 'image/jpeg')
+          .split(';')
+          .first
+          .trim()
+          .toLowerCase();
+      final type = <String>{'image/jpeg', 'image/png', 'image/webp'}.contains(rawType)
+          ? rawType
+          : 'image/jpeg';
       _initialImageData = 'data:$type;base64,${base64Encode(response.bodyBytes)}';
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('Could not attach product image to Sesan AI: $e');
+    }
   }
 
   Future<void> _loadHistory() async {
@@ -74,21 +86,37 @@ class _SesanAiAssistantScreenState extends State<SesanAiAssistantScreen> {
   Future<void> _send() async {
     final text = _controller.text.trim();
     if (text.isEmpty || _sending) return;
+
+    final history = _messages
+        .where((m) => (m['text'] ?? '').toString().trim().isNotEmpty)
+        .toList()
+        .reversed
+        .take(12)
+        .toList()
+        .reversed
+        .map((m) => <String, String>{
+              'role': (m['role'] ?? '') == 'user' ? 'user' : 'assistant',
+              'content': (m['text'] ?? '').toString(),
+            })
+        .toList();
+
     setState(() {
       _sending = true;
       _messages.add({'role': 'user', 'text': text});
       _controller.clear();
     });
+
     try {
       final callable = FirebaseFunctions.instanceFor(region: 'asia-southeast1')
           .httpsCallable('askFarmAssistant');
       final payload = <String, dynamic>{
-        'action': 'ask',
         'message': text,
         'role': widget.initialRole,
+        'locale': _en ? 'en' : 'km',
+        'history': history,
       };
       if (_initialImageData != null) {
-        payload['imageData'] = _initialImageData;
+        payload['image'] = _initialImageData;
         _initialImageData = null;
       }
       final result = await callable.call(payload);
@@ -102,8 +130,11 @@ class _SesanAiAssistantScreenState extends State<SesanAiAssistantScreen> {
       });
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (_scrollController.hasClients) {
-          _scrollController.animateTo(_scrollController.position.maxScrollExtent,
-              duration: const Duration(milliseconds: 250), curve: Curves.easeOut);
+          _scrollController.animateTo(
+            _scrollController.position.maxScrollExtent,
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeOut,
+          );
         }
       });
     } on FirebaseFunctionsException catch (e) {
@@ -114,13 +145,19 @@ class _SesanAiAssistantScreenState extends State<SesanAiAssistantScreen> {
         action: exhausted
             ? SnackBarAction(
                 label: _t('កញ្ចប់ AI', 'AI plans'),
-                onPressed: () => Navigator.push(context,
-                    MaterialPageRoute(builder: (_) => const AiPackagesScreen())),
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const AiPackagesScreen()),
+                ),
               )
             : null,
       ));
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(_t('មិនអាចភ្ជាប់ Sesan AI បានទេ។', 'Could not connect to Sesan AI.'))),
+        );
+      }
     } finally {
       if (mounted) setState(() => _sending = false);
     }
@@ -142,14 +179,18 @@ class _SesanAiAssistantScreenState extends State<SesanAiAssistantScreen> {
         title: const Text('Sesan AI Assistant'),
         actions: [
           if (_remainingCredits != null)
-            Center(child: Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: Text('$_remainingCredits Credits', style: const TextStyle(fontSize: 11)),
-            )),
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: Text('$_remainingCredits Credits', style: const TextStyle(fontSize: 11)),
+              ),
+            ),
           IconButton(
             tooltip: _t('កញ្ចប់ AI', 'AI plans'),
-            onPressed: () => Navigator.push(context,
-                MaterialPageRoute(builder: (_) => const AiPackagesScreen())),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const AiPackagesScreen()),
+            ),
             icon: const Icon(Icons.workspace_premium_outlined),
           ),
         ],
@@ -176,8 +217,10 @@ class _SesanAiAssistantScreenState extends State<SesanAiAssistantScreen> {
                             color: mine ? Colors.green.shade100 : Colors.grey.shade100,
                             borderRadius: BorderRadius.circular(14),
                           ),
-                          child: Text((m['text'] ?? '').toString(),
-                              style: const TextStyle(fontFamily: 'Siemreap', height: 1.45)),
+                          child: Text(
+                            (m['text'] ?? '').toString(),
+                            style: const TextStyle(fontFamily: 'Siemreap', height: 1.45),
+                          ),
                         ),
                       );
                     },
@@ -205,8 +248,11 @@ class _SesanAiAssistantScreenState extends State<SesanAiAssistantScreen> {
                   IconButton.filled(
                     onPressed: _sending ? null : _send,
                     icon: _sending
-                        ? const SizedBox(width: 18, height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                          )
                         : const Icon(Icons.send_rounded),
                   ),
                 ],
