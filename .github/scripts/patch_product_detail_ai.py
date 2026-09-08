@@ -22,19 +22,13 @@ once("  bool _wasPaused = false; // ✅ បន្ថែម\n", "  bool _wasPause
 
 methods = r"""
   String _shownProductName(String fallback) {
-    if (_showTranslatedProduct &&
-        (_translatedProductName?.trim().isNotEmpty ?? false)) {
-      return _translatedProductName!.trim();
-    }
+    if (_showTranslatedProduct && (_translatedProductName?.trim().isNotEmpty ?? false)) return _translatedProductName!.trim();
     final value = (widget.product['product_name'] ?? '').toString().trim();
     return value.isEmpty ? fallback : value;
   }
 
   String _shownProductDescription(String fallback) {
-    if (_showTranslatedProduct &&
-        (_translatedDescription?.trim().isNotEmpty ?? false)) {
-      return _translatedDescription!.trim();
-    }
+    if (_showTranslatedProduct && (_translatedDescription?.trim().isNotEmpty ?? false)) return _translatedDescription!.trim();
     final value = (widget.product['description'] ?? '').toString().trim();
     return value.isEmpty ? fallback : value;
   }
@@ -46,20 +40,13 @@ methods = r"""
   }
 
   Future<void> _toggleProductTranslation() async {
-    if (_showTranslatedProduct) {
-      setState(() => _showTranslatedProduct = false);
-      return;
-    }
-    if (_translatedProductName != null || _translatedDescription != null) {
-      setState(() => _showTranslatedProduct = true);
-      return;
-    }
+    if (_showTranslatedProduct) { setState(() => _showTranslatedProduct = false); return; }
+    if (_translatedProductName != null || _translatedDescription != null) { setState(() => _showTranslatedProduct = true); return; }
     if (_isTranslatingProduct) return;
     setState(() => _isTranslatingProduct = true);
     final locale = Localizations.localeOf(context).languageCode == 'en' ? 'en' : 'km';
     try {
-      final callable = FirebaseFunctions.instanceFor(region: 'asia-southeast1')
-          .httpsCallable('generateProductAiContent');
+      final callable = FirebaseFunctions.instanceFor(region: 'asia-southeast1').httpsCallable('generateProductAiContent');
       final result = await callable.call(<String, dynamic>{
         'productName': (widget.product['product_name'] ?? '').toString(),
         'notes': (widget.product['description'] ?? '').toString(),
@@ -75,13 +62,10 @@ methods = r"""
       });
     } catch (error) {
       debugPrint('Product translation error: $error');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(Localizations.localeOf(context).languageCode == 'en'
-              ? 'Could not translate this product. Please try again.'
-              : 'មិនអាចបកប្រែទំនិញនេះបានទេ សូមសាកម្ដងទៀត។'),
-        ));
-      }
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(
+        Localizations.localeOf(context).languageCode == 'en'
+          ? 'Could not translate this product. Please try again.'
+          : 'មិនអាចបកប្រែទំនិញនេះបានទេ សូមសាកម្ដងទៀត។')));
     } finally {
       if (mounted) setState(() => _isTranslatingProduct = false);
     }
@@ -97,7 +81,7 @@ methods = r"""
     final category = (widget.product['category'] ?? '').toString();
     final seller = (widget.product['seller_name'] ?? widget.product['shop_name'] ?? widget.product['seller_id'] ?? '').toString();
     final prompt = english
-        ? '''I am considering buying this product on Sesan App.
+      ? '''I am considering buying this product on Sesan App.
 Product ID: $productId
 Product: $name
 Description: $description
@@ -106,7 +90,7 @@ Category: $category
 Seller/Shop: $seller
 
 Please inspect the attached product image and the information above. Explain its likely uses, what I should verify with the seller, and important cautions before buying. Do not invent missing details.'''
-        : '''ខ្ញុំកំពុងពិចារណាទិញទំនិញនេះនៅក្នុង Sesan App។
+      : '''ខ្ញុំកំពុងពិចារណាទិញទំនិញនេះនៅក្នុង Sesan App។
 Product ID៖ $productId
 ឈ្មោះទំនិញ៖ $name
 បរិយាយ៖ $description
@@ -115,23 +99,33 @@ Product ID៖ $productId
 អ្នកលក់/ហាង៖ $seller
 
 សូមពិនិត្យរូបទំនិញដែលបានភ្ជាប់ និងព័ត៌មានខាងលើ។ ជួយពន្យល់ការប្រើប្រាស់ ចំណុចដែលគួរសួរបញ្ជាក់ពីអ្នកលក់ និងអ្វីត្រូវប្រុងប្រយ័ត្នមុនទិញ។ កុំបង្កើតព័ត៌មានដែលមិនមាន។''';
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => SesanAiAssistantScreen(
-          initialPrompt: prompt,
-          initialRole: 'agriculture',
-          initialImageUrl: _firstProductImage(),
-        ),
-      ),
-    );
+    Navigator.push(context, MaterialPageRoute(builder: (_) => SesanAiAssistantScreen(
+      initialPrompt: prompt, initialRole: 'agriculture', initialImageUrl: _firstProductImage())));
   }
 
 """
 once("  // ── Screenshot Controller", methods + "  // ── Screenshot Controller", 'AI/translate methods')
 once('"ទំនាក់ទំនង៖ $sellerPhone",', '"ទំនាក់ទំនង៖ ${_maskSellerPhone(sellerPhone)}",', 'watermark phone masking')
-once("widget.product['product_name'] ?? 'គ្មានឈ្មោះ',", "_shownProductName('គ្មានឈ្មោះ'),", 'translated product title')
-once("widget.product['description'] ?? 'មិនមានការពិពណ៌នា...',", "_shownProductDescription('មិនមានការពិពណ៌នា...'),", 'translated product description')
+
+old_title = """                        Text(
+                          widget.product['product_name'] ?? 'គ្មានឈ្មោះ',
+                          style: const TextStyle(
+                            fontSize: 22,"""
+new_title = """                        Text(
+                          _shownProductName('គ្មានឈ្មោះ'),
+                          style: const TextStyle(
+                            fontSize: 22,"""
+once(old_title, new_title, 'translated product title')
+
+old_desc = """                        Text(
+                          widget.product['description'] ?? 'មិនមានការពិពណ៌នា...',
+                          style: const TextStyle(fontSize: 16),
+                        ),"""
+new_desc = """                        Text(
+                          _shownProductDescription('មិនមានការពិពណ៌នា...'),
+                          style: const TextStyle(fontSize: 16),
+                        ),"""
+once(old_desc, new_desc, 'translated product description')
 
 translate_ui = r"""
                         const SizedBox(height: 8),
