@@ -47,18 +47,29 @@ class _ChatScreenState extends State<ChatScreen> {
     if (mounted) setState(() => _currentUserId = uid);
   }
 
+  /// Resolve the other participant instead of assuming seller_id is always
+  /// the moderation target. This makes Block/Report work in both directions:
+  /// buyer -> seller and seller -> buyer.
+  String get _peerUserId {
+    if (_currentUserId.isEmpty) return '';
+
+    final sellerId = widget.seller_id.trim();
+    final receiverId = widget.receiver_id.trim();
+
+    if (sellerId.isNotEmpty && sellerId != _currentUserId) {
+      return sellerId;
+    }
+    if (receiverId.isNotEmpty && receiverId != _currentUserId) {
+      return receiverId;
+    }
+    return '';
+  }
+
   @override
   Widget build(BuildContext context) {
-    if (_currentUserId.isEmpty || widget.seller_id.isEmpty) {
-      return legacy.ChatScreen(
-        productId: widget.productId,
-        productName: widget.productName,
-        seller_id: widget.seller_id,
-        receiver_id: widget.receiver_id,
-      );
-    }
+    final peerUserId = _peerUserId;
 
-    if (_currentUserId == widget.seller_id) {
+    if (_currentUserId.isEmpty || peerUserId.isEmpty) {
       return legacy.ChatScreen(
         productId: widget.productId,
         productName: widget.productName,
@@ -82,7 +93,7 @@ class _ChatScreenState extends State<ChatScreen> {
         return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
           stream: FirebaseFirestore.instance
               .collection('users')
-              .doc(widget.seller_id)
+              .doc(peerUserId)
               .snapshots(),
           builder: (context, theirSnapshot) {
             if (!theirSnapshot.hasData) {
@@ -98,12 +109,13 @@ class _ChatScreenState extends State<ChatScreen> {
               (theirSnapshot.data?.data()?['blockedUsers'] as List?) ?? const [],
             );
 
-            final blockedByMe = myBlocked.contains(widget.seller_id);
+            final blockedByMe = myBlocked.contains(peerUserId);
             final blockedByThem = theirBlocked.contains(_currentUserId);
 
             if (blockedByMe || blockedByThem) {
               return _buildBlockedChat(
                 context,
+                peerUserId: peerUserId,
                 blockedByMe: blockedByMe,
                 blockedByThem: blockedByThem,
               );
@@ -126,7 +138,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     shape: const CircleBorder(),
                     child: ChatModerationMenu(
                       currentUserId: _currentUserId,
-                      targetUserId: widget.seller_id,
+                      targetUserId: peerUserId,
                     ),
                   ),
                 ),
@@ -140,6 +152,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Widget _buildBlockedChat(
     BuildContext context, {
+    required String peerUserId,
     required bool blockedByMe,
     required bool blockedByThem,
   }) {
@@ -154,7 +167,7 @@ class _ChatScreenState extends State<ChatScreen> {
         actions: [
           ChatModerationMenu(
             currentUserId: _currentUserId,
-            targetUserId: widget.seller_id,
+            targetUserId: peerUserId,
           ),
         ],
       ),
