@@ -1,0 +1,31 @@
+name: Chat Parity Batch 3
+on:
+  push:
+    paths:
+      - '.github/workflows/chat-parity-batch3.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Apply Chat options translation
+        run: python tool/chat_parity_batch3.py
+      - name: Verify
+        run: |
+          grep -q "Copy text" lib/chat_screen_legacy.dart
+          grep -q "Delete for everyone?" lib/chat_screen_legacy.dart
+          grep -q "Could not delete" lib/chat_screen_legacy.dart
+          grep -q "Today at" lib/chat_screen_legacy.dart
+          grep -q "Yesterday at" lib/chat_screen_legacy.dart
+          grep -q "Could not send message" lib/chat_screen_legacy.dart
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add lib/chat_screen_legacy.dart
+          git commit -m "Translate iOS Chat message actions errors and dates"
+          git push origin main
