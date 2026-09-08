@@ -168,7 +168,7 @@ class _ChatScreenState extends State<ChatScreen>
         if (mounted) {
           setState(() {
             _isLoading = false;
-            _errorMessage = 'សូម Login មុននឹងប្រើឆាត';
+            _errorMessage = appText(context, km: 'សូម Login មុននឹងប្រើឆាត', en: 'Please log in before using Chat');
           });
         }
         return;
@@ -195,7 +195,7 @@ class _ChatScreenState extends State<ChatScreen>
       if (mounted) {
         setState(() {
           _isLoading = false;
-          _errorMessage = 'មានបញ្ហា: $e';
+          _errorMessage = appText(context, km: 'មានបញ្ហា: $e', en: 'Error: $e');
         });
       }
     }
@@ -248,7 +248,7 @@ class _ChatScreenState extends State<ChatScreen>
       debugPrint("ផ្ញើសារមិនចេញ៖ $e");
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('ផ្ញើសារមិនបាន: $e')));
+      ).showSnackBar(SnackBar(content: Text(appText(context, km: 'ផ្ញើសារមិនបាន: $e', en: 'Could not send message: $e'))));
     }
   }
 
@@ -264,12 +264,12 @@ class _ChatScreenState extends State<ChatScreen>
       final file = File(path);
       if (await file.exists()) await file.delete();
     }
-    _showSnack('បានលប់សម្លេង', Colors.orange);
+    _showSnack(appText(context, km: 'បានលុបសម្លេង', en: 'Recording deleted'), Colors.orange);
   }
 
   void _lockRecording() {
     setState(() => _isLocked = true);
-    _showSnack('🔒 Lock — ចុច Send ពេលចប់', Colors.green);
+    _showSnack(appText(context, km: '🔒 បានចាក់សោ — ចុចផ្ញើពេលចប់', en: '🔒 Locked — tap Send when finished'), Colors.green);
   }
 
   // ✅ មុខងារថ្មី៖ ផ្ញើទីតាំងទៅអ្នកលក់
@@ -1689,8 +1689,8 @@ class _ChatScreenState extends State<ChatScreen>
                       size: 14,
                     ),
                     const SizedBox(width: 8),
-                    const Text(
-                      'កំពុងថតសម្លេង...',
+                    Text(
+                      appText(context, km: 'កំពុងថតសម្លេង...', en: 'Recording...'),
                       style: TextStyle(
                         color: Colors.red,
                         fontWeight: FontWeight.bold,
@@ -1810,9 +1810,9 @@ class _ChatScreenState extends State<ChatScreen>
             ListTile(
               leading: const Icon(Icons.photo_library, color: Colors.purple),
               title: Text(appText(context, km: "ជ្រើសរើសរូបភាពពី Gallery", en: "Choose photos from Gallery")), // ឈ្មោះថ្មី
-              subtitle: const Text(
-                "ជ្រើសរើសបានច្រើនសន្លឹកក្នុងពេលតែមួយ",
-                style: TextStyle(fontSize: 12, color: Colors.grey),
+              subtitle: Text(
+                appText(context, km: 'ជ្រើសរើសបានច្រើនសន្លឹកក្នុងពេលតែមួយ', en: 'Select multiple images at once'),
+                style: const TextStyle(fontSize: 12, color: Colors.grey),
               ),
               onTap: () {
                 Navigator.pop(context);
@@ -2081,12 +2081,12 @@ class _ChatScreenState extends State<ChatScreen>
               if (type == 'text')
                 _buildOptionTile(
                   icon: Icons.copy,
-                  label: 'ចម្លងអក្សរ',
+                  label: appText(context, km: 'ចម្លងអក្សរ', en: 'Copy text'),
                   color: Colors.blue,
                   onTap: () {
                     Navigator.pop(ctx);
                     Clipboard.setData(ClipboardData(text: data['message']));
-                    _showSnack('បានចម្លងហើយ', Colors.blue);
+                    _showSnack(appText(context, km: 'បានចម្លងហើយ', en: 'Copied'), Colors.blue);
                   },
                 ),
 
@@ -2096,7 +2096,9 @@ class _ChatScreenState extends State<ChatScreen>
                 icon: isHighlighted
                     ? Icons.star_rounded
                     : Icons.star_border_rounded,
-                label: isHighlighted ? 'លុប Highlight' : 'Highlight ⭐',
+                label: isHighlighted
+                    ? appText(context, km: 'លុប Highlight', en: 'Remove highlight')
+                    : appText(context, km: 'Highlight ⭐', en: 'Highlight ⭐'),
                 color: Colors.amber,
                 onTap: () {
                   Navigator.pop(ctx);
@@ -2108,7 +2110,9 @@ class _ChatScreenState extends State<ChatScreen>
                     }
                   });
                   _showSnack(
-                    isHighlighted ? 'បានលុប Highlight' : '⭐ បាន Highlight',
+                    isHighlighted
+                        ? appText(context, km: 'បានលុប Highlight', en: 'Highlight removed')
+                        : appText(context, km: '⭐ បាន Highlight', en: '⭐ Highlighted'),
                     Colors.amber,
                   );
                 },
@@ -2118,7 +2122,7 @@ class _ChatScreenState extends State<ChatScreen>
               // ✅ 3. លុបសម្រាប់ខ្លួនឯង
               _buildOptionTile(
                 icon: Icons.delete_outline,
-                label: 'លុបសម្រាប់ខ្លួនឯង',
+                label: appText(context, km: 'លុបសម្រាប់ខ្លួនឯង', en: 'Delete for me'),
                 color: Colors.orange,
                 onTap: () {
                   Navigator.pop(ctx);
@@ -2136,7 +2140,7 @@ class _ChatScreenState extends State<ChatScreen>
               if (isMe)
                 _buildOptionTile(
                   icon: Icons.delete_forever,
-                  label: 'លុបសម្រាប់ទាំងអស់គ្នា',
+                  label: appText(context, km: 'លុបសម្រាប់ទាំងអស់គ្នា', en: 'Delete for everyone'),
                   color: Colors.red,
                   onTap: () {
                     Navigator.pop(ctx);
@@ -2213,9 +2217,9 @@ class _ChatScreenState extends State<ChatScreen>
                 ),
               ),
               const SizedBox(height: 16),
-              const Text(
-                'លុបសម្រាប់ទាំងអស់គ្នា?',
-                style: TextStyle(
+              Text(
+                appText(context, km: 'លុបសម្រាប់ទាំងអស់គ្នា?', en: 'Delete for everyone?'),
+                style: const TextStyle(
                   fontSize: 17,
                   fontWeight: FontWeight.w700,
                   fontFamily: 'Siemreap',
@@ -2223,8 +2227,11 @@ class _ChatScreenState extends State<ChatScreen>
               ),
               const SizedBox(height: 8),
               Text(
-                'សារនេះនឹងបាត់ចេញពីទូរស័ព្ទ'
-                    'ទាំងអស់គ្នា មិនអាចដកវិញបានទេ។',
+                appText(
+                  context,
+                  km: 'សារនេះនឹងបាត់ចេញពីទូរស័ព្ទទាំងអស់គ្នា មិនអាចដកវិញបានទេ។',
+                  en: 'This message will be removed for everyone and cannot be undone.',
+                ),
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: Colors.grey[600],
@@ -2246,9 +2253,9 @@ class _ChatScreenState extends State<ChatScreen>
                         padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
                       onPressed: () => Navigator.pop(ctx),
-                      child: const Text(
-                        'បោះបង់',
-                        style: TextStyle(fontFamily: 'Siemreap'),
+                      child: Text(
+                        appText(context, km: 'បោះបង់', en: 'Cancel'),
+                        style: const TextStyle(fontFamily: 'Siemreap'),
                       ),
                     ),
                   ),
@@ -2272,9 +2279,9 @@ class _ChatScreenState extends State<ChatScreen>
                           deleteForEveryone: true,
                         );
                       },
-                      child: const Text(
-                        'លុបចេញ',
-                        style: TextStyle(
+                      child: Text(
+                        appText(context, km: 'លុបចេញ', en: 'Delete'),
+                        style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.w700,
                           fontFamily: 'Siemreap',
@@ -2311,20 +2318,20 @@ class _ChatScreenState extends State<ChatScreen>
             .delete();
 
 
-        _showSnack('បានលុបសម្រាប់ទាំងអស់គ្នា', Colors.red);
+        _showSnack(appText(context, km: 'បានលុបសម្រាប់ទាំងអស់គ្នា', en: 'Deleted for everyone'), Colors.red);
       } else {
         await FirebaseFirestore.instance.collection('chats').doc(docId).update({
-          'message': '🚫 សារត្រូវបានលុប',
+          'message': appText(context, km: '🚫 សារត្រូវបានលុប', en: '🚫 Message deleted'),
           'type': 'text',
           'fileUrl': '',
           'deletedFor': FieldValue.arrayUnion([currentUserId]),
         });
 
 
-        _showSnack('បានលុបចេញ', Colors.orange);
+        _showSnack(appText(context, km: 'បានលុបចេញ', en: 'Deleted'), Colors.orange);
       }
     } catch (e) {
-      _showSnack('❌ លុបមិនបាន: $e', Colors.red);
+      _showSnack(appText(context, km: '❌ លុបមិនបាន: $e', en: '❌ Could not delete: $e'), Colors.red);
     }
   }
 
@@ -2364,9 +2371,9 @@ class _ChatScreenState extends State<ChatScreen>
 
 
     if (messageDate == today) {
-      return 'ថ្ងៃនេះ ម៉ោង $timeStr';
+      return appText(context, km: 'ថ្ងៃនេះ ម៉ោង $timeStr', en: 'Today at $timeStr');
     } else if (messageDate == yesterday) {
-      return 'ម្សិលមិញ ម៉ោង $timeStr';
+      return appText(context, km: 'ម្សិលមិញ ម៉ោង $timeStr', en: 'Yesterday at $timeStr');
     } else {
       return DateFormat('dd MMM yyyy, HH:mm').format(date);
     }
