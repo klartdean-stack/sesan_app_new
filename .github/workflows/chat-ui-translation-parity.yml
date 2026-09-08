@@ -1,0 +1,89 @@
+name: Chat UI Translation Parity
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/chat-ui-translation-parity.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Patch Chat UI translations safely
+        shell: python
+        run: |
+          from pathlib import Path
+          p = Path('lib/chat_screen_legacy.dart')
+          s = p.read_text(encoding='utf-8')
+
+          def once(old, new, label):
+              global s
+              if old not in s:
+                  raise SystemExit(f'MISSING: {label}')
+              s = s.replace(old, new, 1)
+              print('OK:', label)
+
+          once("import 'location_picker_sheet.dart';\n", "import 'location_picker_sheet.dart';\nimport 'localized_text.dart';\n", 'localized_text import')
+
+          old_replies = '''  final List<String> _quickReplies = [
+    "តម្លៃប៉ុន្មាន?",
+    "ទីតាំងនៅណាដែរ?",
+    "នៅមានស្តុកទេ?",
+    "បាទ/ចា៎វានៅមាន",
+    "សួស្ដីបង! តើសួរទំនិញមួយណាដែរ?",
+    "សុំលេខ និងទីតាំងទទួលឥវ៉ាន់ផងបង",
+    "ជួយចេញបុងអោយផង",
+    "បាទ/ចា៎បានទទួល! សូមអរគុណច្រើន!🙏",
+  ];'''
+          new_replies = '''  List<String> get _quickReplies => [
+    appText(context, km: 'តម្លៃប៉ុន្មាន?', en: 'How much is it?'),
+    appText(context, km: 'ទីតាំងនៅណាដែរ?', en: 'Where are you located?'),
+    appText(context, km: 'នៅមានស្តុកទេ?', en: 'Is it still in stock?'),
+    appText(context, km: 'បាទ/ចា៎វានៅមាន', en: 'Yes, it is available.'),
+    appText(context, km: 'សួស្ដីបង! តើសួរទំនិញមួយណាដែរ?', en: 'Hello! Which product are you asking about?'),
+    appText(context, km: 'សុំលេខ និងទីតាំងទទួលឥវ៉ាន់ផងបង', en: 'Please send your phone number and delivery location.'),
+    appText(context, km: 'ជួយចេញបុងអោយផង', en: 'Please create an invoice.'),
+    appText(context, km: 'បាទ/ចា៎បានទទួល! សូមអរគុណច្រើន!🙏', en: 'Received. Thank you! 🙏'),
+  ];'''
+          once(old_replies, new_replies, 'quick replies KH/EN')
+
+          once("'ទំនិញដែលចង់ទិញ (${items.length})'", "appText(context, km: 'ទំនិញដែលចង់ទិញ (${items.length})', en: 'Cart items (${items.length})')", 'cart items label')
+          once("child: const Text(\n                                'លុបទាំងអស់',", "child: Text(\n                                appText(context, km: 'លុបទាំងអស់', en: 'Clear all'),", 'clear all label')
+          once("addedByMe ? 'ខ្លួនឯង' : addedByName", "addedByMe ? appText(context, km: 'ខ្លួនឯង', en: 'You') : addedByName", 'self label')
+          once('const Text(\n                            "មិនអាចផ្ទុកសារបាន",', 'Text(\n                            appText(context, km: "មិនអាចផ្ទុកសារបាន", en: "Unable to load messages"),', 'load messages error')
+          once('child: const Text("ព្យាយាមម្តងទៀត")', 'child: Text(appText(context, km: "ព្យាយាមម្តងទៀត", en: "Try again"))', 'try again')
+          once('return const Center(\n                      child: Text(\n                        "មិនទាន់មានសារ\\nចាប់ផ្តើមសន្ទនាឥឡូវនេះ!",', 'return Center(\n                      child: Text(\n                        appText(context, km: "មិនទាន់មានសារ\\nចាប់ផ្តើមសន្ទនាឥឡូវនេះ!", en: "No messages yet\\nStart the conversation now!"),', 'empty chat')
+          once("' Swipe ឆ្វេង លប់'", "appText(context, km: ' អូសទៅឆ្វេងដើម្បីលុប', en: ' Swipe left to cancel')", 'record swipe hint')
+          once('const Text(\n                      \'កំពុងថតសម្លេង...\',', 'Text(\n                      appText(context, km: \'កំពុងថតសម្លេង...\', en: \'Recording...\'),', 'recording label')
+          once("decoration: const InputDecoration(\n                    hintText: 'សរសេរសារ...',", "decoration: InputDecoration(\n                    hintText: appText(context, km: 'សរសេរសារ...', en: 'Write a message...'),", 'message hint')
+          once('title: const Text("ជ្រើសរើសរូបភាពពី Gallery")', 'title: Text(appText(context, km: "ជ្រើសរើសរូបភាពពី Gallery", en: "Choose photos from Gallery"))', 'gallery photos')
+          once('subtitle: const Text(\n                "ជ្រើសរើសបានច្រើនសន្លឹកក្នុងពេលតែមួយ",', 'subtitle: Text(\n                appText(context, km: "ជ្រើសរើសបានច្រើនសន្លឹកក្នុងពេលតែមួយ", en: "You can select multiple photos at once"),', 'gallery subtitle')
+          once('title: const Text("ថតរូបថ្មី")', 'title: Text(appText(context, km: "ថតរូបថ្មី", en: "Take a photo"))', 'camera photo')
+          once('title: const Text("វីដេអូពី Gallery")', 'title: Text(appText(context, km: "វីដេអូពី Gallery", en: "Choose video from Gallery"))', 'gallery video')
+          once('title: const Text("ថតវីដេអូថ្មី")', 'title: Text(appText(context, km: "ថតវីដេអូថ្មី", en: "Record a video"))', 'camera video')
+          once('label: const Text(\n                "បង្កើតបុង",', 'label: Text(\n                appText(context, km: "បង្កើតបុង", en: "Create invoice"),', 'create invoice')
+
+          p.write_text(s, encoding='utf-8')
+
+      - name: Verify Chat parity patch
+        run: |
+          grep -q "import 'localized_text.dart';" lib/chat_screen_legacy.dart
+          grep -q "Write a message..." lib/chat_screen_legacy.dart
+          grep -q "Create invoice" lib/chat_screen_legacy.dart
+          grep -q "Choose photos from Gallery" lib/chat_screen_legacy.dart
+          grep -q "No messages yet" lib/chat_screen_legacy.dart
+          grep -q "Cart items" lib/chat_screen_legacy.dart
+      - name: Commit Chat parity patch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add lib/chat_screen_legacy.dart
+          git commit -m "Bring iOS Chat UI translations closer to Android"
+          git push origin main
