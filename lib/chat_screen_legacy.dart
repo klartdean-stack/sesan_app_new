@@ -719,7 +719,7 @@ class _ChatScreenState extends State<ChatScreen>
         appBar: AppBar(
           backgroundColor: Colors.green[700],
           foregroundColor: Colors.white,
-          title: const Text('ឆាត'),
+          title: Text(appText(context, km: 'ឆាត', en: 'Chat')),
         ),
 
         body: GestureDetector(       // <-- បន្ថែមនៅទីនេះ
@@ -740,7 +740,7 @@ class _ChatScreenState extends State<ChatScreen>
               const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('ត្រឡប់ក្រោយ'),
+                child: Text(appText(context, km: 'ត្រឡប់ក្រោយ', en: 'Back')),
               ),
             ],
           ),
@@ -817,13 +817,13 @@ class _ChatScreenState extends State<ChatScreen>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        userData?['name'] ?? 'អ្នកលក់',
+                        userData?['name'] ?? appText(context, km: 'អ្នកលក់', en: 'Seller'),
                         style: const TextStyle(fontSize: 16),
                       ),
                       // ✅ Online status / lastSeen
                       Text(
                         userData?['isOnline'] == true
-                            ? '🟢 កំពុង Online'
+                            ? '🟢 ${appText(context, km: 'កំពុង Online', en: 'Online')}'
                             : _formatLastSeen(userData?['lastSeen']),
                         style: const TextStyle(
                           fontSize: 11,
@@ -841,7 +841,7 @@ class _ChatScreenState extends State<ChatScreen>
           // ✅ ប៊ូតុងមើលហាង
           IconButton(
             icon: const Icon(Icons.store, color: Colors.white),
-            tooltip: 'មើលហាង',
+            tooltip: appText(context, km: 'មើលហាង', en: 'View shop'),
             onPressed: () => _openSellerShop(),
           ),
 
@@ -1258,7 +1258,7 @@ class _ChatScreenState extends State<ChatScreen>
                   children: [
                     Icon(Icons.arrow_back, size: 14, color: Colors.grey[500]),
                     Text(
-                      ' Swipe ឆ្វេង លប់',
+                      appText(context, km: ' អូសទៅឆ្វេងដើម្បីលុប', en: ' Swipe left to cancel'),
                       style: TextStyle(fontSize: 11, color: Colors.grey[500]),
                     ),
                   ],
@@ -1412,7 +1412,9 @@ class _ChatScreenState extends State<ChatScreen>
               ),
               const SizedBox(width: 6),
               Text(
-                isVireak ? "ទីតាំងផ្ញើតាមវិរៈ" : "ទីតាំងទទួលឥវ៉ាន់",
+                isVireak
+                    ? appText(context, km: 'ទីតាំងផ្ញើតាមវិរៈ', en: 'Vireak delivery location')
+                    : appText(context, km: 'ទីតាំងទទួលឥវ៉ាន់', en: 'Delivery location'),
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 14,
@@ -1426,27 +1428,27 @@ class _ChatScreenState extends State<ChatScreen>
           const SizedBox(height: 8),
           _buildLocationRow(
             Icons.map_outlined,
-            "ខេត្ត/ក្រុង",
+            appText(context, km: "ខេត្ត/ក្រុង", en: "Province/City"),
             locationData?['province'] ?? '',
             isMe,
           ),
           if (!isVireak && locationData?['district'] != null)
             _buildLocationRow(
               Icons.location_city_outlined,
-              "ស្រុក/ខណ្ឌ",
+              appText(context, km: "ស្រុក/ខណ្ឌ", en: "District"),
               locationData!['district'],
               isMe,
             ),
           if (isVireak && locationData?['vireakBranch'] != null)
             _buildLocationRow(
               Icons.store_outlined,
-              "សាខាវិរៈ",
+              appText(context, km: "សាខាវិរៈ", en: "Vireak branch"),
               locationData!['vireakBranch'],
               isMe,
             ),
           _buildLocationRow(
             Icons.home_outlined,
-            "អាសយដ្ឋាន",
+            appText(context, km: "អាសយដ្ឋាន", en: "Address"),
             locationData?['address'] ?? '',
             isMe,
           ),
@@ -1488,7 +1490,7 @@ class _ChatScreenState extends State<ChatScreen>
         width: 100,
         height: 40,
         child: Center(
-          child: Text("កំពុងផ្ញើ...", style: TextStyle(fontSize: 10)),
+          child: Text(appText(context, km: "កំពុងផ្ញើ...", en: "Sending..."), style: const TextStyle(fontSize: 10)),
         ),
       );
     }
@@ -1577,7 +1579,7 @@ class _ChatScreenState extends State<ChatScreen>
       case 'audio':
       // ✅ ពិនិត្យបើ URL ទទេ
         if (data['fileUrl'] == null || data['fileUrl'].toString().isEmpty) {
-          return _buildAudioError("សម្លេងមិនមាន");
+          return _buildAudioError(appText(context, km: "សម្លេងមិនមាន", en: "Audio unavailable"));
         }
         return AudioBubble(url: data['fileUrl'], isMe: isMe);
 
@@ -2022,15 +2024,24 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   String _formatLastSeen(dynamic timestamp) {
-    if (timestamp == null) return 'អសកម្ម';
-    final time = (timestamp as Timestamp).toDate();
-    final diff = DateTime.now().difference(time);
-
-
-    if (diff.inMinutes < 1) return 'ទើបតែសកម្ម';
-    if (diff.inMinutes < 60) return 'សកម្ម ${diff.inMinutes} នាទីមុន';
-    if (diff.inHours < 24) return 'សកម្ម ${diff.inHours} ម៉ោងមុន';
-    return 'សកម្ម ${diff.inDays} ថ្ងៃមុន';
+    if (timestamp == null) return appText(context, km: 'អសកម្ម', en: 'Offline');
+    try {
+      final time = (timestamp as Timestamp).toDate();
+      final diff = DateTime.now().difference(time);
+      if (diff.inMinutes < 1) return appText(context, km: 'ទើបតែសកម្ម', en: 'Active just now');
+      if (diff.inMinutes < 60) {
+        return appText(context, km: 'សកម្ម ${diff.inMinutes} នាទីមុន', en: 'Active ${diff.inMinutes} min ago');
+      }
+      if (diff.inHours < 24) {
+        return appText(context, km: 'សកម្ម ${diff.inHours} ម៉ោងមុន', en: 'Active ${diff.inHours} hr ago');
+      }
+      if (diff.inDays < 7) {
+        return appText(context, km: 'សកម្ម ${diff.inDays} ថ្ងៃមុន', en: 'Active ${diff.inDays} days ago');
+      }
+      return DateFormat('dd/MM/yyyy').format(time);
+    } catch (_) {
+      return appText(context, km: 'មិនស្គាល់', en: 'Unknown');
+    }
   }
 
 

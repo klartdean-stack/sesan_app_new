@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:intl/intl.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:flutter/services.dart';
+import 'localized_text.dart';
 
 
 class CreateInvoiceSheet extends StatefulWidget {
@@ -81,7 +82,7 @@ class _CreateInvoiceSheetState extends State<CreateInvoiceSheet> {
         sourcePath: image.path,
         uiSettings: [
           AndroidUiSettings(
-            toolbarTitle: 'តម្រឹម QR Code',
+            toolbarTitle: appText(context, km: 'តម្រឹម QR Code', en: 'Crop QR Code'),
             toolbarColor: Colors.green,
             toolbarWidgetColor: Colors.white,
             initAspectRatio: CropAspectRatioPreset.square,
@@ -89,7 +90,7 @@ class _CreateInvoiceSheetState extends State<CreateInvoiceSheet> {
             aspectRatioPresets: [CropAspectRatioPreset.square],
           ),
           IOSUiSettings(
-            title: 'តឹម QR Code',
+            title: appText(context, km: 'តម្រឹម QR Code', en: 'Crop QR Code'),
             aspectRatioLockEnabled: true,
             aspectRatioPresets: [CropAspectRatioPreset.square],
           ),
@@ -149,8 +150,8 @@ class _CreateInvoiceSheetState extends State<CreateInvoiceSheet> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        "បញ្ជីទំនិញ / Items List",
+                      Text(
+                        appText(context, km: "បញ្ជីទំនិញ", en: "Items List"),
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 10),
@@ -170,33 +171,33 @@ class _CreateInvoiceSheetState extends State<CreateInvoiceSheet> {
                           }),
                         ),
                         icon: const Icon(Icons.add_circle, color: Colors.green),
-                        label: const Text(
-                          "បន្ថែមទំនិញថ្មី",
+                        label: Text(
+                          appText(context, km: "បន្ថែមទំនិញថ្មី", en: "Add another item"),
                           style: TextStyle(color: Colors.green),
                         ),
                       ),
                       const Divider(height: 30, thickness: 1),
 
-                      const Text(
-                        "ព័ត៌មានអ្នកទិញ / Buyer Info",
+                      Text(
+                        appText(context, km: "ព័ត៌មានអ្នកទិញ", en: "Buyer Info"),
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 10),
                       _buildInput(
-                        "ឈ្មោះអ្នកទិញ / Buyer Name",
+                        appText(context, km: "ឈ្មោះអ្នកទិញ", en: "Buyer Name"),
                         CreateInvoiceSheet.cusName,
                       ),
                       _buildInput(
-                        "លេខទូរស័ព្ទ / Phone",
+                        appText(context, km: "លេខទូរស័ព្ទ", en: "Phone"),
                         CreateInvoiceSheet.cusPhone,
                         isNum: true,
                       ),
                       _buildInput(
-                        "អាសយដ្ឋាន / Address",
+                        appText(context, km: "អាសយដ្ឋាន", en: "Address"),
                         CreateInvoiceSheet.cusAddress,
                       ),
                       _buildInput(
-                        "ថ្លៃដឹកជញ្ជូន / Shipping (៛)",
+                        appText(context, km: "ថ្លៃដឹកជញ្ជូន (៛)", en: "Shipping (៛)"),
                         CreateInvoiceSheet.shipPrice,
                         isNum: true,
                         isPrice: true,
@@ -222,8 +223,8 @@ class _CreateInvoiceSheetState extends State<CreateInvoiceSheet> {
   Widget _buildQRUploadSection() {
     return Column(
       children: [
-        const Text(
-          "QR Code សម្រាប់បង់ប្រាក់ (ABA / KHQR)",
+        Text(
+          appText(context, km: "QR Code សម្រាប់បង់ប្រាក់ (ABA / KHQR)", en: "Payment QR Code (ABA / KHQR)"),
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 10),
@@ -266,9 +267,13 @@ class _CreateInvoiceSheetState extends State<CreateInvoiceSheet> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text(
-            "បង្កើតវិក្កយបត្រអាជីព",
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          Expanded(
+            child: Text(
+              appText(context, km: "បង្កើតវិក្កយបត្រអាជីព", en: "Create professional invoice"),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
           ),
           Row(
             children: [
@@ -302,7 +307,7 @@ class _CreateInvoiceSheetState extends State<CreateInvoiceSheet> {
           children: [
             // 🔢 លេខរាប់ជួរឈរទំនិញ
             Text(
-              "ទំនិញទី ${index + 1}",
+              appText(context, km: "ទំនិញទី ${index + 1}", en: "Item ${index + 1}"),
               style: const TextStyle(
                 fontWeight: FontWeight.bold,
                 color: Colors.green,
@@ -310,12 +315,12 @@ class _CreateInvoiceSheetState extends State<CreateInvoiceSheet> {
               ),
             ),
             const SizedBox(height: 4),
-            _buildInput("ឈ្មោះទំនិញ", CreateInvoiceSheet.items[index]['desc']!),
+            _buildInput(appText(context, km: "ឈ្មោះទំនិញ", en: "Product name"), CreateInvoiceSheet.items[index]['desc']!),
             Row(
               children: [
                 Expanded(
                   child: _buildInput(
-                    "ចំនួន",
+                    appText(context, km: "ចំនួន", en: "Quantity"),
                     CreateInvoiceSheet.items[index]['qty']!,
                     isNum: true,
                     onChanged: (v) => setState(() {}),
@@ -324,7 +329,7 @@ class _CreateInvoiceSheetState extends State<CreateInvoiceSheet> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: _buildInput(
-                    "តម្លៃរាយ ៛",
+                    appText(context, km: "តម្លៃរាយ ៛", en: "Unit price ៛"),
                     CreateInvoiceSheet.items[index]['price']!,
                     isNum: true,
                     isPrice:
@@ -360,8 +365,8 @@ class _CreateInvoiceSheetState extends State<CreateInvoiceSheet> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                "សរុបចុងក្រោយ៖",
+              Text(
+                appText(context, km: "សរុបចុងក្រោយ៖", en: "Grand total:"),
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
               Text(
@@ -378,13 +383,13 @@ class _CreateInvoiceSheetState extends State<CreateInvoiceSheet> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _actionBtn(Icons.save, "Save", Colors.blue, () {
+              _actionBtn(Icons.save, appText(context, km: "រក្សាទុក", en: "Save"), Colors.blue, () {
                 widget.onAction({
                   'type': 'save',
                   'total': _calculateGrandTotal(),
                 });
               }),
-              _actionBtn(Icons.camera_alt, "Capture", Colors.purple, () {
+              _actionBtn(Icons.camera_alt, appText(context, km: "ថតទុក", en: "Capture"), Colors.purple, () {
                 widget.onAction({
                   'type': 'screenshot',
                   'total': _calculateGrandTotal(),
