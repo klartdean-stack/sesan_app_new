@@ -6,8 +6,8 @@ import 'settings_screen.dart';
 export 'profile_screen_legacy.dart' hide ProfileScreen;
 
 /// iOS profile entry point.
-/// Keeps the existing profile implementation and exposes the account safety
-/// settings required for Delete Account, Block/Unblock and Report management.
+/// Keeps the existing Profile/Wallet implementation intact and exposes
+/// Settings in the lower account menu area, matching the Android layout.
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
@@ -23,53 +23,64 @@ class ProfileScreen extends StatelessWidget {
       children: [
         const legacy.ProfileScreen(),
 
-        // Keep a visible Settings shortcut on the Profile app bar.
+        // Settings is intentionally kept away from the wallet/header card.
+        // Place the shortcut with the lower account/help controls, matching
+        // the current Android Profile/Menu organization.
         Positioned(
-          top: MediaQuery.paddingOf(context).top + 4,
-          right: 58,
-          child: Material(
-            color: Colors.transparent,
-            child: IconButton(
-              tooltip: 'Settings',
-              icon: const Icon(
-                Icons.settings_rounded,
-                color: Colors.white,
-                size: 24,
-              ),
-              onPressed: () => _openSettings(context),
-            ),
-          ),
-        ),
-
-        // A second explicit entry is intentionally visible above the bottom
-        // navigation so users and App Review can find safety/account controls.
-        Positioned(
-          right: 14,
-          bottom: 88,
+          left: 15,
+          right: 15,
+          bottom: 82,
           child: SafeArea(
             top: false,
             child: Material(
-              color: Colors.green.shade700,
-              elevation: 5,
-              borderRadius: BorderRadius.circular(24),
+              color: Colors.white,
+              elevation: 2,
+              borderRadius: BorderRadius.circular(10),
               child: InkWell(
-                borderRadius: BorderRadius.circular(24),
+                borderRadius: BorderRadius.circular(10),
                 onTap: () => _openSettings(context),
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   child: Row(
-                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.settings_rounded, color: Colors.white, size: 19),
-                      SizedBox(width: 7),
-                      Text(
-                        'ការកំណត់ / Settings',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.green.withOpacity(.12),
+                          borderRadius: BorderRadius.circular(9),
+                        ),
+                        child: const Icon(
+                          Icons.settings_rounded,
+                          color: Colors.green,
+                          size: 22,
                         ),
                       ),
+                      const SizedBox(width: 12),
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'ការកំណត់ / Settings',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            SizedBox(height: 2),
+                            Text(
+                              'Language & account settings',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(fontSize: 11, color: Colors.black54),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(Icons.arrow_forward_ios, size: 15, color: Colors.black45),
                     ],
                   ),
                 ),
