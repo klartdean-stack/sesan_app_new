@@ -1,0 +1,31 @@
+name: Chat Parity Batch 2
+on:
+  push:
+    paths:
+      - '.github/workflows/chat-parity-batch2.yml'
+      - 'tool/chat_parity_batch2.py'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Apply batch 2
+        run: python tool/chat_parity_batch2.py
+      - name: Verify
+        run: |
+          grep -q "Active just now" lib/chat_screen_legacy.dart
+          grep -q "Delivery location" lib/chat_screen_legacy.dart
+          grep -q "Sending..." lib/chat_screen_legacy.dart
+          grep -q "Create professional invoice" lib/create_invoice_sheet.dart
+          grep -q "Grand total:" lib/create_invoice_sheet.dart
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add lib/chat_screen_legacy.dart lib/create_invoice_sheet.dart
+          git commit -m "Translate iOS Chat status location and invoice UI"
+          git push origin main
