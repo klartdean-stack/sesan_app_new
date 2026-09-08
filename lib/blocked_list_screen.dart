@@ -164,17 +164,31 @@ class _BlockedListScreenState extends State<BlockedListScreen> {
   bool _isBlocked(String userId) => _blockedUsers.any((u) => u['id'].toString() == userId);
 
   String _reasonLabel(dynamic value) {
-    final reason = (value ?? 'other').toString();
-    if (Localizations.localeOf(context).languageCode == 'en') return reason;
-    const labels = {
+    final reason = (value ?? 'other').toString().toLowerCase();
+    final english = Localizations.localeOf(context).languageCode == 'en';
+    const enLabels = {
+      'spam': 'Spam',
+      'fake': 'Fake profile',
+      'fake_profile': 'Fake profile',
+      'fraud': 'Scam or fraud',
+      'scam': 'Scam or fraud',
+      'harassment': 'Harassment or abusive behavior',
+      'inappropriate': 'Inappropriate content',
+      'inappropriate_content': 'Inappropriate content',
+      'other': 'Other',
+    };
+    const kmLabels = {
       'spam': 'សាររំខាន / Spam',
-      'fake': 'គណនីក្លែងក្លាយ',
-      'fraud': 'បោកប្រាស់',
-      'harassment': 'រំខាន ឬគំរាមកំហែង',
-      'inappropriate': 'មាតិកាមិនសមរម្យ',
+      'fake': 'Profile ក្លែងក្លាយ',
+      'fake_profile': 'Profile ក្លែងក្លាយ',
+      'fraud': 'ឆបោក ឬបោកប្រាស់',
+      'scam': 'ឆបោក ឬបោកប្រាស់',
+      'harassment': 'រំខាន ឬប្រើពាក្យមិនសមរម្យ',
+      'inappropriate': 'Content មិនសមរម្យ',
+      'inappropriate_content': 'Content មិនសមរម្យ',
       'other': 'ផ្សេងៗ',
     };
-    return labels[reason.toLowerCase()] ?? reason;
+    return (english ? enLabels : kmLabels)[reason] ?? reason;
   }
 
   String _statusLabel(dynamic value) {
@@ -355,13 +369,16 @@ class _BlockedListScreenState extends State<BlockedListScreen> {
   }
 
   Widget _empty(IconData icon, String text) => Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 54, color: Colors.grey.shade400),
-            const SizedBox(height: 12),
-            Text(text, textAlign: TextAlign.center, style: TextStyle(color: Colors.grey.shade600)),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.all(30),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 52, color: Colors.grey[400]),
+              const SizedBox(height: 12),
+              Text(text, textAlign: TextAlign.center, style: TextStyle(color: Colors.grey[600])),
+            ],
+          ),
         ),
       );
 }
