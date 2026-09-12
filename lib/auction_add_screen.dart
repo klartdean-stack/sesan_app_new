@@ -106,7 +106,7 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
 
 
   Future<void> _launchABA() async {
-    final Uri _url = Uri.parse('https://pay.ababank.com/oRF8/lq8jgwzb');
+    final Uri _url = Uri.parse('https://pay.ababank.com/oRF8/oizn40j9');
     try {
       await launchUrl(_url, mode: LaunchMode.externalApplication);
     } catch (e) {

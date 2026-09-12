@@ -15,8 +15,8 @@ class PaymentScreen extends StatelessWidget {
   // 🎯 កូដបង្កើត KHQR String ដោយប្រើដៃ (No Package Needed)
   String _generateManualKHQR() {
     // នេះជាស្ដង់ដារ KHQR សម្រាប់ ABA
-    // មេគ្រាន់តែដូរលេខគណនី "005678716" ទៅជាលេខរបស់មេផ្ទាល់
-    String receiverId = "005678716@aba";
+    // គណនី ABA KHR ថ្មីរបស់ Sesan
+    String receiverId = "019311778@aba";
     String amountStr = totalAmount.toStringAsFixed(0);
 
     // Logic នេះនឹងបង្កើត String ឱ្យមេអូតូ (មេមិនបាច់កែទេ)

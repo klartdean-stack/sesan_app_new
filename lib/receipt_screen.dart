@@ -219,7 +219,7 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
   }
 
   Future<void> _launchABA() async {
-    final Uri url = Uri.parse('https://pay.ababank.com/oRF8/lq8jgwzb');
+    final Uri url = Uri.parse('https://pay.ababank.com/oRF8/oizn40j9');
     if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
       await launchUrl(url, mode: LaunchMode.platformDefault);
     }

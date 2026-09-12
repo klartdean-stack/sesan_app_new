@@ -147,7 +147,7 @@ class _VipMembershipScreenState extends State<VipMembershipScreen> {
   }
 
   Future<void> _launchABA() async {
-    final Uri url = Uri.parse('https://pay.ababank.com/oRF8/lq8jgwzb');
+    final Uri url = Uri.parse('https://pay.ababank.com/oRF8/oizn40j9');
     try {
       await launchUrl(url, mode: LaunchMode.externalApplication);
     } catch (e) {
