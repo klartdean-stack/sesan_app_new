@@ -1,0 +1,36 @@
+name: Fix iOS Add Product Services Import
+on:
+  push:
+    branches: [ios-sync-android46]
+    paths:
+      - '.github/workflows/fix-ios-add-product-services-import.yml'
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ios-sync-android46
+      - name: Add missing Flutter services import
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('lib/add_product.dart')
+          s = p.read_text(encoding='utf-8')
+          needle = "import 'package:flutter/material.dart';\n"
+          addition = "import 'package:flutter/services.dart';\n"
+          if addition not in s:
+              if needle not in s:
+                  raise SystemExit('material import anchor not found')
+              s = s.replace(needle, needle + addition, 1)
+              p.write_text(s, encoding='utf-8')
+          PY
+      - name: Commit fix
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add lib/add_product.dart
+          git diff --cached --quiet || git commit -m 'Fix Add Product formatter import'
+          git push origin HEAD:ios-sync-android46
