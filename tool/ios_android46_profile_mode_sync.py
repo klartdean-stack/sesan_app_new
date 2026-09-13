@@ -1,55 +1,220 @@
 from pathlib import Path
+import re
 
 p = Path('lib/profile_screen_legacy.dart')
 s = p.read_text(encoding='utf-8')
 
-# Imports needed by the Android 46 profile parity cards.
-anchor = "import 'package:my_app/admin_marketplace_analytics_screen.dart';\n"
-extra = (
+
+def insert_after(anchor: str, addition: str, marker: str):
+    global s
+    if marker in s:
+        return
+    if anchor not in s:
+        raise SystemExit(f'anchor not found: {anchor[:60]}')
+    s = s.replace(anchor, anchor + addition, 1)
+
+
+# Imports used by the Android 46 account experience. All of these screens
+# already exist on the iOS parity branch.
+import_anchor = "import 'package:my_app/admin_marketplace_analytics_screen.dart';\n"
+imports = (
     "import 'package:my_app/admin_support_inbox_screen.dart';\n"
     "import 'package:my_app/ai_packages_screen.dart';\n"
     "import 'package:my_app/sesan_ai_assistant_screen.dart';\n"
     "import 'package:my_app/support_chat_screen.dart';\n"
 )
-if "admin_support_inbox_screen.dart" not in s:
+insert_after(import_anchor, imports, "admin_support_inbox_screen.dart")
+
+# User Mode / Seller Mode state.
+if 'bool _isSellerMode' not in s:
+    m = re.search(r"(\s+bool _isInvestor\s*=\s*false;[^\n]*\n)", s)
+    if not m:
+        raise SystemExit('investor state anchor not found')
+    s = s[:m.end()] + '  bool _isSellerMode = false;\n' + s[m.end():]
+
+# Compact mode-aware title.
+s = re.sub(
+    r"title:\s*const Text\(\s*'គណនី និងការគ្រប់គ្រងប្រាក់',\s*style:\s*TextStyle\(fontFamily: 'KHMEROS', fontSize: 18\),\s*\),",
+    """title: Text(
+          _isSellerMode ? 'គណនី និងការគ្រប់គ្រងប្រាក់' : 'គណនី',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(fontFamily: 'KHMEROS', fontSize: 15),
+        ),""",
+    s,
+    count=1,
+    flags=re.S,
+)
+
+# Replace the old order badge in the AppBar with the same User/Seller switch
+# used on Android 46. Seller order count is shown as a card below instead.
+if 'Switch to Seller Mode' not in s:
+    pattern = re.compile(
+        r"\s*actions:\s*\[\s*StreamBuilder<QuerySnapshot>\(.*?\n\s*\],\s*\n\s*\),\s*\n\s*body:\s*StreamBuilder<DocumentSnapshot>\(",
+        re.S,
+    )
+    replacement = """
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 10),
+            child: Tooltip(
+              message: _isSellerMode
+                  ? 'ប្តូរទៅរបៀបអ្នកប្រើ / Switch to User Mode'
+                  : 'ប្តូរទៅរបៀបអ្នកលក់ / Switch to Seller Mode',
+              child: IconButton(
+                onPressed: () => setState(() => _isSellerMode = !_isSellerMode),
+                icon: Icon(
+                  _isSellerMode
+                      ? Icons.person_outline_rounded
+                      : Icons.storefront_outlined,
+                  color: Colors.white,
+                  size: 24,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+      body: StreamBuilder<DocumentSnapshot>("""
+    s, count = pattern.subn(replacement, s, count=1)
+    if count != 1:
+        raise SystemExit('app bar action block not found')
+
+# Android 46 primary mode section. This deliberately sits above the legacy
+# account cards, preserving existing iOS features while making the primary
+# User/Seller navigation identical in purpose to Android.
+if 'Android46 profile mode section' not in s:
+    anchor = '                _buildHeader(name, photoUrl, balance, isFrozen),\n'
     if anchor not in s:
-        raise SystemExit('profile import anchor not found')
-    s = s.replace(anchor, anchor + extra, 1)
-
-# Add the Android-style User/Seller mode state.
-state_anchor = "  bool _isInvestor = false; // ✅ បន្ថែមបន្ទាត់នេះ\n"
-if "bool _isSellerMode" not in s:
-    if state_anchor not in s:
-        raise SystemExit('profile state anchor not found')
-    s = s.replace(state_anchor, state_anchor + "  bool _isSellerMode = false;\n", 1)
-
-# Replace the legacy title with a compact mode-aware title.
-old_title = """        title: const Text(\n          'គណនី និងការគ្រប់គ្រងប្រាក់',\n          style: TextStyle(fontFamily: 'KHMEROS', fontSize: 18),\n        ),"""
-new_title = """        title: Text(\n          _isSellerMode\n              ? 'គណនី និងការគ្រប់គ្រងប្រាក់'\n              : 'គណនី',\n          maxLines: 1,\n          overflow: TextOverflow.ellipsis,\n          style: const TextStyle(fontFamily: 'KHMEROS', fontSize: 15),\n        ),"""
-if old_title in s:
-    s = s.replace(old_title, new_title, 1)
-elif "_isSellerMode\n              ? 'គណនី និងការគ្រប់គ្រងប្រាក់'" not in s:
-    raise SystemExit('profile title anchor not found')
-
-# Replace the old seller-order app-bar badge with Android 46's mode switch.
-start = s.find("        actions: [\n          StreamBuilder<QuerySnapshot>(")
-end_marker = "        ],\n      ),\n      body: StreamBuilder<DocumentSnapshot>("
-end = s.find(end_marker, start) if start != -1 else -1
-if start != -1 and end != -1:
-    new_actions = """        actions: [\n          Padding(\n            padding: const EdgeInsets.only(right: 10),\n            child: Tooltip(\n              message: _isSellerMode\n                  ? 'ប្តូរទៅរបៀបអ្នកប្រើ / Switch to User Mode'\n                  : 'ប្តូរទៅរបៀបអ្នកលក់ / Switch to Seller Mode',\n              child: IconButton(\n                onPressed: () => setState(() => _isSellerMode = !_isSellerMode),\n                icon: Icon(\n                  _isSellerMode\n                      ? Icons.person_outline_rounded\n                      : Icons.storefront_outlined,\n                  color: Colors.white,\n                  size: 24,\n                ),\n              ),\n            ),\n          ),\n"""
-    s = s[:start] + new_actions + s[end:]
-elif "Switch to Seller Mode" not in s:
-    raise SystemExit('profile actions block not found')
-
-# Add the mode-specific quick section directly below the profile header. This
-# gives iOS the same primary separation as Android 46 while retaining legacy
-# cards until the rest of the large profile is fully split in later parity work.
-header_anchor = """                _buildHeader(name, photoUrl, balance, isFrozen),\n                const SizedBox(height: 20),"""
-mode_section = """                _buildHeader(name, photoUrl, balance, isFrozen),\n                const SizedBox(height: 14),\n                Padding(\n                  padding: const EdgeInsets.symmetric(horizontal: 15),\n                  child: Column(\n                    children: [\n                      _buildMenuCard(\n                        title: 'Sesan AI ជំនួយការ / Sesan AI Assistant',\n                        subtitle: 'សួរអំពីកសិកម្ម ការលក់ និងហិរញ្ញវត្ថុ',\n                        icon: Icons.auto_awesome_rounded,\n                        color: Colors.green,\n                        onTap: () => Navigator.push(\n                          context,\n                          MaterialPageRoute(\n                            builder: (_) => const SesanAiAssistantScreen(),\n                          ),\n                        ),\n                      ),\n                      if (!_isSellerMode)\n                        _buildMenuCard(\n                          title: 'កញ្ចប់ Sesan AI / Sesan AI Packages',\n                          subtitle: 'មើល Credit តម្លៃ និងស្នើសុំជាវកញ្ចប់',\n                          icon: Icons.workspace_premium_outlined,\n                          color: Colors.deepPurple,\n                          onTap: () => Navigator.push(\n                            context,\n                            MaterialPageRoute(\n                              builder: (_) => const AiPackagesScreen(),\n                            ),\n                          ),\n                        ),\n                      if (!_isSellerMode)\n                        _buildMenuCard(\n                          title: 'ជំនួយ និង Support / Help & Support',\n                          subtitle: 'ឆាតជាមួយ Sesan Support',\n                          icon: Icons.support_agent_rounded,\n                          color: Colors.blue,\n                          onTap: () => Navigator.push(\n                            context,\n                            MaterialPageRoute(\n                              builder: (_) => const SupportChatScreen(),\n                            ),\n                          ),\n                        ),\n                      if (_isSellerMode)\n                        _buildMenuCard(\n                          title: 'មជ្ឈមណ្ឌលហិរញ្ញវត្ថុ / Finance Center',\n                          subtitle: 'មើលរបាយការណ៍លុយចូល និងលុយចេញ',\n                          icon: Icons.account_balance_wallet,\n                          color: Colors.purple,\n                          onTap: () => Navigator.push(\n                            context,\n                            MaterialPageRoute(\n                              builder: (_) => SellerAccountingScreen(\n                                sellerId: _loggedUid ?? '',\n                              ),\n                            ),\n                          ),\n                        ),\n                      if (_isSellerMode)\n                        StreamBuilder<QuerySnapshot>(\n                          stream: _orderStream,\n                          builder: (context, snapshot) {\n                            final count = snapshot.hasData\n                                ? snapshot.data!.docs.length\n                                : 0;\n                            return Stack(\n                              clipBehavior: Clip.none,\n                              children: [\n                                _buildMenuCard(\n                                  title: 'ការបញ្ជាទិញរបស់អ្នកលក់ / Seller Orders',\n                                  subtitle: 'គ្រប់គ្រង និងតាមដានការបញ្ជាទិញរបស់អ្នក',\n                                  icon: Icons.receipt_long_rounded,\n                                  color: Colors.blueGrey,\n                                  onTap: () => Navigator.push(\n                                    context,\n                                    MaterialPageRoute(\n                                      builder: (_) => OrderManagementScreen(\n                                        sellerId: _loggedUid ?? '',\n                                      ),\n                                    ),\n                                  ),\n                                ),\n                                if (count > 0)\n                                  Positioned(\n                                    right: 38,\n                                    top: 10,\n                                    child: Container(\n                                      padding: const EdgeInsets.symmetric(\n                                        horizontal: 6,\n                                        vertical: 2,\n                                      ),\n                                      decoration: BoxDecoration(\n                                        color: Colors.red,\n                                        borderRadius: BorderRadius.circular(11),\n                                      ),\n                                      child: Text(\n                                        count > 99 ? '99+' : '$count',\n                                        style: const TextStyle(\n                                          color: Colors.white,\n                                          fontSize: 10,\n                                          fontWeight: FontWeight.bold,\n                                        ),\n                                      ),\n                                    ),\n                                  ),\n                              ],\n                            );\n                          },\n                        ),\n                      if (_isSellerMode && _loggedUid == adminUID)\n                        _buildMenuCard(\n                          title: 'ប្រអប់សារ Support / Support Inbox',\n                          subtitle: 'ឆ្លើយតបសំណួរ និងបញ្ហារបស់អ្នកប្រើប្រាស់',\n                          icon: Icons.mark_unread_chat_alt_outlined,\n                          color: Colors.green,\n                          onTap: () => Navigator.push(\n                            context,\n                            MaterialPageRoute(\n                              builder: (_) => const AdminSupportInboxScreen(),\n                            ),\n                          ),\n                        ),\n                    ],\n                  ),\n                ),\n                const SizedBox(height: 20),"""
-if "ការបញ្ជាទិញរបស់អ្នកលក់ / Seller Orders" not in s:
-    if header_anchor not in s:
         raise SystemExit('profile header anchor not found')
-    s = s.replace(header_anchor, mode_section, 1)
+    section = """                // Android46 profile mode section
+                const SizedBox(height: 14),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                  child: Column(
+                    children: [
+                      _buildMenuCard(
+                        title: 'Sesan AI ជំនួយការ / Sesan AI Assistant',
+                        subtitle: 'សួរអំពីកសិកម្ម ការលក់ និងហិរញ្ញវត្ថុ',
+                        icon: Icons.auto_awesome_rounded,
+                        color: Colors.green,
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const SesanAiAssistantScreen(),
+                          ),
+                        ),
+                      ),
+                      if (!_isSellerMode)
+                        _buildMenuCard(
+                          title: 'កញ្ចប់ Sesan AI / Sesan AI Packages',
+                          subtitle: 'មើល Credit តម្លៃ និងស្នើសុំជាវកញ្ចប់',
+                          icon: Icons.workspace_premium_outlined,
+                          color: Colors.deepPurple,
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const AiPackagesScreen(),
+                            ),
+                          ),
+                        ),
+                      if (!_isSellerMode)
+                        _buildMenuCard(
+                          title: 'ជំនួយ / Help & Support',
+                          subtitle: 'ឆាតជាមួយ Sesan Support / Chat with Sesan Support',
+                          icon: Icons.support_agent_rounded,
+                          color: Colors.blue,
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const SupportChatScreen(),
+                            ),
+                          ),
+                        ),
+                      if (_isSellerMode) ...[
+                        _buildMenuCard(
+                          title: 'មជ្ឈមណ្ឌលហិរញ្ញវត្ថុ / Finance Center',
+                          subtitle: 'មើលរបាយការណ៍លុយចូល និងលុយចេញ',
+                          icon: Icons.account_balance_wallet,
+                          color: Colors.purple,
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => SellerAccountingScreen(
+                                sellerId: _loggedUid ?? '',
+                              ),
+                            ),
+                          ),
+                        ),
+                        StreamBuilder<QuerySnapshot>(
+                          stream: _orderStream,
+                          builder: (context, snapshot) {
+                            final count = snapshot.hasData
+                                ? snapshot.data!.docs.length
+                                : 0;
+                            return Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                _buildMenuCard(
+                                  title: 'ការបញ្ជាទិញរបស់អ្នកលក់ / Seller Orders',
+                                  subtitle: 'គ្រប់គ្រង និងតាមដានការបញ្ជាទិញរបស់អ្នក',
+                                  icon: Icons.receipt_long_rounded,
+                                  color: Colors.blueGrey,
+                                  onTap: () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => OrderManagementScreen(
+                                        sellerId: _loggedUid ?? '',
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                if (count > 0)
+                                  Positioned(
+                                    right: 38,
+                                    top: 10,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 6,
+                                        vertical: 2,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.red,
+                                        borderRadius: BorderRadius.circular(11),
+                                      ),
+                                      child: Text(
+                                        count > 99 ? '99+' : '$count',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            );
+                          },
+                        ),
+                      ],
+                      if (_isSellerMode && _loggedUid == adminUID)
+                        _buildMenuCard(
+                          title: 'ប្រអប់សារ Support / Support Inbox',
+                          subtitle: 'ឆ្លើយតបសំណួរ និងបញ្ហារបស់អ្នកប្រើប្រាស់',
+                          icon: Icons.mark_unread_chat_alt_outlined,
+                          color: Colors.green,
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const AdminSupportInboxScreen(),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+"""
+    s = s.replace(anchor, anchor + section, 1)
 
 p.write_text(s, encoding='utf-8')
 print('iOS profile User/Seller mode parity patch applied')
