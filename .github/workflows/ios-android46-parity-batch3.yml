@@ -1,0 +1,36 @@
+name: iOS Android 46 Parity Batch 3
+on:
+  push:
+    branches:
+      - ios-sync-android46
+    paths:
+      - '.github/workflows/ios-android46-parity-batch3.yml'
+      - 'tool/ios_android46_parity_batch3.py'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ios-sync-android46
+      - name: Apply chat parity batch
+        run: python tool/ios_android46_parity_batch3.py
+      - name: Verify changes
+        run: |
+          grep -q "delete_outline_rounded" lib/chat_screen_legacy.dart
+          grep -q "height: 62" lib/chat_screen_legacy.dart
+          grep -q "width: 72" lib/chat_screen_legacy.dart
+          grep -q "height: 23" lib/chat_screen_legacy.dart
+      - name: Commit parity batch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add lib/chat_screen_legacy.dart
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Compact iOS chat cart like Android Build 46"
+            git push origin ios-sync-android46
+          fi
