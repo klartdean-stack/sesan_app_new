@@ -23,6 +23,7 @@ import 'signup_screen.dart';
 import 'package:get/get.dart';
 import 'package:flutter/foundation.dart';
 import 'firebase_options.dart';
+import 'auth_session_store.dart';
 
 const AndroidNotificationChannel channel = AndroidNotificationChannel(
   'order_channel',
@@ -395,10 +396,17 @@ class _AuthWrapperState extends State<AuthWrapper> {
     _checkAuth();
   }
 
-  Future<User?> _restoreFirebaseUser() async {
+  Future<User?> _restoreFirebaseUser(String? expectedUid) async {
     final auth = FirebaseAuth.instance;
     final cachedUser = auth.currentUser;
     if (cachedUser != null) return cachedUser;
+
+    // If iOS has not restored Firebase's cached refresh token yet, recover the
+    // same verified account from credentials protected by Keychain.
+    final securelyRestoredUser = await AuthSessionStore.restore(
+      expectedUid: expectedUid,
+    );
+    if (securelyRestoredUser != null) return securelyRestoredUser;
 
     try {
       return await auth
@@ -417,7 +425,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
     final savedLoggedIn = prefs.getBool('is_logged_in') ?? false;
     final isGuest = prefs.getBool('is_guest') ?? false;
 
-    final firebaseUser = await _restoreFirebaseUser();
+    final firebaseUser = await _restoreFirebaseUser(savedUid);
     if (!mounted) return;
 
     final authController = Get.find<AuthController>();
@@ -443,13 +451,15 @@ class _AuthWrapperState extends State<AuthWrapper> {
         _cachedScreen = const HomeScreen(guestMode: false);
       }
     } else if (savedLoggedIn && savedUid != null && savedUid.isNotEmpty) {
-      // A slow Firebase restore must not log the user out on cold start.
-      // Authenticated features independently wait for FirebaseAuth and can ask
-      // for sign-in only if the Firebase session is genuinely unavailable.
-      authController.isLoggedIn = true;
+      // Never open an authenticated-looking home screen without a real
+      // Firebase user. This keeps Sesan AI and other callable functions from
+      // running without a valid Firebase ID token.
+      await prefs.setBool('is_logged_in', false);
+      await prefs.remove('user_uid');
+      authController.isLoggedIn = false;
       authController.isGuest = false;
-      authController.userId = savedUid;
-      _cachedScreen = const HomeScreen(guestMode: false);
+      authController.userId = '';
+      _cachedScreen = const LoginScreen();
     } else if (isGuest) {
       authController.isLoggedIn = false;
       authController.isGuest = true;

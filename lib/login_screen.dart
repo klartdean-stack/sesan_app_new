@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_instance/src/extension_instance.dart';
 import 'package:get/get_navigation/src/extension_navigation.dart';
 import 'package:my_app/controllers/auth_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'account_deletion_service.dart';
+import 'auth_session_store.dart';
 import 'forgot_password_screen.dart';
 import 'user_service.dart';
 
@@ -216,6 +218,30 @@ class _LoginScreenState extends State<LoginScreen> {
           .doc(userDoc.id)
           .get();
       userData = refreshedDoc.data() ?? userData;
+
+      // Firebase callable functions require a real Firebase Auth session.
+      // Sesan accounts use the phone number as a private synthetic email.
+      final authEmail = "${phoneWith855.replaceAll('+', '')}@sesan.app";
+      final authResult = await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: authEmail,
+        password: password,
+      );
+
+      // Never continue if Firestore and Firebase Authentication point to
+      // different accounts.
+      if (authResult.user?.uid != userDoc.id) {
+        await FirebaseAuth.instance.signOut();
+        throw FirebaseAuthException(
+          code: 'user-mismatch',
+          message: 'The Sesan account does not match Firebase Authentication.',
+        );
+      }
+
+      await AuthSessionStore.save(
+        email: authEmail,
+        password: password,
+        uid: userDoc.id,
+      );
 
       await FirebaseFirestore.instance
           .collection('users')
