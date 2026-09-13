@@ -1,7 +1,9 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'admin_support_inbox_screen.dart';
 import 'edit_profile_screen.dart';
 import 'blocked_list_screen.dart';
 import 'delete_account_screen.dart';
@@ -18,18 +20,27 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   static const String _appVersion = '1.0.0';
   static const String _buildNumber = '54';
+  static const String _adminUid = 'WBdQVvrgEIPBTcgIlumu6bAZGUl2';
+
   String _selectedLanguage = 'km';
+  bool _isAdmin = false;
 
   @override
   void initState() {
     super.initState();
-    _loadLanguage();
+    _loadSettings();
   }
 
-  Future<void> _loadLanguage() async {
+  Future<void> _loadSettings() async {
     final prefs = await SharedPreferences.getInstance();
     final code = prefs.getString('app_language') ?? Get.locale?.languageCode ?? 'km';
-    if (mounted) setState(() => _selectedLanguage = code);
+    final uid = FirebaseAuth.instance.currentUser?.uid ?? prefs.getString('user_uid');
+    if (mounted) {
+      setState(() {
+        _selectedLanguage = code;
+        _isAdmin = uid == _adminUid;
+      });
+    }
   }
 
   Future<void> _changeLanguage(String code) async {
@@ -83,6 +94,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
             subtitle: appText(context, km: 'មើលបញ្ជី ដោះ Block និងគ្រប់គ្រង Report របស់អ្នក', en: 'View blocked users and manage your reports'),
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BlockedListScreen())),
           ),
+          if (_isAdmin) ...[
+            const SizedBox(height: 12),
+            _settingsCard(
+              leading: const CircleAvatar(
+                backgroundColor: Color(0xFFEAF7EA),
+                child: Icon(Icons.mark_unread_chat_alt_outlined, color: Colors.green),
+              ),
+              title: appText(context, km: 'ប្រអប់សារ Support', en: 'Support Inbox'),
+              subtitle: appText(
+                context,
+                km: 'ឆ្លើយតបសំណួរ និងបញ្ហារបស់អ្នកប្រើប្រាស់',
+                en: 'Reply to user questions and support requests',
+              ),
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const AdminSupportInboxScreen()),
+              ),
+            ),
+          ],
           const SizedBox(height: 12),
           _settingsCard(
             leading: const CircleAvatar(
