@@ -943,7 +943,7 @@ class _ChatScreenState extends State<ChatScreen>
 
 
                 return Container(
-                  margin: const EdgeInsets.all(8),
+                  margin: const EdgeInsets.fromLTRB(6, 2, 6, 4),
                   decoration: BoxDecoration(
                     color: Colors.orange[50],
                     borderRadius: BorderRadius.circular(12),
@@ -954,33 +954,36 @@ class _ChatScreenState extends State<ChatScreen>
                     children: [
                       // Header
                       Padding(
-                        padding: const EdgeInsets.all(12),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         child: Row(
                           children: [
                             Icon(
                               Icons.shopping_basket,
                               color: Colors.orange[700],
-                              size: 20,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              appText(context, km: 'ទំនិញដែលចង់ទិញ (${items.length})', en: 'Cart items (${items.length})'),
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.orange[700],
-                                fontSize: 14,
-                              ),
+                              size: 16,
                             ),
                             const Spacer(),
-                            TextButton(
+                            IconButton(
+                              tooltip: appText(
+                                context,
+                                km: 'លុបទាំងអស់',
+                                en: 'Delete all',
+                              ),
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(
+                                minWidth: 28,
+                                minHeight: 28,
+                              ),
+                              visualDensity: VisualDensity.compact,
                               onPressed: () async {
                                 for (var item in items) {
                                   await item.reference.delete();
                                 }
                               },
-                              child: Text(
-                                appText(context, km: 'លុបទាំងអស់', en: 'Clear all'),
-                                style: TextStyle(fontSize: 12, color: Colors.red),
+                              icon: const Icon(
+                                Icons.delete_outline_rounded,
+                                size: 19,
+                                color: Colors.red,
                               ),
                             ),
                           ],
@@ -989,10 +992,10 @@ class _ChatScreenState extends State<ChatScreen>
                       // ✅ បង្ហាញបញ្ជីទំនិញដែលបានបោះចូលឆាត (ជាមួយឈ្មោះ និងស៊ុម)
                       // 🎯 រកមើល StreamBuilder<QuerySnapshot> នៃ 'chat_items' រួចដូរដុំ ListView.builder នេះ៖
                       SizedBox(
-                        height: 75, // 🎯 បង្កើនកម្ពស់ពី 60 ទៅ 75 ដើម្បីល្មមនឹងតម្លៃទំនិញ
+                        height: 62,
                         child: ListView.builder(
                           scrollDirection: Axis.horizontal,
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          padding: const EdgeInsets.symmetric(horizontal: 6),
                           itemCount: items.length,
                           itemBuilder: (context, index) {
                             var data = items[index].data() as Map<String, dynamic>;
@@ -1015,8 +1018,8 @@ class _ChatScreenState extends State<ChatScreen>
                             bool addedByMe = data['customer_id'] == currentUserId;
 
                             return Container(
-                              width: 85, // 🎯 បង្កើនទទឹងបន្តិចពី 80 ទៅ 85
-                              margin: const EdgeInsets.only(right: 6, bottom: 4),
+                              width: 72,
+                              margin: const EdgeInsets.only(right: 5, bottom: 3),
                               decoration: BoxDecoration(
                                 color: Colors.white,
                                 borderRadius: BorderRadius.circular(6),
@@ -1035,8 +1038,8 @@ class _ChatScreenState extends State<ChatScreen>
                                       ClipRRect(
                                         borderRadius: const BorderRadius.vertical(top: Radius.circular(5)),
                                         child: imageUrl.isNotEmpty
-                                            ? Image.network(imageUrl, height: 30, width: double.infinity, fit: BoxFit.cover)
-                                            : Container(height: 30, color: Colors.grey[200]),
+                                            ? Image.network(imageUrl, height: 23, width: double.infinity, fit: BoxFit.cover)
+                                            : Container(height: 23, color: Colors.grey[200]),
                                       ),
                                       // ឈ្មោះទំនិញ + តម្លៃ + អ្នកបន្ថែម
                                       Padding(
