@@ -20,7 +20,7 @@ jobs:
           flutter-version: '3.38.8'
           channel: stable
       - run: flutter pub get
-      # Run against the current parity branch after each blocking-error fix.
+      # Validate the current Android 48 parity branch after feature sync.
       - name: Analyze and capture errors
         shell: bash
         run: |
