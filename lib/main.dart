@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -13,6 +14,7 @@ import 'package:my_app/localization/app_translations.dart';
 import 'package:my_app/product_detail.dart';
 import 'package:my_app/chat_screen.dart';
 import 'package:my_app/auction_detail_screen.dart';
+import 'package:my_app/seller_profile_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'home_screen.dart';
 import 'login_screen.dart';
@@ -71,6 +73,12 @@ void main() async {
     } catch (e) {
       debugPrint('Notification setup error: $e');
     }
+  }
+
+  try {
+    await _setupDeepLinks();
+  } catch (e) {
+    debugPrint('Deep link setup error: $e');
   }
 }
 
@@ -235,6 +243,40 @@ Future<void> _navigateToChat(Map<String, dynamic> data) async {
   );
 }
 
+Future<void> _setupDeepLinks() async {
+  if (kIsWeb) {
+    final uri = Uri.base;
+    if (uri.pathSegments.isNotEmpty) _handleDeepLink(uri);
+    return;
+  }
+
+  final appLinks = AppLinks();
+  try {
+    final initialUri = await appLinks.getInitialLink();
+    if (initialUri != null) _handleDeepLink(initialUri);
+  } catch (e) {
+    debugPrint('Initial link error: $e');
+  }
+
+  appLinks.uriLinkStream.listen((Uri uri) {
+    _handleDeepLink(uri);
+  });
+}
+
+void _handleDeepLink(Uri deepLink) {
+  debugPrint('Deep Link received: $deepLink');
+  final segments = deepLink.pathSegments;
+  if (segments.isEmpty) return;
+
+  Future.delayed(const Duration(milliseconds: 500), () {
+    if (segments.contains('product')) {
+      _navigateToProduct(segments.last);
+    } else if (segments.contains('shop')) {
+      _navigateToShop(segments.last);
+    }
+  });
+}
+
 Future<void> _navigateToProduct(String productId) async {
   try {
     final doc = await FirebaseFirestore.instance
@@ -252,6 +294,28 @@ Future<void> _navigateToProduct(String productId) async {
     );
   } catch (e) {
     debugPrint('Navigate to product error: $e');
+  }
+}
+
+Future<void> _navigateToShop(String sellerId) async {
+  try {
+    final doc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(sellerId)
+        .get();
+    if (!doc.exists) return;
+
+    final userData = Map<String, dynamic>.from(doc.data()!);
+    navigatorKey.currentState?.push(
+      MaterialPageRoute(
+        builder: (_) => SellerProfileScreen(
+          sellerId: sellerId,
+          sellerName: (userData['name'] ?? 'មិនស្គាល់').toString(),
+        ),
+      ),
+    );
+  } catch (e) {
+    debugPrint('Navigate to shop error: $e');
   }
 }
 
