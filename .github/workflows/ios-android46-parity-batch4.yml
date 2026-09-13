@@ -15,12 +15,19 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ios-sync-android46
+          path: ios_target
+      - uses: actions/checkout@v4
+        with:
+          repository: klartdean-stack/sesan_app_android
+          ref: english-local-android
+          path: android_source
       - name: Sync latest Android AI package screen
-        run: |
-          curl -fsSL https://raw.githubusercontent.com/klartdean-stack/sesan_app_android/english-local-android/lib/ai_packages_screen.dart -o lib/ai_packages_screen.dart
+        run: cp android_source/lib/ai_packages_screen.dart ios_target/lib/ai_packages_screen.dart
       - name: Apply auction and shop QR parity
+        working-directory: ios_target
         run: python tool/ios_android46_parity_batch4.py
       - name: Verify changes
+        working-directory: ios_target
         run: |
           grep -q "submit_subscription" lib/ai_packages_screen.dart
           grep -q "onLongPress: _saveQrToGallery" lib/ai_packages_screen.dart
@@ -28,6 +35,7 @@ jobs:
           grep -q "QR result above payment dialog" lib/shop_upgrade_screen.dart
           grep -q "HapticFeedback.mediumImpact" lib/shop_upgrade_screen.dart
       - name: Commit parity batch
+        working-directory: ios_target
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
