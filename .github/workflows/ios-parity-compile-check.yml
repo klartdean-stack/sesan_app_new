@@ -1,0 +1,30 @@
+name: iOS Parity Compile Check
+on:
+  push:
+    branches: [ios-sync-android46]
+    paths:
+      - '.github/workflows/ios-parity-compile-check.yml'
+      - 'lib/**'
+      - 'pubspec.yaml'
+      - 'ios/**'
+jobs:
+  compile:
+    runs-on: macos-26
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ios-sync-android46
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.38.8'
+          channel: stable
+      - name: Get packages
+        run: flutter pub get
+      - name: Install CocoaPods
+        run: |
+          cd ios
+          pod install --repo-update
+          cd ..
+      - name: Compile iOS release without signing
+        run: flutter build ios --release --no-codesign
