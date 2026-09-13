@@ -115,8 +115,63 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
   }
 
 
+  // Android Build 46 parity: QR result above payment dialog
+  void _showTopMessage(String message, {bool isError = false}) {
+    final overlay = Overlay.of(context, rootOverlay: true);
+    late final OverlayEntry entry;
+    entry = OverlayEntry(
+      builder: (overlayContext) => Positioned(
+        top: MediaQuery.of(overlayContext).padding.top + 12,
+        left: 16,
+        right: 16,
+        child: Material(
+          color: Colors.transparent,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: isError ? const Color(0xFFDA3633) : const Color(0xFF238636),
+              borderRadius: BorderRadius.circular(14),
+              boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 12, offset: Offset(0, 4))],
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  isError ? Icons.error_outline_rounded : Icons.check_circle_outline_rounded,
+                  color: Colors.white,
+                  size: 21,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    message,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontFamily: 'Siemreap',
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    overlay.insert(entry);
+    Future.delayed(const Duration(seconds: 3), () {
+      if (entry.mounted) entry.remove();
+    });
+  }
+
   Future<void> _downloadQR() async {
     try {
+      if (!await Gal.hasAccess()) {
+        await Gal.requestAccess();
+      }
+      if (!await Gal.hasAccess()) {
+        throw Exception('Gallery permission denied');
+      }
       final byteData = await rootBundle.load('assets/aba_qr.png');
       final tempDir = await getTemporaryDirectory();
       final file = File('${tempDir.path}/aba_qr_download.png');
@@ -127,9 +182,11 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
         ),
       );
       await Gal.putImage(file.path);
-      _showSuccessSnack('✅ បានរក្សាទុកក្នុង Gallery រួចរាល់!');
+      if (!mounted) return;
+      _showTopMessage('✅ បានរក្សាទុកក្នុង Gallery រួចរាល់!');
     } catch (e) {
-      _showErrorSnack('❌ មិនអាចរក្សាទុកបាន: $e');
+      if (!mounted) return;
+      _showTopMessage('❌ មិនអាចរក្សាទុកបាន: $e', isError: true);
     }
   }
 
