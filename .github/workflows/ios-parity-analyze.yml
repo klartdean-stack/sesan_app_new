@@ -20,6 +20,7 @@ jobs:
           flutter-version: '3.38.8'
           channel: stable
       - run: flutter pub get
+      # Run against the current parity branch after each blocking-error fix.
       - name: Analyze and capture errors
         shell: bash
         run: |
