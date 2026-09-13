@@ -35,7 +35,7 @@ class CommentSection extends StatefulWidget {
 
 class _CommentSectionState extends State<CommentSection> {
   final TextEditingController _commentController = TextEditingController();
-  final _audioRecorder = Record();
+  final AudioRecorder _audioRecorder = AudioRecorder();
   final AudioPlayer _audioPlayer = AudioPlayer();
 
 
@@ -139,10 +139,12 @@ class _CommentSectionState extends State<CommentSection> {
 
 
     await _audioRecorder.start(
-      encoder: AudioEncoder.aacLc, // កំណត់ប្រភេទសំឡេង
-      bitRate: 128000,             // កម្រិតច្បាស់
-      samplingRate: 44100,         // ល្បឿនទាញយកសំណាក
-      path: _recordPath!,          // ផ្លូវផ្ទុក File
+      const RecordConfig(
+        encoder: AudioEncoder.aacLc,
+        bitRate: 128000,
+        sampleRate: 44100,
+      ),
+      path: _recordPath!,
     );
 
 
