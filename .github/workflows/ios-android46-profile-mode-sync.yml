@@ -1,0 +1,37 @@
+name: iOS Android46 Profile Mode Sync
+
+on:
+  push:
+    branches: [ios-sync-android46]
+    paths:
+      - 'tool/ios_android46_profile_mode_sync.py'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync-profile-mode:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ios-sync-android46
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Apply profile mode parity
+        run: python3 tool/ios_android46_profile_mode_sync.py
+      - name: Validate diff
+        run: git diff --check
+      - name: Commit changes
+        run: |
+          if git diff --quiet; then
+            echo 'No changes needed'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add lib/profile_screen_legacy.dart
+          git commit -m 'Sync iOS profile user and seller modes'
+          git push origin ios-sync-android46
