@@ -5,28 +5,28 @@ Analyzing sesan_app_new...
    info • The private field _images could be 'final' • lib/add_pre_order_screen.dart:36:14 • prefer_final_fields
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/add_pre_order_screen.dart:382:42 • deprecated_member_use
    info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/add_pre_order_screen.dart:493:11 • deprecated_member_use
-warning • Unused import: 'package:my_app/map_picker_screen.dart' • lib/add_product.dart:7:8 • unused_import
-warning • Unused import: 'main.dart' • lib/add_product.dart:11:8 • unused_import
-warning • Unused import: 'location_data.dart' • lib/add_product.dart:15:8 • unused_import
-   info • Don't use 'BuildContext's across async gaps • lib/add_product.dart:256:9 • use_build_context_synchronously
-   info • Don't use 'BuildContext's across async gaps • lib/add_product.dart:358:30 • use_build_context_synchronously
-   info • Don't use 'BuildContext's across async gaps • lib/add_product.dart:382:30 • use_build_context_synchronously
-   info • Don't invoke 'print' in production code • lib/add_product.dart:431:7 • avoid_print
-   info • Don't invoke 'print' in production code • lib/add_product.dart:432:7 • avoid_print
-   info • Don't invoke 'print' in production code • lib/add_product.dart:444:9 • avoid_print
-   info • Don't invoke 'print' in production code • lib/add_product.dart:450:7 • avoid_print
-warning • The declaration '_uploadToStorage' isn't referenced • lib/add_product.dart:458:18 • unused_element
-   info • Don't invoke 'print' in production code • lib/add_product.dart:476:11 • avoid_print
-   info • Don't invoke 'print' in production code • lib/add_product.dart:479:11 • avoid_print
-warning • The declaration '_showErrorDialog' isn't referenced • lib/add_product.dart:523:8 • unused_element
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/add_product.dart:572:43 • deprecated_member_use
-   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/add_product.dart:1074:11 • deprecated_member_use
-   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/add_product.dart:1133:9 • deprecated_member_use
-   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/add_product.dart:1173:9 • deprecated_member_use
-   info • 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre • lib/add_product.dart:1234:17 • deprecated_member_use
-   info • 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre • lib/add_product.dart:1235:17 • deprecated_member_use
-   info • 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre • lib/add_product.dart:1250:17 • deprecated_member_use
-   info • 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre • lib/add_product.dart:1251:17 • deprecated_member_use
+   info • Don't use 'BuildContext's across async gaps • lib/add_product.dart:223:42 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/add_product.dart:477:9 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/add_product.dart:579:30 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/add_product.dart:603:30 • use_build_context_synchronously
+   info • Don't invoke 'print' in production code • lib/add_product.dart:652:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/add_product.dart:653:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/add_product.dart:665:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/add_product.dart:671:7 • avoid_print
+warning • The declaration '_uploadToStorage' isn't referenced • lib/add_product.dart:679:18 • unused_element
+   info • Don't invoke 'print' in production code • lib/add_product.dart:697:11 • avoid_print
+   info • Don't invoke 'print' in production code • lib/add_product.dart:700:11 • avoid_print
+warning • The declaration '_showErrorDialog' isn't referenced • lib/add_product.dart:744:8 • unused_element
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/add_product.dart:793:43 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/add_product.dart:1027:61 • deprecated_member_use
+  error • Undefined name 'FilteringTextInputFormatter' • lib/add_product.dart:1375:36 • undefined_identifier
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/add_product.dart:1392:11 • deprecated_member_use
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/add_product.dart:1451:9 • deprecated_member_use
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/add_product.dart:1491:9 • deprecated_member_use
+   info • 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre • lib/add_product.dart:1552:17 • deprecated_member_use
+   info • 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre • lib/add_product.dart:1553:17 • deprecated_member_use
+   info • 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre • lib/add_product.dart:1568:17 • deprecated_member_use
+   info • 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre • lib/add_product.dart:1569:17 • deprecated_member_use
    info • Don't invoke 'print' in production code • lib/add_report_screen.dart:61:7 • avoid_print
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/add_report_screen.dart:144:35 • deprecated_member_use
    info • The private field _selectedImages could be 'final' • lib/add_wanted_screen.dart:40:14 • prefer_final_fields
@@ -1070,4 +1070,4 @@ warning • The asset file 'assets/vireak_buntham_branches.json' doesn't exist �
 warning • The asset directory 'assets/badges/' doesn't exist • pubspec.yaml:105:7 • asset_directory_does_not_exist
 warning • The asset directory 'assets/fonts/' doesn't exist • pubspec.yaml:106:7 • asset_directory_does_not_exist
 
-1069 issues found. (ran in 21.3s)
+1069 issues found. (ran in 21.1s)
