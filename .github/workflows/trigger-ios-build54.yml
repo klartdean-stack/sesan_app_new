@@ -1,0 +1,23 @@
+name: Trigger iOS Build 54 Upload
+
+on:
+  push:
+    branches: [ios-sync-android46]
+    paths:
+      - '.github/workflows/trigger-ios-build54.yml'
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch signed iOS App Store build
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh workflow run ios-build.yml \
+            --repo klartdean-stack/sesan_app_new \
+            --ref ios-sync-android46
