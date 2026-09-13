@@ -1,0 +1,35 @@
+name: iOS Android 46 Parity Batch 5
+on:
+  push:
+    branches:
+      - ios-sync-android46
+    paths:
+      - '.github/workflows/ios-android46-parity-batch5.yml'
+      - 'tool/ios_android46_parity_batch5.py'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ios-sync-android46
+      - name: Apply parity batch 5
+        run: python tool/ios_android46_parity_batch5.py
+      - name: Verify changes
+        run: |
+          grep -q "ThemeData.light" lib/auction_add_screen.dart
+          grep -q "final ValueNotifier<bool> _showSellerPhoneNotifier" lib/seller_profile_screen.dart
+          grep -q "valueListenable: _showSellerPhoneNotifier" lib/seller_profile_screen.dart
+      - name: Commit parity batch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add lib/auction_add_screen.dart lib/seller_profile_screen.dart
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Sync auction picker and seller phone behavior with Android Build 46"
+            git push origin ios-sync-android46
+          fi
