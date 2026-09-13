@@ -30,6 +30,7 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'logout_button.dart';
 import 'settings_screen.dart';
 import 'admin_marketplace_analytics_screen.dart';
+import 'admin_ai_dashboard_screen.dart';
 import 'admin_support_inbox_screen.dart';
 import 'ai_packages_screen.dart';
 import 'sesan_ai_assistant_screen.dart';
@@ -427,6 +428,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                         ),
 
+
+                      if (_loggedUid == adminUID)
+                        _buildMenuCard(
+                          title: 'គ្រប់គ្រង Sesan AI / Sesan AI Dashboard',
+                          subtitle: 'ការប្រើប្រាស់ Credit សំណើជាវ និងមតិយោបល់',
+                          icon: Icons.auto_awesome_rounded,
+                          color: Colors.deepPurple,
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const AdminAiDashboardScreen(),
+                            ),
+                          ),
+                        ),
 
                       if (_loggedUid == adminUID)
                         _buildMenuCard(
