@@ -1,12 +1,18 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:my_app/upload_controller.dart';
 import 'package:my_app/controllers/auth_controller.dart';
 import 'package:my_app/localization/app_translations.dart';
+import 'package:my_app/product_detail.dart';
+import 'package:my_app/chat_screen.dart';
+import 'package:my_app/auction_detail_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'home_screen.dart';
 import 'login_screen.dart';
@@ -57,6 +63,8 @@ void main() async {
   final authController = Get.put(AuthController());
   await authController.checkLoginStatus();
 
+  runApp(const MyApp());
+
   if (!kIsWeb) {
     try {
       await _setupMobileNotifications();
@@ -64,10 +72,30 @@ void main() async {
       debugPrint('Notification setup error: $e');
     }
   }
-  runApp(const MyApp());
 }
 
 Future<void> _setupMobileNotifications() async {
+  const initializationSettings = InitializationSettings(
+    android: AndroidInitializationSettings('ic_stat_sesan'),
+    iOS: DarwinInitializationSettings(),
+  );
+
+  await flutterLocalNotificationsPlugin.initialize(
+    initializationSettings,
+    onDidReceiveNotificationResponse: (response) {
+      final payload = response.payload;
+      if (payload == null || payload.isEmpty) return;
+      try {
+        final decoded = jsonDecode(payload);
+        if (decoded is Map) {
+          _handleNotificationData(Map<String, dynamic>.from(decoded));
+        }
+      } catch (e) {
+        debugPrint('Notification payload error: $e');
+      }
+    },
+  );
+
   final messaging = FirebaseMessaging.instance;
   await messaging.requestPermission(alert: true, badge: true, sound: true);
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
@@ -76,21 +104,27 @@ Future<void> _setupMobileNotifications() async {
       .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
       ?.createNotificationChannel(channel);
 
-  await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
+  await messaging.setForegroundNotificationPresentationOptions(
     alert: true,
     badge: true,
     sound: true,
   );
 
   try {
-    await messaging.subscribeToTopic('admin_orders');
+    final prefs = await SharedPreferences.getInstance();
+    final uid = prefs.getString('user_uid');
+    const adminUid = 'WBdQVvrgEIPBTcgIlumu6bAZGUl2';
+    if (uid == adminUid) {
+      await messaging.subscribeToTopic('admin_orders');
+    }
     await messaging.subscribeToTopic('all_users');
   } catch (e) {
     debugPrint('Subscribe to topic failed: $e');
   }
 
   FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
-    final RemoteNotification? notification = message.notification;
+    final notification = message.notification;
+    if (notification == null) return;
 
     const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
       'order_channel',
@@ -112,13 +146,113 @@ Future<void> _setupMobileNotifications() async {
     );
 
     await flutterLocalNotificationsPlugin.show(
-      0,
-      notification?.title ?? 'Sesan App',
-      notification?.body ?? '',
+      notification.hashCode,
+      notification.title ?? 'Sesan App',
+      notification.body ?? '',
       details,
-      payload: message.data.toString(),
+      payload: jsonEncode(message.data),
     );
   });
+
+  FirebaseMessaging.onMessageOpenedApp.listen((message) {
+    _handleNotificationData(message.data);
+  });
+
+  final initialMessage = await messaging.getInitialMessage();
+  if (initialMessage != null) {
+    Future.delayed(
+      const Duration(milliseconds: 900),
+      () => _handleNotificationData(initialMessage.data),
+    );
+  }
+}
+
+void _handleNotificationData(Map<String, dynamic> data) {
+  final type = data['type']?.toString() ?? '';
+  final productId =
+      data['productId']?.toString() ?? data['product_id']?.toString() ?? '';
+
+  Future.delayed(const Duration(milliseconds: 350), () {
+    if (type == 'new_chat' || type == 'chat') {
+      _navigateToChat(data);
+    } else if ((type == 'auction_started' ||
+            type == 'auction_approved' ||
+            type == 'auction_approved_all' ||
+            type == 'new_auction_pending') &&
+        productId.isNotEmpty) {
+      navigatorKey.currentState?.push(
+        MaterialPageRoute(
+          builder: (_) => AuctionDetailScreen(productId: productId),
+        ),
+      );
+    } else if ((type == 'new_comment' ||
+            type == 'comment_reply' ||
+            type == 'new_rating') &&
+        productId.isNotEmpty) {
+      _navigateToProduct(productId);
+    }
+  });
+}
+
+Future<void> _navigateToChat(Map<String, dynamic> data) async {
+  final senderId = data['senderId']?.toString() ?? '';
+  if (senderId.isEmpty) return;
+
+  final productId =
+      data['productId']?.toString() ?? data['product_id']?.toString() ?? '';
+  var productName = data['productName']?.toString() ?? '';
+  var sellerId = data['sellerId']?.toString() ?? '';
+
+  if (productId.isNotEmpty) {
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('products')
+          .doc(productId)
+          .get();
+      if (doc.exists) {
+        final product = doc.data()!;
+        productName = productName.isNotEmpty
+            ? productName
+            : (product['product_name']?.toString() ?? '');
+        sellerId = sellerId.isNotEmpty
+            ? sellerId
+            : (product['seller_id']?.toString() ?? '');
+      }
+    } catch (e) {
+      debugPrint('Load chat product error: $e');
+    }
+  }
+
+  navigatorKey.currentState?.push(
+    MaterialPageRoute(
+      builder: (_) => ChatScreen(
+        productId: productId,
+        productName: productName,
+        seller_id: sellerId.isNotEmpty ? sellerId : senderId,
+        receiver_id: senderId,
+      ),
+    ),
+  );
+}
+
+Future<void> _navigateToProduct(String productId) async {
+  try {
+    final doc = await FirebaseFirestore.instance
+        .collection('products')
+        .doc(productId)
+        .get();
+    if (!doc.exists) return;
+
+    final product = Map<String, dynamic>.from(doc.data()!);
+    product['id'] = productId;
+    navigatorKey.currentState?.push(
+      MaterialPageRoute(
+        builder: (_) => ProductDetailScreen(product: product),
+      ),
+    );
+  } catch (e) {
+    debugPrint('Navigate to product error: $e');
+  }
 }
 
 class MyApp extends StatelessWidget {
@@ -183,37 +317,53 @@ class _AuthWrapperState extends State<AuthWrapper> {
     _checkAuth();
   }
 
+  Future<User?> _restoreFirebaseUser() async {
+    final auth = FirebaseAuth.instance;
+    final cachedUser = auth.currentUser;
+    if (cachedUser != null) return cachedUser;
+
+    try {
+      return await auth
+          .authStateChanges()
+          .firstWhere((user) => user != null)
+          .timeout(const Duration(seconds: 10));
+    } catch (e) {
+      debugPrint('Firebase session restore delayed at startup: $e');
+      return auth.currentUser;
+    }
+  }
+
   Future<void> _checkAuth() async {
     final prefs = await SharedPreferences.getInstance();
     final savedUid = prefs.getString('user_uid');
     final savedLoggedIn = prefs.getBool('is_logged_in') ?? false;
     final isGuest = prefs.getBool('is_guest') ?? false;
 
-    User? firebaseUser = FirebaseAuth.instance.currentUser;
-    if (firebaseUser == null && !kIsWeb) {
-      try {
-        firebaseUser = await FirebaseAuth.instance
-            .authStateChanges()
-            .where((user) => user != null)
-            .cast<User>()
-            .first
-            .timeout(const Duration(seconds: 2));
-      } catch (_) {
-        firebaseUser = FirebaseAuth.instance.currentUser;
-      }
-    }
-
+    final firebaseUser = await _restoreFirebaseUser();
     if (!mounted) return;
+
     final authController = Get.find<AuthController>();
 
     if (firebaseUser != null) {
-      await prefs.setString('user_uid', firebaseUser.uid);
-      await prefs.setBool('is_logged_in', true);
-      await prefs.setBool('is_guest', false);
-      authController.isLoggedIn = true;
-      authController.isGuest = false;
-      authController.userId = firebaseUser.uid;
-      _cachedScreen = const HomeScreen(guestMode: false);
+      if (savedUid != null &&
+          savedUid.isNotEmpty &&
+          savedUid != firebaseUser.uid) {
+        await FirebaseAuth.instance.signOut();
+        await prefs.setBool('is_logged_in', false);
+        await prefs.remove('user_uid');
+        authController.isLoggedIn = false;
+        authController.isGuest = false;
+        authController.userId = '';
+        _cachedScreen = const LoginScreen();
+      } else {
+        await prefs.setString('user_uid', firebaseUser.uid);
+        await prefs.setBool('is_logged_in', true);
+        await prefs.setBool('is_guest', false);
+        authController.isLoggedIn = true;
+        authController.isGuest = false;
+        authController.userId = firebaseUser.uid;
+        _cachedScreen = const HomeScreen(guestMode: false);
+      }
     } else if (savedLoggedIn && savedUid != null && savedUid.isNotEmpty) {
       await prefs.setBool('is_logged_in', false);
       await prefs.remove('user_uid');
