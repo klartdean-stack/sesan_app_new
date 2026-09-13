@@ -15,34 +15,22 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ios-sync-android46
-          path: ios_target
-      - uses: actions/checkout@v4
-        with:
-          repository: klartdean-stack/sesan_app_android
-          ref: english-local-android
-          path: android_source
-      - name: Sync latest Android AI package screen
-        run: cp android_source/lib/ai_packages_screen.dart ios_target/lib/ai_packages_screen.dart
       - name: Apply auction and shop QR parity
-        working-directory: ios_target
         run: python tool/ios_android46_parity_batch4.py
       - name: Verify changes
-        working-directory: ios_target
         run: |
-          grep -q "submit_subscription" lib/ai_packages_screen.dart
-          grep -q "onLongPress: _saveQrToGallery" lib/ai_packages_screen.dart
           grep -q "QR result above payment dialog" lib/auction_add_screen.dart
+          grep -q "Gallery permission denied" lib/auction_add_screen.dart
           grep -q "QR result above payment dialog" lib/shop_upgrade_screen.dart
           grep -q "HapticFeedback.mediumImpact" lib/shop_upgrade_screen.dart
       - name: Commit parity batch
-        working-directory: ios_target
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add lib/ai_packages_screen.dart lib/auction_add_screen.dart lib/shop_upgrade_screen.dart
+          git add lib/auction_add_screen.dart lib/shop_upgrade_screen.dart
           if git diff --cached --quiet; then
             echo "No changes to commit"
           else
-            git commit -m "Sync iOS AI payments and QR saving with Android Build 46"
+            git commit -m "Sync iOS auction and shop QR saving with Android Build 46"
             git push origin ios-sync-android46
           fi
