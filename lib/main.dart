@@ -39,7 +39,11 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   try {
-    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+    if (Firebase.apps.isEmpty) {
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+    }
     if (kIsWeb) {
       await FirebaseAuth.instance.setPersistence(Persistence.LOCAL);
     }
@@ -211,10 +215,12 @@ class _AuthWrapperState extends State<AuthWrapper> {
       authController.userId = firebaseUser.uid;
       _cachedScreen = const HomeScreen(guestMode: false);
     } else if (savedLoggedIn && savedUid != null && savedUid.isNotEmpty) {
-      authController.isLoggedIn = true;
+      await prefs.setBool('is_logged_in', false);
+      await prefs.remove('user_uid');
+      authController.isLoggedIn = false;
       authController.isGuest = false;
-      authController.userId = savedUid;
-      _cachedScreen = const HomeScreen(guestMode: false);
+      authController.userId = '';
+      _cachedScreen = const LoginScreen();
     } else if (isGuest) {
       authController.isLoggedIn = false;
       authController.isGuest = true;
