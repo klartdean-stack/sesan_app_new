@@ -38,7 +38,7 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
   String? _currentUserId;
   bool _isFollowing = false;
   bool _isLoadingFollow = false;
-  bool _showSellerPhone = false;
+  final ValueNotifier<bool> _showSellerPhoneNotifier = ValueNotifier<bool>(false);
   String? _filterMainCategory; // ប្រភេទមេ
   String? _filterSubCategory; // ប្រភេទរង
   String? _filterSubSubCategory; // ប្រភេទរងបន្ត
@@ -52,6 +52,12 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
   void initState() {
     super.initState();
     _loadUserId();
+  }
+
+  @override
+  void dispose() {
+    _showSellerPhoneNotifier.dispose();
+    super.dispose();
   }
 
   String _maskSellerPhoneForDisplay(String phone) {
@@ -1940,43 +1946,45 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
                                 color: Colors.green[50],
                                 borderRadius: BorderRadius.circular(10),
                               ),
-                              child: Row(
-                                children: [
-                                  Icon(Icons.phone, color: Colors.green[700], size: 14),
-                                  const SizedBox(width: 4),
-                                  Expanded(
-                                    child: Text(
-                                      _showSellerPhone
-                                          ? phone
-                                          : _maskSellerPhoneForDisplay(phone),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(
-                                        color: Colors.green[800],
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 11,
+                              child: ValueListenableBuilder<bool>(
+                                valueListenable: _showSellerPhoneNotifier,
+                                builder: (context, showPhone, _) => Row(
+                                  children: [
+                                    Icon(Icons.phone, color: Colors.green[700], size: 14),
+                                    const SizedBox(width: 4),
+                                    Expanded(
+                                      child: Text(
+                                        showPhone
+                                            ? phone
+                                            : _maskSellerPhoneForDisplay(phone),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          color: Colors.green[800],
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 11,
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                  IconButton(
-                                    onPressed: () => setState(
-                                      () => _showSellerPhone = !_showSellerPhone,
+                                    IconButton(
+                                      onPressed: () =>
+                                          _showSellerPhoneNotifier.value = !showPhone,
+                                      icon: Icon(
+                                        showPhone
+                                            ? Icons.visibility_off
+                                            : Icons.visibility,
+                                        size: 15,
+                                      ),
+                                      tooltip: showPhone ? 'លាក់លេខ' : 'បង្ហាញលេខ',
+                                      padding: EdgeInsets.zero,
+                                      constraints: const BoxConstraints(
+                                        minWidth: 28,
+                                        minHeight: 28,
+                                      ),
+                                      visualDensity: VisualDensity.compact,
                                     ),
-                                    icon: Icon(
-                                      _showSellerPhone
-                                          ? Icons.visibility_off
-                                          : Icons.visibility,
-                                      size: 15,
-                                    ),
-                                    tooltip: _showSellerPhone ? 'លាក់លេខ' : 'បង្ហាញលេខ',
-                                    padding: EdgeInsets.zero,
-                                    constraints: const BoxConstraints(
-                                      minWidth: 28,
-                                      minHeight: 28,
-                                    ),
-                                    visualDensity: VisualDensity.compact,
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ),
                           ),

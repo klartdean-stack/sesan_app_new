@@ -529,10 +529,12 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 30)),
       builder: (ctx, child) => Theme(
-        data: ThemeData.dark().copyWith(
-          colorScheme: const ColorScheme.dark(
-            primary: _accentBlue,
-            surface: _card,
+        data: ThemeData.light().copyWith(
+          colorScheme: const ColorScheme.light(
+            primary: _accent,
+            onPrimary: Colors.white,
+            surface: Colors.white,
+            onSurface: _text,
           ),
         ),
         child: child!,
@@ -543,10 +545,12 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
       context: context,
       initialTime: TimeOfDay.now(),
       builder: (ctx, child) => Theme(
-        data: ThemeData.dark().copyWith(
-          colorScheme: const ColorScheme.dark(
-            primary: _accentBlue,
-            surface: _card,
+        data: ThemeData.light().copyWith(
+          colorScheme: const ColorScheme.light(
+            primary: _accent,
+            onPrimary: Colors.white,
+            surface: Colors.white,
+            onSurface: _text,
           ),
         ),
         child: child!,
@@ -941,7 +945,7 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
     return GestureDetector(
       onTap: _productImages.length >= 8 ? null : _pickProductImages,
       child: Container(
-        height: _productImages.isEmpty ? 140 : 120,
+        height: 120,
         decoration: BoxDecoration(
           color: _card,
           borderRadius: BorderRadius.circular(16),
