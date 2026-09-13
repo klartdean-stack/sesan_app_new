@@ -16,6 +16,7 @@ import 'package:my_app/chat_screen.dart';
 import 'package:my_app/auction_detail_screen.dart';
 import 'package:my_app/seller_profile_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'app_update_gate.dart';
 import 'home_screen.dart';
 import 'login_screen.dart';
 import 'signup_screen.dart';
@@ -353,7 +354,7 @@ class MyApp extends StatelessWidget {
           },
         ),
       ),
-      home: const AuthWrapper(),
+      home: const AppUpdateGate(child: AuthWrapper()),
       routes: {
         '/login': (context) => const LoginScreen(),
         '/home': (context) => const HomeScreen(guestMode: false),
