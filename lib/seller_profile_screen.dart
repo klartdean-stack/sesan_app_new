@@ -38,6 +38,7 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
   String? _currentUserId;
   bool _isFollowing = false;
   bool _isLoadingFollow = false;
+  bool _showSellerPhone = false;
   String? _filterMainCategory; // ប្រភេទមេ
   String? _filterSubCategory; // ប្រភេទរង
   String? _filterSubSubCategory; // ប្រភេទរងបន្ត
@@ -51,6 +52,13 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
   void initState() {
     super.initState();
     _loadUserId();
+  }
+
+  String _maskSellerPhoneForDisplay(String phone) {
+    final clean = phone.trim().replaceAll(RegExp(r'\s+'), '');
+    if (clean.isEmpty) return '';
+    if (clean.length <= 5) return 'XXX';
+    return '${clean.substring(0, 3)}${'*' * (clean.length - 5)}${clean.substring(clean.length - 2)}';
   }
 
   Future<void> _loadUserId() async {
@@ -1875,43 +1883,113 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
                   );
                 },
               ),
-
-              // បង្ហាញលេខទូរស័ព្ទ
+              // Android Build 46 parity: compact chat, phone privacy and follow controls
               FutureBuilder<String>(
                 future: _getSellerPhoneFromProducts(widget.sellerId),
                 builder: (context, phoneSnapshot) {
-                  String phone = phoneSnapshot.data ?? '';
-                  if (phone.isEmpty) return const SizedBox.shrink();
-                  return Column(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        decoration: BoxDecoration(
-                          color: Colors.green[50],
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.phone,
-                              color: Colors.green[700],
-                              size: 20,
+                  final phone = phoneSnapshot.data ?? '';
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          flex: 4,
+                          child: ElevatedButton.icon(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ChatScreen(
+                                    seller_id: widget.sellerId,
+                                    receiver_id: widget.sellerId,
+                                    productName: 'ហាងរបស់ ${widget.sellerName}',
+                                    productId: 'general',
+                                  ),
+                                ),
+                              );
+                            },
+                            icon: const Icon(Icons.chat_bubble_outline, size: 15),
+                            label: const Text(
+                              'ឆាត',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(fontSize: 10, fontFamily: 'Siemreap'),
                             ),
-                            const SizedBox(width: 8),
-                            Text(
-                              phone,
-                              style: TextStyle(
-                                color: Colors.green[700],
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.green[700],
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 8,
+                              ),
+                              minimumSize: const Size(0, 40),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
                               ),
                             ),
-                          ],
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 16),
-                    ],
+                        if (phone.isNotEmpty) ...[
+                          const SizedBox(width: 6),
+                          Expanded(
+                            flex: 6,
+                            child: Container(
+                              height: 40,
+                              padding: const EdgeInsets.symmetric(horizontal: 7),
+                              decoration: BoxDecoration(
+                                color: Colors.green[50],
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(Icons.phone, color: Colors.green[700], size: 14),
+                                  const SizedBox(width: 4),
+                                  Expanded(
+                                    child: Text(
+                                      _showSellerPhone
+                                          ? phone
+                                          : _maskSellerPhoneForDisplay(phone),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        color: Colors.green[800],
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 11,
+                                      ),
+                                    ),
+                                  ),
+                                  IconButton(
+                                    onPressed: () => setState(
+                                      () => _showSellerPhone = !_showSellerPhone,
+                                    ),
+                                    icon: Icon(
+                                      _showSellerPhone
+                                          ? Icons.visibility_off
+                                          : Icons.visibility,
+                                      size: 15,
+                                    ),
+                                    tooltip: _showSellerPhone ? 'លាក់លេខ' : 'បង្ហាញលេខ',
+                                    padding: EdgeInsets.zero,
+                                    constraints: const BoxConstraints(
+                                      minWidth: 28,
+                                      minHeight: 28,
+                                    ),
+                                    visualDensity: VisualDensity.compact,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                        if (_currentUserId != widget.sellerId) ...[
+                          const SizedBox(width: 6),
+                          _FollowButton(
+                            sellerId: widget.sellerId,
+                            currentUserId: _currentUserId,
+                          ),
+                        ],
+                      ],
+                    ),
                   );
                 },
               ),
@@ -2006,46 +2084,7 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
                   },
                 ),
               ],
-
-              // ប៊ូតុងឆាត និងតាមដាន
-              Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => ChatScreen(
-                              seller_id: widget.sellerId,
-                              receiver_id: widget.sellerId,
-                              productName: 'ហាងរបស់ ${widget.sellerName}',
-                              productId: 'general',
-                            ),
-                          ),
-                        );
-                      },
-                      icon: const Icon(Icons.chat_bubble_outline),
-                      label: const Text('ឆាតឥឡូវនេះ'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green[700],
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-                  ),
-                  if (_currentUserId != widget.sellerId) ...[
-                    const SizedBox(width: 12),
-                    _FollowButton(
-                      sellerId: widget.sellerId,
-                      currentUserId: _currentUserId,
-                    ),
-                  ],
-                ],
-              ),
+              // Android46 compact controls duplicate removed
               // ប៊ូតុងដំឡើងហាង (បើជាម្ចាស់)
               if (_cachedCurrentUid == widget.sellerId) ...[
                 const SizedBox(height: 12),

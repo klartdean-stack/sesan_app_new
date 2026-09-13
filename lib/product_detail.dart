@@ -1384,6 +1384,46 @@ Android: $androidPlayStoreLink
                         ),
 
 
+                        // Android Build 46 parity: live bookmark/save count
+                        if ((widget.product['id'] ?? '').toString().isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8),
+                            child: StreamBuilder<QuerySnapshot>(
+                              stream: FirebaseFirestore.instance
+                                  .collection('bookmarks')
+                                  .where(
+                                    'productId',
+                                    isEqualTo: widget.product['id'] ?? '',
+                                  )
+                                  .snapshots(),
+                              builder: (context, bookmarkSnapshot) {
+                                final saveCount =
+                                    bookmarkSnapshot.data?.docs.length ?? 0;
+                                return Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.bookmark_rounded,
+                                      color: Colors.blue.shade700,
+                                      size: 16,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      Localizations.localeOf(context).languageCode == 'en'
+                                          ? '$saveCount saves'
+                                          : 'បានរក្សាទុក $saveCount ដង',
+                                      style: const TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.black87,
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              },
+                            ),
+                          ),
+
                         // ✅ Average រួម + Rating ផ្ទាល់របស់គណនីនេះ
                         StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
                           stream: FirebaseFirestore.instance
