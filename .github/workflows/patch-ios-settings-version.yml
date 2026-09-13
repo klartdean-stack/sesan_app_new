@@ -1,0 +1,28 @@
+name: Patch iOS Settings Version
+on:
+  push:
+    branches: [ios-sync-android46]
+    paths:
+      - '.github/workflows/patch-ios-settings-version.yml'
+      - 'tool/patch_ios_settings_version.py'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ios-sync-android46
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - run: python3 tool/patch_ios_settings_version.py
+      - run: git diff --check
+      - name: Commit settings parity
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add lib/settings_screen.dart pubspec.yaml
+          git commit -m 'Load iOS settings version from package metadata' || exit 0
+          git push origin ios-sync-android46
