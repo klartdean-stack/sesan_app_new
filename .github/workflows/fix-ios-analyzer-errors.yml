@@ -1,0 +1,32 @@
+name: Fix iOS Analyzer Errors
+on:
+  push:
+    branches: [ios-sync-android46]
+    paths:
+      - 'tool/fix_ios_analyzer_errors.py'
+      - '.github/workflows/fix-ios-analyzer-errors.yml'
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ios-sync-android46
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - run: python3 tool/fix_ios_analyzer_errors.py
+      - run: git diff --check
+      - name: Commit fixes
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add lib/chat_screen_legacy.dart lib/investor_dashboard_screen.dart lib/signup_screen.dart
+          if git diff --cached --quiet; then
+            echo 'No changes needed'
+          else
+            git commit -m 'Fix iOS analyzer blocking errors'
+            git push origin ios-sync-android46
+          fi
