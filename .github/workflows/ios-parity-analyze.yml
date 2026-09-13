@@ -1,0 +1,23 @@
+name: iOS Parity Static Analysis
+on:
+  push:
+    branches: [ios-sync-android46]
+    paths:
+      - '.github/workflows/ios-parity-analyze.yml'
+      - 'lib/**'
+      - 'pubspec.yaml'
+permissions:
+  contents: read
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ios-sync-android46
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.38.8'
+          channel: stable
+      - run: flutter pub get
+      - run: flutter analyze --no-fatal-infos --no-fatal-warnings
