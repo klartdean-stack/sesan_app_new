@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 import 'admin_support_inbox_screen.dart';
 import 'edit_profile_screen.dart';
@@ -18,8 +19,8 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  static const String _appVersion = '1.0.0';
-  static const String _buildNumber = '54';
+  String _appVersion = '';
+  String _buildNumber = '';
   static const String _adminUid = 'WBdQVvrgEIPBTcgIlumu6bAZGUl2';
 
   String _selectedLanguage = 'km';
@@ -29,6 +30,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void initState() {
     super.initState();
     _loadSettings();
+    _loadAppVersion();
+  }
+
+  Future<void> _loadAppVersion() async {
+    final packageInfo = await PackageInfo.fromPlatform();
+    if (!mounted) return;
+    setState(() {
+      _appVersion = packageInfo.version;
+      _buildNumber = packageInfo.buildNumber;
+    });
   }
 
   Future<void> _loadSettings() async {
