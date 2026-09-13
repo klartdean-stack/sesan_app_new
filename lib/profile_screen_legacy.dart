@@ -51,6 +51,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _hideBalance = true;
   bool _isLoading = true; // ថែមជួរនេះចូល
   bool _isInvestor = false; // ✅ បន្ថែមបន្ទាត់នេះ
+  bool _isSellerMode = false;
 
 
   @override
@@ -239,79 +240,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        title: const Text(
-          'គណនី និងការគ្រប់គ្រងប្រាក់',
-          style: TextStyle(fontFamily: 'KHMEROS', fontSize: 18),
+        title: Text(
+          _isSellerMode ? 'គណនី និងការគ្រប់គ្រងប្រាក់' : 'គណនី',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(fontFamily: 'KHMEROS', fontSize: 15),
         ),
         backgroundColor: Colors.green[700],
         elevation: 0,
         centerTitle: true,
         actions: [
-          StreamBuilder<QuerySnapshot>(
-            stream: _orderStream,
-            builder: (context, snapshot) {
-              if (snapshot.hasError)
-                return const Icon(Icons.error_outline, color: Colors.red);
-              // នៅ build method បន្ថែម null check
-              if (_orderStream == null) {
-                return const SizedBox.shrink(); // ឬ CircularProgressIndicator
-              }
-
-
-              int count = (snapshot.hasData) ? snapshot.data!.docs.length : 0;
-
-
-              return Padding(
-                padding: const EdgeInsets.only(right: 10),
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    IconButton(
-                      icon: const Icon(
-                        Icons.sell, // ✅ រូបស្លាកលក់
-                        color: Colors.white,
-                        size: 24,
-                      ),
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => OrderManagementScreen(
-                              sellerId: _loggedUid ?? "",
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                    if (count > 0)
-                      Positioned(
-                        right: 5,
-                        top: 5,
-                        child: Container(
-                          padding: const EdgeInsets.all(2),
-                          decoration: const BoxDecoration(
-                            color: Colors.red,
-                            shape: BoxShape.circle,
-                          ),
-                          constraints: const BoxConstraints(
-                            minWidth: 18,
-                            minHeight: 18,
-                          ),
-                          child: Text(
-                            '$count',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                      ),
-                  ],
+          Padding(
+            padding: const EdgeInsets.only(right: 10),
+            child: Tooltip(
+              message: _isSellerMode
+                  ? 'ប្តូរទៅរបៀបអ្នកប្រើ / Switch to User Mode'
+                  : 'ប្តូរទៅរបៀបអ្នកលក់ / Switch to Seller Mode',
+              child: IconButton(
+                onPressed: () => setState(() => _isSellerMode = !_isSellerMode),
+                icon: Icon(
+                  _isSellerMode
+                      ? Icons.person_outline_rounded
+                      : Icons.storefront_outlined,
+                  color: Colors.white,
+                  size: 24,
                 ),
-              );
-            },
+              ),
+            ),
           ),
         ],
       ),
@@ -336,6 +291,119 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: Column(
               children: [
                 _buildHeader(name, photoUrl, balance, isFrozen),
+                // Android46 profile mode section
+                const SizedBox(height: 14),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                  child: Column(
+                    children: [
+                      _buildMenuCard(
+                        title: 'Sesan AI ជំនួយការ / Sesan AI Assistant',
+                        subtitle: 'សួរអំពីកសិកម្ម ការលក់ និងហិរញ្ញវត្ថុ',
+                        icon: Icons.auto_awesome_rounded,
+                        color: Colors.green,
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const SesanAiAssistantScreen()),
+                        ),
+                      ),
+                      if (!_isSellerMode)
+                        _buildMenuCard(
+                          title: 'កញ្ចប់ Sesan AI / Sesan AI Packages',
+                          subtitle: 'មើល Credit តម្លៃ និងស្នើសុំជាវកញ្ចប់',
+                          icon: Icons.workspace_premium_outlined,
+                          color: Colors.deepPurple,
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const AiPackagesScreen()),
+                          ),
+                        ),
+                      if (!_isSellerMode)
+                        _buildMenuCard(
+                          title: 'ជំនួយ / Help & Support',
+                          subtitle: 'ឆាតជាមួយ Sesan Support / Chat with Sesan Support',
+                          icon: Icons.support_agent_rounded,
+                          color: Colors.blue,
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const SupportChatScreen()),
+                          ),
+                        ),
+                      if (_isSellerMode)
+                        _buildMenuCard(
+                          title: 'មជ្ឈមណ្ឌលហិរញ្ញវត្ថុ / Finance Center',
+                          subtitle: 'មើលរបាយការណ៍លុយចូល និងលុយចេញ',
+                          icon: Icons.account_balance_wallet,
+                          color: Colors.purple,
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => SellerAccountingScreen(
+                                sellerId: _loggedUid ?? '',
+                              ),
+                            ),
+                          ),
+                        ),
+                      if (_isSellerMode)
+                        StreamBuilder<QuerySnapshot>(
+                          stream: _orderStream,
+                          builder: (context, snapshot) {
+                            final count = snapshot.hasData ? snapshot.data!.docs.length : 0;
+                            return Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                _buildMenuCard(
+                                  title: 'ការបញ្ជាទិញរបស់អ្នកលក់ / Seller Orders',
+                                  subtitle: 'គ្រប់គ្រង និងតាមដានការបញ្ជាទិញរបស់អ្នក',
+                                  icon: Icons.receipt_long_rounded,
+                                  color: Colors.blueGrey,
+                                  onTap: () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => OrderManagementScreen(
+                                        sellerId: _loggedUid ?? '',
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                if (count > 0)
+                                  Positioned(
+                                    right: 38,
+                                    top: 10,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: Colors.red,
+                                        borderRadius: BorderRadius.circular(11),
+                                      ),
+                                      child: Text(
+                                        count > 99 ? '99+' : '$count',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            );
+                          },
+                        ),
+                      if (_isSellerMode && _loggedUid == adminUID)
+                        _buildMenuCard(
+                          title: 'ប្រអប់សារ Support / Support Inbox',
+                          subtitle: 'ឆ្លើយតបសំណួរ និងបញ្ហារបស់អ្នកប្រើប្រាស់',
+                          icon: Icons.mark_unread_chat_alt_outlined,
+                          color: Colors.green,
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const AdminSupportInboxScreen()),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
                 const SizedBox(height: 20),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 15),
