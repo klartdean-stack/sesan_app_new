@@ -337,9 +337,6 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
       _validateNumber(_startPriceCtrl.text) == null &&
           _validateNumber(_bidStepCtrl.text) == null &&
           _endDate != null;
-  bool get _step2Valid => _selectedPackage != null;
-
-
   void _nextStep() {
     if (_currentStep == 0 && !_step0Valid) {
       _showErrorSnack('សូមបំពេញឈ្មោះទំនិញ និងរូបភាព');
@@ -349,12 +346,12 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
       _showErrorSnack('សូមបំពេញតម្លៃ និងថ្ងៃបញ្ចប់');
       return;
     }
-    if (_currentStep == 2 && !_step2Valid) {
+    if (_currentStep == 1 && _selectedPackage == null) {
       _showErrorSnack('សូមជ្រើសរើសកញ្ចប់សេវា');
       return;
     }
-    if (_currentStep < 2) {
-      setState(() => _currentStep++);
+    if (_currentStep == 0) {
+      setState(() => _currentStep = 1);
       _fadeCtrl
         ..reset()
         ..forward();
@@ -629,7 +626,7 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
 
 
   Widget _buildStepIndicator() {
-    final steps = ['ទំនិញ', 'តម្លៃ', 'សេវា'];
+    final steps = ['ទំនិញ', 'តម្លៃ និងសេវា'];
     return Container(
       color: _bg,
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
@@ -714,9 +711,12 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
       case 0:
         return _buildStep0();
       case 1:
-        return _buildStep1();
-      case 2:
-        return _buildStep2();
+        return Column(
+          children: [
+            _buildStep1(),
+            _buildStep2(),
+          ],
+        );
       default:
         return const SizedBox();
     }
@@ -741,7 +741,7 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
         const SizedBox(height: 8),
         _buildTextField(
           controller: _productNameCtrl,
-          hint: 'ឧ. រទេះគោសាឡី',
+          hint: Get.locale?.languageCode == 'km' ? 'ឧ. ម៉ាស៊ីនច្រូតស្រូវ' : 'e.g. Rice harvester',
           icon: Icons.shopping_bag_outlined,
           validator: _validateRequired,
           onChanged: (_) => setState(() {}),
@@ -753,6 +753,8 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
           controller: _descriptionCtrl,
           hint: 'ពិព័រណ៍អំពីស្ថានភាព លក្ខណៈពិសេស...',
           icon: Icons.description_outlined,
+          keyboard: TextInputType.multiline,
+          textInputAction: TextInputAction.newline,
           maxLines: 4,
         ),
         const SizedBox(height: 16),
@@ -1510,7 +1512,7 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                _currentStep == 2 ? 'បន្តការបង់ប្រាក់' : 'បន្ទាប់',
+                _currentStep == 1 ? 'បន្តការបង់ប្រាក់' : 'បន្ទាប់',
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 15,
@@ -1586,12 +1588,14 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
     List<TextInputFormatter>? inputFormatters,
     String? suffix,
     int maxLines = 1,
+    TextInputAction? textInputAction,
     String? Function(String?)? validator,
     void Function(String)? onChanged,
   }) {
     return TextFormField(
       controller: controller,
       keyboardType: keyboard,
+      textInputAction: textInputAction,
       maxLines: maxLines,
       style: const TextStyle(color: _text, fontSize: 14),
       validator: validator,
