@@ -1,0 +1,83 @@
+name: Port Android 50 Auth Parity
+on:
+  push:
+    branches: [ios-sync-android46]
+    paths:
+      - '.github/workflows/port-android50-auth.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ios-sync-android46
+      - name: Port secure Firebase login and startup recovery
+        shell: python
+        run: |
+          from pathlib import Path
+
+          login = Path('lib/login_screen.dart')
+          text = login.read_text(encoding='utf-8')
+
+          old = "import 'package:flutter/material.dart';\nimport 'package:cloud_firestore/cloud_firestore.dart';"
+          new = "import 'package:flutter/material.dart';\nimport 'package:cloud_firestore/cloud_firestore.dart';\nimport 'package:firebase_auth/firebase_auth.dart';"
+          if "package:firebase_auth/firebase_auth.dart" not in text:
+              if old not in text:
+                  raise SystemExit('login import anchor not found')
+              text = text.replace(old, new, 1)
+
+          old = "import 'account_deletion_service.dart';\nimport 'forgot_password_screen.dart';"
+          new = "import 'account_deletion_service.dart';\nimport 'auth_session_store.dart';\nimport 'forgot_password_screen.dart';"
+          if "import 'auth_session_store.dart';" not in text:
+              if old not in text:
+                  raise SystemExit('auth store import anchor not found')
+              text = text.replace(old, new, 1)
+
+          anchor = """      userData = refreshedDoc.data() ?? userData;\n\n      await FirebaseFirestore.instance\n          .collection('users')\n          .doc(userDoc.id)\n          .update({'lastLogin': FieldValue.serverTimestamp()});\n"""
+          replacement = """      userData = refreshedDoc.data() ?? userData;\n\n      // Firebase callable functions require a real Firebase Auth session.\n      // Sesan accounts use the phone number as a private synthetic email.\n      final authEmail = \"${phoneWith855.replaceAll('+', '')}@sesan.app\";\n      final authResult = await FirebaseAuth.instance.signInWithEmailAndPassword(\n        email: authEmail,\n        password: password,\n      );\n\n      // Never continue if Firestore and Firebase Authentication point to\n      // different accounts.\n      if (authResult.user?.uid != userDoc.id) {\n        await FirebaseAuth.instance.signOut();\n        throw FirebaseAuthException(\n          code: 'user-mismatch',\n          message: 'The Sesan account does not match Firebase Authentication.',\n        );\n      }\n\n      await AuthSessionStore.save(\n        email: authEmail,\n        password: password,\n        uid: userDoc.id,\n      );\n\n      await FirebaseFirestore.instance\n          .collection('users')\n          .doc(userDoc.id)\n          .update({'lastLogin': FieldValue.serverTimestamp()});\n"""
+          if 'final authEmail =' not in text:
+              if anchor not in text:
+                  raise SystemExit('login auth insertion anchor not found')
+              text = text.replace(anchor, replacement, 1)
+          login.write_text(text, encoding='utf-8')
+
+          main = Path('lib/main.dart')
+          text = main.read_text(encoding='utf-8')
+
+          old = "import 'firebase_options.dart';"
+          new = "import 'firebase_options.dart';\nimport 'auth_session_store.dart';"
+          if "import 'auth_session_store.dart';" not in text:
+              if old not in text:
+                  raise SystemExit('main import anchor not found')
+              text = text.replace(old, new, 1)
+
+          old = """  Future<User?> _restoreFirebaseUser() async {\n    final auth = FirebaseAuth.instance;\n    final cachedUser = auth.currentUser;\n    if (cachedUser != null) return cachedUser;\n\n    try {\n"""
+          new = """  Future<User?> _restoreFirebaseUser(String? expectedUid) async {\n    final auth = FirebaseAuth.instance;\n    final cachedUser = auth.currentUser;\n    if (cachedUser != null) return cachedUser;\n\n    // If iOS has not restored Firebase's cached refresh token yet, recover the\n    // same verified account from credentials protected by Keychain.\n    final securelyRestoredUser = await AuthSessionStore.restore(\n      expectedUid: expectedUid,\n    );\n    if (securelyRestoredUser != null) return securelyRestoredUser;\n\n    try {\n"""
+          if '_restoreFirebaseUser(String? expectedUid)' not in text:
+              if old not in text:
+                  raise SystemExit('restore method anchor not found')
+              text = text.replace(old, new, 1)
+
+          text = text.replace(
+              'final firebaseUser = await _restoreFirebaseUser();',
+              'final firebaseUser = await _restoreFirebaseUser(savedUid);',
+              1,
+          )
+
+          old = """    } else if (savedLoggedIn && savedUid != null && savedUid.isNotEmpty) {\n      // A slow Firebase restore must not log the user out on cold start.\n      // Authenticated features independently wait for FirebaseAuth and can ask\n      // for sign-in only if the Firebase session is genuinely unavailable.\n      authController.isLoggedIn = true;\n      authController.isGuest = false;\n      authController.userId = savedUid;\n      _cachedScreen = const HomeScreen(guestMode: false);\n"""
+          new = """    } else if (savedLoggedIn && savedUid != null && savedUid.isNotEmpty) {\n      // Never open an authenticated-looking home screen without a real\n      // Firebase user. This keeps Sesan AI and other callable functions from\n      // running without a valid Firebase ID token.\n      await prefs.setBool('is_logged_in', false);\n      await prefs.remove('user_uid');\n      authController.isLoggedIn = false;\n      authController.isGuest = false;\n      authController.userId = '';\n      _cachedScreen = const LoginScreen();\n"""
+          if 'Never open an authenticated-looking home screen' not in text:
+              if old not in text:
+                  raise SystemExit('saved login branch anchor not found')
+              text = text.replace(old, new, 1)
+
+          main.write_text(text, encoding='utf-8')
+      - name: Commit Android Build 50 auth parity
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add lib/login_screen.dart lib/main.dart
+          git commit -m 'Port Android Build 50 secure Firebase auth parity to iOS' || true
+          git push origin ios-sync-android46
