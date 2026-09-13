@@ -1,0 +1,36 @@
+name: iOS Android 46 Parity Batch 1
+on:
+  push:
+    branches:
+      - ios-sync-android46
+    paths:
+      - '.github/workflows/ios-android46-parity-batch1.yml'
+      - 'tool/ios_android46_parity_batch1.py'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ios-sync-android46
+      - name: Apply parity batch 1
+        run: python tool/ios_android46_parity_batch1.py
+      - name: Verify changes
+        run: |
+          grep -q "Colors.white" lib/cart_screen.dart
+          grep -q "តម្លៃ និងសេវា" lib/auction_add_screen.dart
+          grep -q "textInputAction: TextInputAction.newline" lib/auction_add_screen.dart
+          grep -q "_currentStep == 1 ? 'បន្តការបង់ប្រាក់'" lib/auction_add_screen.dart
+      - name: Commit parity batch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add lib/cart_screen.dart lib/auction_add_screen.dart
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Sync cart and auction flow with Android Build 46"
+            git push origin ios-sync-android46
+          fi
