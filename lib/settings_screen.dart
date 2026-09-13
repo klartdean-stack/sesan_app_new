@@ -6,6 +6,7 @@ import 'edit_profile_screen.dart';
 import 'blocked_list_screen.dart';
 import 'delete_account_screen.dart';
 import 'localized_text.dart';
+import 'support_chat_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -81,6 +82,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
             title: appText(context, km: 'គ្រប់គ្រង Block និង Report', en: 'Blocked & reported profiles'),
             subtitle: appText(context, km: 'មើលបញ្ជី ដោះ Block និងគ្រប់គ្រង Report របស់អ្នក', en: 'View blocked users and manage your reports'),
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BlockedListScreen())),
+          ),
+          const SizedBox(height: 12),
+          _settingsCard(
+            leading: const CircleAvatar(
+              backgroundColor: Color(0xFFE8F1FF),
+              child: Icon(Icons.support_agent_rounded, color: Colors.blue),
+            ),
+            title: appText(context, km: 'ជំនួយ និង Support', en: 'Help & Support'),
+            subtitle: appText(
+              context,
+              km: 'ឆាតជាមួយ Sesan Support និងប្រើ AI ពេល Admin មិននៅ',
+              en: 'Chat with Sesan Support, with AI help when Admin is away',
+            ),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const SupportChatScreen()),
+            ),
           ),
           const SizedBox(height: 12),
           Card(
