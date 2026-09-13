@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:my_app/login_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'user_service.dart'; // បើមាន
+import 'auth_session_store.dart';
 
 
 /// 🔥 Service សម្រាប់ Logout - ប្រើគ្រប់ទីកន្លែងក្នុង App
@@ -16,6 +17,7 @@ class LogoutService {
       debugPrint("Firebase logout error: $e");
     }
 
+    await AuthSessionStore.clear();
 
     // ២. លុប SharedPreferences ទាំងអស់
     final prefs = await SharedPreferences.getInstance();
@@ -90,6 +92,3 @@ class LogoutService {
     );
   }
 }
-
-
-
