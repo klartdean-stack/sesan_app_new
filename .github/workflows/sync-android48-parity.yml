@@ -1,0 +1,33 @@
+name: Sync Android 48 Parity
+
+on:
+  push:
+    branches: [ios-sync-android46]
+    paths:
+      - '.github/workflows/sync-android48-parity.yml'
+      - 'tool/sync_android48_parity.py'
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ios-sync-android46
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Sync parity files and patches
+        run: python3 tool/sync_android48_parity.py
+      - name: Validate changed Dart files
+        run: git diff --check
+      - name: Commit parity updates
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add lib/login_screen.dart lib/profile_screen_legacy.dart lib/sesan_ai_assistant_screen.dart lib/ai_packages_screen.dart lib/admin_ai_dashboard_screen.dart lib/admin_ai_purchase_history_screen.dart
+          git commit -m 'Sync iOS AI and session parity with Android 48' || exit 0
+          git push origin ios-sync-android46
