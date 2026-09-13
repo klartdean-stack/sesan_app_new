@@ -1,0 +1,22 @@
+name: Trigger signed iOS build after asset fix
+
+on:
+  push:
+    branches:
+      - ios-sync-android46
+    paths:
+      - '.github/workflows/trigger-ios-build54-after-assets-fix.yml'
+  workflow_dispatch:
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch signed iOS build
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run ios-build.yml --repo ${{ github.repository }} --ref ios-sync-android46
