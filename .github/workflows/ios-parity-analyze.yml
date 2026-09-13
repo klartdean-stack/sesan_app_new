@@ -20,7 +20,7 @@ jobs:
           flutter-version: '3.38.8'
           channel: stable
       - run: flutter pub get
-      # Validate the current Android 48 parity branch after feature sync.
+      # Validate the current Android 48 parity branch after the Add Product formatter fix.
       - name: Analyze and capture errors
         shell: bash
         run: |
