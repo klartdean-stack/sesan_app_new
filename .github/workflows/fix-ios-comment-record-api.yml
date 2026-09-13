@@ -1,0 +1,36 @@
+name: Fix iOS Comment Recorder API
+on:
+  push:
+    branches: [ios-sync-android46]
+    paths:
+      - '.github/workflows/fix-ios-comment-record-api.yml'
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ios-sync-android46
+      - name: Migrate comment recorder to record v6
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('lib/comment_section.dart')
+          s = p.read_text(encoding='utf-8')
+          s = s.replace('final _audioRecorder = Record();', 'final AudioRecorder _audioRecorder = AudioRecorder();')
+          old = """await _audioRecorder.start(\n      encoder: AudioEncoder.aacLc, // កំណត់ប្រភេទសំឡេង\n      bitRate: 128000,             // កម្រិតច្បាស់\n      samplingRate: 44100,         // ល្បឿនទាញយកសំណាក\n      path: _recordPath!,          // ផ្លូវផ្ទុក File\n    );"""
+          new = """await _audioRecorder.start(\n      const RecordConfig(\n        encoder: AudioEncoder.aacLc,\n        bitRate: 128000,\n        sampleRate: 44100,\n      ),\n      path: _recordPath!,\n    );"""
+          if old not in s:
+              raise SystemExit('old recorder start block not found')
+          s = s.replace(old, new, 1)
+          p.write_text(s, encoding='utf-8')
+          PY
+      - name: Commit recorder migration
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add lib/comment_section.dart
+          git diff --cached --quiet || git commit -m 'Migrate comment recorder to record v6 API'
+          git push origin HEAD:ios-sync-android46
