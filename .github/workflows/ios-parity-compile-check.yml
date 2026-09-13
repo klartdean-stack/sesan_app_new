@@ -21,8 +21,10 @@ jobs:
           channel: stable
       - name: Get packages
         run: flutter pub get
-      - name: Install CocoaPods
+      - name: Refresh CocoaPods
         run: |
+          rm -rf ios/Pods ios/.symlinks
+          rm -f ios/Podfile.lock
           cd ios
           pod install --repo-update
           cd ..
