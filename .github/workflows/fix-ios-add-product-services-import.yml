@@ -34,3 +34,4 @@ jobs:
           git add lib/add_product.dart
           git diff --cached --quiet || git commit -m 'Fix Add Product formatter import'
           git push origin HEAD:ios-sync-android46
+# trigger
