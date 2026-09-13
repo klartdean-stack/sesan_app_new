@@ -390,7 +390,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
       return await auth
           .authStateChanges()
           .firstWhere((user) => user != null)
-          .timeout(const Duration(seconds: 10));
+          .timeout(const Duration(seconds: 30));
     } catch (e) {
       debugPrint('Firebase session restore delayed at startup: $e');
       return auth.currentUser;
@@ -429,12 +429,13 @@ class _AuthWrapperState extends State<AuthWrapper> {
         _cachedScreen = const HomeScreen(guestMode: false);
       }
     } else if (savedLoggedIn && savedUid != null && savedUid.isNotEmpty) {
-      await prefs.setBool('is_logged_in', false);
-      await prefs.remove('user_uid');
-      authController.isLoggedIn = false;
+      // A slow Firebase restore must not log the user out on cold start.
+      // Authenticated features independently wait for FirebaseAuth and can ask
+      // for sign-in only if the Firebase session is genuinely unavailable.
+      authController.isLoggedIn = true;
       authController.isGuest = false;
-      authController.userId = '';
-      _cachedScreen = const LoginScreen();
+      authController.userId = savedUid;
+      _cachedScreen = const HomeScreen(guestMode: false);
     } else if (isGuest) {
       authController.isLoggedIn = false;
       authController.isGuest = true;
