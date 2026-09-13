@@ -1,0 +1,28 @@
+name: Patch iOS AI Admin Profile
+on:
+  push:
+    branches: [ios-sync-android46]
+    paths:
+      - '.github/workflows/patch-ios-profile-ai.yml'
+      - 'tool/patch_ios_profile_ai.py'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ios-sync-android46
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - run: python3 tool/patch_ios_profile_ai.py
+      - run: git diff --check
+      - name: Commit profile parity
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add lib/profile_screen_legacy.dart
+          git commit -m 'Add Sesan AI admin dashboard to iOS profile' || exit 0
+          git push origin ios-sync-android46
