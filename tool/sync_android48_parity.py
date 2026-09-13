@@ -1,8 +1,8 @@
 from pathlib import Path
+import os
 import re
-import urllib.request
 
-ANDROID_BASE = 'https://raw.githubusercontent.com/klartdean-stack/sesan_app_android/english-local-android/'
+ANDROID_SOURCE_DIR = Path(os.environ.get('ANDROID_SOURCE_DIR', '/tmp/sesan_app_android'))
 
 SYNC_FILES = [
     'lib/sesan_ai_assistant_screen.dart',
@@ -12,10 +12,11 @@ SYNC_FILES = [
 ]
 
 for rel in SYNC_FILES:
+    source = ANDROID_SOURCE_DIR / rel
+    if not source.exists():
+        raise SystemExit(f'Android source file not found: {source}')
     print(f'Syncing {rel} from Android latest...')
-    with urllib.request.urlopen(ANDROID_BASE + rel, timeout=60) as response:
-        data = response.read().decode('utf-8')
-    Path(rel).write_text(data, encoding='utf-8')
+    Path(rel).write_text(source.read_text(encoding='utf-8'), encoding='utf-8')
 
 # Preserve the iOS guest-login UI, but apply the latest Android session fix:
 # do not wipe SharedPreferences before a new Firebase login has succeeded.
