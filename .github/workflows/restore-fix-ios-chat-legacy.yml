@@ -1,0 +1,38 @@
+name: Restore and Fix iOS Legacy Chat
+on:
+  push:
+    branches: [ios-sync-android46]
+    paths:
+      - '.github/workflows/restore-fix-ios-chat-legacy.yml'
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ios-sync-android46
+          fetch-depth: 50
+      - name: Restore chat implementation and migrate recorder API
+        run: |
+          git checkout f0a10fef5544b21a0ffc9b08487985e057a5cf40 -- lib/chat_screen_legacy.dart
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('lib/chat_screen_legacy.dart')
+          s = p.read_text(encoding='utf-8')
+          s = s.replace('final Record _audioRecorder = Record();', 'final AudioRecorder _audioRecorder = AudioRecorder();')
+          old = """await _audioRecorder.start(\n        encoder: AudioEncoder.aacLc,\n        bitRate: 48000,\n        samplingRate: 22050,\n        path: path,\n      );"""
+          new = """await _audioRecorder.start(\n        const RecordConfig(\n          encoder: AudioEncoder.aacLc,\n          bitRate: 48000,\n          sampleRate: 22050,\n        ),\n        path: path,\n      );"""
+          if old not in s:
+              raise SystemExit('legacy chat recorder start block not found')
+          s = s.replace(old, new, 1)
+          p.write_text(s, encoding='utf-8')
+          PY
+      - name: Commit restored chat
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add lib/chat_screen_legacy.dart
+          git diff --cached --quiet || git commit -m 'Restore chat implementation with record v6 API'
+          git push origin HEAD:ios-sync-android46
