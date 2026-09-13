@@ -263,6 +263,12 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  Future<void> _continueAsGuest() async {
+    if (_isLoading) return;
+    await Get.find<AuthController>().loginAsGuest();
+    if (mounted) Get.offAllNamed('/home-guest');
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -329,6 +335,30 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: _isLoading
                           ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
                           : const Text('ចូលប្រើប្រាស់', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: OutlinedButton.icon(
+                      onPressed: _isLoading ? null : _continueAsGuest,
+                      icon: const Icon(Icons.person_outline, color: Colors.green),
+                      label: const Text(
+                        'បន្តដោយមិនចូលគណនី / Continue as Guest',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.green,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: Colors.green, width: 1.4),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 20),
