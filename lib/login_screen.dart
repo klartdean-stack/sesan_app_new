@@ -162,19 +162,9 @@ class _LoginScreenState extends State<LoginScreen> {
     final rawPhone = _phoneController.text.trim();
     final password = _passwordController.text.trim();
 
-    final prefsBeforeLogin = await SharedPreferences.getInstance();
-    final savedLanguage = prefsBeforeLogin.getString('app_language');
-    final savedRememberPhone = prefsBeforeLogin.getBool('remember_phone') ?? false;
-    final savedPhone = prefsBeforeLogin.getString('remembered_phone');
-
-    await prefsBeforeLogin.clear();
-    if (savedLanguage != null) {
-      await prefsBeforeLogin.setString('app_language', savedLanguage);
-    }
-    if (savedRememberPhone && savedPhone != null && savedPhone.isNotEmpty) {
-      await prefsBeforeLogin.setBool('remember_phone', true);
-      await prefsBeforeLogin.setString('remembered_phone', savedPhone);
-    }
+    // Keep existing session/settings until the new Firebase login succeeds.
+    // This prevents a temporary login failure from unexpectedly signing out
+    // an already authenticated account, matching the latest Android behavior.
     UserService.clearCache();
 
     setState(() => _isLoading = true);
