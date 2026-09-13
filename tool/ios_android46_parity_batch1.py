@@ -14,15 +14,9 @@ def replace_once(path, old, new, label):
     print(f'{label}: applied')
 
 
-# 1) Cart checkout total contrast (Android Build 46 parity)
-replace_once(
-    'lib/cart_screen.dart',
-    "style: const TextStyle(color: Colors.red),",
-    "style: const TextStyle(color: Colors.white),",
-    'cart total contrast',
-)
+# Cart checkout text is already white in this iOS baseline, so Android's
+# checkout-contrast fix is already satisfied. Continue with auction parity.
 
-# 2) Auction creation: collapse 3 steps into 2 steps.
 replace_once(
     'lib/auction_add_screen.dart',
     """  bool get _step2Valid => _selectedPackage != null;\n\n\n  void _nextStep() {\n    if (_currentStep == 0 && !_step0Valid) {\n      _showErrorSnack('សូមបំពេញឈ្មោះទំនិញ និងរូបភាព');\n      return;\n    }\n    if (_currentStep == 1 && !_step1Valid) {\n      _showErrorSnack('សូមបំពេញតម្លៃ និងថ្ងៃបញ្ចប់');\n      return;\n    }\n    if (_currentStep == 2 && !_step2Valid) {\n      _showErrorSnack('សូមជ្រើសរើសកញ្ចប់សេវា');\n      return;\n    }\n    if (_currentStep < 2) {\n      setState(() => _currentStep++);\n      _fadeCtrl\n        ..reset()\n        ..forward();\n    } else {\n      _showPaymentDialog();\n    }\n  }\n""",
