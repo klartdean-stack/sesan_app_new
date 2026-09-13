@@ -20,7 +20,14 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.x'
+      - name: Clone latest Android source
+        run: |
+          git clone --depth 1 --branch english-local-android \
+            https://github.com/klartdean-stack/sesan_app_android.git \
+            /tmp/sesan_app_android
       - name: Sync parity files and patches
+        env:
+          ANDROID_SOURCE_DIR: /tmp/sesan_app_android
         run: python3 tool/sync_android48_parity.py
       - name: Validate changed Dart files
         run: git diff --check
