@@ -1,0 +1,50 @@
+name: iOS Android 46 Parity Batch 6
+on:
+  push:
+    branches:
+      - ios-sync-android46
+    paths:
+      - '.github/workflows/ios-android46-parity-batch6.yml'
+permissions:
+  contents: write
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ios-sync-android46
+      - name: Sync profile, AI admin and localization files from Android 46
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE='https://raw.githubusercontent.com/klartdean-stack/sesan_app_android/english-local-android'
+          mkdir -p lib/l10n
+          curl -fsSL "$BASE/lib/profile_screen.dart" -o lib/profile_screen_legacy.dart
+          curl -fsSL "$BASE/lib/admin_ai_dashboard_screen.dart" -o lib/admin_ai_dashboard_screen.dart
+          curl -fsSL "$BASE/lib/admin_ai_purchase_history_screen.dart" -o lib/admin_ai_purchase_history_screen.dart
+          curl -fsSL "$BASE/lib/l10n/app_en.arb" -o lib/l10n/app_en.arb
+          curl -fsSL "$BASE/lib/l10n/app_km.arb" -o lib/l10n/app_km.arb
+          curl -fsSL "$BASE/lib/l10n/app_localizations.dart" -o lib/l10n/app_localizations.dart
+          curl -fsSL "$BASE/lib/l10n/app_localizations_en.dart" -o lib/l10n/app_localizations_en.dart
+          curl -fsSL "$BASE/lib/l10n/app_localizations_km.dart" -o lib/l10n/app_localizations_km.dart
+          curl -fsSL "$BASE/l10n.yaml" -o l10n.yaml
+      - name: Verify profile parity
+        run: |
+          grep -q "bool _isSellerMode = false" lib/profile_screen_legacy.dart
+          grep -q "AdminAiDashboardScreen" lib/profile_screen_legacy.dart
+          grep -q "Support Inbox" lib/profile_screen_legacy.dart
+          grep -q "class AppLocalizations" lib/l10n/app_localizations.dart
+          test -s lib/admin_ai_dashboard_screen.dart
+          test -s lib/admin_ai_purchase_history_screen.dart
+      - name: Commit batch 6
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add lib/profile_screen_legacy.dart lib/admin_ai_dashboard_screen.dart lib/admin_ai_purchase_history_screen.dart lib/l10n l10n.yaml
+          if git diff --cached --quiet; then
+            echo 'No changes needed'
+          else
+            git commit -m 'Sync iOS profile AI admin and localization with Android 46'
+            git push origin ios-sync-android46
+          fi
