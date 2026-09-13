@@ -7,7 +7,7 @@ on:
       - 'lib/**'
       - 'pubspec.yaml'
 permissions:
-  contents: read
+  contents: write
 jobs:
   analyze:
     runs-on: ubuntu-latest
@@ -20,4 +20,25 @@ jobs:
           flutter-version: '3.38.8'
           channel: stable
       - run: flutter pub get
-      - run: flutter analyze --no-fatal-infos --no-fatal-warnings
+      - name: Analyze and capture errors
+        shell: bash
+        run: |
+          set +e
+          flutter analyze --no-fatal-infos --no-fatal-warnings 2>&1 | tee analysis_errors.txt
+          status=${PIPESTATUS[0]}
+          if [ "$status" -eq 0 ]; then
+            rm -f analysis_errors.txt
+          fi
+          echo "ANALYZE_STATUS=$status" >> "$GITHUB_ENV"
+          exit 0
+      - name: Save analyzer report when errors exist
+        if: env.ANALYZE_STATUS != '0'
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add analysis_errors.txt
+          git commit -m 'Capture iOS parity analyzer errors' || true
+          git push origin ios-sync-android46
+      - name: Fail when analyzer has errors
+        if: env.ANALYZE_STATUS != '0'
+        run: exit 1
