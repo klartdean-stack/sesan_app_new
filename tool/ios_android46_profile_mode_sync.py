@@ -1,60 +1,51 @@
 from pathlib import Path
-import re
 
 p = Path('lib/profile_screen_legacy.dart')
 s = p.read_text(encoding='utf-8')
+changed = False
 
-
-def insert_after(anchor: str, addition: str, marker: str):
-    global s
-    if marker in s:
-        return
-    if anchor not in s:
-        raise SystemExit(f'anchor not found: {anchor[:60]}')
-    s = s.replace(anchor, anchor + addition, 1)
-
-
-# Imports used by the Android 46 account experience. All of these screens
-# already exist on the iOS parity branch.
-import_anchor = "import 'package:my_app/admin_marketplace_analytics_screen.dart';\n"
-imports = (
+# Imports for screens already present on the iOS parity branch.
+anchor = "import 'package:my_app/admin_marketplace_analytics_screen.dart';\n"
+extra = (
     "import 'package:my_app/admin_support_inbox_screen.dart';\n"
     "import 'package:my_app/ai_packages_screen.dart';\n"
     "import 'package:my_app/sesan_ai_assistant_screen.dart';\n"
     "import 'package:my_app/support_chat_screen.dart';\n"
 )
-insert_after(import_anchor, imports, "admin_support_inbox_screen.dart")
+if 'admin_support_inbox_screen.dart' not in s and anchor in s:
+    s = s.replace(anchor, anchor + extra, 1)
+    changed = True
 
-# User Mode / Seller Mode state.
+# User/Seller mode state.
 if 'bool _isSellerMode' not in s:
-    m = re.search(r"(\s+bool _isInvestor\s*=\s*false;[^\n]*\n)", s)
-    if not m:
-        raise SystemExit('investor state anchor not found')
-    s = s[:m.end()] + '  bool _isSellerMode = false;\n' + s[m.end():]
+    state_pos = s.find('  bool _isInvestor = false;')
+    if state_pos >= 0:
+        line_end = s.find('\n', state_pos)
+        s = s[:line_end + 1] + '  bool _isSellerMode = false;\n' + s[line_end + 1:]
+        changed = True
 
-# Compact mode-aware title.
-s = re.sub(
-    r"title:\s*const Text\(\s*'គណនី និងការគ្រប់គ្រងប្រាក់',\s*style:\s*TextStyle\(fontFamily: 'KHMEROS', fontSize: 18\),\s*\),",
-    """title: Text(
+# Mode-aware title.
+old_title = """        title: const Text(
+          'គណនី និងការគ្រប់គ្រងប្រាក់',
+          style: TextStyle(fontFamily: 'KHMEROS', fontSize: 18),
+        ),"""
+new_title = """        title: Text(
           _isSellerMode ? 'គណនី និងការគ្រប់គ្រងប្រាក់' : 'គណនី',
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: const TextStyle(fontFamily: 'KHMEROS', fontSize: 15),
-        ),""",
-    s,
-    count=1,
-    flags=re.S,
-)
+        ),"""
+if old_title in s:
+    s = s.replace(old_title, new_title, 1)
+    changed = True
 
-# Replace the old order badge in the AppBar with the same User/Seller switch
-# used on Android 46. Seller order count is shown as a card below instead.
+# Replace old seller order icon with mode switch.
 if 'Switch to Seller Mode' not in s:
-    pattern = re.compile(
-        r"\s*actions:\s*\[\s*StreamBuilder<QuerySnapshot>\(.*?\n\s*\],\s*\n\s*\),\s*\n\s*body:\s*StreamBuilder<DocumentSnapshot>\(",
-        re.S,
-    )
-    replacement = """
-        actions: [
+    start = s.find('        actions: [\n          StreamBuilder<QuerySnapshot>(')
+    end_marker = '        ],\n      ),\n      body: StreamBuilder<DocumentSnapshot>('
+    end = s.find(end_marker, start) if start >= 0 else -1
+    if start >= 0 and end >= 0:
+        block = """        actions: [
           Padding(
             padding: const EdgeInsets.only(right: 10),
             child: Tooltip(
@@ -73,20 +64,15 @@ if 'Switch to Seller Mode' not in s:
               ),
             ),
           ),
-        ],
-      ),
-      body: StreamBuilder<DocumentSnapshot>("""
-    s, count = pattern.subn(replacement, s, count=1)
-    if count != 1:
-        raise SystemExit('app bar action block not found')
+"""
+        s = s[:start] + block + s[end:]
+        changed = True
 
-# Android 46 primary mode section. This deliberately sits above the legacy
-# account cards, preserving existing iOS features while making the primary
-# User/Seller navigation identical in purpose to Android.
-if 'Android46 profile mode section' not in s:
-    anchor = '                _buildHeader(name, photoUrl, balance, isFrozen),\n'
-    if anchor not in s:
-        raise SystemExit('profile header anchor not found')
+# Primary Android 46 mode cards above the legacy cards. Existing features below
+# remain untouched so this is safe for the current App Store codebase.
+marker = '// Android46 profile mode section'
+header = '                _buildHeader(name, photoUrl, balance, isFrozen),\n'
+if marker not in s and header in s:
     section = """                // Android46 profile mode section
                 const SizedBox(height: 14),
                 Padding(
@@ -100,9 +86,7 @@ if 'Android46 profile mode section' not in s:
                         color: Colors.green,
                         onTap: () => Navigator.push(
                           context,
-                          MaterialPageRoute(
-                            builder: (_) => const SesanAiAssistantScreen(),
-                          ),
+                          MaterialPageRoute(builder: (_) => const SesanAiAssistantScreen()),
                         ),
                       ),
                       if (!_isSellerMode)
@@ -113,9 +97,7 @@ if 'Android46 profile mode section' not in s:
                           color: Colors.deepPurple,
                           onTap: () => Navigator.push(
                             context,
-                            MaterialPageRoute(
-                              builder: (_) => const AiPackagesScreen(),
-                            ),
+                            MaterialPageRoute(builder: (_) => const AiPackagesScreen()),
                           ),
                         ),
                       if (!_isSellerMode)
@@ -126,12 +108,10 @@ if 'Android46 profile mode section' not in s:
                           color: Colors.blue,
                           onTap: () => Navigator.push(
                             context,
-                            MaterialPageRoute(
-                              builder: (_) => const SupportChatScreen(),
-                            ),
+                            MaterialPageRoute(builder: (_) => const SupportChatScreen()),
                           ),
                         ),
-                      if (_isSellerMode) ...[
+                      if (_isSellerMode)
                         _buildMenuCard(
                           title: 'មជ្ឈមណ្ឌលហិរញ្ញវត្ថុ / Finance Center',
                           subtitle: 'មើលរបាយការណ៍លុយចូល និងលុយចេញ',
@@ -146,12 +126,11 @@ if 'Android46 profile mode section' not in s:
                             ),
                           ),
                         ),
+                      if (_isSellerMode)
                         StreamBuilder<QuerySnapshot>(
                           stream: _orderStream,
                           builder: (context, snapshot) {
-                            final count = snapshot.hasData
-                                ? snapshot.data!.docs.length
-                                : 0;
+                            final count = snapshot.hasData ? snapshot.data!.docs.length : 0;
                             return Stack(
                               clipBehavior: Clip.none,
                               children: [
@@ -174,10 +153,7 @@ if 'Android46 profile mode section' not in s:
                                     right: 38,
                                     top: 10,
                                     child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 6,
-                                        vertical: 2,
-                                      ),
+                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                       decoration: BoxDecoration(
                                         color: Colors.red,
                                         borderRadius: BorderRadius.circular(11),
@@ -196,7 +172,6 @@ if 'Android46 profile mode section' not in s:
                             );
                           },
                         ),
-                      ],
                       if (_isSellerMode && _loggedUid == adminUID)
                         _buildMenuCard(
                           title: 'ប្រអប់សារ Support / Support Inbox',
@@ -205,16 +180,17 @@ if 'Android46 profile mode section' not in s:
                           color: Colors.green,
                           onTap: () => Navigator.push(
                             context,
-                            MaterialPageRoute(
-                              builder: (_) => const AdminSupportInboxScreen(),
-                            ),
+                            MaterialPageRoute(builder: (_) => const AdminSupportInboxScreen()),
                           ),
                         ),
                     ],
                   ),
                 ),
 """
-    s = s.replace(anchor, anchor + section, 1)
+    s = s.replace(header, header + section, 1)
+    changed = True
 
 p.write_text(s, encoding='utf-8')
-print('iOS profile User/Seller mode parity patch applied')
+print('profile parity changed=' + str(changed))
+print('has seller mode=' + str('bool _isSellerMode' in s))
+print('has mode section=' + str(marker in s))
