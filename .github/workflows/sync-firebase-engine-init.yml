@@ -1,0 +1,45 @@
+name: Sync Firebase Engine Init
+on:
+  push:
+    branches: [ios-sync-android46]
+    paths:
+      - '.github/workflows/sync-firebase-engine-init.yml'
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ios-sync-android46
+      - name: Port latest Firebase initialization parity
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('lib/main.dart')
+          s = p.read_text(encoding='utf-8')
+          anchor = """final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =\n    FlutterLocalNotificationsPlugin();\n\n"""
+          helper = """Future<FirebaseApp> _ensureFirebaseInitialized() async {\n  try {\n    return Firebase.app();\n  } on FirebaseException catch (error) {\n    if (error.code != 'no-app') rethrow;\n  }\n\n  try {\n    return await Firebase.initializeApp(\n      options: DefaultFirebaseOptions.currentPlatform,\n    );\n  } on FirebaseException catch (error) {\n    if (error.code == 'duplicate-app') {\n      return Firebase.app();\n    }\n    rethrow;\n  }\n}\n\n"""
+          if helper not in s:
+              if anchor not in s:
+                  raise SystemExit('notification anchor not found')
+              s = s.replace(anchor, anchor + helper, 1)
+          old_bg = """@pragma('vm:entry-point')\nFuture<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {\n  if (Firebase.apps.isEmpty) {\n    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);\n  }\n}\n"""
+          new_bg = """@pragma('vm:entry-point')\nFuture<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {\n  await _ensureFirebaseInitialized();\n}\n"""
+          if old_bg in s:
+              s = s.replace(old_bg, new_bg, 1)
+          old_main = """  try {\n    if (Firebase.apps.isEmpty) {\n      await Firebase.initializeApp(\n        options: DefaultFirebaseOptions.currentPlatform,\n      );\n    }\n    if (kIsWeb) {\n      await FirebaseAuth.instance.setPersistence(Persistence.LOCAL);\n    }\n  } catch (e) {\n    debugPrint('Firebase init error: $e');\n  }\n"""
+          new_main = """  try {\n    await _ensureFirebaseInitialized();\n    if (kIsWeb) {\n      await FirebaseAuth.instance.setPersistence(Persistence.LOCAL);\n    }\n  } catch (e) {\n    debugPrint('Firebase initialization failed: $e');\n  }\n"""
+          if old_main not in s:
+              raise SystemExit('main Firebase initialization block not found')
+          s = s.replace(old_main, new_main, 1)
+          p.write_text(s, encoding='utf-8')
+          PY
+      - name: Commit latest Firebase init parity
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add lib/main.dart
+          git diff --cached --quiet || git commit -m 'Reuse Firebase default app across iOS Flutter engines'
+          git push origin HEAD:ios-sync-android46
