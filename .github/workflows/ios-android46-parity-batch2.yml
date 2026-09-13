@@ -1,0 +1,35 @@
+name: iOS Android 46 Parity Batch 2
+on:
+  push:
+    branches:
+      - ios-sync-android46
+    paths:
+      - '.github/workflows/ios-android46-parity-batch2.yml'
+      - 'tool/ios_android46_parity_batch2.py'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ios-sync-android46
+      - name: Apply parity batch 2
+        run: python tool/ios_android46_parity_batch2.py
+      - name: Verify changes
+        run: |
+          grep -q "live bookmark/save count" lib/product_detail.dart
+          grep -q "compact chat, phone privacy and follow controls" lib/seller_profile_screen.dart
+          grep -q "_maskSellerPhoneForDisplay" lib/seller_profile_screen.dart
+      - name: Commit parity batch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add lib/product_detail.dart lib/seller_profile_screen.dart
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Sync product saves and seller controls with Android Build 46"
+            git push origin ios-sync-android46
+          fi
