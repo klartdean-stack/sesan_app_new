@@ -5,16 +5,17 @@ s = p.read_text(encoding='utf-8')
 changed = False
 
 # Imports for screens already present on the iOS parity branch.
-anchor = "import 'package:my_app/admin_marketplace_analytics_screen.dart';\n"
-extra = (
-    "import 'package:my_app/admin_support_inbox_screen.dart';\n"
-    "import 'package:my_app/ai_packages_screen.dart';\n"
-    "import 'package:my_app/sesan_ai_assistant_screen.dart';\n"
-    "import 'package:my_app/support_chat_screen.dart';\n"
+imports = (
+    "import 'admin_support_inbox_screen.dart';\n"
+    "import 'ai_packages_screen.dart';\n"
+    "import 'sesan_ai_assistant_screen.dart';\n"
+    "import 'support_chat_screen.dart';\n"
 )
-if 'admin_support_inbox_screen.dart' not in s and anchor in s:
-    s = s.replace(anchor, anchor + extra, 1)
-    changed = True
+if "import 'admin_support_inbox_screen.dart';" not in s:
+    anchor = "import 'admin_marketplace_analytics_screen.dart';\n"
+    if anchor in s:
+        s = s.replace(anchor, anchor + imports, 1)
+        changed = True
 
 # User/Seller mode state.
 if 'bool _isSellerMode' not in s:
@@ -68,8 +69,7 @@ if 'Switch to Seller Mode' not in s:
         s = s[:start] + block + s[end:]
         changed = True
 
-# Primary Android 46 mode cards above the legacy cards. Existing features below
-# remain untouched so this is safe for the current App Store codebase.
+# Primary Android 46 mode cards above legacy cards.
 marker = '// Android46 profile mode section'
 header = '                _buildHeader(name, photoUrl, balance, isFrozen),\n'
 if marker not in s and header in s:
@@ -192,5 +192,3 @@ if marker not in s and header in s:
 
 p.write_text(s, encoding='utf-8')
 print('profile parity changed=' + str(changed))
-print('has seller mode=' + str('bool _isSellerMode' in s))
-print('has mode section=' + str(marker in s))
