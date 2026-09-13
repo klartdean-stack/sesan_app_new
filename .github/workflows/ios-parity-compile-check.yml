@@ -28,5 +28,6 @@ jobs:
           cd ios
           pod install --repo-update
           cd ..
+      # Final no-signing compile validation for current Android Build 49 parity.
       - name: Compile iOS release without signing
         run: flutter build ios --release --no-codesign
