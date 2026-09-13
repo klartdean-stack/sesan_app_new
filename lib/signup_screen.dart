@@ -197,9 +197,22 @@ class _SignUpScreenState extends State<SignUpScreen> {
             key: _formKey,
             child: Column(
               children: [
-                const Align(
+                Align(
                   alignment: Alignment.centerRight,
-                  child: LanguageSwitcher(),
+                  child: TextButton.icon(
+                    onPressed: () {
+                      final controller = Get.find<LanguageController>();
+                      final isEnglish =
+                          Localizations.localeOf(context).languageCode == 'en';
+                      controller.changeLanguage(isEnglish ? 'km' : 'en');
+                    },
+                    icon: const Icon(Icons.language, size: 18),
+                    label: Text(
+                      Localizations.localeOf(context).languageCode == 'en'
+                          ? 'ខ្មែរ'
+                          : 'English',
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 16),
                 const Icon(

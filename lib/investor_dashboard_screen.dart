@@ -9,7 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
-import 'package:my_app/Shareholder_dividend_history.dart';
+import 'package:my_app/shareholder_dividend_history.dart';
 import 'package:my_app/company_report_screen.dart';
 import 'package:my_app/digital_contract_screen.dart';
 import 'package:my_app/transaction_history_screen.dart';

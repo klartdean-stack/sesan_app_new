@@ -1489,11 +1489,14 @@ class _ChatScreenState extends State<ChatScreen>
 
   Widget _buildMessageContent(Map<String, dynamic> data, bool isMe) {
     if (data['status'] == 'sending' && data['type'] != 'text') {
-      return const SizedBox(
+      return SizedBox(
         width: 100,
         height: 40,
         child: Center(
-          child: Text(appText(context, km: "កំពុងផ្ញើ...", en: "Sending..."), style: const TextStyle(fontSize: 10)),
+          child: Text(
+            appText(context, km: "កំពុងផ្ញើ...", en: "Sending..."),
+            style: const TextStyle(fontSize: 10),
+          ),
         ),
       );
     }
