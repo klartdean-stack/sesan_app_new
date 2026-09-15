@@ -1,4 +1,4 @@
-name: Sync Android 51 seller parity to iOS
+name: Wire Android 51 seller parity into iOS
 on:
   push:
     branches:
@@ -15,16 +15,38 @@ jobs:
         with:
           ref: ios-sync-android46
           fetch-depth: 0
-      - name: Copy seller parity files
+      - name: Add Seller Guide and Agreement to Seller Mode
         run: |
-          curl -fsSL https://raw.githubusercontent.com/klartdean-stack/sesan_app_android/english-local-android/lib/seller_guide_screen.dart -o lib/seller_guide_screen.dart
-          curl -fsSL https://raw.githubusercontent.com/klartdean-stack/sesan_app_android/english-local-android/lib/seller_digital_agreement_screen.dart -o lib/seller_digital_agreement_screen.dart
-          test "$(git hash-object lib/seller_guide_screen.dart)" = "c215818a8f50573d7c0a1c0699cca598425b4793"
-          test "$(git hash-object lib/seller_digital_agreement_screen.dart)" = "b0bcf57be810d0794599ffc5c1d201990020c7ad"
-      - name: Commit copied files
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('lib/profile_screen_legacy.dart')
+          s=p.read_text()
+          marker="import 'support_chat_screen.dart';"
+          imports="import 'seller_guide_screen.dart';\nimport 'seller_digital_agreement_screen.dart';"
+          if "seller_guide_screen.dart" not in s:
+              s=s.replace(marker, marker+'\n'+imports, 1)
+          if 'const SellerGuideScreen()' not in s:
+              anchor='''                      _buildMenuCard(\n                        title: "ឧបករណ៍កសិកម្ម",'''
+              block='''                      _buildMenuCard(\n                        title: Localizations.localeOf(context).languageCode == 'en' ? 'Seller guide' : 'មគ្គុទេសក៍អ្នកលក់',\n                        subtitle: Localizations.localeOf(context).languageCode == 'en' ? 'Learn posting, cart sales, stock, and orders' : 'រៀនបង្ហោះ លក់តាមកន្ត្រក គ្រប់គ្រងស្តុក និង Order',\n                        icon: Icons.menu_book_rounded,\n                        color: Colors.green,\n                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const SellerGuideScreen())),\n                      ),\n                      _buildMenuCard(\n                        title: Localizations.localeOf(context).languageCode == 'en' ? 'Seller digital agreement' : 'កិច្ចព្រមព្រៀងឌីជីថលអ្នកលក់',\n                        subtitle: Localizations.localeOf(context).languageCode == 'en' ? 'Review and accept the Sesan App seller terms' : 'អាន និងយល់ព្រមលើលក្ខខណ្ឌលក់ដូរជាមួយ Sesan App',\n                        icon: Icons.draw_rounded,\n                        color: Colors.indigo,\n                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const SellerDigitalAgreementScreen())),\n                      ),\n\n'''
+              if anchor not in s: raise SystemExit('Seller menu anchor not found')
+              s=s.replace(anchor,block+anchor,1)
+          p.write_text(s)
+          PY
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.38.8'
+          channel: stable
+      - run: flutter pub get
+      - name: Analyze seller parity
+        run: flutter analyze --no-fatal-warnings --no-fatal-infos lib/profile_screen_legacy.dart lib/seller_guide_screen.dart lib/seller_digital_agreement_screen.dart
+      - name: Commit seller parity
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add lib/seller_guide_screen.dart lib/seller_digital_agreement_screen.dart
-          git commit -m "Copy Android 51 seller guide and agreement to iOS"
-          git push origin ios-sync-android46
+          git add lib/profile_screen_legacy.dart
+          if git diff --cached --quiet; then
+            echo "Already wired"
+          else
+            git commit -m "Wire Android 51 seller guide and agreement into iOS"
+            git push origin ios-sync-android46
+          fi
