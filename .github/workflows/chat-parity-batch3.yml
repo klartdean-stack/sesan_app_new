@@ -38,16 +38,9 @@ jobs:
             s=s.replace(insert, "              if (canShowShopMap)\n                _buildShopMapPreview(shopLatitude!, shopLongitude!),\n\n"+insert, 1)
           p.write_text(s)
           PY
-      - name: Fetch Android 51 optimized chat
+      - name: Copy Android 51 optimized chat from mirrored branch
         run: |
-          python3 - <<'PY'
-          import json, urllib.request, base64
-          url='https://api.github.com/repos/klartdean-stack/sesan_app_android/contents/lib/chat_screen.dart?ref=english-local-android'
-          req=urllib.request.Request(url, headers={'Accept':'application/vnd.github+json','User-Agent':'Sesan-iOS-Parity'})
-          with urllib.request.urlopen(req) as r: data=json.load(r)
-          content=base64.b64decode(data['content']).decode('utf-8')
-          open('lib/chat_screen_android51.dart','w',encoding='utf-8').write(content)
-          PY
+          git show origin/english-local-android:lib/chat_screen.dart > lib/chat_screen_android51.dart
           test -s lib/chat_screen_android51.dart
           grep -q "OPTIMIZED CHAT SCREEN" lib/chat_screen_android51.dart
       - name: Switch wrapper to Android 51 chat and keep moderation
