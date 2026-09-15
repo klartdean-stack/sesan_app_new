@@ -24,6 +24,7 @@ import 'product_list.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart'; // ថែមតែមួយជួរនេះ
 import 'package:firebase_messaging/firebase_messaging.dart'; // ថែមជួរនេះ
+import 'l10n/app_localizations.dart';
 
 
 
@@ -241,6 +242,7 @@ String? name;
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final UploadController uploadController = Get.find<UploadController>();
     final user = FirebaseAuth.instance.currentUser;
 
@@ -288,7 +290,7 @@ String? name;
                     setState(() => _searchQuery = value.trim());
                   },
                   decoration: InputDecoration(
-                    hintText: "ស្វែងរកទំនិញ...",
+                    hintText: l10n.searchProducts,
                     hintStyle: const TextStyle(
                       fontFamily: 'Siemreap',
                       fontSize: 13,
