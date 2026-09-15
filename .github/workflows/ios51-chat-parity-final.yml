@@ -1,0 +1,38 @@
+name: iOS 51 Chat parity final
+on:
+  workflow_dispatch:
+  push:
+    branches: [ios-sync-android46]
+    paths: ['.github/workflows/ios51-chat-parity-final.yml']
+permissions:
+  contents: write
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: {ref: ios-sync-android46}
+      - name: Fetch Android 51 optimized Chat
+        run: |
+          python3 - <<'PY'
+          import urllib.request
+          url='https://raw.githubusercontent.com/klartdean-stack/sesan_app_android/english-local-android/lib/chat_screen.dart'
+          data=urllib.request.urlopen(url, timeout=30).read().decode('utf-8')
+          if 'OPTIMIZED CHAT SCREEN' not in data or 'class ChatScreen extends StatefulWidget' not in data:
+              raise SystemExit('Android chat source validation failed')
+          open('lib/chat_screen_legacy.dart','w',encoding='utf-8').write(data)
+          PY
+      - name: Verify iOS moderation wrapper remains
+        run: |
+          grep -q "OPTIMIZED CHAT SCREEN" lib/chat_screen_legacy.dart
+          grep -q "ChatModerationMenu" lib/chat_screen.dart
+          grep -q "legacy.ChatScreen" lib/chat_screen.dart
+          grep -q "_uploadQueue" lib/chat_screen_legacy.dart
+          grep -q "_blockUser" lib/chat_screen_legacy.dart
+      - name: Commit
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add lib/chat_screen_legacy.dart
+          git commit -m "Sync iOS Chat core to Android 51 optimized Chat"
+          git push origin HEAD:ios-sync-android46
