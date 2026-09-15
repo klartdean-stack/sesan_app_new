@@ -12,6 +12,28 @@ import 'package:my_app/product_list.dart';
 import 'package:my_app/location_picker.dart';
 import 'localized_text.dart';
 
+class ThousandsSeparatorInputFormatter extends TextInputFormatter {
+  final NumberFormat _formatter = NumberFormat('#,###');
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final digits = newValue.text.replaceAll(RegExp(r'[^0-9]'), '');
+    if (digits.isEmpty) {
+      return const TextEditingValue();
+    }
+    final value = int.tryParse(digits);
+    if (value == null) return oldValue;
+    final formatted = _formatter.format(value);
+    return TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
+    );
+  }
+}
+
 class EditProductScreen extends StatefulWidget {
   final String productId;
   final Map<String, dynamic> productData;
