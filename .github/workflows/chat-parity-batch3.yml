@@ -1,4 +1,4 @@
-name: Sync iOS Chat to Android 51
+name: Finish iOS Android 51 parity
 on:
   push:
     branches: [ios-sync-android46]
@@ -7,45 +7,70 @@ on:
 permissions:
   contents: write
 jobs:
-  sync:
+  parity:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ios-sync-android46
           fetch-depth: 0
-      - name: Fetch Android 51 source
+      - name: Match Android 51 banner presentation and chat menu
         run: |
-          git clone --depth 1 --branch english-local-android https://github.com/klartdean-stack/sesan_app_android.git /tmp/android51
-      - name: Sync current Android Chat UI
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          home = Path('lib/home_screen.dart')
+          s = home.read_text()
+          pattern = re.compile(r"AspectRatio\(\s*aspectRatio:\s*MediaQuery\s*\.of\(context\)\s*\.size\s*\.width\s*>\s*800\s*\?\s*21\s*/\s*7\s*:\s*16\s*/\s*8,\s*child:\s*Image\.asset\(\s*'assets/sesan_banner\.png\.jpg',\s*fit:\s*BoxFit\.cover,\s*\),\s*\),", re.S)
+          replacement = """AspectRatio(
+                            // Android 51 banner source is 1280x405.
+                            // Keep the exact ratio so the whole image is visible.
+                            aspectRatio: 1280 / 405,
+                            child: SizedBox(
+                              width: double.infinity,
+                              child: Image.asset(
+                                'assets/sesan_banner.png.jpg',
+                                width: double.infinity,
+                                fit: BoxFit.contain,
+                              ),
+                            ),
+                          ),"""
+          s2, n = pattern.subn(replacement, s, count=1)
+          if n != 1:
+            raise SystemExit('Could not locate old iOS banner layout')
+          home.write_text(s2)
+
+          chat = Path('lib/chat_screen.dart')
+          c = chat.read_text()
+          old = "top: MediaQuery.paddingOf(context).top + kToolbarHeight + 6,"
+          new = "top: MediaQuery.paddingOf(context).top + 4,"
+          if old not in c:
+            raise SystemExit('Could not locate floating moderation menu position')
+          chat.write_text(c.replace(old, new, 1))
+
+          Path('tool/.keep').unlink(missing_ok=True)
+          PY
+      - name: Verify banner identity and layout
         run: |
-          cp /tmp/android51/lib/chat_screen.dart lib/chat_screen.dart
-      - name: Verify exact Home banner
-        run: |
-          test "$(git hash-object assets/sesan_banner.png.jpg)" = "$(git -C /tmp/android51 hash-object assets/sesan_banner.png.jpg)"
-          grep -q "assets/sesan_banner.png.jpg" /tmp/android51/lib/home_screen.dart
-          echo "Banner blob is already identical to Android 51"
-      - name: Verify chat dependencies
-        run: |
-          grep -q "video_thumbnail:" pubspec.yaml
-          grep -q "video_compress:" pubspec.yaml
-          grep -q "flutter_image_compress:" pubspec.yaml
-          grep -q "record:" pubspec.yaml
-      - name: Flutter analyze
+          test "$(git hash-object assets/sesan_banner.png.jpg)" = "67d69670d94dc3c6664fd08d71b260c749aa1390"
+          grep -q "aspectRatio: 1280 / 405" lib/home_screen.dart
+          grep -q "fit: BoxFit.contain" lib/home_screen.dart
+      - name: Flutter analyze changed parity files
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.38.8'
           channel: stable
       - run: flutter pub get
-      - run: flutter analyze lib/chat_screen.dart lib/location_picker_sheet.dart lib/share_service.dart
-      - name: Commit synced chat
+      - run: flutter analyze lib/home_screen.dart lib/chat_screen.dart lib/location_picker_sheet.dart lib/share_service.dart
+      - name: Commit verified parity fixes
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add lib/chat_screen.dart
+          git add lib/home_screen.dart lib/chat_screen.dart tool/.keep || true
           if git diff --cached --quiet; then
-            echo "Chat already matches Android 51"
+            echo "No parity changes needed"
           else
-            git commit -m "Sync iOS Chat Screen to Android 51"
+            git commit -m "Match iOS banner and chat menu to Android 51"
             git push origin ios-sync-android46
           fi
