@@ -1,4 +1,4 @@
-name: Repair and connect iOS maps
+name: Finish iOS 51 seller map and chat parity
 on:
   push:
     branches: [ios-sync-android46]
@@ -7,59 +7,66 @@ on:
 permissions:
   contents: write
 jobs:
-  maps:
+  parity:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ios-sync-android46
           fetch-depth: 0
-      - name: Repair map APIs and connect Add Product
+      - name: Add Blue Gold seller map
         run: |
-          git show 41f6e82f30c7d42d4345562c9198b30573d472c0^:lib/add_product.dart > lib/add_product.dart
           python3 - <<'PY'
           from pathlib import Path
-          p=Path('lib/add_product.dart'); s=p.read_text()
-          if "package:geocoding/geocoding.dart" not in s:
-            s=s.replace("import 'package:get/get.dart';", "import 'package:get/get.dart';\nimport 'package:geocoding/geocoding.dart';\nimport 'package:google_maps_flutter/google_maps_flutter.dart';")
-          if "map_picker_screen.dart" not in s:
-            s=s.replace("import 'package:google_maps_flutter/google_maps_flutter.dart';", "import 'package:google_maps_flutter/google_maps_flutter.dart';\nimport 'map_picker_screen.dart';")
-          s=s.replace("  final Geocoding _geocoding = Geocoding();\n", "")
-          s=s.replace("  double? selectedLat;\n  double? selectedLng;", "  bool _locationChosenManually = false;\n  double? selectedLat;\n  double? selectedLng;",1)
-          s=s.replace("setState(() {\n                            locationController.text = location.toString();", "setState(() {\n                            _locationChosenManually = true;\n                            locationController.text = location.toString();",1)
-          old='''Expanded(\n                  flex: 1,\n                  child: Container(\n                    // ប្តូរពី InkWell មក Container ធម្មតាដើម្បី Disable\n                    padding: const EdgeInsets.symmetric(vertical: 12),'''
-          start=s.find(old)
-          if start < 0: raise SystemExit('old disabled map button not found')
-          end=s.find("                ),\n              ],\n            ),", start)
-          if end < 0: raise SystemExit('map button end not found')
-          replacement='''Expanded(\n                  flex: 1,\n                  child: InkWell(\n                    onTap: () async {\n                      final result = await Navigator.push<LatLng>(\n                        context,\n                        MaterialPageRoute(builder: (_) => MapPickerScreen(initialLat: selectedLat, initialLng: selectedLng)),\n                      );\n                      if (result == null || !mounted) return;\n                      setState(() { selectedLat = result.latitude; selectedLng = result.longitude; });\n                      await _fillLocationFromMap(result);\n                    },\n                    borderRadius: BorderRadius.circular(14),\n                    child: Container(\n                      padding: const EdgeInsets.symmetric(vertical: 12),\n                      decoration: BoxDecoration(\n                        color: selectedLat != null && selectedLng != null ? Colors.green.withValues(alpha: 0.12) : Colors.green.withValues(alpha: 0.06),\n                        borderRadius: BorderRadius.circular(14),\n                        border: Border.all(color: selectedLat != null && selectedLng != null ? Colors.green : Colors.green.shade300),\n                      ),\n                      child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [\n                        Icon(selectedLat != null && selectedLng != null ? Icons.location_on : Icons.map_outlined, color: Colors.green.shade700),\n                        const SizedBox(height: 2),\n                        Text(selectedLat != null && selectedLng != null ? _t('បាន Pin', 'Pinned') : 'Maps', style: TextStyle(fontSize: 10, color: Colors.green.shade800, fontWeight: FontWeight.bold, fontFamily: 'Siemreap')),\n                      ]),\n                    ),\n                  ),\n'''
-          s=s[:start]+replacement+s[end:]
-          marker="  Future<void> pickManyImages() async {"
-          helper='''  Future<void> _fillLocationFromMap(LatLng point) async {\n    if (_locationChosenManually || !mounted) return;\n    try {\n      final placemarks = await placemarkFromCoordinates(point.latitude, point.longitude);\n      if (!mounted || _locationChosenManually) return;\n      final parts = <String>[];\n      if (placemarks.isNotEmpty) {\n        final place = placemarks.first;\n        for (final value in [place.administrativeArea, place.subAdministrativeArea, place.locality, place.subLocality]) {\n          final clean = value?.trim() ?? '';\n          if (clean.isNotEmpty && !parts.contains(clean)) parts.add(clean);\n        }\n      }\n      setState(() => locationController.text = parts.isNotEmpty ? parts.join(', ') : '${point.latitude.toStringAsFixed(6)}, ${point.longitude.toStringAsFixed(6)}');\n    } catch (_) {}\n  }\n\n'''
-          if '_fillLocationFromMap(LatLng point)' not in s: s=s.replace(marker,helper+marker,1)
-          p.write_text(s)
-
-          p=Path('lib/edit_shopscreen.dart'); s=p.read_text()
-          s=s.replace("  final Geocoding _geocoding = Geocoding();\n", "")
-          s=s.replace("final p=await _geocoding.placemarkFromCoordinates(selected.latitude,selected.longitude);", "final p=await placemarkFromCoordinates(selected.latitude,selected.longitude);")
-          p.write_text(s)
-
-          p=Path('lib/map_picker_screen.dart'); s=p.read_text()
-          s=s.replace("final position = await Geolocator.getCurrentPosition(locationSettings: const LocationSettings(accuracy: LocationAccuracy.high, timeLimit: Duration(seconds: 15)));", "final position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high, timeLimit: const Duration(seconds: 15));")
+          p=Path('lib/seller_profile_screen.dart'); s=p.read_text()
+          if "package:google_maps_flutter/google_maps_flutter.dart" not in s:
+            s=s.replace("import 'package:fl_chart/fl_chart.dart';", "import 'package:fl_chart/fl_chart.dart';\nimport 'package:google_maps_flutter/google_maps_flutter.dart';\nimport 'package:url_launcher/url_launcher.dart';")
+          anchor='  Widget _buildSellerInfoCard(BuildContext context) {'
+          if 'Widget _buildShopMapPreview' not in s:
+            methods='''  Future<void> _openShopDirections(double latitude, double longitude) async {\n    final url = Uri.parse('https://www.google.com/maps/dir/?api=1&destination=$latitude,$longitude');\n    if (!await launchUrl(url, mode: LaunchMode.externalApplication) && mounted) {\n      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Unable to open Google Maps')));\n    }\n  }\n\n  void _openShopMap(double latitude, double longitude) {\n    final location = LatLng(latitude, longitude);\n    Navigator.push(context, MaterialPageRoute(builder: (_) => Scaffold(\n      appBar: AppBar(title: Text(widget.sellerName), backgroundColor: Colors.green, foregroundColor: Colors.white),\n      body: Stack(children: [\n        GoogleMap(initialCameraPosition: CameraPosition(target: location, zoom: 16), markers: {Marker(markerId: const MarkerId('shop_full'), position: location, infoWindow: InfoWindow(title: widget.sellerName))}, myLocationButtonEnabled: false),\n        Positioned(left: 16, right: 16, bottom: 24, child: ElevatedButton.icon(onPressed: () => _openShopDirections(latitude, longitude), icon: const Icon(Icons.directions), label: const Text('Directions to shop'), style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white, minimumSize: const Size.fromHeight(48)))),\n      ]),\n    )));\n  }\n\n  Widget _buildShopMapPreview(double latitude, double longitude) {\n    final location = LatLng(latitude, longitude);\n    return Padding(padding: const EdgeInsets.only(top: 10, bottom: 10), child: ClipRRect(borderRadius: BorderRadius.circular(12), child: SizedBox(height: 170, child: Stack(fit: StackFit.expand, children: [\n      AbsorbPointer(child: GoogleMap(initialCameraPosition: CameraPosition(target: location, zoom: 15.5), markers: {Marker(markerId: const MarkerId('shop_location'), position: location)}, zoomControlsEnabled: false, myLocationButtonEnabled: false, mapToolbarEnabled: false, compassEnabled: false, scrollGesturesEnabled: false, zoomGesturesEnabled: false, rotateGesturesEnabled: false, tiltGesturesEnabled: false)),\n      Material(color: Colors.transparent, child: InkWell(onTap: () => _openShopMap(latitude, longitude))),\n      Positioned(left: 10, right: 10, bottom: 10, child: Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8), decoration: BoxDecoration(color: Colors.white.withOpacity(0.94), borderRadius: BorderRadius.circular(10)), child: const Row(children: [Icon(Icons.location_on, color: Colors.green, size: 18), SizedBox(width: 6), Expanded(child: Text('Shop location', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold))), Icon(Icons.open_in_full, size: 16)]))),\n    ])))));\n  }\n\n'''
+            if anchor not in s: raise SystemExit('seller info anchor missing')
+            s=s.replace(anchor, methods+anchor, 1)
+          lat="        final shopLatitude = (userData?['shop_latitude'] as num?)?.toDouble();"
+          if lat not in s:
+            needle="        String shopAddress = userData?['address'] ?? 'មិនទាន់មានទីតាំង';"
+            if needle not in s: raise SystemExit('shop address anchor missing')
+            extra="\n        final shopLatitude = (userData?['shop_latitude'] as num?)?.toDouble();\n        final shopLongitude = (userData?['shop_longitude'] as num?)?.toDouble();\n        final canShowShopMap = (shopTier == 'basic' || shopTier == 'premium') && shopLatitude != null && shopLongitude != null;"
+            s=s.replace(needle, needle+extra, 1)
+          if '_buildShopMapPreview(shopLatitude!, shopLongitude!)' not in s:
+            insert="              // ── ក្រាប 4 ខ្សែសម្រាប់ម្ចាស់ហាង Gold Verified ──"
+            if insert not in s: raise SystemExit('seller map insertion anchor missing')
+            s=s.replace(insert, "              if (canShowShopMap)\n                _buildShopMapPreview(shopLatitude!, shopLongitude!),\n\n"+insert, 1)
           p.write_text(s)
           PY
-      - name: Flutter setup
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.38.8'
-          channel: stable
-      - run: flutter pub get
-      - name: Analyze map files
-        run: flutter analyze --no-fatal-warnings --no-fatal-infos lib/add_product.dart lib/edit_product.dart lib/edit_shopscreen.dart lib/map_picker_screen.dart
-      - name: Commit maps
+      - name: Fetch Android 51 optimized chat
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add lib/add_product.dart lib/edit_shopscreen.dart lib/map_picker_screen.dart pubspec.lock
-          git commit -m "Connect and repair iOS maps parity" || exit 0
-          git push origin ios-sync-android46
+          python3 - <<'PY'
+          import json, urllib.request, base64
+          url='https://api.github.com/repos/klartdean-stack/sesan_app_android/contents/lib/chat_screen.dart?ref=english-local-android'
+          req=urllib.request.Request(url, headers={'Accept':'application/vnd.github+json','User-Agent':'Sesan-iOS-Parity'})
+          with urllib.request.urlopen(req) as r: data=json.load(r)
+          content=base64.b64decode(data['content']).decode('utf-8')
+          open('lib/chat_screen_android51.dart','w',encoding='utf-8').write(content)
+          PY
+          test -s lib/chat_screen_android51.dart
+          grep -q "OPTIMIZED CHAT SCREEN" lib/chat_screen_android51.dart
+      - name: Switch wrapper to Android 51 chat and keep moderation
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('lib/chat_screen.dart'); s=p.read_text()
+          if "chat_screen_android51.dart' as android51" not in s:
+            s=s.replace("import 'chat_screen_legacy.dart' as legacy;", "import 'chat_screen_legacy.dart' as legacy;\nimport 'chat_screen_android51.dart' as android51;")
+          s=s.replace('return legacy.ChatScreen(', 'return android51.ChatScreen(')
+          s=s.replace('                legacy.ChatScreen(', '                android51.ChatScreen(')
+          p.write_text(s)
+          PY
+          grep -q "android51.ChatScreen" lib/chat_screen.dart
+          grep -q "ChatModerationMenu" lib/chat_screen.dart
+      - name: Commit parity
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add lib/seller_profile_screen.dart lib/chat_screen.dart lib/chat_screen_android51.dart
+          git commit -m "Add Blue Gold seller map and Android 51 chat to iOS" || exit 0
+          git push origin HEAD:ios-sync-android46
