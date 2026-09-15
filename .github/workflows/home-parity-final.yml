@@ -1,0 +1,51 @@
+name: iOS Home parity final
+on:
+  workflow_dispatch:
+  push:
+    branches: [ios-sync-android46]
+    paths: ['.github/workflows/home-parity-final.yml']
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ios-sync-android46
+      - name: Apply Home parity safely
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('lib/home_screen.dart')
+          s=p.read_text(encoding='utf-8')
+          imp="import 'l10n/app_localizations.dart';"
+          if imp not in s:
+              anchor="import 'package:firebase_messaging/firebase_messaging.dart'; // ថែមជួរនេះ"
+              if anchor not in s:
+                  raise SystemExit('Firebase Messaging import anchor missing')
+              s=s.replace(anchor, anchor+'\n'+imp, 1)
+          build='  Widget build(BuildContext context) {\n    final UploadController uploadController = Get.find<UploadController>();'
+          if build in s:
+              s=s.replace(build, '  Widget build(BuildContext context) {\n    final l10n = AppLocalizations.of(context);\n    final UploadController uploadController = Get.find<UploadController>();', 1)
+          elif 'final l10n = AppLocalizations.of(context);' not in s:
+              raise SystemExit('Home build anchor missing')
+          s=s.replace('hintText: "ស្វែងរកទំនិញ...",', 'hintText: l10n.searchProducts,', 1)
+          # Verify Android-style combined Search + QR remains intact.
+          checks=['Expanded(', 'TextField(', 'Icons.search', 'suffixIcon: IconButton(', 'Icons.qr_code_scanner', 'QrScannerScreen()', 'hintText: l10n.searchProducts']
+          missing=[x for x in checks if x not in s]
+          if missing:
+              raise SystemExit('Home parity validation failed: '+', '.join(missing))
+          p.write_text(s, encoding='utf-8')
+          PY
+      - name: Commit Home parity
+        run: |
+          if git diff --quiet -- lib/home_screen.dart; then
+            echo 'Home search + QR parity already complete.'
+            exit 0
+          fi
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add lib/home_screen.dart
+          git commit -m "Finish iOS Home search and QR parity"
+          git push origin HEAD:ios-sync-android46
