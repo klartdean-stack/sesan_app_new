@@ -3,11 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/services.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:my_app/map_picker_screen.dart';
 import 'package:my_app/product_list.dart';
 import 'package:my_app/location_picker.dart';
+import 'localized_text.dart';
 
 
 class EditProductScreen extends StatefulWidget {
@@ -46,6 +49,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
   List<File> _imageFiles = []; // សម្រាប់ទុកបញ្ជីរូបភាពថ្មី
   List<String> _existingImageUrls = []; // សម្រាប់ទុកបញ្ជីរូបភាពចាស់
   bool _isLoading = false;
+  final Geocoding _geocoding = Geocoding();
   double? selectedLat;
   double? selectedLng;
   bool _isOwner = false; // ✅ បន្ថែមនេះ
@@ -147,6 +151,34 @@ class _EditProductScreenState extends State<EditProductScreen> {
     }
   }
 
+
+  Future<void> _fillLocationFromMap(LatLng point) async {
+    try {
+      final placemarks = await _geocoding.placemarkFromCoordinates(
+        point.latitude, point.longitude, locale: const Locale('km', 'KH'));
+      if (!mounted) return;
+      final parts = <String>[];
+      void addPart(String? value) {
+        final clean = value?.trim() ?? '';
+        if (clean.isEmpty) return;
+        if (parts.any((part) => part.toLowerCase() == clean.toLowerCase())) return;
+        parts.add(clean);
+      }
+      if (placemarks.isNotEmpty) {
+        final place = placemarks.first;
+        addPart(place.administrativeArea); addPart(place.subAdministrativeArea);
+        addPart(place.locality); addPart(place.subLocality);
+      }
+      setState(() => _locationController.text = parts.isNotEmpty
+          ? parts.join(', ')
+          : '${point.latitude.toStringAsFixed(6)}, ${point.longitude.toStringAsFixed(6)}');
+    } catch (error) {
+      debugPrint('Edit product reverse geocoding failed: $error');
+      if (!mounted) return;
+      setState(() => _locationController.text =
+          '${point.latitude.toStringAsFixed(6)}, ${point.longitude.toStringAsFixed(6)}');
+    }
+  }
 
   Future<void> _updateProduct() async {
     if (!_isOwner) {
@@ -460,32 +492,54 @@ class _EditProductScreenState extends State<EditProductScreen> {
 
 
                   /// =========================
-                  /// MAP BUTTON (Disabled)
-                  /// =========================
+                  /// MAP BUTTON
                   Expanded(
                     flex: 1,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade100,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.grey.shade300),
-                      ),
-                      child: Column(
-                        children: [
-                          Icon(
-                            Icons.map_outlined,
-                            color: Colors.grey.shade400,
-                            size: 20,
-                          ),
-                          const Text(
-                            "Map",
-                            style: TextStyle(
-                              fontSize: 10,
-                              color: Colors.grey,
-                            ),
-                          ),
-                        ],
+                    child: InkWell(
+                      onTap: () async {
+                        final result = await Navigator.push<LatLng>(
+                          context,
+                          MaterialPageRoute(builder: (_) => MapPickerScreen(
+                            initialLat: selectedLat, initialLng: selectedLng)),
+                        );
+                        if (result == null || !mounted) return;
+                        setState(() { selectedLat = result.latitude; selectedLng = result.longitude; });
+                        await _fillLocationFromMap(result);
+                      },
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        decoration: BoxDecoration(
+                          color: Colors.green.withOpacity(0.10),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.green.shade400),
+                        ),
+                        child: Stack(clipBehavior: Clip.none, children: [
+                          Center(child: Column(children: [
+                            Icon(selectedLat != null && selectedLng != null
+                                ? Icons.location_on : Icons.map_outlined,
+                                color: Colors.green.shade700, size: 20),
+                            Text(selectedLat != null && selectedLng != null
+                                ? appText(context, km: 'កែទីតាំង', en: 'Change')
+                                : appText(context, km: 'បន្ថែម Pin', en: 'Add pin'),
+                                textAlign: TextAlign.center, maxLines: 2,
+                                style: TextStyle(fontSize: 9, color: Colors.green.shade800,
+                                    fontWeight: FontWeight.bold, fontFamily: 'Siemreap')),
+                          ])),
+                          if (selectedLat != null && selectedLng != null)
+                            Positioned(right: -8, top: -18, child: Material(
+                              color: Colors.red, shape: const CircleBorder(), child: InkWell(
+                                customBorder: const CircleBorder(), onTap: () {
+                                  setState(() { selectedLat = null; selectedLng = null; });
+                                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(
+                                    appText(context, km: 'បានដកផែនទីចេញ។ សូមចុចរក្សាទុកការកែប្រែ។',
+                                      en: 'Map removed. Tap Save changes.'))));
+                                },
+                                child: const Padding(padding: EdgeInsets.all(4),
+                                  child: Icon(Icons.close, size: 14, color: Colors.white)),
+                              ),
+                            )),
+                        ]),
                       ),
                     ),
                   ),
