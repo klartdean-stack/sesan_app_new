@@ -1,0 +1,100 @@
+name: iOS V51 Product List AI parity
+on:
+  push:
+    branches: [ios-sync-android46]
+    paths: ['.github/triggers/ios-v51-product-list-ai.txt']
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ios-sync-android46
+      - name: Patch Product List AI Image Voice Location
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('lib/product_list.dart')
+          s=p.read_text()
+          # imports
+          anchor="import 'package:flutter/material.dart';"
+          imports="""import 'dart:async';
+import 'dart:convert';
+import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
+import 'package:cloud_functions/cloud_functions.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:record/record.dart';
+"""
+          if "dart:async" not in s: s=s.replace(anchor, imports+anchor)
+          for imp in ["import 'localized_text.dart';", "import 'category_localization.dart';", "import 'location_picker.dart';"]:
+            if imp not in s: s=s.replace("import 'edit_product.dart';", "import 'edit_product.dart';\n"+imp)
+          # Replace ProductListScreen state only, preserving ProductGridView below.
+          start=s.index('class _ProductListScreenState extends State<ProductListScreen> {')
+          end=s.index('\nclass ProductGridView extends StatefulWidget', start)
+          state=r'''class _ProductListScreenState extends State<ProductListScreen> {
+  String _currentSearch = '';
+  final TextEditingController _searchController = TextEditingController();
+  final ImagePicker _searchImagePicker = ImagePicker();
+  final AudioRecorder _searchAudioRecorder = AudioRecorder();
+  Timer? _voiceSearchTimer;
+  bool _isSearchBusy = false;
+  bool _isVoiceSearching = false;
+  bool _voiceSheetOpen = false;
+  String? _selectedProvince, _selectedDistrict, _selectedCommune;
+
+  bool get _hasLocationFilter => (_selectedProvince?.isNotEmpty ?? false) || (_selectedDistrict?.isNotEmpty ?? false) || (_selectedCommune?.isNotEmpty ?? false);
+  String get _locationFilterLabel => [if (_selectedProvince?.isNotEmpty ?? false) _selectedProvince!, if (_selectedDistrict?.isNotEmpty ?? false) _selectedDistrict!, if (_selectedCommune?.isNotEmpty ?? false) _selectedCommune!].join(' › ');
+  String _label(String km,String en)=>Localizations.localeOf(context).languageCode=='en'?en:km;
+  void _msg(String m,{Color color=Colors.red}) { if(mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text(m),backgroundColor:color)); }
+  bool _canAi(){ if((FirebaseAuth.instance.currentUser?.uid??'').isNotEmpty)return true; _msg(_label('សូមចូលគណនីជាមុន ដើម្បីស្វែងរកតាមរូប ឬសម្លេង','Please sign in to search with a photo or voice')); return false; }
+  Future<Map<String,dynamic>> _callAi({String? image,String? audio}) async { final c=FirebaseFunctions.instanceFor(region:'asia-southeast1').httpsCallable('analyzeProductSearch'); final r=await c.call({'locale':Localizations.localeOf(context).languageCode,if(image!=null)'image':image,if(audio!=null)'audio':audio}); return Map<String,dynamic>.from(r.data as Map); }
+  void _applyAi(Map<String,dynamic>d){final q=(d['query']??'').toString().trim(); if(q.isEmpty)throw StateError('Empty AI search query'); final k=(d['keywords'] as List?)?.map((e)=>e.toString().trim()).where((e)=>e.isNotEmpty).toList()??<String>[]; _searchController.text=q; setState(()=>_currentSearch=<String>{q,...k}.join(' | ')); _msg(_label('កំពុងស្វែងរក៖ $q','Searching for: $q'),color:Colors.green);}
+  Future<void> _searchByImage() async { if(_isSearchBusy||!_canAi())return; final x=await _searchImagePicker.pickImage(source:ImageSource.gallery,maxWidth:1024,maxHeight:1024,imageQuality:72); if(x==null||!mounted)return; setState(()=>_isSearchBusy=true); try{final b=await x.readAsBytes();if(b.isEmpty||b.length>3300000)throw StateError('large');final mime=(x.mimeType=='image/png'||x.mimeType=='image/webp')?x.mimeType!:'image/jpeg';_applyAi(await _callAi(image:'data:$mime;base64,${base64Encode(b)}'));}on FirebaseFunctionsException catch(e){_msg(e.message??_label('មិនអាចស្វែងរកតាមរូបបានទេ','Could not search with this image'));}catch(e){_msg(_label('រូបធំពេក ឬមិនអាចអានបាន','The image is too large or could not be read'));}finally{if(mounted)setState(()=>_isSearchBusy=false);}}
+  Future<void> _toggleVoice() async {if(_isSearchBusy||_isVoiceSearching||!_canAi())return;try{if(!await _searchAudioRecorder.hasPermission()){_msg(_label('សូមអនុញ្ញាត Microphone ជាមុន','Please allow microphone access first'));return;}final dir=await getTemporaryDirectory();final path='${dir.path}/sesan_search_${DateTime.now().millisecondsSinceEpoch}.m4a';await _searchAudioRecorder.start(const RecordConfig(encoder:AudioEncoder.aacLc,bitRate:48000,sampleRate:22050,echoCancel:true,noiseSuppress:true,autoGain:true),path:path);if(!mounted)return;setState(()=>_isVoiceSearching=true);_voiceSearchTimer=Timer(const Duration(seconds:5),_finishVoice);_voiceSheetOpen=true;showModalBottomSheet<void>(context:context,isDismissible:false,enableDrag:false,builder:(_)=>SafeArea(child:Padding(padding:const EdgeInsets.all(28),child:Column(mainAxisSize:MainAxisSize.min,children:[const Icon(Icons.mic_rounded,color:Colors.red,size:44),const SizedBox(height:12),Text(_label('កំពុងស្តាប់...','Listening...'),style:const TextStyle(fontFamily:'Siemreap',fontSize:20,fontWeight:FontWeight.bold)),const SizedBox(height:12),const LinearProgressIndicator()])))).whenComplete(()=>_voiceSheetOpen=false);}catch(e){_msg(_label('មិនអាចចាប់ផ្តើមថតសម្លេងបានទេ','Could not start voice recording'));}}
+  Future<void> _finishVoice() async {if(!_isVoiceSearching)return;_voiceSearchTimer?.cancel();if(_voiceSheetOpen&&mounted){Navigator.of(context).pop();_voiceSheetOpen=false;}if(mounted)setState((){_isVoiceSearching=false;_isSearchBusy=true;});try{final path=await _searchAudioRecorder.stop();if(path==null||path.isEmpty)throw StateError('empty');final b=await XFile(path).readAsBytes();if(b.isEmpty||b.length>7500000)throw StateError('bad');_applyAi(await _callAi(audio:'data:audio/m4a;base64,${base64Encode(b)}'));}on FirebaseFunctionsException catch(e){_msg(e.message??_label('មិនអាចយល់សម្លេងនេះបានទេ','Could not understand this recording'));}catch(e){_msg(_label('ការស្វែងរកតាមសម្លេងបរាជ័យ','Voice search failed'));}finally{if(mounted)setState(()=>_isSearchBusy=false);}}
+  Future<void> _showLocationFilter() async {await CambodiaLocationService.load();if(!mounted)return;String? province=_selectedProvince,district=_selectedDistrict,commune=_selectedCommune;await showModalBottomSheet<void>(context:context,isScrollControlled:true,builder:(sheet)=>StatefulBuilder(builder:(context,setSheet){final ps=CambodiaLocationService.getProvinces();final ds=province==null?<String>[]:CambodiaLocationService.getDistricts(province!);final cs=province==null||district==null?<String>[]:CambodiaLocationService.getCommunes(province!,district!);Widget dd(String label,String? value,List<String> items,ValueChanged<String?> change)=>DropdownButtonFormField<String>(value:value,isExpanded:true,decoration:InputDecoration(labelText:label,border:const OutlineInputBorder()),items:items.map((e)=>DropdownMenuItem(value:e,child:Text(e))).toList(),onChanged:change);return SafeArea(child:Padding(padding:const EdgeInsets.all(18),child:Column(mainAxisSize:MainAxisSize.min,children:[Text(appText(context,km:'ចម្រុះតាមទីតាំង',en:'Filter by location'),style:const TextStyle(fontSize:18,fontWeight:FontWeight.bold)),const SizedBox(height:16),dd(appText(context,km:'ខេត្ត/រាជធានី',en:'Province / City'),province,ps,(v)=>setSheet((){province=v;district=null;commune=null;})),const SizedBox(height:10),dd(appText(context,km:'ស្រុក/ខណ្ឌ',en:'District'),district,ds,(v)=>setSheet((){district=v;commune=null;})),const SizedBox(height:10),dd(appText(context,km:'ឃុំ/សង្កាត់',en:'Commune'),commune,cs,(v)=>setSheet(()=>commune=v)),const SizedBox(height:16),Row(children:[Expanded(child:OutlinedButton(onPressed:(){setState((){_selectedProvince=null;_selectedDistrict=null;_selectedCommune=null;});Navigator.pop(sheet);},child:Text(appText(context,km:'ទាំងអស់',en:'All locations')))),const SizedBox(width:10),Expanded(child:ElevatedButton(onPressed:province==null?null:(){setState((){_selectedProvince=province;_selectedDistrict=district;_selectedCommune=commune;});Navigator.pop(sheet);},child:Text(appText(context,km:'អនុវត្ត',en:'Apply'))))])]))); }));}
+  @override Widget build(BuildContext context)=>Scaffold(appBar:AppBar(leading:IconButton(icon:const Icon(Icons.arrow_back_ios,color:Colors.white),onPressed:()=>Navigator.pop(context)),title:Text(widget.category=='ទំនិញរបស់ខ្ញុំ'?appText(context,km:'គ្រប់គ្រងការបង្ហោះ',en:'Manage posts'):localizedCategoryLabel(context,widget.category),style:const TextStyle(color:Colors.white,fontWeight:FontWeight.bold,fontFamily:'Siemreap')),backgroundColor:Colors.green[700],centerTitle:true,actions:[IconButton(onPressed:_showLocationFilter,icon:Icon(_hasLocationFilter?Icons.filter_alt:Icons.filter_alt_outlined,color:Colors.white))],bottom:PreferredSize(preferredSize:Size.fromHeight(_hasLocationFilter?88:60),child:Padding(padding:const EdgeInsets.fromLTRB(15,0,15,10),child:Column(children:[Container(height:45,decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(10)),child:TextField(controller:_searchController,onChanged:(v)=>setState(()=>_currentSearch=v.trim().toLowerCase()),decoration:InputDecoration(hintText:appText(context,km:'ស្វែងរកទំនិញក្នុងប្រភេទនេះ...',en:'Search products in this category...'),prefixIcon:const Icon(Icons.search),suffixIconConstraints:const BoxConstraints.tightFor(width:94,height:45),suffixIcon:Row(children:[SizedBox(width:30,child:InkResponse(onTap:_isSearchBusy?null:_searchByImage,child:const Icon(Icons.image_search_rounded,color:Colors.purple,size:21))),SizedBox(width:30,child:InkResponse(onTap:_isSearchBusy?null:_toggleVoice,child:Icon(_isVoiceSearching?Icons.stop_circle_rounded:Icons.mic_rounded,color:_isVoiceSearching?Colors.red:Colors.green,size:21))),SizedBox(width:30,child:InkResponse(onTap:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>const QrScannerScreen())),child:const Icon(Icons.qr_code_scanner,color:Colors.blue,size:21)))]),border:InputBorder.none))),if(_hasLocationFilter)...[const SizedBox(height:7),Text(_locationFilterLabel,maxLines:1,overflow:TextOverflow.ellipsis,style:const TextStyle(color:Colors.white,fontSize:11))]]))))),body:ProductGridView(category:widget.category,searchQuery:_currentSearch,filterProvince:_selectedProvince,filterDistrict:_selectedDistrict,filterCommune:_selectedCommune));
+  @override void dispose(){_voiceSearchTimer?.cancel();_searchController.dispose();_searchAudioRecorder.dispose();super.dispose();}
+}
+'''
+          s=s[:start]+state+s[end:]
+          # Add location fields to grid widget.
+          s=s.replace("final bool isAuction; // 🎯 ១. ត្រូវប្រកាស Variable នេះនៅទីនេះ!", "final bool isAuction; // 🎯 ១. ត្រូវប្រកាស Variable នេះនៅទីនេះ!\n  final String? filterProvince;\n  final String? filterDistrict;\n  final String? filterCommune;")
+          s=s.replace("this.isAuction = false, // 🎯 ២. និងដាក់វាចូលក្នុង Constructor ទីនេះ!", "this.isAuction = false, // 🎯 ២. និងដាក់វាចូលក្នុង Constructor ទីនេះ!\n    this.filterProvince,\n    this.filterDistrict,\n    this.filterCommune,")
+          # fetch more rows for search/location
+          s=s.replace("query = query.orderBy('created_at', descending: true).limit(50);", "final hasLocationFilter = (widget.filterProvince?.isNotEmpty ?? false) || (widget.filterDistrict?.isNotEmpty ?? false) || (widget.filterCommune?.isNotEmpty ?? false);\n    final fetchLimit = hasLocationFilter ? 500 : (widget.searchQuery.trim().isEmpty ? 50 : 200);\n    query = query.orderBy('created_at', descending: true).limit(fetchLimit);")
+          s=s.replace("_hasMore = snapshot.docs.length >= 50;", "_hasMore = snapshot.docs.length >= fetchLimit;")
+          # Replace basic name search with smart/location helpers and use them.
+          marker="  // ── BUILD ───────────────────────────────────────────────"
+          helpers=r'''  String _searchableProductText(Map<String,dynamic>d)=>[d['product_name'],d['productName'],d['category'],d['sub_category'],d['sub_sub_category'],d['description'],d['details'],d['brand'],d['keywords'],d['tags']].where((v)=>v!=null).map((v)=>v is List?v.join(' '):v.toString()).join(' ').toLowerCase();
+  bool _matchesSmartSearch(Map<String,dynamic>d,String q){q=q.toLowerCase().trim();if(q.isEmpty)return true;final h=_searchableProductText(d);for(final a in q.split('|').map((e)=>e.trim()).where((e)=>e.isNotEmpty)){if(h.contains(a))return true;final t=a.split(RegExp(r'\s+')).where((e)=>e.length>=2).toList();if(t.isNotEmpty&&t.where(h.contains).length/t.length>=.34)return true;}return false;}
+  bool _matchesLocation(Map<String,dynamic>d){final p=widget.filterProvince?.trim()??'',di=widget.filterDistrict?.trim()??'',c=widget.filterCommune?.trim()??'';if(p.isEmpty&&di.isEmpty&&c.isEmpty)return true;final raw=(d['location']??'').toString();if(p.isNotEmpty&&!raw.contains(p))return false;if(di.isNotEmpty&&!raw.contains(di))return false;if(c.isNotEmpty&&!raw.contains(c))return false;return true;}
+
+'''
+          if '_matchesSmartSearch' not in s: s=s.replace(marker,helpers+marker)
+          old="""      final name = (data['product_name'] ?? data['productName'] ?? '')
+          .toString()
+          .toLowerCase();
+      final query = widget.searchQuery.toLowerCase();"""
+          if old in s: s=s.replace(old,"      final query = widget.searchQuery;")
+          s=s.replace("name.contains(query) &&\r\n          matchesSub &&", "_matchesSmartSearch(data, query) &&\r\n          matchesSub &&")
+          s=s.replace("name.contains(query) &&\n          matchesSub &&", "_matchesSmartSearch(data, query) &&\n          matchesSub &&")
+          # append location condition after matchesSubSub where exact old return exists
+          s=s.replace("matchesSubSub;", "matchesSubSub && _matchesLocation(data);")
+          p.write_text(s)
+          # validation
+          out=p.read_text()
+          for token in ['analyzeProductSearch','image_search_rounded','AudioRecorder','filterProvince','_matchesSmartSearch','_matchesLocation']:
+            assert token in out, token
+          PY
+      - name: Commit
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add lib/product_list.dart
+          git diff --cached --quiet || git commit -m "Port Android 51 Product List AI image voice location to iOS"
+          git push origin ios-sync-android46
