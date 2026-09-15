@@ -1,0 +1,43 @@
+name: iOS V51 Cart Stock Protection
+on:
+  workflow_dispatch:
+  push:
+    branches: [ios-sync-android46]
+    paths: [.github/workflows/ios-v51-cart-stock.yml]
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ios-sync-android46
+      - name: Port stock-aware cart quantity from Android 51
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('lib/cart_screen.dart')
+          s=p.read_text()
+          old='''  void _updateQuantity(String docId, int newQty) {\n    if (newQty < 1) newQty = 1;\n    if (newQty > 999) newQty = 999;'''
+          new='''  void _updateQuantity(String docId, int newQty, {int maxQty = 999}) {\n    if (newQty < 1) newQty = 1;\n    if (newQty > maxQty) newQty = maxQty;\n    if (newQty > 999) newQty = 999;'''
+          assert old in s, 'updateQuantity anchor missing'
+          s=s.replace(old,new,1)
+          old='''  Widget _buildModernCartItem(QueryDocumentSnapshot item) {\n    int qty = _getQuantity(item);'''
+          new='''  Widget _buildModernCartItem(QueryDocumentSnapshot item) {\n    final itemData = item.data() as Map<String, dynamic>;\n    final tracksStock = itemData['track_stock'] == true;\n    final stockQuantity = itemData['stock_quantity'] is num\n        ? (itemData['stock_quantity'] as num).toInt()\n        : int.tryParse(itemData['stock_quantity']?.toString() ?? '') ?? 0;\n    final rawStockUnit = itemData['stock_unit']?.toString().trim() ?? '';\n    final stockUnit = rawStockUnit.toLowerCase() == 'item' ||\n            rawStockUnit.toLowerCase() == 'items' ||\n            rawStockUnit.toLowerCase() == 'item(s)'\n        ? ''\n        : rawStockUnit;\n    final maxQty = tracksStock ? stockQuantity.clamp(1, 999).toInt() : 999;\n    int qty = _getQuantity(item);\n    if (qty > maxQty) qty = maxQty;'''
+          assert old in s, 'cart item anchor missing'
+          s=s.replace(old,new,1)
+          s=s.replace("() => _updateQuantity(item.id, qty - 1),","() => _updateQuantity(item.id, qty - 1, maxQty: maxQty),")
+          s=s.replace("() => _updateQuantity(item.id, qty + 1),","() => _updateQuantity(item.id, qty + 1, maxQty: maxQty),")
+          # Clamp typed quantity too.
+          s=s.replace("_updateQuantity(item.id, value);","_updateQuantity(item.id, value, maxQty: maxQty);")
+          # Keep stockUnit intentionally available for the matching V51 stock UI lower in this widget.
+          p.write_text(s)
+          PY
+          dart format lib/cart_screen.dart || true
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add lib/cart_screen.dart
+          git diff --cached --quiet && exit 0
+          git commit -m "Port Android 51 cart stock quantity protection"
+          git push origin HEAD:ios-sync-android46
