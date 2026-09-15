@@ -52,7 +52,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
     if (_isLocating) return;
     setState(() { _isLocating = true; _locationError = null; });
     try {
-      final position = await Geolocator.getCurrentPosition(locationSettings: const LocationSettings(accuracy: LocationAccuracy.high, timeLimit: Duration(seconds: 15)));
+      final position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high, timeLimit: const Duration(seconds: 15));
       final target = LatLng(position.latitude, position.longitude);
       _selectedLocation = target;
       await _mapController?.animateCamera(CameraUpdate.newCameraPosition(CameraPosition(target: target, zoom: 17)));
