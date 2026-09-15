@@ -26,6 +26,7 @@ Downloading packages...
   dbus 0.7.12 (0.7.15 available)
   dio 5.11.0 (5.11.1 available)
   dio_web_adapter 2.2.1 (2.2.2 available)
+  equatable 2.1.0 (3.0.0 available)
   file_picker 8.3.7 (13.1.0 available)
   file_selector_linux 0.9.4 (0.9.4+1 available)
   file_selector_macos 0.9.5 (0.9.5+1 available)
@@ -132,7 +133,7 @@ Downloading packages...
   win32 5.15.0 (6.4.0 available)
   xml 6.5.0 (7.0.1 available)
 Got dependencies!
-131 packages have newer versions incompatible with dependency constraints.
+132 packages have newer versions incompatible with dependency constraints.
 Try `flutter pub outdated` for more information.
 Analyzing sesan_app_new...                                      
 
@@ -398,22 +399,25 @@ warning • The declaration '_RuleItem' isn't referenced • lib/auction_main_sc
    info • Statements in an if should be enclosed in a block • lib/audio_bubble_.dart:68:11 • curly_braces_in_flow_control_structures
    info • Statements in an if should be enclosed in a block • lib/audio_bubble_.dart:84:9 • curly_braces_in_flow_control_structures
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/blocked_list_screen.dart:332:68 • deprecated_member_use
-   info • Statements in a for should be enclosed in a block • lib/cart_screen.dart:18:110 • curly_braces_in_flow_control_structures
-   info • Statements in a for should be enclosed in a block • lib/cart_screen.dart:18:159 • curly_braces_in_flow_control_structures
-   info • Statements in a for should be enclosed in a block • lib/cart_screen.dart:18:209 • curly_braces_in_flow_control_structures
-warning • The member 'hasListeners' can only be used within instance members of subclasses of 'ChangeNotifier' • lib/cart_screen.dart:28:718 • invalid_use_of_protected_member
+   info • Statements in a for should be enclosed in a block • lib/cart_screen.dart:47:54 • curly_braces_in_flow_control_structures
+   info • Statements in a for should be enclosed in a block • lib/cart_screen.dart:48:47 • curly_braces_in_flow_control_structures
+   info • Statements in a for should be enclosed in a block • lib/cart_screen.dart:49:49 • curly_braces_in_flow_control_structures
+   info • The parameter name 'sum' matches a visible type name • lib/cart_screen.dart:103:36 • avoid_types_as_parameter_names
+   info • Statements in a for should be enclosed in a block • lib/cart_screen.dart:164:73 • curly_braces_in_flow_control_structures
+warning • The member 'hasListeners' can only be used within instance members of subclasses of 'ChangeNotifier' • lib/cart_screen.dart:220:20 • invalid_use_of_protected_member
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/cart_screen.dart:235:51 • deprecated_member_use
 warning • Unused import: 'dart:ui' • lib/chat_list_screen.dart:1:8 • unused_import
-warning • Unused import: 'package:my_app/order_management_screen.dart' • lib/chat_list_screen.dart:7:8 • unused_import
-   info • The private field _isSearching could be 'final' • lib/chat_list_screen.dart:20:8 • prefer_final_fields
-warning • The value of the field '_isSearching' isn't used • lib/chat_list_screen.dart:20:8 • unused_field
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/chat_list_screen.dart:183:61 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/chat_list_screen.dart:193:69 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/chat_list_screen.dart:206:55 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/chat_list_screen.dart:208:74 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/chat_list_screen.dart:252:55 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/chat_list_screen.dart:254:74 • deprecated_member_use
-   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/chat_list_screen.dart:348:15 • use_build_context_synchronously
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/chat_list_screen.dart:444:51 • deprecated_member_use
+warning • Unused import: 'package:get/get.dart' • lib/chat_list_screen.dart:5:8 • unused_import
+warning • Unused import: 'package:my_app/order_management_screen.dart' • lib/chat_list_screen.dart:8:8 • unused_import
+   info • The private field _isSearching could be 'final' • lib/chat_list_screen.dart:21:8 • prefer_final_fields
+warning • The value of the field '_isSearching' isn't used • lib/chat_list_screen.dart:21:8 • unused_field
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/chat_list_screen.dart:214:61 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/chat_list_screen.dart:224:69 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/chat_list_screen.dart:237:55 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/chat_list_screen.dart:239:74 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/chat_list_screen.dart:283:55 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/chat_list_screen.dart:285:74 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/chat_list_screen.dart:466:51 • deprecated_member_use
    info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/chat_moderation_menu.dart:173:19 • deprecated_member_use
    info • The variable name 'seller_id' isn't a lowerCamelCase identifier • lib/chat_screen.dart:17:16 • non_constant_identifier_names
    info • The variable name 'receiver_id' isn't a lowerCamelCase identifier • lib/chat_screen.dart:18:16 • non_constant_identifier_names
@@ -1172,4 +1176,4 @@ warning • The value of the local variable 'permission' isn't used • lib/weat
    info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/weight_calc.dart:115:15 • deprecated_member_use
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/weight_calc.dart:272:22 • deprecated_member_use
 
-1035 issues found. (ran in 21.1s)
+1038 issues found. (ran in 17.2s)
