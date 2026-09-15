@@ -1,0 +1,111 @@
+name: iOS 51 Product Detail map parity
+on:
+  workflow_dispatch:
+  push:
+    branches: [ios-sync-android46]
+    paths: ['.github/workflows/ios51-product-detail-map.yml']
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ios-sync-android46
+      - name: Port product detail map
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          p=Path('lib/product_detail.dart'); s=p.read_text()
+          if "package:google_maps_flutter/google_maps_flutter.dart" not in s:
+            s=s.replace("import 'package:flutter/material.dart';", "import 'package:flutter/material.dart';\nimport 'package:google_maps_flutter/google_maps_flutter.dart';")
+          marker='  @override\n  Widget build(BuildContext context) {'
+          if 'Widget _buildSellerMapPreview()' not in s:
+            methods=r'''  double? _mapCoordinate(dynamic value) {
+    if (value is num) return value.toDouble();
+    return double.tryParse(value?.toString().trim() ?? '');
+  }
+
+  bool _validMapLocation(double? lat, double? lng) => lat != null && lng != null && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
+
+  Future<void> _openInGoogleMaps(LatLng location) async {
+    final uri = Uri.https('www.google.com', '/maps/search/', {
+      'api': '1', 'query': '${location.latitude},${location.longitude}',
+    });
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication) && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(
+        Localizations.localeOf(context).languageCode == 'en' ? 'Could not open Google Maps.' : 'មិនអាចបើក Google Maps បានទេ។')));
+    }
+  }
+
+  void _openProductMap(LatLng location, String address) {
+    Navigator.push(context, MaterialPageRoute(builder: (mapContext) => Scaffold(
+      appBar: AppBar(backgroundColor: Colors.green.shade700, foregroundColor: Colors.white,
+        title: Text(Localizations.localeOf(mapContext).languageCode == 'en' ? 'Product location' : 'ទីតាំងទំនិញ')),
+      body: Stack(children: [
+        GoogleMap(initialCameraPosition: CameraPosition(target: location, zoom: 16), markers: {
+          Marker(markerId: const MarkerId('product_location'), position: location, infoWindow: InfoWindow(title: address)),
+        }, myLocationButtonEnabled: false, zoomControlsEnabled: false, mapToolbarEnabled: false),
+        Positioned(left: 18, right: 18, bottom: 18, child: SafeArea(top: false, child: ElevatedButton.icon(
+          onPressed: () => _openInGoogleMaps(location), icon: const Icon(Icons.directions),
+          label: Text(Localizations.localeOf(mapContext).languageCode == 'en' ? 'Open in Google Maps' : 'បើកក្នុង Google Maps'),
+          style: ElevatedButton.styleFrom(minimumSize: const Size.fromHeight(50), backgroundColor: Colors.green.shade700, foregroundColor: Colors.white),
+        ))),
+      ]),
+    )));
+  }
+
+  Widget _buildSellerMapPreview() {
+    final lat = _mapCoordinate(widget.product['lat']);
+    final lng = _mapCoordinate(widget.product['lng']);
+    if (!_validMapLocation(lat, lng)) return const SizedBox.shrink();
+    final location = LatLng(lat!, lng!);
+    final address = (widget.product['location'] ?? '').toString().trim();
+    return Padding(padding: const EdgeInsets.only(top: 4, bottom: 2), child: AspectRatio(aspectRatio: 4,
+      child: ClipRRect(borderRadius: BorderRadius.circular(13), child: Stack(fit: StackFit.expand, children: [
+        IgnorePointer(child: GoogleMap(initialCameraPosition: CameraPosition(target: location, zoom: 14), markers: {
+          Marker(markerId: const MarkerId('product_preview'), position: location),
+        }, myLocationButtonEnabled: false, zoomControlsEnabled: false, mapToolbarEnabled: false,
+          rotateGesturesEnabled: false, scrollGesturesEnabled: false, tiltGesturesEnabled: false, zoomGesturesEnabled: false)),
+        Material(color: Colors.transparent, child: InkWell(onTap: () => _openProductMap(location, address))),
+        IgnorePointer(child: Center(child: Container(padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+          decoration: BoxDecoration(color: Colors.white.withOpacity(0.94), borderRadius: BorderRadius.circular(10),
+            boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 6, offset: Offset(0,2))]),
+          child: Row(mainAxisSize: MainAxisSize.min, children: [const Icon(Icons.location_on, color: Colors.green, size: 20),
+            const SizedBox(width: 7), Text(Localizations.localeOf(context).languageCode == 'en' ? 'View location on map' : 'មើលទីតាំងលើផែនទី',
+              style: const TextStyle(fontFamily: 'Siemreap', fontSize: 11, fontWeight: FontWeight.bold))])))),
+      ]))),
+    );
+  }
+
+'''
+            if marker not in s: raise SystemExit('build marker missing')
+            s=s.replace(marker, methods+marker, 1)
+          if '_buildSellerMapPreview(),' not in s:
+            needle="""                              ListTile(
+                                contentPadding: EdgeInsets.zero,
+                                leading: const Icon(
+                                  Icons.location_on,
+                                  color: Colors.red,
+                                ),
+                                title: Text(
+                                  widget.product['location'] ?? 'មិនមានទីតាំង',
+                                ),
+                              ),"""
+            if needle not in s: raise SystemExit('location tile anchor missing')
+            s=s.replace(needle, needle+'\n                              _buildSellerMapPreview(),', 1)
+          p.write_text(s)
+          PY
+      - name: Verify
+        run: |
+          grep -q "Widget _buildSellerMapPreview" lib/product_detail.dart
+          grep -q "MarkerId('product_preview')" lib/product_detail.dart
+          grep -q "_buildSellerMapPreview()," lib/product_detail.dart
+      - name: Commit
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add lib/product_detail.dart
+          git commit -m "Port Android 51 Product Detail map to iOS"
+          git push origin HEAD:ios-sync-android46
