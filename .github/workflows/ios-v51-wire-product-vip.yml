@@ -1,0 +1,57 @@
+name: iOS V51 wire Product List and VIP
+on:
+  push:
+    branches: [ios-sync-android46]
+    paths:
+      - '.github/triggers/ios-v51-wire-product-vip.txt'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ios-sync-android46
+      - name: Wire V51 Product List and VIP member-card download
+        shell: python
+        run: |
+          from pathlib import Path
+
+          home = Path('lib/home_screen.dart')
+          s = home.read_text()
+          if "import 'product_list_v51_screen.dart';" not in s:
+              s = s.replace("import 'product_list.dart';", "import 'product_list.dart';\nimport 'product_list_v51_screen.dart';", 1)
+          old = "builder: (context) => ProductListScreen(category: item['name']),"
+          new = "builder: (context) => ProductListV51Screen(category: item['name']),"
+          if old not in s and new not in s:
+              raise SystemExit('Product List category route pattern not found')
+          s = s.replace(old, new, 1)
+          home.write_text(s)
+
+          vip = Path('lib/vip_membership_screen.dart')
+          s = vip.read_text()
+          if "import 'vip_member_card_download.dart';" not in s:
+              marker = "import 'package:url_launcher/url_launcher.dart';"
+              if marker not in s:
+                  raise SystemExit('VIP import marker not found')
+              s = s.replace(marker, marker + "\nimport 'vip_member_card_download.dart';", 1)
+          old = """if (isVip) ...[\n                      _buildVipCard(userData, uid),\n                      const SizedBox(height: 20),\n                    ],"""
+          new = """if (isVip) ...[\n                      VipMemberCardDownload(\n                        card: _buildVipCard(userData, uid),\n                      ),\n                      const SizedBox(height: 20),\n                    ],"""
+          if old not in s and new not in s:
+              raise SystemExit('VIP card block pattern not found')
+          s = s.replace(old, new, 1)
+          vip.write_text(s)
+      - name: Verify patch
+        run: |
+          grep -n "ProductListV51Screen" lib/home_screen.dart
+          grep -n "VipMemberCardDownload" lib/vip_membership_screen.dart
+          git diff --check
+      - name: Commit
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add lib/home_screen.dart lib/vip_membership_screen.dart
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "Wire iOS V51 Product List and VIP card download"
+          git push origin HEAD:ios-sync-android46
