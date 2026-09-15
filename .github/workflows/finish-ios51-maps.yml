@@ -1,0 +1,57 @@
+name: Finish iOS Android 51 map parity
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  finish-maps:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ios-sync-android46
+      - name: Patch Edit Product map parity
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          p=Path('lib/edit_product.dart')
+          s=p.read_text()
+          if "package:geocoding/geocoding.dart" not in s:
+              s=s.replace("import 'package:flutter/services.dart';", "import 'package:flutter/services.dart';\nimport 'package:geocoding/geocoding.dart';\nimport 'package:google_maps_flutter/google_maps_flutter.dart';")
+          if "import 'localized_text.dart';" not in s:
+              s=s.replace("import 'package:my_app/location_picker.dart';", "import 'package:my_app/location_picker.dart';\nimport 'localized_text.dart';")
+          s=s.replace("  bool _isLoading = false;\n  double? selectedLat;", "  bool _isLoading = false;\n  final Geocoding _geocoding = Geocoding();\n  double? selectedLat;")
+          anchor="\n\n  Future<void> _updateProduct() async {"
+          if "Future<void> _fillLocationFromMap" not in s:
+              fn='''\n\n  Future<void> _fillLocationFromMap(LatLng point) async {\n    try {\n      final placemarks = await _geocoding.placemarkFromCoordinates(\n        point.latitude,\n        point.longitude,\n        locale: const Locale('km', 'KH'),\n      );\n      if (!mounted) return;\n      final parts = <String>[];\n      void addPart(String? value) {\n        final clean = value?.trim() ?? '';\n        if (clean.isEmpty) return;\n        if (parts.any((part) => part.toLowerCase() == clean.toLowerCase())) return;\n        parts.add(clean);\n      }\n      if (placemarks.isNotEmpty) {\n        final place = placemarks.first;\n        addPart(place.administrativeArea);\n        addPart(place.subAdministrativeArea);\n        addPart(place.locality);\n        addPart(place.subLocality);\n      }\n      setState(() {\n        _locationController.text = parts.isNotEmpty\n            ? parts.join(', ')\n            : '${point.latitude.toStringAsFixed(6)}, ${point.longitude.toStringAsFixed(6)}';\n      });\n    } catch (error) {\n      debugPrint('Edit product reverse geocoding failed: $error');\n      if (!mounted) return;\n      setState(() {\n        _locationController.text =\n            '${point.latitude.toStringAsFixed(6)}, ${point.longitude.toStringAsFixed(6)}';\n      });\n    }\n  }'''
+              s=s.replace(anchor,fn+anchor)
+          start=s.find('                  /// MAP BUTTON (Disabled)')
+          if start!=-1:
+              # Replace from comment through the matching Expanded block, stopping before Row close marker.
+              end=s.find('                ],\n              ),\n              const SizedBox(height: 30)', start)
+              if end==-1: raise SystemExit('Could not locate disabled map block end')
+              replacement='''                  /// MAP BUTTON\n                  Expanded(\n                    flex: 1,\n                    child: InkWell(\n                      onTap: () async {\n                        final result = await Navigator.push<LatLng>(\n                          context,\n                          MaterialPageRoute(\n                            builder: (_) => MapPickerScreen(\n                              initialLat: selectedLat,\n                              initialLng: selectedLng,\n                            ),\n                          ),\n                        );\n                        if (result == null || !mounted) return;\n                        setState(() {\n                          selectedLat = result.latitude;\n                          selectedLng = result.longitude;\n                        });\n                        await _fillLocationFromMap(result);\n                      },\n                      borderRadius: BorderRadius.circular(12),\n                      child: Container(\n                        padding: const EdgeInsets.symmetric(vertical: 10),\n                        decoration: BoxDecoration(\n                          color: Colors.green.withOpacity(0.10),\n                          borderRadius: BorderRadius.circular(12),\n                          border: Border.all(color: Colors.green.shade400),\n                        ),\n                        child: Stack(\n                          clipBehavior: Clip.none,\n                          children: [\n                            Center(\n                              child: Column(\n                                children: [\n                                  Icon(\n                                    selectedLat != null && selectedLng != null\n                                        ? Icons.location_on\n                                        : Icons.map_outlined,\n                                    color: Colors.green.shade700,\n                                    size: 20,\n                                  ),\n                                  Text(\n                                    selectedLat != null && selectedLng != null\n                                        ? appText(context, km: 'កែទីតាំង', en: 'Change')\n                                        : appText(context, km: 'បន្ថែម Pin', en: 'Add pin'),\n                                    textAlign: TextAlign.center,\n                                    maxLines: 2,\n                                    style: TextStyle(\n                                      fontSize: 9,\n                                      color: Colors.green.shade800,\n                                      fontWeight: FontWeight.bold,\n                                      fontFamily: 'Siemreap',\n                                    ),\n                                  ),\n                                ],\n                              ),\n                            ),\n                            if (selectedLat != null && selectedLng != null)\n                              Positioned(\n                                right: -8,\n                                top: -18,\n                                child: Material(\n                                  color: Colors.red,\n                                  shape: const CircleBorder(),\n                                  child: InkWell(\n                                    customBorder: const CircleBorder(),\n                                    onTap: () {\n                                      setState(() {\n                                        selectedLat = null;\n                                        selectedLng = null;\n                                      });\n                                      ScaffoldMessenger.of(context).showSnackBar(\n                                        SnackBar(\n                                          content: Text(appText(\n                                            context,\n                                            km: 'បានដកផែនទីចេញ។ សូមចុចរក្សាទុកការកែប្រែ។',\n                                            en: 'Map removed. Tap Save changes.',\n                                          )),\n                                        ),\n                                      );\n                                    },\n                                    child: const Padding(\n                                      padding: EdgeInsets.all(4),\n                                      child: Icon(Icons.close, size: 14, color: Colors.white),\n                                    ),\n                                  ),\n                                ),\n                              ),\n                          ],\n                        ),\n                      ),\n                    ),\n                  ),\n'''
+              s=s[:start]+replacement+s[end:]
+          p.write_text(s)
+          PY
+      - name: Verify map parity markers
+        run: |
+          grep -q "Future<void> _fillLocationFromMap" lib/edit_product.dart
+          grep -q "Navigator.push<LatLng>" lib/edit_product.dart
+          ! grep -q "MAP BUTTON (Disabled)" lib/edit_product.dart
+          grep -q "'lat': selectedLat" lib/edit_product.dart
+          grep -q "'lng': selectedLng" lib/edit_product.dart
+      - name: Commit
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add lib/edit_product.dart
+          if git diff --cached --quiet; then
+            echo "No changes needed"
+          else
+            git commit -m "Enable Android 51 map picker in iOS edit product"
+            git push origin HEAD:ios-sync-android46
+          fi
