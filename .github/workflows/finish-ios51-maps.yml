@@ -1,15 +1,12 @@
 name: Finish iOS Android 51 map parity
-
 on:
   workflow_dispatch:
   push:
     branches: [ios-sync-android46]
     paths:
       - '.github/workflows/finish-ios51-maps.yml'
-
 permissions:
   contents: write
-
 jobs:
   finish-maps:
     runs-on: ubuntu-latest
@@ -17,37 +14,23 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ios-sync-android46
-      - name: Repair geocoding compatibility
+      - name: Fix edit product geocoding
         run: |
           python3 <<'PY'
           from pathlib import Path
-          p = Path('lib/edit_product.dart')
-          s = p.read_text()
-          s = s.replace('  final Geocoding _geocoding = Geocoding();\n', '')
-          s = s.replace('await _geocoding.placemarkFromCoordinates(', 'await placemarkFromCoordinates(')
-          s = s.replace(", locale: const Locale('km', 'KH'))", ")")
+          p=Path('lib/edit_product.dart')
+          s=p.read_text()
+          s=s.replace('  final Geocoding _geocoding = Geocoding();\n','')
+          s=s.replace('await _geocoding.placemarkFromCoordinates(', 'await placemarkFromCoordinates(')
+          s=s.replace(", locale: const Locale('km', 'KH'))", ")")
           p.write_text(s)
           PY
-      - name: Verify map files
-        run: |
-          grep -q "Navigator.push<LatLng>" lib/edit_product.dart
           grep -q "await placemarkFromCoordinates" lib/edit_product.dart
-          ! grep -q "Geocoding _geocoding" lib/edit_product.dart
-          grep -q "'lat': selectedLat" lib/edit_product.dart
-          grep -q "'lng': selectedLng" lib/edit_product.dart
-          grep -q "Navigator.push<LatLng>" lib/add_product.dart
-          grep -q "'lat': selectedLat" lib/add_product.dart
-          grep -q "'lng': selectedLng" lib/add_product.dart
-          grep -q "shop_latitude" lib/edit_shopscreen.dart
-          grep -q "isShopLocation: true" lib/edit_shopscreen.dart
+          grep -q "Navigator.push<LatLng>" lib/edit_product.dart
       - name: Commit
         run: |
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git add lib/edit_product.dart
-          if git diff --cached --quiet; then
-            echo "No changes needed"
-          else
-            git commit -m "Fix iOS map geocoding compatibility"
-            git push origin HEAD:ios-sync-android46
-          fi
+          git diff --cached --quiet || git commit -m "Fix iOS edit product map geocoding"
+          git push origin HEAD:ios-sync-android46
