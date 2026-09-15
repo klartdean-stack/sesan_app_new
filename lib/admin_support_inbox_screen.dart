@@ -37,10 +37,7 @@ class AdminSupportInboxScreen extends StatelessWidget {
             return Center(
               child: Text(
                 _t(context, 'មិនទាន់មានសារ Support', 'No support messages yet'),
-                style: const TextStyle(
-                  fontFamily: 'Siemreap',
-                  color: Colors.grey,
-                ),
+                style: const TextStyle(fontFamily: 'Siemreap', color: Colors.grey),
               ),
             );
           }
@@ -54,9 +51,8 @@ class AdminSupportInboxScreen extends StatelessWidget {
               final data = doc.data();
               final name = (data['userName'] ?? 'Sesan User').toString();
               final last = (data['lastMessage'] ?? '').toString();
-              final unread = (data['adminUnread'] ?? 0) is num
-                  ? (data['adminUnread'] as num).toInt()
-                  : 0;
+              final unreadValue = data['adminUnread'];
+              final unread = unreadValue is num ? unreadValue.toInt() : 0;
 
               return Card(
                 elevation: 0,
@@ -100,10 +96,7 @@ class AdminSupportInboxScreen extends StatelessWidget {
                   ),
                   trailing: unread > 0
                       ? Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 7,
-                            vertical: 3,
-                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                           decoration: BoxDecoration(
                             color: Colors.red,
                             borderRadius: BorderRadius.circular(12),
