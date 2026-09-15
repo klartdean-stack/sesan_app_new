@@ -1087,21 +1087,14 @@ warning • The declaration '_viewImage' isn't referenced • lib/transactioncon
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/use_detail_screen.dart:39:35 • deprecated_member_use
    info • Unnecessary override • lib/user_notification_list.dart:72:8 • unnecessary_overrides
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/user_notification_list.dart:478:38 • deprecated_member_use
-   info • 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre • lib/user_profile_screen.dart:311:31 • deprecated_member_use
-   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/user_profile_screen.dart:599:19 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/user_profile_screen.dart:798:32 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/user_profile_screen.dart:867:30 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/user_profile_screen.dart:937:28 • deprecated_member_use
-warning • A value for optional parameter 'disabled' isn't ever given • lib/user_profile_screen.dart:974:10 • unused_element_parameter
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/user_profile_screen.dart:1049:43 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/user_profile_screen.dart:1054:45 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/user_profile_screen.dart:1103:39 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/user_profile_screen.dart:1105:58 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/user_profile_screen.dart:1198:47 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/user_profile_screen.dart:1288:39 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/user_profile_screen.dart:1341:34 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/user_profile_screen.dart:1426:32 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/user_profile_screen.dart:1594:28 • deprecated_member_use
+   info • Statements in an if should be enclosed in a block • lib/user_profile_screen.dart:24:482 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • lib/user_profile_screen.dart:24:523 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • lib/user_profile_screen.dart:24:558 • curly_braces_in_flow_control_structures
+   info • The 'children' argument should be last in widget constructor invocations • lib/user_profile_screen.dart:29:321 • sort_child_properties_last
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/user_profile_screen.dart:29:363 • deprecated_member_use
+  error • The named parameter 'actions' isn't defined • lib/user_profile_screen.dart:29:726 • undefined_named_parameter
+  error • Expected to find ')' • lib/user_profile_screen.dart:29:993 • expected_token
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/user_profile_screen.dart:44:283 • deprecated_member_use
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/video_player_screen.dart:117:39 • deprecated_member_use
    info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/vip_membership_screen.dart:301:23 • use_build_context_synchronously
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/vip_membership_screen.dart:342:41 • deprecated_member_use
@@ -1179,4 +1172,4 @@ warning • The value of the local variable 'permission' isn't used • lib/weat
    info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/weight_calc.dart:115:15 • deprecated_member_use
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/weight_calc.dart:272:22 • deprecated_member_use
 
-1042 issues found. (ran in 20.8s)
+1035 issues found. (ran in 17.3s)
