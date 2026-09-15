@@ -1,0 +1,2 @@
+run: 2026-09-15T23:00:00+07:00
+purpose: wire ProductListV51Screen category route and VIP member-card Gallery download
