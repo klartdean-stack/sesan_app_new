@@ -1,31 +1,51 @@
-name: Chat Parity Batch 3
+name: Sync iOS Chat to Android 51
 on:
   push:
+    branches: [ios-sync-android46]
     paths:
       - '.github/workflows/chat-parity-batch3.yml'
 permissions:
   contents: write
 jobs:
-  patch:
+  sync:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: main
-      - name: Apply Chat options translation
-        run: python tool/chat_parity_batch3.py
-      - name: Verify
+          ref: ios-sync-android46
+          fetch-depth: 0
+      - name: Fetch Android 51 source
         run: |
-          grep -q "Copy text" lib/chat_screen_legacy.dart
-          grep -q "Delete for everyone?" lib/chat_screen_legacy.dart
-          grep -q "Could not delete" lib/chat_screen_legacy.dart
-          grep -q "Today at" lib/chat_screen_legacy.dart
-          grep -q "Yesterday at" lib/chat_screen_legacy.dart
-          grep -q "Could not send message" lib/chat_screen_legacy.dart
-      - name: Commit
+          git clone --depth 1 --branch english-local-android https://github.com/klartdean-stack/sesan_app_android.git /tmp/android51
+      - name: Sync current Android Chat UI
+        run: |
+          cp /tmp/android51/lib/chat_screen.dart lib/chat_screen.dart
+      - name: Verify exact Home banner
+        run: |
+          test "$(git hash-object assets/sesan_banner.png.jpg)" = "$(git -C /tmp/android51 hash-object assets/sesan_banner.png.jpg)"
+          grep -q "assets/sesan_banner.png.jpg" /tmp/android51/lib/home_screen.dart
+          echo "Banner blob is already identical to Android 51"
+      - name: Verify chat dependencies
+        run: |
+          grep -q "video_thumbnail:" pubspec.yaml
+          grep -q "video_compress:" pubspec.yaml
+          grep -q "flutter_image_compress:" pubspec.yaml
+          grep -q "record:" pubspec.yaml
+      - name: Flutter analyze
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.38.8'
+          channel: stable
+      - run: flutter pub get
+      - run: flutter analyze lib/chat_screen.dart lib/location_picker_sheet.dart lib/share_service.dart
+      - name: Commit synced chat
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add lib/chat_screen_legacy.dart
-          git commit -m "Translate iOS Chat message actions errors and dates"
-          git push origin main
+          git add lib/chat_screen.dart
+          if git diff --cached --quiet; then
+            echo "Chat already matches Android 51"
+          else
+            git commit -m "Sync iOS Chat Screen to Android 51"
+            git push origin ios-sync-android46
+          fi
