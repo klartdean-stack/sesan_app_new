@@ -2,6 +2,7 @@ import 'dart:ui' as ui;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:my_app/farm_tools.dart';
 import 'package:my_app/order_management_screen.dart';
@@ -21,6 +22,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
   Map<String, dynamic>? _foundUser;
   bool _isSearchLoading = false;
   String _searchError = '';
+  bool _isOpeningChat = false;
   String? currentUserId;
   bool _isUserLoaded = false;
 
@@ -49,6 +51,35 @@ class _ChatListScreenState extends State<ChatListScreen> {
     } catch (e) {
       debugPrint("Load User ID Error: $e");
       if (mounted) setState(() => _isUserLoaded = true);
+    }
+  }
+
+  Future<void> _openChatSafely({
+    required String otherUserId,
+    required String productName,
+    required String productId,
+    String? chatRoomId,
+  }) async {
+    if (_isOpeningChat || !mounted || otherUserId.isEmpty) return;
+    setState(() => _isOpeningChat = true);
+    final markSeenFuture = chatRoomId == null || chatRoomId.isEmpty
+        ? Future<void>.value()
+        : _markAsSeen(chatRoomId);
+    try {
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ChatScreen(
+            seller_id: otherUserId,
+            receiver_id: otherUserId,
+            productName: productName,
+            productId: productId,
+          ),
+        ),
+      );
+      await markSeenFuture;
+    } finally {
+      if (mounted) setState(() => _isOpeningChat = false);
     }
   }
 
@@ -341,21 +372,12 @@ class _ChatListScreenState extends State<ChatListScreen> {
         String userImg = userData?['photoUrl'] ?? '';
         bool isOnline = userData?['isOnline'] == true;
         return ListTile(
-          onTap: () async {
-            await _markAsSeen(chat['chatRoomId']);
-            if (!mounted) return;
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => ChatScreen(
-                  seller_id: otherUserId,
-                  receiver_id: otherUserId,
-                  productName: chat['productName'] ?? 'Chat',
-                  productId: chat['productId'] ?? 'general',
-                ),
-              ),
-            );
-          },
+          onTap: () => _openChatSafely(
+            otherUserId: otherUserId,
+            productName: chat['productName'] ?? 'Chat',
+            productId: chat['productId'] ?? 'general',
+            chatRoomId: chat['chatRoomId']?.toString(),
+          ),
           leading: _buildAvatarWithUnread(userImg, chat['chatRoomId'], isOnline),
           title: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
