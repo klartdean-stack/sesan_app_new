@@ -76,8 +76,9 @@ class _CartScreenState extends State<CartScreen>
   }
 
   // 🎯 Hybrid: Local optimistic + debounced Firestore
-  void _updateQuantity(String docId, int newQty) {
+  void _updateQuantity(String docId, int newQty, {int maxQty = 999}) {
     if (newQty < 1) newQty = 1;
+    if (newQty > maxQty) newQty = maxQty;
     if (newQty > 999) newQty = 999;
 
     // 1. Update local immediately (optimistic)
@@ -278,7 +279,20 @@ class _CartScreenState extends State<CartScreen>
   }
 
   Widget _buildModernCartItem(QueryDocumentSnapshot item) {
+    final itemData = item.data() as Map<String, dynamic>;
+    final tracksStock = itemData['track_stock'] == true;
+    final stockQuantity = itemData['stock_quantity'] is num
+        ? (itemData['stock_quantity'] as num).toInt()
+        : int.tryParse(itemData['stock_quantity']?.toString() ?? '') ?? 0;
+    final rawStockUnit = itemData['stock_unit']?.toString().trim() ?? '';
+    final stockUnit = rawStockUnit.toLowerCase() == 'item' ||
+            rawStockUnit.toLowerCase() == 'items' ||
+            rawStockUnit.toLowerCase() == 'item(s)'
+        ? ''
+        : rawStockUnit;
+    final maxQty = tracksStock ? stockQuantity.clamp(1, 999).toInt() : 999;
     int qty = _getQuantity(item);
+    if (qty > maxQty) qty = maxQty;
     double price =
         double.tryParse(item['price'].toString().replaceAll(',', '')) ?? 0;
 
@@ -366,7 +380,7 @@ class _CartScreenState extends State<CartScreen>
                   children: [
                     _qtyBtn(
                       Icons.remove,
-                      () => _updateQuantity(item.id, qty - 1),
+                      () => _updateQuantity(item.id, qty - 1, maxQty: maxQty),
                     ),
                     Container(
                       width: 60,
