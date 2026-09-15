@@ -398,11 +398,10 @@ warning • The declaration '_RuleItem' isn't referenced • lib/auction_main_sc
    info • Statements in an if should be enclosed in a block • lib/audio_bubble_.dart:68:11 • curly_braces_in_flow_control_structures
    info • Statements in an if should be enclosed in a block • lib/audio_bubble_.dart:84:9 • curly_braces_in_flow_control_structures
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/blocked_list_screen.dart:332:68 • deprecated_member_use
-warning • Unused import: 'package:firebase_auth/firebase_auth.dart' • lib/cart_screen.dart:2:8 • unused_import
-   info • The parameter name 'sum' matches a visible type name • lib/cart_screen.dart:135:28 • avoid_types_as_parameter_names
-warning • The value of the local variable 'stockUnit' isn't used • lib/cart_screen.dart:288:11 • unused_local_variable
-warning • The member 'hasListeners' can only be used within instance members of subclasses of 'ChangeNotifier' • lib/cart_screen.dart:308:20 • invalid_use_of_protected_member
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/cart_screen.dart:328:41 • deprecated_member_use
+   info • Statements in a for should be enclosed in a block • lib/cart_screen.dart:18:110 • curly_braces_in_flow_control_structures
+   info • Statements in a for should be enclosed in a block • lib/cart_screen.dart:18:159 • curly_braces_in_flow_control_structures
+   info • Statements in a for should be enclosed in a block • lib/cart_screen.dart:18:209 • curly_braces_in_flow_control_structures
+warning • The member 'hasListeners' can only be used within instance members of subclasses of 'ChangeNotifier' • lib/cart_screen.dart:28:718 • invalid_use_of_protected_member
 warning • Unused import: 'dart:ui' • lib/chat_list_screen.dart:1:8 • unused_import
 warning • Unused import: 'package:my_app/order_management_screen.dart' • lib/chat_list_screen.dart:7:8 • unused_import
    info • The private field _isSearching could be 'final' • lib/chat_list_screen.dart:20:8 • prefer_final_fields
@@ -1180,4 +1179,4 @@ warning • The value of the local variable 'permission' isn't used • lib/weat
    info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/weight_calc.dart:115:15 • deprecated_member_use
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/weight_calc.dart:272:22 • deprecated_member_use
 
-1043 issues found. (ran in 16.6s)
+1042 issues found. (ran in 20.8s)
