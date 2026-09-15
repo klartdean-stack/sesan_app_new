@@ -539,10 +539,9 @@ warning • The declaration '_showDeleteReplyDialog' isn't referenced • lib/co
    info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/dispute_system.dart:176:11 • deprecated_member_use
    info • Don't invoke 'print' in production code • lib/download_helper.dart:17:7 • avoid_print
    info • Don't invoke 'print' in production code • lib/download_helper.dart:19:7 • avoid_print
-   info • The private field _imageFiles could be 'final' • lib/edit_product.dart:29:14 • prefer_final_fields
-   info • Statements in an if should be enclosed in a block • lib/edit_product.dart:46:31 • curly_braces_in_flow_control_structures
-   info • Statements in an if should be enclosed in a block • lib/edit_product.dart:46:116 • curly_braces_in_flow_control_structures
-  error • The method 'ThousandsSeparatorInputFormatter' isn't defined for the type '_EditProductScreenState' • lib/edit_product.dart:64:399 • undefined_method
+   info • The private field _imageFiles could be 'final' • lib/edit_product.dart:51:14 • prefer_final_fields
+   info • Statements in an if should be enclosed in a block • lib/edit_product.dart:68:31 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • lib/edit_product.dart:68:116 • curly_braces_in_flow_control_structures
    info • Don't use 'BuildContext's across async gaps • lib/edit_profile_screen.dart:291:23 • use_build_context_synchronously
    info • Don't use 'BuildContext's across async gaps • lib/edit_profile_screen.dart:292:30 • use_build_context_synchronously
    info • Don't use 'BuildContext's across async gaps • lib/edit_profile_screen.dart:297:30 • use_build_context_synchronously
@@ -871,6 +870,17 @@ warning • The declaration '_buildLockSwitch' isn't referenced • lib/product_
 warning • The declaration '_buildOwnerTools' isn't referenced • lib/product_list.dart:1207:10 • unused_element
    info • Don't use 'BuildContext's across async gaps • lib/product_list.dart:1293:29 • use_build_context_synchronously
    info • Don't use 'BuildContext's across async gaps • lib/product_list.dart:1295:17 • use_build_context_synchronously
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/product_list_v51_screen.dart:34:198 • deprecated_member_use
+  error • Expected to find ';' • lib/product_list_v51_screen.dart:48:8 • expected_token
+warning • Dead code • lib/product_list_v51_screen.dart:48:9 • dead_code
+  error • Expected an identifier • lib/product_list_v51_screen.dart:48:9 • missing_identifier
+  error • Unexpected text ';' • lib/product_list_v51_screen.dart:48:9 • unexpected_token
+warning • The label 'body' isn't used • lib/product_list_v51_screen.dart:48:10 • unused_label
+  error • Expected to find ';' • lib/product_list_v51_screen.dart:48:147 • expected_token
+  error • Expected an identifier • lib/product_list_v51_screen.dart:48:148 • missing_identifier
+  error • Unexpected text ';' • lib/product_list_v51_screen.dart:48:148 • unexpected_token
+   info • Unnecessary empty statement • lib/product_list_v51_screen.dart:48:149 • empty_statements
+   info • The import of 'dart:typed_data' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/foundation.dart' • lib/product_search_v51.dart:3:8 • unnecessary_import
 warning • Unused import: 'dart:io' • lib/profile_screen_legacy.dart:1:8 • unused_import
 warning • Unused import: 'package:firebase_storage/firebase_storage.dart' • lib/profile_screen_legacy.dart:2:8 • unused_import
 warning • Unused import: 'package:image_picker/image_picker.dart' • lib/profile_screen_legacy.dart:7:8 • unused_import
@@ -1191,4 +1201,4 @@ warning • The value of the local variable 'permission' isn't used • lib/weat
    info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/weight_calc.dart:115:15 • deprecated_member_use
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/weight_calc.dart:272:22 • deprecated_member_use
 
-1054 issues found. (ran in 21.4s)
+1064 issues found. (ran in 21.2s)
