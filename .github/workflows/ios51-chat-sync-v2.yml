@@ -1,0 +1,34 @@
+name: iOS51 Chat Sync V2
+
+on:
+  push:
+    branches:
+      - ios-sync-android46
+    paths:
+      - '.github/workflows/ios51-chat-sync-v2.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  sync-chat:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ios-sync-android46
+      - name: Download Android chat
+        run: curl -fL "https://raw.githubusercontent.com/klartdean-stack/sesan_app_android/english-local-android/lib/chat_screen.dart" -o lib/chat_screen_legacy.dart
+      - name: Verify source
+        run: |
+          grep -q "OPTIMIZED CHAT SCREEN" lib/chat_screen_legacy.dart
+          grep -q "_uploadQueue" lib/chat_screen_legacy.dart
+          grep -q "ChatModerationMenu" lib/chat_screen.dart
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add lib/chat_screen_legacy.dart
+          git commit -m "Sync iOS Chat core to Android 51 optimized Chat"
+          git push origin HEAD:ios-sync-android46
