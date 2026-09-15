@@ -782,7 +782,6 @@ warning • Duplicate import • lib/order_management_screen.dart:7:8 • duplic
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/order_tracking_screen.dart:134:43 • deprecated_member_use
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/order_tracking_screen.dart:274:35 • deprecated_member_use
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/order_tracking_screen.dart:324:33 • deprecated_member_use
-   info • String literals shouldn't be concatenated by the '+' operator • lib/paymentauto_screen.dart:23:69 • prefer_adjacent_string_concatenation
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/pesticide_calc_page.dart:116:42 • deprecated_member_use
    info • Function literals shouldn't be passed to 'forEach' • lib/pig_feed_calc.dart:68:38 • avoid_function_literals_in_foreach_calls
    info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/pig_feed_calc.dart:104:15 • deprecated_member_use
@@ -1191,4 +1190,4 @@ warning • The value of the local variable 'permission' isn't used • lib/weat
    info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/weight_calc.dart:115:15 • deprecated_member_use
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/weight_calc.dart:272:22 • deprecated_member_use
 
-1054 issues found. (ran in 21.7s)
+1053 issues found. (ran in 23.1s)
