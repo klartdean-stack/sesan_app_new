@@ -6,6 +6,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:gal/gal.dart';
 import 'package:get/get.dart'
     show Get, ExtensionSnackbar, GetNavigation, ExtensionDialog, SnackPosition;
@@ -970,6 +971,45 @@ Android: $androidPlayStoreLink
   }
 
 
+  double? _mapCoordinate(dynamic value) {
+    if (value is num) return value.toDouble();
+    return double.tryParse(value?.toString().trim() ?? '');
+  }
+
+  bool _validMapLocation(double? lat, double? lng) {
+    return lat != null && lng != null && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
+  }
+
+  Future<void> _openInGoogleMaps(LatLng location) async {
+    final uri = Uri.https('www.google.com', '/maps/search/', <String, String>{'api': '1', 'query': '${location.latitude},${location.longitude}'});
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication) && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(Localizations.localeOf(context).languageCode == 'en' ? 'Could not open Google Maps.' : 'មិនអាចបើក Google Maps បានទេ។')));
+    }
+  }
+
+  void _openProductMap(LatLng location, String address) {
+    Navigator.push(context, MaterialPageRoute(builder: (mapContext) => Scaffold(
+      appBar: AppBar(backgroundColor: Colors.green.shade700, foregroundColor: Colors.white, title: Text(Localizations.localeOf(mapContext).languageCode == 'en' ? 'Product location' : 'ទីតាំងទំនិញ')),
+      body: Stack(children: [
+        GoogleMap(initialCameraPosition: CameraPosition(target: location, zoom: 16), markers: {Marker(markerId: const MarkerId('product_location'), position: location, infoWindow: InfoWindow(title: address))}, myLocationButtonEnabled: false, zoomControlsEnabled: false, mapToolbarEnabled: false),
+        Positioned(left: 18, right: 18, bottom: 18, child: SafeArea(top: false, child: ElevatedButton.icon(onPressed: () => _openInGoogleMaps(location), icon: const Icon(Icons.directions), label: Text(Localizations.localeOf(mapContext).languageCode == 'en' ? 'Open in Google Maps' : 'បើកក្នុង Google Maps'), style: ElevatedButton.styleFrom(minimumSize: const Size.fromHeight(50), backgroundColor: Colors.green.shade700, foregroundColor: Colors.white))))
+      ]),
+    )));
+  }
+
+  Widget _buildSellerMapPreview() {
+    final lat = _mapCoordinate(widget.product['lat']);
+    final lng = _mapCoordinate(widget.product['lng']);
+    if (!_validMapLocation(lat, lng)) return const SizedBox.shrink();
+    final location = LatLng(lat!, lng!);
+    final address = (widget.product['location'] ?? '').toString().trim();
+    return Padding(padding: const EdgeInsets.only(top: 4, bottom: 2), child: AspectRatio(aspectRatio: 4, child: ClipRRect(borderRadius: BorderRadius.circular(13), child: Stack(fit: StackFit.expand, children: [
+      IgnorePointer(child: GoogleMap(initialCameraPosition: CameraPosition(target: location, zoom: 14), markers: {Marker(markerId: const MarkerId('product_preview'), position: location)}, myLocationButtonEnabled: false, zoomControlsEnabled: false, mapToolbarEnabled: false, rotateGesturesEnabled: false, scrollGesturesEnabled: false, tiltGesturesEnabled: false, zoomGesturesEnabled: false)),
+      Material(color: Colors.transparent, child: InkWell(onTap: () => _openProductMap(location, address))),
+      IgnorePointer(child: Center(child: Container(padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9), decoration: BoxDecoration(color: Colors.white.withOpacity(0.94), borderRadius: BorderRadius.circular(10), boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 6, offset: Offset(0, 2))]), child: Row(mainAxisSize: MainAxisSize.min, children: [const Icon(Icons.location_on, color: Colors.green, size: 20), const SizedBox(width: 7), Text(Localizations.localeOf(context).languageCode == 'en' ? 'View location on map' : 'មើលទីតាំងលើផែនទី', style: const TextStyle(fontFamily: 'Siemreap', fontSize: 11, fontWeight: FontWeight.bold))]))))
+    ]))));
+  }
+
   @override
   Widget build(BuildContext context) {
     final bool isAddToCartDisabled =
@@ -1922,6 +1962,7 @@ Android: $androidPlayStoreLink
                                   widget.product['location'] ?? 'មិនមានទីតាំង',
                                 ),
                               ),
+                              _buildSellerMapPreview(),
                             ],
                           ),
                         ),
