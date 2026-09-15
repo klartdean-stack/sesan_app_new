@@ -110,7 +110,7 @@ Downloading packages...
   shimmer 3.0.0 (4.0.0 available)
   sqflite 2.4.2 (2.4.4 available)
   sqflite_android 2.4.2+2 (2.4.4 available)
-  sqflite_common 2.5.6 (2.5.12 available)
+  sqflite_common 2.5.6 (2.5.13 available)
   sqflite_darwin 2.4.2 (2.4.4 available)
   sqflite_platform_interface 2.4.0 (2.4.2 available)
   stack_trace 1.12.1 (1.12.2 available)
@@ -1201,4 +1201,4 @@ warning • The value of the local variable 'permission' isn't used • lib/weat
    info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/weight_calc.dart:115:15 • deprecated_member_use
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/weight_calc.dart:272:22 • deprecated_member_use
 
-1064 issues found. (ran in 21.2s)
+1064 issues found. (ran in 21.0s)
