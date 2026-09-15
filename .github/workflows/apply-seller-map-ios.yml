@@ -1,0 +1,76 @@
+name: Apply Blue Gold Seller Map iOS
+on:
+  push:
+    branches: [ios-sync-android46]
+    paths: ['.github/workflows/apply-seller-map-ios.yml']
+permissions:
+  contents: write
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ios-sync-android46
+      - name: Patch seller profile map
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('lib/seller_profile_screen.dart')
+          s=p.read_text()
+          if "google_maps_flutter" not in s:
+            s=s.replace("import 'package:fl_chart/fl_chart.dart';", "import 'package:fl_chart/fl_chart.dart';\nimport 'package:google_maps_flutter/google_maps_flutter.dart';\nimport 'package:url_launcher/url_launcher.dart';")
+          marker="  Widget _buildSellerInfoCard(BuildContext context) {"
+          helper=r'''  Future<void> _openShopDirections(double lat, double lng) async {
+    final uri = Uri.parse('https://www.google.com/maps/dir/?api=1&destination=$lat,$lng');
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication) && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Unable to open Google Maps')));
+    }
+  }
+
+  void _openShopMap(double lat, double lng, String shopName) {
+    final target = LatLng(lat, lng);
+    Navigator.push(context, MaterialPageRoute(builder: (_) => Scaffold(
+      appBar: AppBar(title: Text(shopName), backgroundColor: Colors.green[700], foregroundColor: Colors.white),
+      body: Stack(children: [
+        GoogleMap(initialCameraPosition: CameraPosition(target: target, zoom: 16), markers: {Marker(markerId: const MarkerId('shop'), position: target, infoWindow: InfoWindow(title: shopName))}, myLocationButtonEnabled: false, zoomControlsEnabled: true),
+        Positioned(left: 16, right: 16, bottom: 24, child: ElevatedButton.icon(onPressed: () => _openShopDirections(lat, lng), icon: const Icon(Icons.directions), label: const Text('Directions to shop'), style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white, minimumSize: const Size.fromHeight(48)))),
+      ]),
+    )));
+  }
+
+  Widget _buildShopMapCard(Map<String, dynamic>? userData) {
+    final tier = userData?['shop_tier']?.toString();
+    if (tier != 'basic' && tier != 'premium') return const SizedBox.shrink();
+    final lat = (userData?['shop_latitude'] as num?)?.toDouble();
+    final lng = (userData?['shop_longitude'] as num?)?.toDouble();
+    if (lat == null || lng == null) return const SizedBox.shrink();
+    final target = LatLng(lat, lng);
+    return Padding(
+      padding: const EdgeInsets.only(top: 14),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(14),
+        child: SizedBox(height: 190, child: Stack(children: [
+          Positioned.fill(child: AbsorbPointer(child: GoogleMap(initialCameraPosition: CameraPosition(target: target, zoom: 15), markers: {Marker(markerId: const MarkerId('shop_preview'), position: target)}, myLocationButtonEnabled: false, zoomControlsEnabled: false, mapToolbarEnabled: false))),
+          Positioned.fill(child: Material(color: Colors.transparent, child: InkWell(onTap: () => _openShopMap(lat, lng, widget.sellerName)))),
+          Positioned(left: 10, right: 10, bottom: 10, child: Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8), decoration: BoxDecoration(color: Colors.white.withValues(alpha: .94), borderRadius: BorderRadius.circular(10)), child: Row(children: [Icon(Icons.location_on, color: tier == 'premium' ? Colors.amber.shade800 : Colors.blueAccent, size: 18), const SizedBox(width: 6), Expanded(child: Text(tier == 'premium' ? 'Gold shop location' : 'Blue shop location', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold))), const Icon(Icons.open_in_full, size: 16)]))),
+        ])),
+      ),
+    );
+  }
+
+'''
+          if '_buildShopMapCard(' not in s:
+            s=s.replace(marker, helper+marker, 1)
+          anchor="              // ── ក្រាប 4 ខ្សែសម្រាប់ម្ចាស់ហាង Gold Verified ──"
+          if "_buildShopMapCard(userData)," not in s:
+            s=s.replace(anchor, "              _buildShopMapCard(userData),\n\n"+anchor, 1)
+          p.write_text(s)
+          PY
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add lib/seller_profile_screen.dart
+          git commit -m 'Add Blue Gold seller map display to iOS' || exit 0
+          git push origin ios-sync-android46
