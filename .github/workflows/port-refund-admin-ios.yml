@@ -1,0 +1,67 @@
+name: Port Android 51 refund admin to iOS
+on:
+  workflow_dispatch:
+  push:
+    branches: [ios-sync-android46]
+    paths: ['lib/admin_refund_screen.dart']
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ios-sync-android46
+      - name: Wire refund management into Admin Confirm
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('lib/admin_confirm.dart')
+          s=p.read_text()
+          if "import 'admin_refund_screen.dart';" not in s:
+              s=s.replace("import 'auction_admin_screen.dart';", "import 'auction_admin_screen.dart';\nimport 'admin_refund_screen.dart';")
+          if "case 'refund':" not in s:
+              marker="""                case 'rejected':
+                  Navigator.push("""
+              block="""                case 'refund':
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const AdminRefundScreen(),
+                    ),
+                  );
+                  break;
+                case 'rejected':
+                  Navigator.push("""
+              if marker not in s: raise SystemExit('refund switch marker missing')
+              s=s.replace(marker, block, 1)
+          if "_buildPopupItem(\n                'refund'," not in s:
+              marker="""              _buildPopupItem(
+                'rejected',"""
+              block="""              _buildPopupItem(
+                'refund',
+                Icons.currency_exchange_rounded,
+                'គ្រប់គ្រង Refund',
+                Colors.redAccent,
+              ),
+              _buildPopupItem(
+                'rejected',"""
+              if marker not in s: raise SystemExit('refund menu marker missing')
+              s=s.replace(marker, block, 1)
+          p.write_text(s)
+          PY
+      - name: Verify Dart source
+        run: |
+          grep -q "admin_refund_screen.dart" lib/admin_confirm.dart
+          grep -q "case 'refund'" lib/admin_confirm.dart
+          grep -q "secureAdminProcessRefund" lib/admin_refund_screen.dart
+      - name: Commit product code
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add lib/admin_confirm.dart
+          if ! git diff --cached --quiet; then
+            git commit -m "Wire Android 51 refund management into iOS admin"
+            git push origin HEAD:ios-sync-android46
+          fi
