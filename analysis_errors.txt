@@ -1079,29 +1079,24 @@ warning • The declaration '_viewImage' isn't referenced • lib/transactioncon
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/use_detail_screen.dart:39:35 • deprecated_member_use
    info • Unnecessary override • lib/user_notification_list.dart:72:8 • unnecessary_overrides
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/user_notification_list.dart:478:38 • deprecated_member_use
-   info • Statements in an if should be enclosed in a block • lib/user_profile_screen.dart:23:481 • curly_braces_in_flow_control_structures
-   info • Statements in an if should be enclosed in a block • lib/user_profile_screen.dart:23:522 • curly_braces_in_flow_control_structures
-   info • Statements in an if should be enclosed in a block • lib/user_profile_screen.dart:23:557 • curly_braces_in_flow_control_structures
-   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/user_profile_screen.dart:28:382 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/user_profile_screen.dart:32:394 • deprecated_member_use
-   info • Statements in an if should be enclosed in a block • lib/user_profile_screen.dart:32:1161 • curly_braces_in_flow_control_structures
-   info • Statements in an if should be enclosed in a block • lib/user_profile_screen.dart:32:1218 • curly_braces_in_flow_control_structures
-   info • Statements in an if should be enclosed in a block • lib/user_profile_screen.dart:32:1240 • curly_braces_in_flow_control_structures
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/user_profile_screen.dart:34:261 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/user_profile_screen.dart:35:345 • deprecated_member_use
-warning • A value for optional parameter 'disabled' isn't ever given • lib/user_profile_screen.dart:39:244 • unused_element_parameter
-warning • The receiver can't be null, so the null-aware operator '?.' is unnecessary • lib/user_profile_screen.dart:39:325 • invalid_null_aware_operator
-  error • Expected an identifier • lib/user_profile_screen.dart:39:327 • missing_identifier
-  error • The getter '4' isn't defined for the type 'bool' • lib/user_profile_screen.dart:39:327 • undefined_getter
-  error • Expected to find ')' • lib/user_profile_screen.dart:39:328 • expected_token
-   info • Statements in an if should be enclosed in a block • lib/user_profile_screen.dart:40:417 • curly_braces_in_flow_control_structures
-   info • Statements in an if should be enclosed in a block • lib/user_profile_screen.dart:40:487 • curly_braces_in_flow_control_structures
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/user_profile_screen.dart:40:2281 • deprecated_member_use
-warning • The receiver can't be null, so the null-aware operator '?.' is unnecessary • lib/user_profile_screen.dart:40:2296 • invalid_null_aware_operator
-  error • Expected an identifier • lib/user_profile_screen.dart:40:2298 • missing_identifier
-  error • The getter '12' isn't defined for the type 'bool' • lib/user_profile_screen.dart:40:2298 • undefined_getter
-  error • Expected to find ')' • lib/user_profile_screen.dart:40:2300 • expected_token
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/user_profile_screen.dart:44:283 • deprecated_member_use
+   info • Statements in an if should be enclosed in a block • lib/user_profile_screen.dart:18:481 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • lib/user_profile_screen.dart:18:522 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • lib/user_profile_screen.dart:18:557 • curly_braces_in_flow_control_structures
+   info • Don't use 'BuildContext's across async gaps • lib/user_profile_screen.dart:22:389 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/user_profile_screen.dart:25:278 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/user_profile_screen.dart:26:192 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/user_profile_screen.dart:26:277 • use_build_context_synchronously
+   info • Statements in an if should be enclosed in a block • lib/user_profile_screen.dart:27:725 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • lib/user_profile_screen.dart:27:837 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • lib/user_profile_screen.dart:27:859 • curly_braces_in_flow_control_structures
+warning • A value for optional parameter 'disabled' isn't ever given • lib/user_profile_screen.dart:34:244 • unused_element_parameter
+warning • The receiver can't be null, so the null-aware operator '?.' is unnecessary • lib/user_profile_screen.dart:34:325 • invalid_null_aware_operator
+  error • Expected an identifier • lib/user_profile_screen.dart:34:327 • missing_identifier
+  error • The getter '4' isn't defined for the type 'bool' • lib/user_profile_screen.dart:34:327 • undefined_getter
+  error • Expected to find ')' • lib/user_profile_screen.dart:34:328 • expected_token
+   info • Statements in an if should be enclosed in a block • lib/user_profile_screen.dart:35:447 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • lib/user_profile_screen.dart:35:517 • curly_braces_in_flow_control_structures
+   info • Don't use 'BuildContext's across async gaps • lib/user_profile_screen.dart:37:519 • use_build_context_synchronously
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/video_player_screen.dart:117:39 • deprecated_member_use
    info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/vip_membership_screen.dart:301:23 • use_build_context_synchronously
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/vip_membership_screen.dart:342:41 • deprecated_member_use
@@ -1179,4 +1174,4 @@ warning • The value of the local variable 'permission' isn't used • lib/weat
    info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/weight_calc.dart:115:15 • deprecated_member_use
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/weight_calc.dart:272:22 • deprecated_member_use
 
-1041 issues found. (ran in 17.4s)
+1036 issues found. (ran in 14.6s)
