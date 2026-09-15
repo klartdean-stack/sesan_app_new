@@ -1,4 +1,4 @@
-name: Finish iOS Android 51 parity
+name: Repair and connect iOS maps
 on:
   push:
     branches: [ios-sync-android46]
@@ -7,70 +7,47 @@ on:
 permissions:
   contents: write
 jobs:
-  parity:
+  maps:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ios-sync-android46
           fetch-depth: 0
-      - name: Match Android 51 banner presentation and chat menu
+      - name: Restore Add Product and connect map picker
         run: |
+          git show 41f6e82f30c7d42d4345562c9198b30573d472c0^:lib/add_product.dart > lib/add_product.dart
           python3 - <<'PY'
           from pathlib import Path
-          import re
-
-          home = Path('lib/home_screen.dart')
-          s = home.read_text()
-          if 'aspectRatio: 1280 / 405' not in s:
-            pattern = re.compile(r"AspectRatio\(\s*aspectRatio:\s*MediaQuery\s*\.of\(context\)\s*\.size\s*\.width\s*>\s*800\s*\?\s*21\s*/\s*7\s*:\s*16\s*/\s*8,\s*child:\s*Image\.asset\(\s*'assets/sesan_banner\.png\.jpg',\s*fit:\s*BoxFit\.cover,\s*\),\s*\),", re.S)
-            replacement = """AspectRatio(
-                            // Android 51 banner source is 1280x405.
-                            // Keep the exact ratio so the whole image is visible.
-                            aspectRatio: 1280 / 405,
-                            child: SizedBox(
-                              width: double.infinity,
-                              child: Image.asset(
-                                'assets/sesan_banner.png.jpg',
-                                width: double.infinity,
-                                fit: BoxFit.contain,
-                              ),
-                            ),
-                          ),"""
-            s, n = pattern.subn(replacement, s, count=1)
-            if n != 1:
-              raise SystemExit('Could not locate old iOS banner layout')
-            home.write_text(s)
-
-          chat = Path('lib/chat_screen.dart')
-          c = chat.read_text()
-          old = "top: MediaQuery.paddingOf(context).top + kToolbarHeight + 6,"
-          if old in c:
-            chat.write_text(c.replace(old, "top: MediaQuery.paddingOf(context).top + 4,", 1))
-
-          Path('tool/.keep').unlink(missing_ok=True)
+          p=Path('lib/add_product.dart'); s=p.read_text()
+          if "package:geocoding/geocoding.dart" not in s:
+            s=s.replace("import 'package:get/get.dart';", "import 'package:get/get.dart';\nimport 'package:geocoding/geocoding.dart';\nimport 'package:google_maps_flutter/google_maps_flutter.dart';")
+          s=s.replace("  double? selectedLat;\n  double? selectedLng;", "  final Geocoding _geocoding = Geocoding();\n  bool _locationChosenManually = false;\n  double? selectedLat;\n  double? selectedLng;",1)
+          s=s.replace("setState(() {\n                            locationController.text = location.toString();", "setState(() {\n                            _locationChosenManually = true;\n                            locationController.text = location.toString();",1)
+          old='''Expanded(\n                  flex: 1,\n                  child: Container(\n                    // ប្តូរពី InkWell មក Container ធម្មតាដើម្បី Disable\n                    padding: const EdgeInsets.symmetric(vertical: 12),'''
+          start=s.find(old)
+          if start < 0: raise SystemExit('old disabled map button not found')
+          end=s.find("                ),\n              ],\n            ),", start)
+          if end < 0: raise SystemExit('map button end not found')
+          replacement='''Expanded(\n                  flex: 1,\n                  child: InkWell(\n                    onTap: () async {\n                      final result = await Navigator.push<LatLng>(\n                        context,\n                        MaterialPageRoute(builder: (_) => MapPickerScreen(initialLat: selectedLat, initialLng: selectedLng)),\n                      );\n                      if (result == null || !mounted) return;\n                      setState(() { selectedLat = result.latitude; selectedLng = result.longitude; });\n                      await _fillLocationFromMap(result);\n                    },\n                    borderRadius: BorderRadius.circular(14),\n                    child: Container(\n                      padding: const EdgeInsets.symmetric(vertical: 12),\n                      decoration: BoxDecoration(\n                        color: selectedLat != null && selectedLng != null ? Colors.green.withOpacity(0.12) : Colors.green.withOpacity(0.06),\n                        borderRadius: BorderRadius.circular(14),\n                        border: Border.all(color: selectedLat != null && selectedLng != null ? Colors.green : Colors.green.shade300),\n                      ),\n                      child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [\n                        Icon(selectedLat != null && selectedLng != null ? Icons.location_on : Icons.map_outlined, color: Colors.green.shade700),\n                        const SizedBox(height: 2),\n                        Text(selectedLat != null && selectedLng != null ? _t('បាន Pin', 'Pinned') : 'Maps', style: TextStyle(fontSize: 10, color: Colors.green.shade800, fontWeight: FontWeight.bold, fontFamily: 'Siemreap')),\n                      ]),\n                    ),\n                  ),\n'''
+          s=s[:start]+replacement+s[end:]
+          marker="  Future<void> pickManyImages() async {"
+          helper='''  Future<void> _fillLocationFromMap(LatLng point) async {\n    if (_locationChosenManually || !mounted) return;\n    try {\n      final placemarks = await _geocoding.placemarkFromCoordinates(point.latitude, point.longitude, locale: const Locale('km', 'KH'));\n      if (!mounted || _locationChosenManually) return;\n      final parts = <String>[];\n      if (placemarks.isNotEmpty) {\n        final place = placemarks.first;\n        for (final value in [place.administrativeArea, place.subAdministrativeArea, place.locality, place.subLocality]) {\n          final clean = value?.trim() ?? '';\n          if (clean.isNotEmpty && !parts.contains(clean)) parts.add(clean);\n        }\n      }\n      setState(() => locationController.text = parts.isNotEmpty ? parts.join(', ') : '${point.latitude.toStringAsFixed(6)}, ${point.longitude.toStringAsFixed(6)}');\n    } catch (_) {}\n  }\n\n'''
+          if '_fillLocationFromMap(LatLng point)' not in s: s=s.replace(marker,helper+marker,1)
+          p.write_text(s)
           PY
-      - name: Verify banner identity and layout
-        run: |
-          test "$(git hash-object assets/sesan_banner.png.jpg)" = "67d69670d94dc3c6664fd08d71b260c749aa1390"
-          grep -q "aspectRatio: 1280 / 405" lib/home_screen.dart
-          grep -q "fit: BoxFit.contain" lib/home_screen.dart
       - name: Flutter setup
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.38.8'
           channel: stable
       - run: flutter pub get
-      - name: Analyze parity files
-        run: flutter analyze --no-fatal-warnings --no-fatal-infos lib/home_screen.dart lib/chat_screen.dart lib/location_picker_sheet.dart lib/share_service.dart
-      - name: Commit verified parity fixes
+      - name: Analyze map files
+        run: flutter analyze --no-fatal-warnings --no-fatal-infos lib/add_product.dart lib/edit_product.dart lib/edit_shopscreen.dart lib/map_picker_screen.dart
+      - name: Commit maps
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A lib/home_screen.dart lib/chat_screen.dart tool/.keep || true
-          if git diff --cached --quiet; then
-            echo "No parity changes needed"
-          else
-            git commit -m "Match iOS banner and chat menu to Android 51"
-            git push origin ios-sync-android46
-          fi
+          git add lib/add_product.dart pubspec.lock
+          git commit -m "Connect iOS product map picker" || exit 0
+          git push origin ios-sync-android46
