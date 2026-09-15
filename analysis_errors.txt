@@ -539,11 +539,10 @@ warning • The declaration '_showDeleteReplyDialog' isn't referenced • lib/co
    info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/dispute_system.dart:176:11 • deprecated_member_use
    info • Don't invoke 'print' in production code • lib/download_helper.dart:17:7 • avoid_print
    info • Don't invoke 'print' in production code • lib/download_helper.dart:19:7 • avoid_print
-   info • The private field _imageFiles could be 'final' • lib/edit_product.dart:49:14 • prefer_final_fields
-   info • Don't invoke 'print' in production code • lib/edit_product.dart:133:5 • avoid_print
-   info • Don't invoke 'print' in production code • lib/edit_product.dart:134:5 • avoid_print
-   info • Don't invoke 'print' in production code • lib/edit_product.dart:135:5 • avoid_print
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/edit_product.dart:512:47 • deprecated_member_use
+   info • The private field _imageFiles could be 'final' • lib/edit_product.dart:29:14 • prefer_final_fields
+   info • Statements in an if should be enclosed in a block • lib/edit_product.dart:46:31 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • lib/edit_product.dart:46:116 • curly_braces_in_flow_control_structures
+  error • The method 'ThousandsSeparatorInputFormatter' isn't defined for the type '_EditProductScreenState' • lib/edit_product.dart:64:399 • undefined_method
    info • Don't use 'BuildContext's across async gaps • lib/edit_profile_screen.dart:291:23 • use_build_context_synchronously
    info • Don't use 'BuildContext's across async gaps • lib/edit_profile_screen.dart:292:30 • use_build_context_synchronously
    info • Don't use 'BuildContext's across async gaps • lib/edit_profile_screen.dart:297:30 • use_build_context_synchronously
@@ -596,13 +595,15 @@ warning • The value of the field 'cardColor' isn't used • lib/forgot_passwor
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/forgot_password_screen.dart:417:118 • deprecated_member_use
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/forgot_password_screen.dart:418:125 • deprecated_member_use
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/forgot_password_screen.dart:434:30 • deprecated_member_use
-  error • Target of URI doesn't exist: 'l10n/app_localizations.dart' • lib/home_screen.dart:27:8 • uri_does_not_exist
+warning • Unused import: 'package:my_app/admin_confirm.dart' • lib/home_screen.dart:6:8 • unused_import
+warning • Unused import: 'chat_screen.dart' • lib/home_screen.dart:17:8 • unused_import
+warning • Unused import: 'auction_add_screen.dart' • lib/home_screen.dart:21:8 • unused_import
+warning • Duplicate import • lib/home_screen.dart:22:8 • duplicate_import
    info • The private field _selectedCategory could be 'final' • lib/home_screen.dart:47:10 • prefer_final_fields
    info • Don't invoke 'print' in production code • lib/home_screen.dart:105:7 • avoid_print
    info • Don't invoke 'print' in production code • lib/home_screen.dart:134:11 • avoid_print
    info • Don't invoke 'print' in production code • lib/home_screen.dart:149:7 • avoid_print
 warning • The declaration '_checkLoginStatus' isn't referenced • lib/home_screen.dart:193:16 • unused_element
-  error • Undefined name 'AppLocalizations' • lib/home_screen.dart:245:18 • undefined_identifier
 warning • The value of the local variable 'user' isn't used • lib/home_screen.dart:247:11 • unused_local_variable
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/home_screen.dart:697:63 • deprecated_member_use
    info • Don't use 'BuildContext's across async gaps • lib/home_screen.dart:813:29 • use_build_context_synchronously
@@ -1190,4 +1191,4 @@ warning • The value of the local variable 'permission' isn't used • lib/weat
    info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/weight_calc.dart:115:15 • deprecated_member_use
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/weight_calc.dart:272:22 • deprecated_member_use
 
-1053 issues found. (ran in 23.1s)
+1054 issues found. (ran in 21.4s)
