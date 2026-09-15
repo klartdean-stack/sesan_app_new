@@ -49,7 +49,6 @@ class _EditProductScreenState extends State<EditProductScreen> {
   List<File> _imageFiles = []; // សម្រាប់ទុកបញ្ជីរូបភាពថ្មី
   List<String> _existingImageUrls = []; // សម្រាប់ទុកបញ្ជីរូបភាពចាស់
   bool _isLoading = false;
-  final Geocoding _geocoding = Geocoding();
   double? selectedLat;
   double? selectedLng;
   bool _isOwner = false; // ✅ បន្ថែមនេះ
@@ -154,8 +153,8 @@ class _EditProductScreenState extends State<EditProductScreen> {
 
   Future<void> _fillLocationFromMap(LatLng point) async {
     try {
-      final placemarks = await _geocoding.placemarkFromCoordinates(
-        point.latitude, point.longitude, locale: const Locale('km', 'KH'));
+      final placemarks = await placemarkFromCoordinates(
+        point.latitude, point.longitude);
       if (!mounted) return;
       final parts = <String>[];
       void addPart(String? value) {
