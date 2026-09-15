@@ -13,6 +13,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'vip_member_card_download.dart';
 
 class VipMembershipScreen extends StatefulWidget {
   const VipMembershipScreen({super.key});
@@ -921,7 +922,9 @@ class _VipMembershipScreenState extends State<VipMembershipScreen> {
                   padding: const EdgeInsets.fromLTRB(20, 10, 20, 40),
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                     if (isVip) ...[
-                      _buildVipCard(userData, uid),
+                      VipMemberCardDownload(
+                        card: _buildVipCard(userData, uid),
+                      ),
                       const SizedBox(height: 20),
                     ],
                     _buildBenefitsCard(),

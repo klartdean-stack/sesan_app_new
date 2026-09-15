@@ -21,6 +21,7 @@ import 'package:firebase_auth/firebase_auth.dart'; // ផាសជួរនេ�
 import 'auction_add_screen.dart';
 import 'chat_list_screen.dart';
 import 'product_list.dart';
+import 'product_list_v51_screen.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart'; // ថែមតែមួយជួរនេះ
 import 'package:firebase_messaging/firebase_messaging.dart'; // ថែមជួរនេះ
@@ -920,7 +921,7 @@ String? name;
             Navigator.push(
               context,
               CupertinoPageRoute(
-                builder: (context) => ProductListScreen(category: item['name']),
+                builder: (context) => ProductListV51Screen(category: item['name']),
               ),
             );
           },
