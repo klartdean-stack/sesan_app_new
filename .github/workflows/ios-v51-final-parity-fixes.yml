@@ -31,11 +31,30 @@ jobs:
               p.write_text(s)
           elif new not in s:
               raise SystemExit('VIP ABA URL pattern not found')
+
+          p = Path('lib/chat_list_screen.dart')
+          s = p.read_text()
+          if "import 'package:get/get.dart';" not in s:
+              s = s.replace("import 'package:flutter/material.dart';", "import 'package:flutter/material.dart';\nimport 'package:get/get.dart';")
+          if 'bool _isOpeningChat = false;' not in s:
+              s = s.replace("String _searchError = '';", "String _searchError = '';\n  bool _isOpeningChat = false;")
+          marker = '  Future<void> _markAsSeen(String chatRoomId) async {'
+          safe = '''  Future<void> _openChatSafely({\n    required String otherUserId,\n    required String productName,\n    required String productId,\n    String? chatRoomId,\n  }) async {\n    if (_isOpeningChat || !mounted || otherUserId.isEmpty) return;\n    setState(() => _isOpeningChat = true);\n    final markSeenFuture = chatRoomId == null || chatRoomId.isEmpty\n        ? Future<void>.value()\n        : _markAsSeen(chatRoomId);\n    try {\n      await Navigator.push(\n        context,\n        MaterialPageRoute(\n          builder: (context) => ChatScreen(\n            seller_id: otherUserId,\n            receiver_id: otherUserId,\n            productName: productName,\n            productId: productId,\n          ),\n        ),\n      );\n      await markSeenFuture;\n    } finally {\n      if (mounted) setState(() => _isOpeningChat = false);\n    }\n  }\n\n'''
+          if '_openChatSafely({' not in s:
+              if marker not in s: raise SystemExit('chat marker missing')
+              s = s.replace(marker, safe + marker, 1)
+          oldtap = '''          onTap: () async {\n            await _markAsSeen(chat['chatRoomId']);\n            if (!mounted) return;\n            Navigator.push(\n              context,\n              MaterialPageRoute(\n                builder: (context) => ChatScreen(\n                  seller_id: otherUserId,\n                  receiver_id: otherUserId,\n                  productName: chat['productName'] ?? 'Chat',\n                  productId: chat['productId'] ?? 'general',\n                ),\n              ),\n            );\n          },'''
+          newtap = '''          onTap: () => _openChatSafely(\n            otherUserId: otherUserId,\n            productName: chat['productName'] ?? 'Chat',\n            productId: chat['productId'] ?? 'general',\n            chatRoomId: chat['chatRoomId']?.toString(),\n          ),'''
+          if oldtap in s:
+              s = s.replace(oldtap, newtap, 1)
+          elif newtap not in s:
+              raise SystemExit('chat tile tap pattern missing')
+          p.write_text(s)
       - name: Commit changes
         run: |
           if git diff --quiet; then exit 0; fi
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add lib/vip_membership_screen.dart
-          git commit -m 'Align iOS VIP payment URL with Android V51'
+          git add lib/vip_membership_screen.dart lib/chat_list_screen.dart
+          git commit -m 'Align iOS VIP and chat behavior with Android V51'
           git push origin HEAD:ios-sync-android46
