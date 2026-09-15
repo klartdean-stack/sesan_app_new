@@ -130,7 +130,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   receiver_id: widget.receiver_id,
                 ),
                 Positioned(
-                  top: MediaQuery.paddingOf(context).top + kToolbarHeight + 6,
+                  top: MediaQuery.paddingOf(context).top + 4,
                   right: 8,
                   child: Material(
                     color: Colors.green.shade700,

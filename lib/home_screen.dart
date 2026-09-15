@@ -634,17 +634,18 @@ String? name;
                         children: [
                           // --- ១. Banner ---
                           AspectRatio(
-                            aspectRatio: MediaQuery
-                                .of(context)
-                                .size
-                                .width > 800
-                                ? 21 / 7
-                                : 16 / 8,
-                            child: Image.asset(
-                              'assets/sesan_banner.png.jpg',
-                              fit: BoxFit.cover,
-                            ),
-                          ),
+                  // Android 51 banner source is 1280x405.
+                  // Keep the exact ratio so the whole image is visible.
+                  aspectRatio: 1280 / 405,
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: Image.asset(
+                      'assets/sesan_banner.png.jpg',
+                      width: double.infinity,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                ),
 
 
                           // --- ២. Categories (កែសម្រួលថ្មី) ---
