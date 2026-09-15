@@ -35,6 +35,8 @@ import 'admin_support_inbox_screen.dart';
 import 'ai_packages_screen.dart';
 import 'sesan_ai_assistant_screen.dart';
 import 'support_chat_screen.dart';
+import 'seller_guide_screen.dart';
+import 'seller_digital_agreement_screen.dart';
 
 
 class ProfileScreen extends StatefulWidget {
@@ -671,6 +673,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                         ),
 
+
+                      _buildMenuCard(
+                        title: Localizations.localeOf(context).languageCode == 'en' ? 'Seller guide' : 'មគ្គុទេសក៍អ្នកលក់',
+                        subtitle: Localizations.localeOf(context).languageCode == 'en' ? 'Learn posting, cart sales, stock, and orders' : 'រៀនបង្ហោះ លក់តាមកន្ត្រក គ្រប់គ្រងស្តុក និង Order',
+                        icon: Icons.menu_book_rounded,
+                        color: Colors.green,
+                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const SellerGuideScreen())),
+                      ),
+                      _buildMenuCard(
+                        title: Localizations.localeOf(context).languageCode == 'en' ? 'Seller digital agreement' : 'កិច្ចព្រមព្រៀងឌីជីថលអ្នកលក់',
+                        subtitle: Localizations.localeOf(context).languageCode == 'en' ? 'Review and accept the Sesan App seller terms' : 'អាន និងយល់ព្រមលើលក្ខខណ្ឌលក់ដូរជាមួយ Sesan App',
+                        icon: Icons.draw_rounded,
+                        color: Colors.indigo,
+                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const SellerDigitalAgreementScreen())),
+                      ),
 
                       _buildMenuCard(
                         title: "ឧបករណ៍កសិកម្ម",
