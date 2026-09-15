@@ -1,0 +1,86 @@
+name: iOS 51 Blue Gold shop map display
+on:
+  workflow_dispatch:
+  push:
+    branches: [ios-sync-android46]
+    paths: ['.github/workflows/ios51-shop-map-display.yml']
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: {ref: ios-sync-android46}
+      - name: Patch seller shop map
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          p=Path('lib/seller_profile_screen.dart'); s=p.read_text()
+          if "package:google_maps_flutter/google_maps_flutter.dart" not in s:
+            s=s.replace("import 'package:fl_chart/fl_chart.dart';", "import 'package:fl_chart/fl_chart.dart';\nimport 'package:google_maps_flutter/google_maps_flutter.dart';\nimport 'package:url_launcher/url_launcher.dart';")
+          anchor='  Widget _buildSellerInfoCard(BuildContext context) {'
+          if 'Widget _buildShopMapPreview' not in s:
+            methods=r'''  Future<void> _openShopDirections(double latitude, double longitude) async {
+    final url = Uri.parse('https://www.google.com/maps/dir/?api=1&destination=$latitude,$longitude');
+    if (!await launchUrl(url, mode: LaunchMode.externalApplication) && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('មិនអាចបើក Google Maps បានទេ')));
+    }
+  }
+
+  Widget _buildShopMapPreview(double latitude, double longitude) {
+    final location = LatLng(latitude, longitude);
+    return Padding(padding: const EdgeInsets.only(top: 4, bottom: 10), child: GestureDetector(
+      onTap: () => _openShopDirections(latitude, longitude),
+      child: AspectRatio(aspectRatio: 4, child: ClipRRect(borderRadius: BorderRadius.circular(12), child: Stack(fit: StackFit.expand, children: [
+        AbsorbPointer(child: GoogleMap(initialCameraPosition: CameraPosition(target: location, zoom: 15.5), markers: {
+          Marker(markerId: const MarkerId('shop_location'), position: location),
+        }, zoomControlsEnabled: false, myLocationButtonEnabled: false, mapToolbarEnabled: false, compassEnabled: false,
+          scrollGesturesEnabled: false, zoomGesturesEnabled: false, rotateGesturesEnabled: false, tiltGesturesEnabled: false)),
+        Container(color: Colors.black.withOpacity(0.05)),
+        Center(child: Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+          decoration: BoxDecoration(color: Colors.white.withOpacity(0.94), borderRadius: BorderRadius.circular(20),
+            boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 5)]),
+          child: Row(mainAxisSize: MainAxisSize.min, children: [const Icon(Icons.directions, color: Colors.green, size: 18),
+            const SizedBox(width: 6), Text(Localizations.localeOf(context).languageCode == 'en' ? 'Directions to shop' : 'ទៅកាន់ហាង',
+              style: const TextStyle(fontFamily: 'Siemreap', fontSize: 11, fontWeight: FontWeight.bold))]))),
+      ])))),
+    );
+  }
+
+'''
+            if anchor not in s: raise SystemExit('seller info anchor missing')
+            s=s.replace(anchor, methods+anchor, 1)
+          if "final shopLatitude = (userData?['shop_latitude'] as num?)?.toDouble();" not in s:
+            needle="""        String shopAddress = userData?['address'] ?? 'មិនទាន់មានទីតាំង';"""
+            if needle not in s:
+              needle="""        String shopAddress = userData?['address'] ?? "មិនទាន់មានទីតាំង";"""
+            if needle not in s: raise SystemExit('shop address anchor missing')
+            extra="""
+        final shopLatitude = (userData?['shop_latitude'] as num?)?.toDouble();
+        final shopLongitude = (userData?['shop_longitude'] as num?)?.toDouble();
+        final canShowShopMap = (shopTier == 'basic' || shopTier == 'premium') && shopLatitude != null && shopLongitude != null;"""
+            s=s.replace(needle, needle+extra, 1)
+          if '_buildShopMapPreview(shopLatitude!, shopLongitude!)' not in s:
+            # Insert after location section, before next owner/shop section using a stable nearby comment/condition.
+            candidates=["              if (_cachedCurrentUid == widget.sellerId)", "              // ── ក្រាប 4 ខ្សែ"]
+            pos=-1; chosen=''
+            for c in candidates:
+              pos=s.find(c, s.find('Widget _buildSellerInfoCard'))
+              if pos!=-1: chosen=c; break
+            if pos==-1: raise SystemExit('shop map insertion anchor missing')
+            s=s[:pos]+"              if (canShowShopMap)\n                _buildShopMapPreview(shopLatitude!, shopLongitude!),\n\n"+s[pos:]
+          p.write_text(s)
+          PY
+      - name: Verify
+        run: |
+          grep -q "shop_latitude" lib/seller_profile_screen.dart
+          grep -q "Widget _buildShopMapPreview" lib/seller_profile_screen.dart
+          grep -q "_buildShopMapPreview(shopLatitude!, shopLongitude!)" lib/seller_profile_screen.dart
+      - name: Commit
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add lib/seller_profile_screen.dart
+          git commit -m "Show Blue Gold shop maps on iOS seller profile"
+          git push origin HEAD:ios-sync-android46
