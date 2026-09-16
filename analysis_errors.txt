@@ -866,41 +866,112 @@ warning • The declaration '_buildLockSwitch' isn't referenced • lib/product_
 warning • The declaration '_buildOwnerTools' isn't referenced • lib/product_list.dart:1207:10 • unused_element
    info • Don't use 'BuildContext's across async gaps • lib/product_list.dart:1293:29 • use_build_context_synchronously
    info • Don't use 'BuildContext's across async gaps • lib/product_list.dart:1295:17 • use_build_context_synchronously
-   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/product_list_v51_screen.dart:34:198 • deprecated_member_use
-  error • Expected to find ';' • lib/product_list_v51_screen.dart:48:8 • expected_token
-warning • Dead code • lib/product_list_v51_screen.dart:48:9 • dead_code
-  error • Expected an identifier • lib/product_list_v51_screen.dart:48:9 • missing_identifier
-  error • Unexpected text ';' • lib/product_list_v51_screen.dart:48:9 • unexpected_token
-warning • The label 'body' isn't used • lib/product_list_v51_screen.dart:48:10 • unused_label
-  error • Expected to find ';' • lib/product_list_v51_screen.dart:48:147 • expected_token
-  error • Expected an identifier • lib/product_list_v51_screen.dart:48:148 • missing_identifier
-  error • Unexpected text ';' • lib/product_list_v51_screen.dart:48:148 • unexpected_token
-   info • Unnecessary empty statement • lib/product_list_v51_screen.dart:48:149 • empty_statements
    info • The import of 'dart:typed_data' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/foundation.dart' • lib/product_search_v51.dart:3:8 • unnecessary_import
 warning • Unused import: 'dart:io' • lib/profile_screen_legacy.dart:1:8 • unused_import
 warning • Unused import: 'package:firebase_storage/firebase_storage.dart' • lib/profile_screen_legacy.dart:2:8 • unused_import
 warning • Unused import: 'package:image_picker/image_picker.dart' • lib/profile_screen_legacy.dart:7:8 • unused_import
-warning • Unused import: 'package:my_app/logout_button.dart' • lib/profile_screen_legacy.dart:12:8 • unused_import
-warning • Unused import: 'package:my_app/logout_service.dart' • lib/profile_screen_legacy.dart:13:8 • unused_import
-warning • Unused import: 'login_screen.dart' • lib/profile_screen_legacy.dart:21:8 • unused_import
-warning • Unused import: 'edit_product.dart' • lib/profile_screen_legacy.dart:25:8 • unused_import
-warning • Unused import: 'package:cloud_functions/cloud_functions.dart' • lib/profile_screen_legacy.dart:29:8 • unused_import
-warning • Duplicate import • lib/profile_screen_legacy.dart:30:8 • duplicate_import
-warning • Unused import: 'logout_button.dart' • lib/profile_screen_legacy.dart:30:8 • unused_import
-warning • The declaration '_ensureUserExists' isn't referenced • lib/profile_screen_legacy.dart:177:16 • unused_element
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/profile_screen_legacy.dart:485:49 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/profile_screen_legacy.dart:493:51 • deprecated_member_use
-   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/profile_screen_legacy.dart:631:31 • use_build_context_synchronously
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/profile_screen_legacy.dart:1338:26 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/profile_screen_legacy.dart:1393:39 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/profile_screen_legacy.dart:1585:51 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/profile_screen_legacy.dart:1622:47 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/profile_screen_legacy.dart:1625:49 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/profile_screen_legacy.dart:1715:58 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/profile_screen_legacy.dart:1718:60 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/profile_screen_legacy.dart:1765:33 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/profile_screen_legacy.dart:1818:26 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/profile_screen_legacy.dart:1830:28 • deprecated_member_use
+warning • Unused import: 'package:my_app/edit_profile_screen.dart' • lib/profile_screen_legacy.dart:13:8 • unused_import
+warning • Unused import: 'package:my_app/logout_button.dart' • lib/profile_screen_legacy.dart:17:8 • unused_import
+warning • Unused import: 'package:my_app/logout_service.dart' • lib/profile_screen_legacy.dart:18:8 • unused_import
+warning • Unused import: 'login_screen.dart' • lib/profile_screen_legacy.dart:26:8 • unused_import
+warning • Unused import: 'edit_product.dart' • lib/profile_screen_legacy.dart:30:8 • unused_import
+warning • Unused import: 'package:cloud_functions/cloud_functions.dart' • lib/profile_screen_legacy.dart:34:8 • unused_import
+warning • Duplicate import • lib/profile_screen_legacy.dart:35:8 • duplicate_import
+warning • Unused import: 'logout_button.dart' • lib/profile_screen_legacy.dart:35:8 • unused_import
+  error • The getter 'delegate' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:81:24 • undefined_getter
+warning • The declaration '_ensureUserExists' isn't referenced • lib/profile_screen_legacy.dart:162:16 • unused_element
+  error • The getter 'account' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:201:28 • undefined_getter
+  error • The getter 'signInToViewAccount' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:211:22 • undefined_getter
+  error • The getter 'goToSignIn' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:219:24 • undefined_getter
+  error • The getter 'accountAndMoney' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:234:32 • undefined_getter
+  error • The getter 'account' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:234:55 • undefined_getter
+  error • The getter 'signOut' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:312:36 • undefined_getter
+  error • The getter 'signOutConfirmation' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:319:36 • undefined_getter
+  error • The getter 'cancel' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:326:40 • undefined_getter
+  error • The getter 'signOut' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:343:40 • undefined_getter
+  error • The getter 'signOut' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:357:28 • undefined_getter
+  error • The getter 'financeCenter' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:383:19 • undefined_getter
+  error • The getter 'viewIncomeExpenses' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:384:22 • undefined_getter
+  error • The getter 'sesanPartnership' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:492:25 • undefined_getter
+  error • The getter 'sesanPartnershipDescription' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:493:28 • undefined_getter
+  error • The getter 'savedProductsAndShops' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:504:23 • undefined_getter
+  error • The getter 'savedProductsAndFollowedShops' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:505:26 • undefined_getter
+  error • The getter 'managePostedProducts' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:528:26 • undefined_getter
+  error • The getter 'viewMyShop' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:541:23 • undefined_getter
+  error • The getter 'previewMyShop' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:542:26 • undefined_getter
+  error • The getter 'adminDashboard' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:588:25 • undefined_getter
+  error • The getter 'reviewCustomerPayments' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:589:28 • undefined_getter
+  error • The getter 'sellerWithdrawals' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:633:25 • undefined_getter
+  error • The getter 'reviewSellerWithdrawals' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:634:28 • undefined_getter
+  error • The getter 'sesanPartnership' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:659:25 • undefined_getter
+  error • The getter 'sesanPartnershipDescription' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:660:28 • undefined_getter
+  error • The getter 'savedProductsAndShops' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:671:23 • undefined_getter
+  error • The getter 'savedProductsAndFollowedShops' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:672:26 • undefined_getter
+  error • The getter 'vipMember' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:732:25 • undefined_getter
+  error • The getter 'vipMemberDescription' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:733:28 • undefined_getter
+  error • The getter 'becomeVip' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:745:23 • undefined_getter
+  error • The getter 'becomeVipDescription' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:746:26 • undefined_getter
+  error • The getter 'legalPolicies' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:759:23 • undefined_getter
+  error • The getter 'settings' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:772:23 • undefined_getter
+  error • The getter 'helpAndSupport' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:785:23 • undefined_getter
+  error • The getter 'aboutUs' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:800:23 • undefined_getter
+  error • The getter 'vipBenefits' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:841:30 • undefined_getter
+  error • The getter 'vipBadgeBenefit' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:859:47 • undefined_getter
+  error • The getter 'vipStatisticsBenefit' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:860:47 • undefined_getter
+  error • The getter 'vipPromotionBenefit' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:861:47 • undefined_getter
+  error • The getter 'vipSupportBenefit' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:862:47 • undefined_getter
+  error • The getter 'vipPrice' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:880:38 • undefined_getter
+  error • The getter 'notNow' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:908:30 • undefined_getter
+  error • The getter 'buyNow' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:935:30 • undefined_getter
+  error • The getter 'professionalSeller' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:1006:37 • undefined_getter
+  error • The getter 'availableBalance' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:1053:39 • undefined_getter
+  error • The getter 'withdraw' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:1115:35 • undefined_getter
+  error • The getter 'pendingBalance' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:1126:33 • undefined_getter
+  error • The getter 'totalBalance' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:1131:33 • undefined_getter
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/profile_screen_legacy.dart:1174:31 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/profile_screen_legacy.dart:1190:33 • deprecated_member_use
+  error • The getter 'mySesanId' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:1200:16 • undefined_getter
+  error • The getter 'notAvailableYet' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:1216:40 • undefined_getter
+  error • The getter 'sesanIdHelp' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:1232:22 • undefined_getter
+  error • The getter 'idCopied' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:1247:31 • undefined_getter
+  error • The getter 'idCopied' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:1259:30 • undefined_getter
+  error • The getter 'create' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:1271:24 • undefined_getter
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/profile_screen_legacy.dart:1299:31 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/profile_screen_legacy.dart:1316:26 • deprecated_member_use
+  error • The getter 'accountNotice' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:1364:23 • undefined_getter
+  error • The getter 'frozenAccountMessage' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:1368:16 • undefined_getter
+  error • The getter 'ok' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:1374:30 • undefined_getter
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/profile_screen_legacy.dart:1399:39 • deprecated_member_use
+  error • The getter 'createSesanIdTitle' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:1410:22 • undefined_getter
+  error • The getter 'createSesanIdDescription' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:1419:22 • undefined_getter
+  error • The getter 'cancel' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:1443:30 • undefined_getter
+  error • The getter 'create' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:1461:30 • undefined_getter
+  error • The method 'sesanIdCreated' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:1511:20 • undefined_method
+  error • The method 'errorMessage' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:1531:32 • undefined_method
+warning • The '!' will have no effect because the receiver can't be null • lib/profile_screen_legacy.dart:1545:46 • unnecessary_non_null_assertion
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/profile_screen_legacy.dart:1584:51 • deprecated_member_use
+  error • The getter 'sesan' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:1605:30 • undefined_getter
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/profile_screen_legacy.dart:1621:47 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/profile_screen_legacy.dart:1624:49 • deprecated_member_use
+  error • The getter 'forKhmerFarmers' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:1628:32 • undefined_getter
+  error • The getter 'aboutLandTitle' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:1651:33 • undefined_getter
+  error • The getter 'aboutLandContent' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:1652:35 • undefined_getter
+  error • The getter 'aboutFarmersTitle' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:1658:33 • undefined_getter
+  error • The getter 'aboutFarmersContent' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:1659:35 • undefined_getter
+  error • The getter 'aboutWorkValueTitle' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:1665:33 • undefined_getter
+  error • The getter 'aboutWorkValueContent' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:1666:35 • undefined_getter
+  error • The getter 'aboutMissionTitle' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:1672:33 • undefined_getter
+  error • The getter 'aboutMissionContent' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:1673:35 • undefined_getter
+  error • The getter 'aboutThanksTitle' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:1679:33 • undefined_getter
+  error • The getter 'aboutThanksContent' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:1680:35 • undefined_getter
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/profile_screen_legacy.dart:1689:58 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/profile_screen_legacy.dart:1692:60 • deprecated_member_use
+  error • The getter 'aboutSlogan' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:1696:32 • undefined_getter
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/profile_screen_legacy.dart:1741:33 • deprecated_member_use
+  error • The getter 'aboutQuestion' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:1752:18 • undefined_getter
+  error • The getter 'aboutQuestionAnswer' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:1766:18 • undefined_getter
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/profile_screen_legacy.dart:1793:26 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/profile_screen_legacy.dart:1805:28 • deprecated_member_use
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/profit_calc.dart:146:28 • deprecated_member_use
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/profit_calc.dart:147:26 • deprecated_member_use
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/qr_scanner_screen.dart:265:49 • deprecated_member_use
@@ -949,16 +1020,6 @@ warning • Unused import: 'package:qr_flutter/qr_flutter.dart' • lib/seller_p
 warning • Unused import: 'package:fl_chart/fl_chart.dart' • lib/seller_profile_screen.dart:23:8 • unused_import
 warning • The value of the field '_screenshotController' isn't used • lib/seller_profile_screen.dart:30:470 • unused_field
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/seller_profile_screen.dart:48:975 • deprecated_member_use
-  error • The argument type 'bool' can't be assigned to the parameter type 'double'.  • lib/seller_profile_screen.dart:52:642 • argument_type_not_assignable
-warning • The receiver can't be null, so the null-aware operator '?.' is unnecessary • lib/seller_profile_screen.dart:52:673 • invalid_null_aware_operator
-  error • Expected an identifier • lib/seller_profile_screen.dart:52:675 • missing_identifier
-  error • The getter '8' isn't defined for the type 'int' • lib/seller_profile_screen.dart:52:675 • undefined_getter
-  error • Expected to find ')' • lib/seller_profile_screen.dart:52:676 • expected_token
-  error • The argument type 'bool' can't be assigned to the parameter type 'double'.  • lib/seller_profile_screen.dart:56:284 • argument_type_not_assignable
-warning • The receiver can't be null, so the null-aware operator '?.' is unnecessary • lib/seller_profile_screen.dart:56:321 • invalid_null_aware_operator
-  error • Expected an identifier • lib/seller_profile_screen.dart:56:323 • missing_identifier
-  error • The getter '8' isn't defined for the type 'int' • lib/seller_profile_screen.dart:56:323 • undefined_getter
-  error • Expected to find ')' • lib/seller_profile_screen.dart:56:324 • expected_token
    info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/seller_withdraw_screen.dart:79:35 • use_build_context_synchronously
    info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/seller_withdraw_screen.dart:80:43 • use_build_context_synchronously
    info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/seller_withdraw_screen.dart:83:56 • use_build_context_synchronously
@@ -1195,4 +1256,4 @@ warning • The value of the local variable 'permission' isn't used • lib/weat
    info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/weight_calc.dart:115:15 • deprecated_member_use
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/weight_calc.dart:272:22 • deprecated_member_use
 
-1057 issues found. (ran in 16.7s)
+1118 issues found. (ran in 20.5s)
