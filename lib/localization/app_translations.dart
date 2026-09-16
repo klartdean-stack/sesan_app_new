@@ -96,3 +96,46 @@ class LanguageController extends GetxController {
     update();
   }
 }
+
+class LanguageSwitcher extends StatelessWidget {
+  const LanguageSwitcher({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return GetBuilder<LanguageController>(
+      builder: (controller) {
+        return PopupMenuButton<String>(
+          tooltip: 'language'.tr,
+          onSelected: controller.changeLanguage,
+          itemBuilder: (context) => const [
+            PopupMenuItem<String>(
+              value: 'km',
+              child: Text('ខ្មែរ'),
+            ),
+            PopupMenuItem<String>(
+              value: 'en',
+              child: Text('English'),
+            ),
+          ],
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey.shade300),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.language, size: 18),
+                const SizedBox(width: 6),
+                Text(controller.isEnglish ? 'English' : 'ខ្មែរ'),
+                const SizedBox(width: 2),
+                const Icon(Icons.arrow_drop_down, size: 18),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
