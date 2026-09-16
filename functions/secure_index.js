@@ -321,6 +321,9 @@ exports.settleWithdrawReserve = onDocumentUpdated(
   }
 );
 
+// Legacy test trigger previously moved seller money whenever any order document was updated.
+// Keep the deployed function name/trigger shape, but make it a no-op so there is only one
+// authoritative settlement path.
 exports.testWalletNow = onDocumentUpdated(
   {
     document: "orders/{orderId}",
@@ -334,6 +337,8 @@ exports.testWalletNow = onDocumentUpdated(
   }
 );
 
+// Authoritative seller settlement: runs hourly and moves eligible earnings from
+// wallet_balance -> available_balance exactly once, inside one Firestore transaction.
 exports.scheduledWalletSettlement = onSchedule(
   {
     schedule: "0 * * * *",
@@ -342,6 +347,9 @@ exports.scheduledWalletSettlement = onSchedule(
   },
   async () => {
     const cutoffMillis = Date.now() - FIVE_DAYS_MS;
+
+    // Single-field query avoids requiring a composite index. We filter packing_date
+    // in code and cap each run so one bad/large dataset cannot exhaust the function.
     const candidates = await db
       .collection("orders")
       .where("is_settled", "==", false)
