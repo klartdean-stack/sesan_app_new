@@ -13,60 +13,112 @@ jobs:
         with:
           ref: ios-sync-android46
           fetch-depth: 0
-      - name: Patch Product Detail compact parity
+      - name: Compact Product Detail seller information card
         shell: python
         run: |
           from pathlib import Path
           p=Path('lib/product_detail.dart')
           s=p.read_text(encoding='utf-8')
           reps=[
-            ('fontSize: 22,\n                                  fontWeight: FontWeight.bold,','fontSize: 18,\n                                  height: 1.25,\n                                  fontWeight: FontWeight.bold,'),
-            ('''                                            RatingBarIndicator(\n                                              rating: avgRating,\n                                              itemBuilder: (context, _) =>\n                                                  const Icon(\n                                                    Icons.star,\n                                                    color: Colors.amber,\n                                                  ),\n                                              itemCount: 5,\n                                              itemSize: 22,\n                                            ),\n                                            const SizedBox(width: 8),''','''                                            const Icon(\n                                              Icons.star_rounded,\n                                              color: Colors.amber,\n                                              size: 17,\n                                            ),\n                                            const SizedBox(width: 4),'''),
-            ('fontSize: 13,\n                                                fontWeight: FontWeight.bold,','fontSize: 11,\n                                                fontWeight: FontWeight.bold,'),
-            ('const SizedBox(height: 8),\n                                        Text(\n                                          myRating > 0','const SizedBox(height: 4),\n                                        Text(\n                                          myRating > 0'),
-            ('fontSize: 12,\n                                            color: myRating > 0','fontSize: 11,\n                                            color: myRating > 0'),
-            ('itemSize: 30,','itemSize: 22,'),
-            ('horizontal: 3,','horizontal: 2,'),
-            ('padding: EdgeInsets.only(top: 6),','padding: EdgeInsets.only(top: 4),'),
-            ('width: 18,\n                                              height: 18,','width: 14,\n                                              height: 14,'),
-            ('height: 30,\n                              ), // ៤. ចំនួនកម្ម៉ង់','height: 18,\n                              ), // ៤. ចំនួនកម្ម៉ង់'),
-            ('fontSize: 16,\n                                  fontWeight: FontWeight.bold,','fontSize: 14,\n                                  fontWeight: FontWeight.bold,'),
-            ('const SizedBox(height: 10),\n                              // --- ផ្នែកជ្រើសរើសចំនួន','const SizedBox(height: 6),\n                              // --- ផ្នែកជ្រើសរើសចំនួន'),
-            ('width: 80, // កែទំហំឱ្យល្មម','width: 60, // Compact quantity field'),
-            ('horizontal: 10,\n                                            ),\n                                            child: TextField(','horizontal: 6,\n                                            ),\n                                            child: TextField('),
-            ('style: const TextStyle(\n                                                fontWeight: FontWeight.bold,','style: const TextStyle(\n                                                fontSize: 14,\n                                                fontWeight: FontWeight.bold,'),
-            ('vertical: 8,\n                                                    ),','vertical: 4,\n                                                    ),'),
-            ('const SizedBox(width: 10),\n                                          const Text(\n                                            "ចំនួន",','const SizedBox(width: 6),\n                                          const Text(\n                                            "ចំនួន",'),
-            ('color: Colors.grey,\n                                              fontFamily: \'Siemreap\',','color: Colors.grey,\n                                              fontSize: 12,\n                                              fontFamily: \'Siemreap\','),
-            ('const SizedBox(height: 15),\n                                      Container(\n                                        padding: const EdgeInsets.all(12),','const SizedBox(height: 7),\n                                      Container(\n                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),'),
-            ('fontSize: 16,\n                                                fontWeight: FontWeight.w500,','fontSize: 13,\n                                                fontWeight: FontWeight.w500,'),
-            ('fontSize: 20,\n                                            color: Colors.blue,','fontSize: 17,\n                                            color: Colors.blue,'),
-            ('padding: const EdgeInsets.all(8),\n        decoration: BoxDecoration(\n          color: Colors.blue.withOpacity(0.1),\n          borderRadius: BorderRadius.circular(8),\n        ),\n        child: Icon(icon, color: Colors.blue, size: 20),','padding: const EdgeInsets.all(6),\n        decoration: BoxDecoration(\n          color: Colors.blue.withOpacity(0.1),\n          borderRadius: BorderRadius.circular(7),\n        ),\n        child: Icon(icon, color: Colors.blue, size: 18),'),
+            ('padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),','padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),'),
+            ('Icons.storefront,\n                                              color: Colors.green,\n                                              size: 19,','Icons.storefront,\n                                              color: Colors.green,\n                                              size: 17,'),
+            ('fontSize: 15,\n                                                fontWeight: FontWeight.bold,\n                                                color: Colors.green.shade800,','fontSize: 11,\n                                                fontWeight: FontWeight.bold,\n                                                color: Colors.green.shade800,'),
+            ('Icons.arrow_forward,\n                                            size: 14,','Icons.arrow_forward,\n                                            size: 12,'),
+            ('''                                          label: Text(
+                                            appText(
+                                              context,
+                                              km: 'មើលហាង',
+                                              en: 'View shop',
+                                            ),
+                                          ),
+                                          style: TextButton.styleFrom(
+                                            foregroundColor: Colors.blue,
+                                          ),''','''                                          label: Text(
+                                            appText(
+                                              context,
+                                              km: 'មើលហាង',
+                                              en: 'View shop',
+                                            ),
+                                            maxLines: 1,
+                                            style: const TextStyle(fontSize: 11),
+                                          ),
+                                          style: TextButton.styleFrom(
+                                            foregroundColor: Colors.blue,
+                                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 3),
+                                            minimumSize: Size.zero,
+                                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                          ),'''),
+            ('                                    const Divider(height: 12),','                                    const Divider(height: 14),'),
+            ('                                      child: ListTile(\n                                        contentPadding: EdgeInsets.zero,','                                      child: ListTile(\n                                        dense: true,\n                                        visualDensity: const VisualDensity(vertical: -3),\n                                        minVerticalPadding: 2,\n                                        contentPadding: EdgeInsets.zero,'),
+            ('                                                  size: 24,','                                                  size: 22,'),
+            ('                                                  left: 8,','                                                  left: 5,'),
+            ('fontSize: 12,\n                                            color: Colors.grey.shade600,','fontSize: 10,\n                                            color: Colors.grey.shade600,'),
+            ('                                          icons.chevron_right,','                                          icons.chevron_right,'),
           ]
           for a,b in reps:
             if a in s: s=s.replace(a,b,1)
-          a='  Widget _qtyActionBtn(IconData icon, VoidCallback onTap) {\n    return InkWell(\n      onTap: onTap,\n      child: Container('
-          b='  Widget _qtyActionBtn(IconData icon, VoidCallback onTap) {\n    return InkWell(\n      onTap: onTap,\n      borderRadius: BorderRadius.circular(7),\n      child: Container('
+          # trailing size: target the seller profile tile only
+          a='''                                        trailing: const Icon(
+                                          Icons.chevron_right,
+                                          color: Colors.grey,
+                                        ),'''
+          b='''                                        trailing: const Icon(
+                                          Icons.chevron_right,
+                                          color: Colors.grey,
+                                          size: 20,
+                                        ),'''
+          if a in s: s=s.replace(a,b,1)
+          # compact location row while preserving phone privacy tiles
+          a='''                                    ListTile(
+                                      contentPadding: EdgeInsets.zero,
+                                      leading: const Icon(
+                                        Icons.location_on,
+                                        color: Colors.red,
+                                      ),
+                                      title: Text(
+                                        widget.product['location'] ??
+                                            appText(
+                                              context,
+                                              km: 'មិនមានទីតាំង',
+                                              en: 'Location not provided',
+                                            ),
+                                      ),
+                                    ),'''
+          b='''                                    ListTile(
+                                      dense: true,
+                                      visualDensity: const VisualDensity(vertical: -4),
+                                      minVerticalPadding: 0,
+                                      minLeadingWidth: 26,
+                                      horizontalTitleGap: 8,
+                                      contentPadding: EdgeInsets.zero,
+                                      leading: const Icon(
+                                        Icons.location_on,
+                                        color: Colors.red,
+                                        size: 19,
+                                      ),
+                                      title: Text(
+                                        widget.product['location'] ??
+                                            appText(
+                                              context,
+                                              km: 'មិនមានទីតាំង',
+                                              en: 'Location not provided',
+                                            ),
+                                        style: const TextStyle(fontSize: 13, fontFamily: 'Siemreap'),
+                                      ),
+                                    ),'''
           if a in s: s=s.replace(a,b,1)
           p.write_text(s,encoding='utf-8')
-
-          p=Path('lib/add_product.dart')
-          s=p.read_text(encoding='utf-8')
-          a='                  side: BorderSide(color: Colors.deepPurple.withOpacity(0.75)),\n                  visualDensity: VisualDensity.compact,\n'
-          b='                  side: BorderSide(color: Colors.deepPurple.withOpacity(0.75)),\n                  minimumSize: const Size(0, 32),\n                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),\n                  visualDensity: VisualDensity.compact,\n'
-          if a in s: s=s.replace(a,b,1)
-          p.write_text(s,encoding='utf-8')
-      - name: Verify patch
+      - name: Verify seller card patch
         run: |
-          grep -Fq 'Icons.star_rounded' lib/product_detail.dart
-          grep -Fq 'width: 60, // Compact quantity field' lib/product_detail.dart
-          grep -Fq 'minimumSize: const Size(0, 32)' lib/add_product.dart
+          grep -Fq 'visualDensity: const VisualDensity(vertical: -3)' lib/product_detail.dart
+          grep -Fq 'style: const TextStyle(fontSize: 11)' lib/product_detail.dart
+          grep -Fq 'horizontalTitleGap: 8' lib/product_detail.dart
           git diff --check
-      - name: Commit compact parity
+      - name: Commit seller card parity
         run: |
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add lib/product_detail.dart lib/add_product.dart
+          git add lib/product_detail.dart
           git diff --cached --quiet && exit 0
-          git commit -m 'Compact iOS Product Detail and Add Product AI controls'
+          git commit -m 'Compact iOS Product Detail seller information card'
           git push origin HEAD:ios-sync-android46
