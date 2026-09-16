@@ -47,6 +47,7 @@ Downloading packages...
   firebase_storage_platform_interface 6.0.5 (6.0.7 available)
   firebase_storage_web 3.11.11 (3.11.13 available)
   fl_chart 0.68.0 (1.2.0 available)
+  flutter_cache_manager 3.4.2 (3.4.3 available)
   flutter_image_compress 2.3.0 (2.5.1 available)
   flutter_image_compress_web 0.1.4+1 (0.1.5+1 available)
   flutter_local_notifications 18.0.1 (22.3.1 available)
@@ -55,6 +56,7 @@ Downloading packages...
   flutter_plugin_android_lifecycle 2.0.34 (2.0.35 available)
   flutter_secure_storage 10.3.4 (11.1.1 available)
   flutter_secure_storage_darwin 0.3.2 (0.4.2 available)
+  flutter_secure_storage_platform_interface 2.1.0 (2.1.1 available)
   flutter_secure_storage_windows 4.1.0 (4.2.2 available)
   geocoding 3.0.0 (5.0.0 available)
   geocoding_android 3.3.1 (5.1.0 available)
@@ -133,7 +135,7 @@ Downloading packages...
   win32 5.15.0 (6.4.0 available)
   xml 6.5.0 (7.0.1 available)
 Got dependencies!
-132 packages have newer versions incompatible with dependency constraints.
+134 packages have newer versions incompatible with dependency constraints.
 Try `flutter pub outdated` for more information.
 Analyzing sesan_app_new...                                      
 
@@ -157,13 +159,13 @@ warning • The declaration '_uploadToStorage' isn't referenced • lib/add_prod
 warning • The declaration '_showErrorDialog' isn't referenced • lib/add_product.dart:765:8 • unused_element
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/add_product.dart:814:43 • deprecated_member_use
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/add_product.dart:1048:61 • deprecated_member_use
-   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/add_product.dart:1413:11 • deprecated_member_use
-   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/add_product.dart:1472:9 • deprecated_member_use
-   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/add_product.dart:1512:9 • deprecated_member_use
-   info • 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre • lib/add_product.dart:1573:17 • deprecated_member_use
-   info • 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre • lib/add_product.dart:1574:17 • deprecated_member_use
-   info • 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre • lib/add_product.dart:1589:17 • deprecated_member_use
-   info • 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre • lib/add_product.dart:1590:17 • deprecated_member_use
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/add_product.dart:1478:11 • deprecated_member_use
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/add_product.dart:1537:9 • deprecated_member_use
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/add_product.dart:1577:9 • deprecated_member_use
+   info • 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre • lib/add_product.dart:1642:17 • deprecated_member_use
+   info • 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre • lib/add_product.dart:1643:17 • deprecated_member_use
+   info • 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre • lib/add_product.dart:1658:17 • deprecated_member_use
+   info • 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre • lib/add_product.dart:1659:17 • deprecated_member_use
    info • Don't invoke 'print' in production code • lib/add_report_screen.dart:61:7 • avoid_print
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/add_report_screen.dart:144:35 • deprecated_member_use
    info • The private field _selectedImages could be 'final' • lib/add_wanted_screen.dart:40:14 • prefer_final_fields
@@ -419,42 +421,40 @@ warning • The declaration '_getSubtitleText' isn't referenced • lib/chat_lis
    info • The variable name 'receiver_id' isn't a lowerCamelCase identifier • lib/chat_screen.dart:18:16 • non_constant_identifier_names
    info • The variable name 'seller_id' isn't a lowerCamelCase identifier • lib/chat_screen.dart:24:19 • non_constant_identifier_names
    info • The variable name 'receiver_id' isn't a lowerCamelCase identifier • lib/chat_screen.dart:25:19 • non_constant_identifier_names
-warning • Unused import: 'package:audio_video_progress_bar/audio_video_progress_bar.dart' • lib/chat_screen_legacy.dart:2:8 • unused_import
-   info • The import of 'package:flutter/foundation.dart' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' • lib/chat_screen_legacy.dart:6:8 • unnecessary_import
-warning • Unused import: 'package:my_app/chat_video_player.dart' • lib/chat_screen_legacy.dart:14:8 • unused_import
-warning • Unused import: 'package:audioplayers/audioplayers.dart' • lib/chat_screen_legacy.dart:22:8 • unused_import
-warning • Unused import: 'package:video_player/video_player.dart' • lib/chat_screen_legacy.dart:26:8 • unused_import
-   info • The imported package 'flutter_cache_manager' isn't a dependency of the importing package • lib/chat_screen_legacy.dart:30:8 • depend_on_referenced_packages
-warning • Unused import: 'package:flutter_cache_manager/flutter_cache_manager.dart' • lib/chat_screen_legacy.dart:30:8 • unused_import
-   info • The variable name 'seller_id' isn't a lowerCamelCase identifier • lib/chat_screen_legacy.dart:38:16 • non_constant_identifier_names
-   info • The variable name 'receiver_id' isn't a lowerCamelCase identifier • lib/chat_screen_legacy.dart:39:16 • non_constant_identifier_names
-   info • The variable name 'seller_id' isn't a lowerCamelCase identifier • lib/chat_screen_legacy.dart:45:19 • non_constant_identifier_names
-   info • The variable name 'receiver_id' isn't a lowerCamelCase identifier • lib/chat_screen_legacy.dart:46:19 • non_constant_identifier_names
-   info • The private field _highlightedMessages could be 'final' • lib/chat_screen_legacy.dart:67:15 • prefer_final_fields
-   info • Statements in an if should be enclosed in a block • lib/chat_screen_legacy.dart:190:9 • curly_braces_in_flow_control_structures
-warning • A value for optional parameter 'imageFile' isn't ever given • lib/chat_screen_legacy.dart:223:11 • unused_element_parameter
-   info • Don't use 'BuildContext's across async gaps • lib/chat_screen_legacy.dart:250:9 • use_build_context_synchronously
-   info • Don't use 'BuildContext's across async gaps • lib/chat_screen_legacy.dart:251:53 • use_build_context_synchronously
-   info • Don't use 'BuildContext's across async gaps • lib/chat_screen_legacy.dart:267:24 • use_build_context_synchronously
-warning • The declaration '_lockRecording' isn't referenced • lib/chat_screen_legacy.dart:270:8 • unused_element
-   info • Don't use 'BuildContext's across async gaps • lib/chat_screen_legacy.dart:327:9 • use_build_context_synchronously
-warning • The declaration '_compressVideoFast' isn't referenced • lib/chat_screen_legacy.dart:563:16 • unused_element
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/chat_screen_legacy.dart:1091:61 • deprecated_member_use
-   info • The local variable '_seenUpdated' starts with an underscore • lib/chat_screen_legacy.dart:1174:37 • no_leading_underscores_for_local_identifiers
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/chat_screen_legacy.dart:1293:28 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/chat_screen_legacy.dart:1483:44 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/chat_screen_legacy.dart:1569:37 • deprecated_member_use
-warning • The declaration '_buildStatusTick' isn't referenced • lib/chat_screen_legacy.dart:1632:10 • unused_element
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/chat_screen_legacy.dart:1650:33 • deprecated_member_use
-warning • The declaration '_buildLockedRecorder' isn't referenced • lib/chat_screen_legacy.dart:1861:10 • unused_element
-   info • Don't use 'BuildContext's across async gaps • lib/chat_screen_legacy.dart:1999:15 • use_build_context_synchronously
-   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/chat_screen_legacy.dart:2018:41 • use_build_context_synchronously
-   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/chat_screen_legacy.dart:2019:28 • use_build_context_synchronously
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/chat_screen_legacy.dart:2181:24 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/chat_screen_legacy.dart:2218:37 • deprecated_member_use
-   info • Don't use 'BuildContext's across async gaps • lib/chat_screen_legacy.dart:2329:28 • use_build_context_synchronously
-   info • Don't use 'BuildContext's across async gaps • lib/chat_screen_legacy.dart:2339:28 • use_build_context_synchronously
-   info • Don't use 'BuildContext's across async gaps • lib/chat_screen_legacy.dart:2342:26 • use_build_context_synchronously
+warning • Unused import: 'dart:ui' • lib/chat_screen_legacy.dart:3:8 • unused_import
+warning • Unused import: 'package:gal/gal.dart' • lib/chat_screen_legacy.dart:12:8 • unused_import
+   info • The variable name 'seller_id' isn't a lowerCamelCase identifier • lib/chat_screen_legacy.dart:47:16 • non_constant_identifier_names
+   info • The variable name 'receiver_id' isn't a lowerCamelCase identifier • lib/chat_screen_legacy.dart:48:16 • non_constant_identifier_names
+   info • The variable name 'seller_id' isn't a lowerCamelCase identifier • lib/chat_screen_legacy.dart:54:19 • non_constant_identifier_names
+   info • The variable name 'receiver_id' isn't a lowerCamelCase identifier • lib/chat_screen_legacy.dart:55:19 • non_constant_identifier_names
+warning • The value of the field '_loggedUid' isn't used • lib/chat_screen_legacy.dart:90:11 • unused_field
+   info • The private field _highlightedMessages could be 'final' • lib/chat_screen_legacy.dart:99:15 • prefer_final_fields
+   info • The private field _isOnline could be 'final' • lib/chat_screen_legacy.dart:100:8 • prefer_final_fields
+warning • The value of the field '_isOnline' isn't used • lib/chat_screen_legacy.dart:100:8 • unused_field
+   info • Don't use 'BuildContext's across async gaps • lib/chat_screen_legacy.dart:540:9 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/chat_screen_legacy.dart:593:26 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/chat_screen_legacy.dart:623:26 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/chat_screen_legacy.dart:668:11 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/chat_screen_legacy.dart:721:26 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/chat_screen_legacy.dart:725:26 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/chat_screen_legacy.dart:775:13 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/chat_screen_legacy.dart:901:13 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/chat_screen_legacy.dart:913:19 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/chat_screen_legacy.dart:922:13 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/chat_screen_legacy.dart:959:26 • use_build_context_synchronously
+warning • The declaration '_lockRecording' isn't referenced • lib/chat_screen_legacy.dart:986:8 • unused_element
+   info • Don't use 'BuildContext's across async gaps • lib/chat_screen_legacy.dart:1058:9 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/chat_screen_legacy.dart:1063:15 • use_build_context_synchronously
+warning • The declaration '_buildBlockedScreen' isn't referenced • lib/chat_screen_legacy.dart:1133:10 • unused_element
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/chat_screen_legacy.dart:1664:53 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/chat_screen_legacy.dart:1853:28 • deprecated_member_use
+  error • The name '_' is already defined • lib/chat_screen_legacy.dart:2035:36 • duplicate_definition
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/chat_screen_legacy.dart:2070:33 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/chat_screen_legacy.dart:2354:44 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/chat_screen_legacy.dart:2466:33 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/chat_screen_legacy.dart:2609:53 • deprecated_member_use
+   info • Don't use 'BuildContext's across async gaps • lib/chat_screen_legacy.dart:2941:15 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/chat_screen_legacy.dart:2961:29 • use_build_context_synchronously
    info • The imported package 'flutter_cache_manager' isn't a dependency of the importing package • lib/chat_video_bubble.dart:4:8 • depend_on_referenced_packages
 warning • Unused import: 'package:path_provider/path_provider.dart' • lib/chat_video_bubble.dart:6:8 • unused_import
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/chat_video_bubble.dart:123:25 • deprecated_member_use
@@ -761,25 +761,27 @@ warning • Unnecessary cast • lib/order_history_screen.dart:77:20 • unneces
    info • Don't use 'BuildContext's across async gaps • lib/order_history_screen.dart:465:9 • use_build_context_synchronously
    info • Don't use 'BuildContext's across async gaps • lib/order_history_screen.dart:471:21 • use_build_context_synchronously
    info • Don't use 'BuildContext's across async gaps • lib/order_history_screen.dart:496:28 • use_build_context_synchronously
-warning • Unused import: 'package:firebase_auth/firebase_auth.dart' • lib/order_management_screen.dart:3:8 • unused_import
-warning • Duplicate import • lib/order_management_screen.dart:7:8 • duplicate_import
-   info • Invalid use of a private type in a public API • lib/order_management_screen.dart:16:3 • library_private_types_in_public_api
-   info • Statements in an if should be enclosed in a block • lib/order_management_screen.dart:94:11 • curly_braces_in_flow_control_structures
-   info • Statements in an if should be enclosed in a block • lib/order_management_screen.dart:99:11 • curly_braces_in_flow_control_structures
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/order_management_screen.dart:148:48 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/order_management_screen.dart:151:33 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/order_management_screen.dart:268:53 • deprecated_member_use
+   info • Invalid use of a private type in a public API • lib/order_management_screen.dart:14:3 • library_private_types_in_public_api
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/order_management_screen.dart:154:44 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/order_management_screen.dart:261:53 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/order_management_screen.dart:494:33 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/order_management_screen.dart:496:52 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/order_management_screen.dart:652:35 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/order_management_screen.dart:654:65 • deprecated_member_use
    info • Don't use 'BuildContext's across async gaps • lib/order_scanner_service.dart:35:18 • use_build_context_synchronously
    info • Don't use 'BuildContext's across async gaps • lib/order_scanner_service.dart:47:18 • use_build_context_synchronously
    info • Don't use 'BuildContext's across async gaps • lib/order_scanner_service.dart:51:25 • use_build_context_synchronously
    info • Don't use 'BuildContext's across async gaps • lib/order_scanner_service.dart:53:16 • use_build_context_synchronously
    info • Unnecessary 'this.' qualifier • lib/order_service.dart:93:15 • unnecessary_this
    info • Unnecessary 'this.' qualifier • lib/order_service.dart:93:28 • unnecessary_this
-   info • Don't use 'BuildContext's across async gaps • lib/order_tracking_screen.dart:17:28 • use_build_context_synchronously
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/order_tracking_screen.dart:110:48 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/order_tracking_screen.dart:134:43 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/order_tracking_screen.dart:274:35 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/order_tracking_screen.dart:324:33 • deprecated_member_use
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/order_tracking_screen.dart:45:30 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/order_tracking_screen.dart:51:30 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/order_tracking_screen.dart:61:30 • use_build_context_synchronously
+   info • Unnecessary 'const' keyword • lib/order_tracking_screen.dart:82:20 • unnecessary_const
+   info • Unnecessary 'const' keyword • lib/order_tracking_screen.dart:179:32 • unnecessary_const
+   info • Unnecessary 'const' keyword • lib/order_tracking_screen.dart:222:28 • unnecessary_const
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/order_tracking_screen.dart:326:35 • deprecated_member_use
+   info • Unnecessary 'const' keyword • lib/order_tracking_screen.dart:400:24 • unnecessary_const
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/pesticide_calc_page.dart:116:42 • deprecated_member_use
    info • Function literals shouldn't be passed to 'forEach' • lib/pig_feed_calc.dart:68:38 • avoid_function_literals_in_foreach_calls
    info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/pig_feed_calc.dart:104:15 • deprecated_member_use
@@ -811,42 +813,42 @@ warning • Duplicate import • lib/order_management_screen.dart:7:8 • duplic
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/pre_order_grid_view.dart:136:41 • deprecated_member_use
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/pre_order_grid_view.dart:265:37 • deprecated_member_use
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/pre_order_related_products_widget.dart:138:47 • deprecated_member_use
-warning • Unused import: 'package:my_app/share_service.dart' • lib/product_detail.dart:17:8 • unused_import
-warning • Unused import: 'video_player_screen.dart' • lib/product_detail.dart:28:8 • unused_import
-   info • The private field _quantity could be 'final' • lib/product_detail.dart:66:7 • prefer_final_fields
-warning • The value of the field '_quantity' isn't used • lib/product_detail.dart:66:7 • unused_field
-   info • Statements in an if should be enclosed in a block • lib/product_detail.dart:217:20 • curly_braces_in_flow_control_structures
-   info • Unnecessary braces in a string interpolation • lib/product_detail.dart:296:39 • unnecessary_brace_in_string_interps
-warning • The declaration '_saveProductWithWatermark' isn't referenced • lib/product_detail.dart:428:16 • unused_element
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/product_detail.dart:480:39 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/product_detail.dart:696:24 • deprecated_member_use
-warning • The declaration '_shareOriginalImage' isn't referenced • lib/product_detail.dart:724:16 • unused_element
-warning • The declaration '_shareCurrentImage' isn't referenced • lib/product_detail.dart:927:16 • unused_element
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/product_detail.dart:1011:164 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/product_detail.dart:1165:69 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/product_detail.dart:1210:51 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/product_detail.dart:1258:38 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/product_detail.dart:1332:53 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/product_detail.dart:1335:55 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/product_detail.dart:1369:56 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/product_detail.dart:1372:58 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/product_detail.dart:1408:53 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/product_detail.dart:1411:55 • deprecated_member_use
-   info • Statements in an if should be enclosed in a block • lib/product_detail.dart:1637:41 • curly_braces_in_flow_control_structures
-   info • Statements in an if should be enclosed in a block • lib/product_detail.dart:1691:41 • curly_braces_in_flow_control_structures
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/product_detail.dart:1707:56 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/product_detail.dart:1710:58 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/product_detail.dart:1787:49 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/product_detail.dart:1790:51 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/product_detail.dart:1907:64 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/product_detail.dart:1908:69 • deprecated_member_use
-   info • Don't use 'BuildContext's across async gaps • lib/product_detail.dart:2125:9 • use_build_context_synchronously
-   info • Don't use 'BuildContext's across async gaps • lib/product_detail.dart:2138:48 • use_build_context_synchronously
-   info • Don't use 'BuildContext's across async gaps • lib/product_detail.dart:2139:52 • use_build_context_synchronously
-   info • Don't use 'BuildContext's across async gaps • lib/product_detail.dart:2158:9 • use_build_context_synchronously
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/product_detail.dart:2170:30 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/product_detail.dart:2185:24 • deprecated_member_use
-   info • Don't use 'BuildContext's across async gaps • lib/product_detail.dart:2207:30 • use_build_context_synchronously
+warning • Unused import: 'package:my_app/share_service.dart' • lib/product_detail.dart:21:8 • unused_import
+warning • Unused import: 'video_player_screen.dart' • lib/product_detail.dart:35:8 • unused_import
+   info • The private field _quantity could be 'final' • lib/product_detail.dart:73:7 • prefer_final_fields
+warning • The value of the field '_quantity' isn't used • lib/product_detail.dart:73:7 • unused_field
+   info • Statements in an if should be enclosed in a block • lib/product_detail.dart:208:7 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • lib/product_detail.dart:216:7 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • lib/product_detail.dart:263:9 • curly_braces_in_flow_control_structures
+   info • Unnecessary braces in a string interpolation • lib/product_detail.dart:359:39 • unnecessary_brace_in_string_interps
+warning • The declaration '_saveProductWithWatermark' isn't referenced • lib/product_detail.dart:492:16 • unused_element
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/product_detail.dart:540:39 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/product_detail.dart:756:24 • deprecated_member_use
+warning • The declaration '_shareOriginalImage' isn't referenced • lib/product_detail.dart:783:16 • unused_element
+warning • The declaration '_shareCurrentImage' isn't referenced • lib/product_detail.dart:971:16 • unused_element
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/product_detail.dart:1326:43 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/product_detail.dart:1555:68 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/product_detail.dart:1619:61 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/product_detail.dart:1690:48 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/product_detail.dart:1786:59 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/product_detail.dart:1789:61 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/product_detail.dart:1827:62 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/product_detail.dart:1830:64 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/product_detail.dart:1870:59 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/product_detail.dart:1873:61 • deprecated_member_use
+   info • Statements in an if should be enclosed in a block • lib/product_detail.dart:2120:47 • curly_braces_in_flow_control_structures
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/product_detail.dart:2231:62 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/product_detail.dart:2236:64 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/product_detail.dart:2318:55 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/product_detail.dart:2321:57 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/product_detail.dart:2473:62 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/product_detail.dart:2475:62 • deprecated_member_use
+   info • Don't use 'BuildContext's across async gaps • lib/product_detail.dart:2713:9 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/product_detail.dart:2727:11 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/product_detail.dart:2731:11 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/product_detail.dart:2750:28 • use_build_context_synchronously
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/product_detail.dart:2761:30 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/product_detail.dart:2775:24 • deprecated_member_use
 warning • Unused import: 'main.dart' • lib/product_list.dart:9:8 • unused_import
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/product_list.dart:144:43 • deprecated_member_use
 warning • The value of the field '_batchSize' isn't used • lib/product_list.dart:207:13 • unused_field
@@ -867,111 +869,6 @@ warning • The declaration '_buildOwnerTools' isn't referenced • lib/product_
    info • Don't use 'BuildContext's across async gaps • lib/product_list.dart:1293:29 • use_build_context_synchronously
    info • Don't use 'BuildContext's across async gaps • lib/product_list.dart:1295:17 • use_build_context_synchronously
    info • The import of 'dart:typed_data' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/foundation.dart' • lib/product_search_v51.dart:3:8 • unnecessary_import
-warning • Unused import: 'dart:io' • lib/profile_screen_legacy.dart:1:8 • unused_import
-warning • Unused import: 'package:firebase_storage/firebase_storage.dart' • lib/profile_screen_legacy.dart:2:8 • unused_import
-warning • Unused import: 'package:image_picker/image_picker.dart' • lib/profile_screen_legacy.dart:7:8 • unused_import
-warning • Unused import: 'package:my_app/edit_profile_screen.dart' • lib/profile_screen_legacy.dart:13:8 • unused_import
-warning • Unused import: 'package:my_app/logout_button.dart' • lib/profile_screen_legacy.dart:17:8 • unused_import
-warning • Unused import: 'package:my_app/logout_service.dart' • lib/profile_screen_legacy.dart:18:8 • unused_import
-warning • Unused import: 'login_screen.dart' • lib/profile_screen_legacy.dart:26:8 • unused_import
-warning • Unused import: 'edit_product.dart' • lib/profile_screen_legacy.dart:30:8 • unused_import
-warning • Unused import: 'package:cloud_functions/cloud_functions.dart' • lib/profile_screen_legacy.dart:34:8 • unused_import
-warning • Duplicate import • lib/profile_screen_legacy.dart:35:8 • duplicate_import
-warning • Unused import: 'logout_button.dart' • lib/profile_screen_legacy.dart:35:8 • unused_import
-  error • The getter 'delegate' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:81:24 • undefined_getter
-warning • The declaration '_ensureUserExists' isn't referenced • lib/profile_screen_legacy.dart:162:16 • unused_element
-  error • The getter 'account' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:201:28 • undefined_getter
-  error • The getter 'signInToViewAccount' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:211:22 • undefined_getter
-  error • The getter 'goToSignIn' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:219:24 • undefined_getter
-  error • The getter 'accountAndMoney' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:234:32 • undefined_getter
-  error • The getter 'account' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:234:55 • undefined_getter
-  error • The getter 'signOut' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:312:36 • undefined_getter
-  error • The getter 'signOutConfirmation' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:319:36 • undefined_getter
-  error • The getter 'cancel' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:326:40 • undefined_getter
-  error • The getter 'signOut' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:343:40 • undefined_getter
-  error • The getter 'signOut' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:357:28 • undefined_getter
-  error • The getter 'financeCenter' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:383:19 • undefined_getter
-  error • The getter 'viewIncomeExpenses' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:384:22 • undefined_getter
-  error • The getter 'sesanPartnership' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:492:25 • undefined_getter
-  error • The getter 'sesanPartnershipDescription' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:493:28 • undefined_getter
-  error • The getter 'savedProductsAndShops' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:504:23 • undefined_getter
-  error • The getter 'savedProductsAndFollowedShops' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:505:26 • undefined_getter
-  error • The getter 'managePostedProducts' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:528:26 • undefined_getter
-  error • The getter 'viewMyShop' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:541:23 • undefined_getter
-  error • The getter 'previewMyShop' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:542:26 • undefined_getter
-  error • The getter 'adminDashboard' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:588:25 • undefined_getter
-  error • The getter 'reviewCustomerPayments' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:589:28 • undefined_getter
-  error • The getter 'sellerWithdrawals' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:633:25 • undefined_getter
-  error • The getter 'reviewSellerWithdrawals' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:634:28 • undefined_getter
-  error • The getter 'sesanPartnership' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:659:25 • undefined_getter
-  error • The getter 'sesanPartnershipDescription' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:660:28 • undefined_getter
-  error • The getter 'savedProductsAndShops' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:671:23 • undefined_getter
-  error • The getter 'savedProductsAndFollowedShops' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:672:26 • undefined_getter
-  error • The getter 'vipMember' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:732:25 • undefined_getter
-  error • The getter 'vipMemberDescription' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:733:28 • undefined_getter
-  error • The getter 'becomeVip' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:745:23 • undefined_getter
-  error • The getter 'becomeVipDescription' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:746:26 • undefined_getter
-  error • The getter 'legalPolicies' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:759:23 • undefined_getter
-  error • The getter 'settings' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:772:23 • undefined_getter
-  error • The getter 'helpAndSupport' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:785:23 • undefined_getter
-  error • The getter 'aboutUs' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:800:23 • undefined_getter
-  error • The getter 'vipBenefits' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:841:30 • undefined_getter
-  error • The getter 'vipBadgeBenefit' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:859:47 • undefined_getter
-  error • The getter 'vipStatisticsBenefit' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:860:47 • undefined_getter
-  error • The getter 'vipPromotionBenefit' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:861:47 • undefined_getter
-  error • The getter 'vipSupportBenefit' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:862:47 • undefined_getter
-  error • The getter 'vipPrice' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:880:38 • undefined_getter
-  error • The getter 'notNow' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:908:30 • undefined_getter
-  error • The getter 'buyNow' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:935:30 • undefined_getter
-  error • The getter 'professionalSeller' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:1006:37 • undefined_getter
-  error • The getter 'availableBalance' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:1053:39 • undefined_getter
-  error • The getter 'withdraw' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:1115:35 • undefined_getter
-  error • The getter 'pendingBalance' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:1126:33 • undefined_getter
-  error • The getter 'totalBalance' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:1131:33 • undefined_getter
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/profile_screen_legacy.dart:1174:31 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/profile_screen_legacy.dart:1190:33 • deprecated_member_use
-  error • The getter 'mySesanId' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:1200:16 • undefined_getter
-  error • The getter 'notAvailableYet' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:1216:40 • undefined_getter
-  error • The getter 'sesanIdHelp' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:1232:22 • undefined_getter
-  error • The getter 'idCopied' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:1247:31 • undefined_getter
-  error • The getter 'idCopied' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:1259:30 • undefined_getter
-  error • The getter 'create' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:1271:24 • undefined_getter
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/profile_screen_legacy.dart:1299:31 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/profile_screen_legacy.dart:1316:26 • deprecated_member_use
-  error • The getter 'accountNotice' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:1364:23 • undefined_getter
-  error • The getter 'frozenAccountMessage' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:1368:16 • undefined_getter
-  error • The getter 'ok' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:1374:30 • undefined_getter
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/profile_screen_legacy.dart:1399:39 • deprecated_member_use
-  error • The getter 'createSesanIdTitle' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:1410:22 • undefined_getter
-  error • The getter 'createSesanIdDescription' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:1419:22 • undefined_getter
-  error • The getter 'cancel' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:1443:30 • undefined_getter
-  error • The getter 'create' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:1461:30 • undefined_getter
-  error • The method 'sesanIdCreated' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:1511:20 • undefined_method
-  error • The method 'errorMessage' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:1531:32 • undefined_method
-warning • The '!' will have no effect because the receiver can't be null • lib/profile_screen_legacy.dart:1545:46 • unnecessary_non_null_assertion
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/profile_screen_legacy.dart:1584:51 • deprecated_member_use
-  error • The getter 'sesan' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:1605:30 • undefined_getter
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/profile_screen_legacy.dart:1621:47 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/profile_screen_legacy.dart:1624:49 • deprecated_member_use
-  error • The getter 'forKhmerFarmers' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:1628:32 • undefined_getter
-  error • The getter 'aboutLandTitle' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:1651:33 • undefined_getter
-  error • The getter 'aboutLandContent' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:1652:35 • undefined_getter
-  error • The getter 'aboutFarmersTitle' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:1658:33 • undefined_getter
-  error • The getter 'aboutFarmersContent' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:1659:35 • undefined_getter
-  error • The getter 'aboutWorkValueTitle' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:1665:33 • undefined_getter
-  error • The getter 'aboutWorkValueContent' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:1666:35 • undefined_getter
-  error • The getter 'aboutMissionTitle' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:1672:33 • undefined_getter
-  error • The getter 'aboutMissionContent' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:1673:35 • undefined_getter
-  error • The getter 'aboutThanksTitle' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:1679:33 • undefined_getter
-  error • The getter 'aboutThanksContent' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:1680:35 • undefined_getter
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/profile_screen_legacy.dart:1689:58 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/profile_screen_legacy.dart:1692:60 • deprecated_member_use
-  error • The getter 'aboutSlogan' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:1696:32 • undefined_getter
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/profile_screen_legacy.dart:1741:33 • deprecated_member_use
-  error • The getter 'aboutQuestion' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:1752:18 • undefined_getter
-  error • The getter 'aboutQuestionAnswer' isn't defined for the type 'AppLocalizations' • lib/profile_screen_legacy.dart:1766:18 • undefined_getter
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/profile_screen_legacy.dart:1793:26 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/profile_screen_legacy.dart:1805:28 • deprecated_member_use
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/profit_calc.dart:146:28 • deprecated_member_use
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/profit_calc.dart:147:26 • deprecated_member_use
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/qr_scanner_screen.dart:265:49 • deprecated_member_use
@@ -1010,16 +907,36 @@ warning • The value of the local variable 'now' isn't used • lib/seller_acco
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/seller_guide_screen.dart:21:466 • deprecated_member_use
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/seller_guide_screen.dart:21:587 • deprecated_member_use
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/seller_guide_screen.dart:21:1136 • deprecated_member_use
-warning • Unused import: 'dart:io' • lib/seller_profile_screen.dart:1:8 • unused_import
-   info • The import of 'package:flutter/services.dart' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' • lib/seller_profile_screen.dart:8:8 • unnecessary_import
-warning • Unused import: 'package:get/get_core/src/get_main.dart' • lib/seller_profile_screen.dart:9:8 • unused_import
-warning • Unused import: 'package:get/get_navigation/src/extension_navigation.dart' • lib/seller_profile_screen.dart:10:8 • unused_import
 warning • Unused import: 'package:my_app/share_service.dart' • lib/seller_profile_screen.dart:13:8 • unused_import
-warning • Unused import: 'package:path_provider/path_provider.dart' • lib/seller_profile_screen.dart:15:8 • unused_import
-warning • Unused import: 'package:qr_flutter/qr_flutter.dart' • lib/seller_profile_screen.dart:16:8 • unused_import
-warning • Unused import: 'package:fl_chart/fl_chart.dart' • lib/seller_profile_screen.dart:23:8 • unused_import
-warning • The value of the field '_screenshotController' isn't used • lib/seller_profile_screen.dart:30:470 • unused_field
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/seller_profile_screen.dart:48:975 • deprecated_member_use
+warning • The declaration '_formatJoinDateKhmer' isn't referenced • lib/seller_profile_screen.dart:139:10 • unused_element
+warning • The declaration '_toggleFollow' isn't referenced • lib/seller_profile_screen.dart:202:16 • unused_element
+warning • The declaration '_getCurrentUid' isn't referenced • lib/seller_profile_screen.dart:352:18 • unused_element
+   info • Don't use 'BuildContext's across async gaps • lib/seller_profile_screen.dart:375:77 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/seller_profile_screen.dart:380:60 • use_build_context_synchronously
+   info • Statements in a for should be enclosed in a block • lib/seller_profile_screen.dart:404:40 • curly_braces_in_flow_control_structures
+warning • The declaration '_toggleSingleProductLock' isn't referenced • lib/seller_profile_screen.dart:432:16 • unused_element
+   info • Don't use 'BuildContext's across async gaps • lib/seller_profile_screen.dart:512:49 • use_build_context_synchronously
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/seller_profile_screen.dart:688:105 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/seller_profile_screen.dart:702:151 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/seller_profile_screen.dart:702:182 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/seller_profile_screen.dart:703:303 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/seller_profile_screen.dart:720:37 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/seller_profile_screen.dart:721:143 • deprecated_member_use
+   info • Statements in an if should be enclosed in a block • lib/seller_profile_screen.dart:742:39 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • lib/seller_profile_screen.dart:742:98 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • lib/seller_profile_screen.dart:742:146 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • lib/seller_profile_screen.dart:742:206 • curly_braces_in_flow_control_structures
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/seller_profile_screen.dart:748:141 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/seller_profile_screen.dart:776:500 • deprecated_member_use
+warning • The '!' will have no effect because the receiver can't be null • lib/seller_profile_screen.dart:794:66 • unnecessary_non_null_assertion
+warning • The '!' will have no effect because the receiver can't be null • lib/seller_profile_screen.dart:794:82 • unnecessary_non_null_assertion
+   info • Statements in an if should be enclosed in a block • lib/seller_profile_screen.dart:828:90 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • lib/seller_profile_screen.dart:828:171 • curly_braces_in_flow_control_structures
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/seller_profile_screen.dart:851:149 • deprecated_member_use
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/seller_profile_screen.dart:858:552 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/seller_profile_screen.dart:858:619 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/seller_profile_screen.dart:858:691 • use_build_context_synchronously
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/seller_profile_screen.dart:881:139 • deprecated_member_use
    info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/seller_withdraw_screen.dart:79:35 • use_build_context_synchronously
    info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/seller_withdraw_screen.dart:80:43 • use_build_context_synchronously
    info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/seller_withdraw_screen.dart:83:56 • use_build_context_synchronously
@@ -1256,4 +1173,4 @@ warning • The value of the local variable 'permission' isn't used • lib/weat
    info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/weight_calc.dart:115:15 • deprecated_member_use
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/weight_calc.dart:272:22 • deprecated_member_use
 
-1118 issues found. (ran in 20.5s)
+1033 issues found. (ran in 21.3s)
