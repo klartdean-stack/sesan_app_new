@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+/// Archives user-created marketplace content so an account can be restored
+/// during the 15-day recovery period.
 class AccountDeletionService {
   AccountDeletionService._();
 
@@ -56,15 +58,23 @@ class AccountDeletionService {
     var restored = 0;
 
     for (final archive in snapshot.docs) {
-      final data = archive.data();
-      final collection = data['originalCollection']?.toString();
-      final documentId = data['originalId']?.toString();
-      final rawData = data['data'];
-      if (collection == null || documentId == null || rawData is! Map) continue;
+      final archiveData = archive.data();
+      final collection = archiveData['originalCollection']?.toString();
+      final documentId = archiveData['originalId']?.toString();
+      final rawData = archiveData['data'];
 
-      await _db.collection(collection).doc(documentId).set(
-            Map<String, dynamic>.from(rawData),
-          );
+      if (collection == null ||
+          collection.isEmpty ||
+          documentId == null ||
+          documentId.isEmpty ||
+          rawData is! Map) {
+        continue;
+      }
+
+      await _db
+          .collection(collection)
+          .doc(documentId)
+          .set(Map<String, dynamic>.from(rawData));
       await archive.reference.delete();
       restored++;
     }
