@@ -12,65 +12,52 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ios-sync-android46
-      - name: Patch seller profile map
+          fetch-depth: 0
+      - name: Patch remaining V51 parity
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          p=Path('lib/seller_profile_screen.dart')
-          s=p.read_text()
-          if "google_maps_flutter" not in s:
-            s=s.replace("import 'package:fl_chart/fl_chart.dart';", "import 'package:fl_chart/fl_chart.dart';\nimport 'package:google_maps_flutter/google_maps_flutter.dart';\nimport 'package:url_launcher/url_launcher.dart';")
-          marker="  Widget _buildSellerInfoCard(BuildContext context) {"
-          helper=r'''  Future<void> _openShopDirections(double lat, double lng) async {
-    final uri = Uri.parse('https://www.google.com/maps/dir/?api=1&destination=$lat,$lng');
-    if (!await launchUrl(uri, mode: LaunchMode.externalApplication) && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Unable to open Google Maps')));
-    }
-  }
 
-  void _openShopMap(double lat, double lng, String shopName) {
-    final target = LatLng(lat, lng);
-    Navigator.push(context, MaterialPageRoute(builder: (_) => Scaffold(
-      appBar: AppBar(title: Text(shopName), backgroundColor: Colors.green[700], foregroundColor: Colors.white),
-      body: Stack(children: [
-        GoogleMap(initialCameraPosition: CameraPosition(target: target, zoom: 16), markers: {Marker(markerId: const MarkerId('shop'), position: target, infoWindow: InfoWindow(title: shopName))}, myLocationButtonEnabled: false, zoomControlsEnabled: true),
-        Positioned(left: 16, right: 16, bottom: 24, child: ElevatedButton.icon(onPressed: () => _openShopDirections(lat, lng), icon: const Icon(Icons.directions), label: const Text('Directions to shop'), style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white, minimumSize: const Size.fromHeight(48)))),
-      ]),
-    )));
-  }
+          old_link='https://pay.ababank.com/oRF8/lq8jgwzb'
+          new_link='https://pay.ababank.com/oRF8/oizn40j9'
+          for filename in ['lib/shop_upgrade_screen.dart','lib/auction_add_screen.dart']:
+            p=Path(filename)
+            s=p.read_text(encoding='utf-8')
+            if old_link in s:
+              s=s.replace(old_link,new_link)
+              p.write_text(s,encoding='utf-8')
+            elif new_link not in s:
+              raise SystemExit(f'ABA link missing in {filename}')
 
-  Widget _buildShopMapCard(Map<String, dynamic>? userData) {
-    final tier = userData?['shop_tier']?.toString();
-    if (tier != 'basic' && tier != 'premium') return const SizedBox.shrink();
-    final lat = (userData?['shop_latitude'] as num?)?.toDouble();
-    final lng = (userData?['shop_longitude'] as num?)?.toDouble();
-    if (lat == null || lng == null) return const SizedBox.shrink();
-    final target = LatLng(lat, lng);
-    return Padding(
-      padding: const EdgeInsets.only(top: 14),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(14),
-        child: SizedBox(height: 190, child: Stack(children: [
-          Positioned.fill(child: AbsorbPointer(child: GoogleMap(initialCameraPosition: CameraPosition(target: target, zoom: 15), markers: {Marker(markerId: const MarkerId('shop_preview'), position: target)}, myLocationButtonEnabled: false, zoomControlsEnabled: false, mapToolbarEnabled: false))),
-          Positioned.fill(child: Material(color: Colors.transparent, child: InkWell(onTap: () => _openShopMap(lat, lng, widget.sellerName)))),
-          Positioned(left: 10, right: 10, bottom: 10, child: Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8), decoration: BoxDecoration(color: Colors.white.withValues(alpha: .94), borderRadius: BorderRadius.circular(10)), child: Row(children: [Icon(Icons.location_on, color: tier == 'premium' ? Colors.amber.shade800 : Colors.blueAccent, size: 18), const SizedBox(width: 6), Expanded(child: Text(tier == 'premium' ? 'Gold shop location' : 'Blue shop location', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold))), const Icon(Icons.open_in_full, size: 16)]))),
-        ])),
-      ),
-    );
-  }
-
-'''
-          if '_buildShopMapCard(' not in s:
-            s=s.replace(marker, helper+marker, 1)
-          anchor="              // ── ក្រាប 4 ខ្សែសម្រាប់ម្ចាស់ហាង Gold Verified ──"
-          if "_buildShopMapCard(userData)," not in s:
-            s=s.replace(anchor, "              _buildShopMapCard(userData),\n\n"+anchor, 1)
-          p.write_text(s)
+          p=Path('lib/add_product.dart')
+          s=p.read_text(encoding='utf-8')
+          wanted="""                  side: BorderSide(color: Colors.deepPurple.withOpacity(0.75)),
+                  minimumSize: const Size(0, 32),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  visualDensity: VisualDensity.compact,
+"""
+          old="""                  side: BorderSide(color: Colors.deepPurple.withOpacity(0.75)),
+                  visualDensity: VisualDensity.compact,
+"""
+          if wanted not in s:
+            if old not in s:
+              raise SystemExit('AI button style anchor not found')
+            s=s.replace(old,wanted,1)
+            p.write_text(s,encoding='utf-8')
           PY
+          grep -Fq 'https://pay.ababank.com/oRF8/oizn40j9' lib/shop_upgrade_screen.dart
+          grep -Fq 'https://pay.ababank.com/oRF8/oizn40j9' lib/auction_add_screen.dart
+          grep -Fq 'minimumSize: const Size(0, 32)' lib/add_product.dart
+          grep -Fq 'padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5)' lib/add_product.dart
+          git diff --check
       - name: Commit
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add lib/seller_profile_screen.dart
-          git commit -m 'Add Blue Gold seller map display to iOS' || exit 0
-          git push origin ios-sync-android46
+          git add lib/shop_upgrade_screen.dart lib/auction_add_screen.dart lib/add_product.dart
+          if git diff --cached --quiet; then
+            echo 'No changes to commit.'
+            exit 0
+          fi
+          git commit -m 'Match iOS payment links and Add Product AI button to Android V51'
+          git push origin HEAD:ios-sync-android46
