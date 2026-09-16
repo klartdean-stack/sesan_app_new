@@ -1323,7 +1323,7 @@ class _AddProductPageState extends State<AddProductPage> {
                   if (_aiTitleEn?.isNotEmpty == true) 'product_name_en': _aiTitleEn,
                   if (_aiDescriptionKm?.isNotEmpty == true) 'description_km': _aiDescriptionKm,
                   if (_aiDescriptionEn?.isNotEmpty == true) 'description_en': _aiDescriptionEn,
-                  'price': priceController.text.trim(),
+                  'price': priceController.text.trim().replaceAll(',', ''),
                   'track_stock': true,
                   'stock_quantity': int.parse(stockQuantityController.text.trim()),
                   'stock_unit': stockUnitController.text.trim(),
@@ -1604,16 +1604,20 @@ class _AddProductPageState extends State<AddProductPage> {
           controller: priceController,
           keyboardType: TextInputType.number,
           onChanged: (value) {
-            if (value.isNotEmpty) {
-              String cleanNumber = value.replaceAll(',', '');
-              String formatted = formatter.format(int.parse(cleanNumber));
-              priceController.value = TextEditingValue(
-                text: formatted,
-                selection: TextSelection.fromPosition(
-                  TextPosition(offset: formatted.length),
-                ),
-              );
+            final cleanNumber = value.replaceAll(RegExp(r'[^0-9]'), '');
+            if (cleanNumber.isEmpty) {
+              if (value.isNotEmpty) {
+                priceController.clear();
+              }
+              return;
             }
+            final amount = int.tryParse(cleanNumber);
+            if (amount == null) return;
+            final formatted = formatter.format(amount);
+            priceController.value = TextEditingValue(
+              text: formatted,
+              selection: TextSelection.collapsed(offset: formatted.length),
+            );
           },
           decoration: InputDecoration(
             labelText: 'តម្លៃ (៛) *',
