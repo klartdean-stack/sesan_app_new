@@ -366,20 +366,12 @@ warning • The value of the field '_isLoading' isn't used • lib/auction_detai
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/auction_detail_screen.dart:1335:41 • deprecated_member_use
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/auction_detail_screen.dart:1337:60 • deprecated_member_use
    info • 'VideoPlayerController.network' is deprecated and shouldn't be used. Use VideoPlayerController.networkUrl instead • lib/auction_detail_screen.dart:1386:19 • deprecated_member_use
-   info • The import of 'dart:ui' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' • lib/auction_main_screen.dart:2:8 • unnecessary_import
-   info • The import of 'package:flutter/services.dart' is unnecessary because all of the used elements are also provided by the import of 'dart:ui' • lib/auction_main_screen.dart:7:8 • unnecessary_import
-warning • The value of the field '_adminId' isn't used • lib/auction_main_screen.dart:27:16 • unused_field
-warning • The value of the field '_gold' isn't used • lib/auction_main_screen.dart:39:16 • unused_field
+   info • The import of 'dart:ui' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' • lib/auction_main_screen.dart:3:8 • unnecessary_import
+   info • The import of 'package:flutter/services.dart' is unnecessary because all of the used elements are also provided by the import of 'dart:ui' • lib/auction_main_screen.dart:8:8 • unnecessary_import
+warning • The value of the field '_adminId' isn't used • lib/auction_main_screen.dart:24:16 • unused_field
+warning • The value of the field '_gold' isn't used • lib/auction_main_screen.dart:35:16 • unused_field
    info • Don't use 'BuildContext's across async gaps • lib/auction_main_screen.dart:110:13 • use_build_context_synchronously
-   info • Statements in an if should be enclosed in a block • lib/auction_main_screen.dart:139:13 • curly_braces_in_flow_control_structures
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/auction_main_screen.dart:193:48 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/auction_main_screen.dart:227:37 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/auction_main_screen.dart:467:31 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/auction_main_screen.dart:500:22 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/auction_main_screen.dart:502:41 • deprecated_member_use
-warning • The declaration '_RuleItem' isn't referenced • lib/auction_main_screen.dart:519:7 • unused_element
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/auction_main_screen.dart:545:28 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/auction_main_screen.dart:547:47 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/auction_main_screen.dart:180:48 • deprecated_member_use
    info • Statements in an if should be enclosed in a block • lib/audio_bubble_.dart:68:11 • curly_braces_in_flow_control_structures
    info • Statements in an if should be enclosed in a block • lib/audio_bubble_.dart:84:9 • curly_braces_in_flow_control_structures
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/blocked_list_screen.dart:332:68 • deprecated_member_use
@@ -1164,4 +1156,4 @@ warning • The value of the local variable 'permission' isn't used • lib/weat
    info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/weight_calc.dart:115:15 • deprecated_member_use
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/weight_calc.dart:272:22 • deprecated_member_use
 
-1024 issues found. (ran in 22.0s)
+1016 issues found. (ran in 20.3s)
