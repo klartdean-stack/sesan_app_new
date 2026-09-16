@@ -1,0 +1,181 @@
+name: Fix iOS V51 analyzer blockers
+
+on:
+  push:
+    branches:
+      - ios-sync-android46
+    paths:
+      - '.github/workflows/fix-ios-v51-analyzer-blockers.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ios-sync-android46
+          fetch-depth: 0
+
+      - name: Fix parser blockers
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          seller = Path('lib/seller_profile_screen.dart')
+          s = seller.read_text(encoding='utf-8')
+          bad = 'childAspectRatio:MediaQuery.of(c).size.width>700?.8:.65'
+          good = 'childAspectRatio:MediaQuery.of(c).size.width > 700 ? 0.8 : 0.65'
+          if bad not in s:
+              raise SystemExit('seller product-grid ratio pattern not found')
+          s = s.replace(bad, good)
+          bad2 = 'childAspectRatio:MediaQuery.of(context).size.width>700?.8:.65'
+          good2 = 'childAspectRatio:MediaQuery.of(context).size.width > 700 ? 0.8 : 0.65'
+          if bad2 not in s:
+              raise SystemExit('seller shimmer ratio pattern not found')
+          s = s.replace(bad2, good2)
+          seller.write_text(s, encoding='utf-8')
+
+          product = Path('lib/product_list_v51_screen.dart')
+          p = product.read_text(encoding='utf-8')
+          old = "  @override Widget build(BuildContext context){final ai=_ai;return Scaffold(appBar:AppBar(backgroundColor:Colors.green.shade700,foregroundColor:Colors.white,title:Text(localizedCategoryLabel(context,widget.category)),actions:[IconButton(onPressed:_pickLocation,icon:Icon(_hasLocation?Icons.filter_alt:Icons.filter_alt_outlined))],bottom:PreferredSize(preferredSize:Size.fromHeight(_hasLocation?88:60),child:Padding(padding:const EdgeInsets.fromLTRB(15,0,15,10),child:Column(children:[\n    Container(height:45,decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(10)),child:TextField(controller:_searchController,onChanged:(v)=>setState(()=>_search=v.trim().toLowerCase()),decoration:InputDecoration(hintText:appText(context,km:'ស្វែងរកទំនិញក្នុងប្រភេទនេះ...',en:'Search products in this category...'),prefixIcon:const Icon(Icons.search),suffixIconConstraints:const BoxConstraints.tightFor(width:96),suffixIcon:Row(children:[SizedBox(width:32,child:IconButton(padding:EdgeInsets.zero,onPressed:ai?.busy==true?null:_imageSearch,icon:const Icon(Icons.image_search,color:Colors.purple,size:21))),SizedBox(width:32,child:IconButton(padding:EdgeInsets.zero,onPressed:ai?.busy==true?null:_voiceSearch,icon:Icon(ai?.recording==true?Icons.stop_circle:Icons.mic,color:ai?.recording==true?Colors.red:Colors.green,size:21))),SizedBox(width:32,child:IconButton(padding:EdgeInsets.zero,onPressed:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>const QrScannerScreen())),icon:const Icon(Icons.qr_code_scanner,color:Colors.blue,size:21)))]),border:InputBorder.none))),\n    if(_hasLocation)...[const SizedBox(height:7),InkWell(onTap:_pickLocation,child:Row(children:[const Icon(Icons.location_on,color:Colors.white,size:15),const SizedBox(width:5),Expanded(child:Text(_locationLabel,maxLines:1,overflow:TextOverflow.ellipsis,style:const TextStyle(color:Colors.white,fontSize:11))) ]))]\n  ]))))),body:ProductGridV51(category:widget.category,searchQuery:_search,filterProvince:_province,filterDistrict:_district,filterCommune:_commune));}"
+          new = """  @override
+  Widget build(BuildContext context) {
+    final ai = _ai;
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.green.shade700,
+        foregroundColor: Colors.white,
+        title: Text(localizedCategoryLabel(context, widget.category)),
+        actions: [
+          IconButton(
+            onPressed: _pickLocation,
+            icon: Icon(_hasLocation ? Icons.filter_alt : Icons.filter_alt_outlined),
+          ),
+        ],
+        bottom: PreferredSize(
+          preferredSize: Size.fromHeight(_hasLocation ? 88 : 60),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(15, 0, 15, 10),
+            child: Column(
+              children: [
+                Container(
+                  height: 45,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: TextField(
+                    controller: _searchController,
+                    onChanged: (v) => setState(() => _search = v.trim().toLowerCase()),
+                    decoration: InputDecoration(
+                      hintText: appText(
+                        context,
+                        km: 'ស្វែងរកទំនិញក្នុងប្រភេទនេះ...',
+                        en: 'Search products in this category...',
+                      ),
+                      prefixIcon: const Icon(Icons.search),
+                      suffixIconConstraints: const BoxConstraints.tightFor(width: 96),
+                      suffixIcon: Row(
+                        children: [
+                          SizedBox(
+                            width: 32,
+                            child: IconButton(
+                              padding: EdgeInsets.zero,
+                              onPressed: ai?.busy == true ? null : _imageSearch,
+                              icon: const Icon(Icons.image_search, color: Colors.purple, size: 21),
+                            ),
+                          ),
+                          SizedBox(
+                            width: 32,
+                            child: IconButton(
+                              padding: EdgeInsets.zero,
+                              onPressed: ai?.busy == true ? null : _voiceSearch,
+                              icon: Icon(
+                                ai?.recording == true ? Icons.stop_circle : Icons.mic,
+                                color: ai?.recording == true ? Colors.red : Colors.green,
+                                size: 21,
+                              ),
+                            ),
+                          ),
+                          SizedBox(
+                            width: 32,
+                            child: IconButton(
+                              padding: EdgeInsets.zero,
+                              onPressed: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (_) => const QrScannerScreen()),
+                              ),
+                              icon: const Icon(Icons.qr_code_scanner, color: Colors.blue, size: 21),
+                            ),
+                          ),
+                        ],
+                      ),
+                      border: InputBorder.none,
+                    ),
+                  ),
+                ),
+                if (_hasLocation) ...[
+                  const SizedBox(height: 7),
+                  InkWell(
+                    onTap: _pickLocation,
+                    child: Row(
+                      children: [
+                        const Icon(Icons.location_on, color: Colors.white, size: 15),
+                        const SizedBox(width: 5),
+                        Expanded(
+                          child: Text(
+                            _locationLabel,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(color: Colors.white, fontSize: 11),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+      body: ProductGridV51(
+        category: widget.category,
+        searchQuery: _search,
+        filterProvince: _province,
+        filterDistrict: _district,
+        filterCommune: _commune,
+      ),
+    );
+  }"""
+          if old not in p:
+              raise SystemExit('product_list_v51 build block pattern not found')
+          p = p.replace(old, new)
+          product.write_text(p, encoding='utf-8')
+          PY
+
+      - name: Format touched files
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.38.8'
+          channel: stable
+      - run: dart format lib/product_list_v51_screen.dart lib/seller_profile_screen.dart
+
+      - name: Commit fixes
+        shell: bash
+        run: |
+          if git diff --quiet -- lib/product_list_v51_screen.dart lib/seller_profile_screen.dart; then
+            echo 'No changes to commit.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add lib/product_list_v51_screen.dart lib/seller_profile_screen.dart
+          git commit -m 'Fix iOS V51 product list and seller parser blockers'
+          git push origin HEAD:ios-sync-android46
