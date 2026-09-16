@@ -4,11 +4,15 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/services.dart';
 import 'package:my_app/reset_password_screen.dart';
 
+// Enum សម្រាប់ពិនិត្យប្រភេទ OTP
+enum OTPPurpose { signUp, login, resetPassword }
+
 class OTPScreen extends StatefulWidget {
   final String verificationId;
   final String name;
   final String phone;
   final String password;
+  final OTPPurpose purpose; // បន្ថែមនេះ
 
   const OTPScreen({
     super.key,
@@ -16,6 +20,7 @@ class OTPScreen extends StatefulWidget {
     required this.name,
     required this.phone,
     required this.password,
+    this.purpose = OTPPurpose.signUp, // default ជា signUp
   });
 
   @override
@@ -36,44 +41,64 @@ class _OTPScreenState extends State<OTPScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // ១. ផ្ទៀងផ្ទាត់ OTP ជាមួយ Firebase Auth
-      PhoneAuthCredential credential = PhoneAuthProvider.credential(
+      // ១. ផ្ទៀងផ្ទាត់ OTP
+      PhoneAuthCredential phoneCredential = PhoneAuthProvider.credential(
         verificationId: widget.verificationId,
         smsCode: otp,
       );
 
-      // ចូលប្រព័ន្ធដើម្បីយក UID ពិតប្រាកដ
       UserCredential userCredential = await FirebaseAuth.instance
-          .signInWithCredential(credential);
+          .signInWithCredential(phoneCredential);
       String uid = userCredential.user!.uid;
 
-      // ២. បើមកពីមុខងារ "ភ្លេចលេខសម្ងាត់" (Reset Password Case)
-      if (widget.name == "ResetPassword") {
+      // ២. បើមកពី Reset Password
+      if (widget.purpose == OTPPurpose.resetPassword) {
         setState(() => _isLoading = false);
         if (mounted) {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (context) =>
-                  ResetPasswordScreen(uid: uid), // បោះ UID ទៅ Update
+              builder: (context) => ResetPasswordScreen(uid: uid),
             ),
           );
         }
-        return; // ចប់ការងារត្រឹមនេះសម្រាប់ Reset Password
+        return;
       }
 
-      // ៣. បើមកពីការចុះឈ្មោះ ឬ Login ធម្មតា (Sign Up / Login Case)
+      // ៣. បើមកពី Sign Up ឬ Login
       DocumentReference userRef = FirebaseFirestore.instance
           .collection('users')
           .doc(uid);
       DocumentSnapshot userDoc = await userRef.get();
 
       if (!userDoc.exists) {
+        // ===== បន្ថែមនេះ: Link Email/Password =====
+        if (widget.password.isNotEmpty) {
+          final email = "${widget.phone.replaceAll('+', '')}@sesan.app";
+          final emailCredential = EmailAuthProvider.credential(
+            email: email,
+            password: widget.password,
+          );
+
+          try {
+            await userCredential.user!.linkWithCredential(emailCredential);
+          } on FirebaseAuthException catch (e) {
+            // បើធ្លាប់មាន account ដូចគ្នា កុំឲ្យ crash
+            if (e.code == 'provider-already-linked' ||
+                e.code == 'credential-already-in-use') {
+              // មិនអីទេ បន្តទៅមុខ
+            } else {
+              throw e;
+            }
+          }
+        }
+
+        // បង្កើត user ថ្មី
         await userRef.set({
           'uid': uid,
           'name': widget.name,
           'phone': widget.phone,
-          'password': widget.password, // លេខកូដសម្រាប់ដកលុយ
+          'password': widget.password,
           'balance': 0,
           'wallet_balance': 0,
           'today_earnings': 0,
@@ -81,7 +106,7 @@ class _OTPScreenState extends State<OTPScreen> {
           'lastLogin': FieldValue.serverTimestamp(),
         });
       } else {
-        // បើមានអាខោនហើយ គ្រាន់តែ Update ម៉ោងចូលប្រើ
+        // Update last login
         await userRef.update({'lastLogin': FieldValue.serverTimestamp()});
       }
 
@@ -134,7 +159,7 @@ class _OTPScreenState extends State<OTPScreen> {
                 ],
               ),
             ),
-            const SizedBox(height: 50), // ប្រអប់វាយ OTP ស្អាតៗ
+            const SizedBox(height: 50),
             TextField(
               controller: _otpController,
               textAlign: TextAlign.center,
