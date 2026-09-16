@@ -2317,7 +2317,7 @@ Android: $androidPlayStoreLink
 
                               // --- ផ្នែកព័ត៌មានអ្នកលក់ (Update ថ្មី អាចចុចចូលមើល Profile បាន) ---
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                                 decoration: BoxDecoration(
                                   color: Colors.green.withOpacity(0.05),
                                   borderRadius: BorderRadius.circular(12),
@@ -2336,7 +2336,7 @@ Android: $androidPlayStoreLink
                                             const Icon(
                                               Icons.storefront,
                                               color: Colors.green,
-                                              size: 19,
+                                              size: 17,
                                             ),
                                             const SizedBox(width: 6),
                                             Text(
@@ -2346,7 +2346,7 @@ Android: $androidPlayStoreLink
                                                 en: 'Seller information',
                                               ),
                                               style: TextStyle(
-                                                fontSize: 15,
+                                                fontSize: 11,
                                                 fontWeight: FontWeight.bold,
                                                 color: Colors.green.shade800,
                                               ),
@@ -2376,7 +2376,7 @@ Android: $androidPlayStoreLink
                                           },
                                           icon: const Icon(
                                             Icons.arrow_forward,
-                                            size: 14,
+                                            size: 12,
                                           ),
                                           label: Text(
                                             appText(
@@ -2391,7 +2391,7 @@ Android: $androidPlayStoreLink
                                         ),
                                       ],
                                     ),
-                                    const Divider(height: 12),
+                                    const Divider(height: 14),
                                     // 🎯 ចុចលើ Profile ក៏អាចចូលទៅមើលបានដែរ
                                     InkWell(
                                       onTap: () {
@@ -2411,6 +2411,9 @@ Android: $androidPlayStoreLink
                                         );
                                       },
                                       child: ListTile(
+                                        dense: true,
+                                        visualDensity: const VisualDensity(vertical: -3),
+                                        minVerticalPadding: 2,
                                         contentPadding: EdgeInsets.zero,
                                         leading: CircleAvatar(
                                           radius: 20,
@@ -2434,7 +2437,7 @@ Android: $androidPlayStoreLink
                                               ? const Icon(
                                                   Icons.person,
                                                   color: Colors.green,
-                                                  size: 24,
+                                                  size: 22,
                                                 )
                                               : null,
                                         ),
@@ -2465,7 +2468,7 @@ Android: $androidPlayStoreLink
                                                         'premium'))
                                               Container(
                                                 margin: const EdgeInsets.only(
-                                                  left: 8,
+                                                  left: 5,
                                                 ),
                                                 padding: const EdgeInsets.all(
                                                   2,
@@ -2497,7 +2500,7 @@ Android: $androidPlayStoreLink
                                               ? "ផុសនៅ៖ ${DateFormat('dd-MM-yyyy HH:mm').format((widget.product['updated_at'] as Timestamp).toDate())}"
                                               : "ម្ចាស់ចំការ / អ្នកលក់",
                                           style: TextStyle(
-                                            fontSize: 12,
+                                            fontSize: 10,
                                             color: Colors.grey.shade600,
                                           ),
                                         ),
