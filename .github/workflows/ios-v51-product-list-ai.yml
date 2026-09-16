@@ -19,11 +19,8 @@ jobs:
         with:
           ref: ios-sync-android46
 
-      - name: Patch Android V51 Product List parity
-        run: |
-          python3 tool/patch_ios_product_list_ai.py
-          python3 tool/fix_ios_product_list_search_filter.py
-          python3 tool/patch_ios_product_list_manage_posts_v2.py
+      - name: Patch Android V51 Manage Posts parity
+        run: python3 tool/patch_ios_product_list_manage_posts_v2.py
 
       - name: Verify Product List parity tokens
         run: |
