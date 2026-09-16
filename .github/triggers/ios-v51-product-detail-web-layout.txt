@@ -1,0 +1,1 @@
+sync Product Detail web/layout differences with Android V51
