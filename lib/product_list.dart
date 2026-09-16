@@ -16,6 +16,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:my_app/wanted_detail_screen.dart';
 import 'main.dart';
 import 'product_detail.dart';
+import 'pre_order_detail_screen.dart';
 import 'edit_product.dart';
 import 'location_picker.dart';
 import 'category_localization.dart';
@@ -602,6 +603,9 @@ class ProductGridView extends StatefulWidget {
   final String? filterProvince;
   final String? filterDistrict;
   final String? filterCommune;
+  final String? filterProvince;
+  final String? filterDistrict;
+  final String? filterCommune;
 
 
   const ProductGridView({
@@ -610,6 +614,9 @@ class ProductGridView extends StatefulWidget {
     this.searchQuery = "",
     this.isHome = false,
     this.isAuction = false, // 🎯 ២. និងដាក់វាចូលក្នុង Constructor ទីនេះ!
+    this.filterProvince,
+    this.filterDistrict,
+    this.filterCommune,
     this.filterProvince,
     this.filterDistrict,
     this.filterCommune,
@@ -631,6 +638,8 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
   bool _hasMore = true;
   DocumentSnapshot? _lastDoc;
   String? _currentUserId;
+  String _selectedManageType = 'sale';
+  static String _lastManageType = 'sale';
   String _selectedSubCategory = 'ទាំងអស់'; // ✅ បន្ថែមបន្ទាត់នេះ
   String _selectedSubSubCategory = 'ទាំងអស់'; // ✅ បន្ថែម
   @override
@@ -665,6 +674,11 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
 
   Future<void> _initUserAndFetch() async {
     _currentUserId = await UserService.getUserId();
+    if (widget.category == "ទំនិញរបស់ខ្ញុំ") {
+      final prefs = await SharedPreferences.getInstance();
+      final savedType = prefs.getString('manage_posts_tab');
+      _selectedManageType = savedType ?? _lastManageType;
+    }
 
 
     // ✅ Clear តែពេលចូលមកដំបូង
@@ -741,6 +755,10 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
           .where('userId', isEqualTo: _currentUserId)
           .orderBy('createdAt', descending: true)
           .get(),
+      FirebaseFirestore.instance
+          .collection('pre_orders')
+          .where('owner_id', isEqualTo: _currentUserId)
+          .get(),
     ]);
 
 
@@ -750,13 +768,14 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
     final combined = <DocumentSnapshot>[];
     combined.addAll(futures[0].docs);
     combined.addAll(futures[1].docs);
+    combined.addAll(futures[2].docs);
 
 
     combined.sort((a, b) {
       final dataA = a.data() as Map<String, dynamic>;
       final dataB = b.data() as Map<String, dynamic>;
-      final timeA = dataA['created_at'] ?? dataA['savedAt'] ?? Timestamp.now();
-      final timeB = dataB['created_at'] ?? dataB['savedAt'] ?? Timestamp.now();
+      final timeA = dataA['created_at'] ?? dataA['createdAt'] ?? dataA['savedAt'] ?? Timestamp.now();
+      final timeB = dataB['created_at'] ?? dataB['createdAt'] ?? dataB['savedAt'] ?? Timestamp.now();
       return (timeB as Timestamp).compareTo(timeA as Timestamp);
     });
 
@@ -909,6 +928,9 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
       final data = doc.data() as Map<String, dynamic>;
       final query = widget.searchQuery;
 
+      final postType = _managePostType(doc);
+      final matchesManageType = widget.category != 'ទំនិញរបស់ខ្ញុំ' ||
+          postType == _selectedManageType;
 
       final subCategory = (data['sub_category'] ?? '').toString();
       final subSubCategory = (data['sub_sub_category'] ?? '').toString();
@@ -924,7 +946,8 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
               subSubCategory == _selectedSubSubCategory;
 
 
-      return _matchesSmartSearch(data, query) &&
+      return matchesManageType &&
+          _matchesSmartSearch(data, query) &&
           matchesSub &&
           matchesSubSub &&
           _matchesLocationFilter(data);
@@ -936,6 +959,7 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
       return Column(
         children: [
           if (!widget.isHome) _buildSubCategoryFilter(),
+          if (widget.category == 'ទំនិញរបស់ខ្ញុំ') _buildManageTabs(),
           const Expanded(
             child: Center(
               child: Text(
@@ -953,6 +977,7 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
     return Column(
       children: [
         if (!widget.isHome) _buildSubCategoryFilter(),
+        if (widget.category == 'ទំនិញរបស់ខ្ញុំ') _buildManageTabs(),
         Expanded(
           child: GridView.builder(
             key: const PageStorageKey('productGrid'),
@@ -989,6 +1014,69 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
     );
   }
 
+
+  String _managePostType(DocumentSnapshot doc) {
+    final path = doc.reference.path;
+    if (path.contains('wanted_products')) return 'wanted';
+    if (path.contains('pre_orders')) return 'preorder';
+    return 'sale';
+  }
+
+  Widget _buildManageTabs() {
+    final tabs = <({String value, String km, String en, Color color})>[
+      (value: 'sale', km: 'ទំនិញលក់', en: 'For sale', color: Colors.green),
+      (value: 'wanted', km: 'ប្រកាសទិញ', en: 'Wanted', color: Colors.blue),
+      (value: 'preorder', km: 'លក់មុន', en: 'Pre-order', color: Colors.orange),
+    ];
+
+    return Container(
+      color: Colors.white,
+      padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+      child: Row(
+        children: tabs.map((tab) {
+          final selected = _selectedManageType == tab.value;
+          return Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 3),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(10),
+                onTap: () async {
+                  if (selected) return;
+                  setState(() => _selectedManageType = tab.value);
+                  _lastManageType = tab.value;
+                  final prefs = await SharedPreferences.getInstance();
+                  await prefs.setString('manage_posts_tab', tab.value);
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  height: 38,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: selected ? tab.color : tab.color.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: tab.color.withOpacity(selected ? 1 : 0.28),
+                    ),
+                  ),
+                  child: Text(
+                    appText(context, km: tab.km, en: tab.en),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontFamily: 'Siemreap',
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: selected ? Colors.white : tab.color,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
 
   Widget _buildSubCategoryFilter() {
     if (widget.category == 'ទាំងអស់' ||
@@ -1272,7 +1360,7 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
 
 
         return GestureDetector(
-          onTap: () => _onProductTap(docId, data, isWanted),
+          onTap: () => _onProductTap(docId, data, isWanted, isPreOrder: isPreOrder),
           child: Container(
             decoration: BoxDecoration(
               color: Colors.white,
@@ -1776,9 +1864,11 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => isWanted
-            ? WantedDetailScreen(data: productWithId)
-            : ProductDetailScreen(product: productWithId),
+        builder: (context) => isPreOrder
+            ? PreOrderDetailScreen(documentId: docId, data: productWithId)
+            : isWanted
+                ? WantedDetailScreen(data: productWithId)
+                : ProductDetailScreen(product: productWithId),
       ),
     );
   }
