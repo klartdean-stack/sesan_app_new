@@ -2319,10 +2319,10 @@ Android: $androidPlayStoreLink
 
                               // --- ផ្នែកព័ត៌មានអ្នកលក់ (Update ថ្មី អាចចុចចូលមើល Profile បាន) ---
                               Container(
-                                padding: const EdgeInsets.all(15),
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
                                 decoration: BoxDecoration(
                                   color: Colors.green.withOpacity(0.05),
-                                  borderRadius: BorderRadius.circular(15),
+                                  borderRadius: BorderRadius.circular(12),
                                   border: Border.all(
                                     color: Colors.green.withOpacity(0.2),
                                   ),
@@ -2338,8 +2338,9 @@ Android: $androidPlayStoreLink
                                             const Icon(
                                               Icons.storefront,
                                               color: Colors.green,
+                                              size: 19,
                                             ),
-                                            const SizedBox(width: 8),
+                                            const SizedBox(width: 6),
                                             Text(
                                               appText(
                                                 context,
@@ -2347,7 +2348,7 @@ Android: $androidPlayStoreLink
                                                 en: 'Seller information',
                                               ),
                                               style: TextStyle(
-                                                fontSize: 18,
+                                                fontSize: 15,
                                                 fontWeight: FontWeight.bold,
                                                 color: Colors.green.shade800,
                                               ),
@@ -2377,7 +2378,7 @@ Android: $androidPlayStoreLink
                                           },
                                           icon: const Icon(
                                             Icons.arrow_forward,
-                                            size: 16,
+                                            size: 14,
                                           ),
                                           label: Text(
                                             appText(
@@ -2392,7 +2393,7 @@ Android: $androidPlayStoreLink
                                         ),
                                       ],
                                     ),
-                                    const Divider(height: 20),
+                                    const Divider(height: 12),
                                     // 🎯 ចុចលើ Profile ក៏អាចចូលទៅមើលបានដែរ
                                     InkWell(
                                       onTap: () {
@@ -2414,7 +2415,7 @@ Android: $androidPlayStoreLink
                                       child: ListTile(
                                         contentPadding: EdgeInsets.zero,
                                         leading: CircleAvatar(
-                                          radius: 25,
+                                          radius: 20,
                                           backgroundColor:
                                               Colors.green.shade100,
                                           backgroundImage:
@@ -2435,7 +2436,7 @@ Android: $androidPlayStoreLink
                                               ? const Icon(
                                                   Icons.person,
                                                   color: Colors.green,
-                                                  size: 30,
+                                                  size: 24,
                                                 )
                                               : null,
                                         ),
@@ -2452,7 +2453,7 @@ Android: $androidPlayStoreLink
                                                     ),
                                                 style: const TextStyle(
                                                   fontWeight: FontWeight.bold,
-                                                  fontSize: 16,
+                                                  fontSize: 14,
                                                 ),
                                                 overflow: TextOverflow.ellipsis,
                                               ),
