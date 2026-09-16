@@ -1,1 +1,1 @@
-run safe Product Detail web layout parity patch
+run safe Product Detail web layout parity patch - retry with Flutter
