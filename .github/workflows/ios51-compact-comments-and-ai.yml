@@ -1,11 +1,6 @@
-name: iOS V51 compact comments and Add Product AI parity
+name: iOS V51 Compact Parity
 
-on:
-  push:
-    branches: [ios-sync-android46]
-    paths:
-      - '.github/workflows/ios51-compact-comments-and-ai.yml'
-  workflow_dispatch:
+on: [push]
 
 permissions:
   contents: write
@@ -18,119 +13,51 @@ jobs:
         with:
           ref: ios-sync-android46
           fetch-depth: 0
-
-      - name: Apply compact mobile parity patches
-        shell: bash
+      - name: Patch compact UI
         run: |
           python3 - <<'PY'
           from pathlib import Path
 
-          # Add Product: keep the existing AI behavior, only make the button match Android V51 compact sizing.
-          path = Path('lib/add_product.dart')
-          text = path.read_text(encoding='utf-8')
-          old = """                  side: BorderSide(color: Colors.deepPurple.withOpacity(0.75)),
-                  visualDensity: VisualDensity.compact,
-"""
-          new = """                  side: BorderSide(color: Colors.deepPurple.withOpacity(0.75)),
-                  minimumSize: const Size(0, 32),
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  visualDensity: VisualDensity.compact,
-"""
-          if 'minimumSize: const Size(0, 32)' not in text:
-              if old not in text:
-                  raise SystemExit('Add Product AI button anchor not found')
-              text = text.replace(old, new, 1)
-              path.write_text(text, encoding='utf-8')
+          p = Path('lib/add_product.dart')
+          s = p.read_text(encoding='utf-8')
+          old = "                  side: BorderSide(color: Colors.deepPurple.withOpacity(0.75)),\n                  visualDensity: VisualDensity.compact,\n"
+          new = "                  side: BorderSide(color: Colors.deepPurple.withOpacity(0.75)),\n                  minimumSize: const Size(0, 32),\n                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),\n                  visualDensity: VisualDensity.compact,\n"
+          if 'minimumSize: const Size(0, 32)' not in s:
+              if old not in s:
+                  raise SystemExit('Add Product AI anchor missing')
+              s = s.replace(old, new, 1)
+              p.write_text(s, encoding='utf-8')
 
-          # Product Detail comments: compact visual density only. Posting/reply/image/audio logic is unchanged.
-          path = Path('lib/comment_section.dart')
-          text = path.read_text(encoding='utf-8')
-          replacements = [
-              ('padding: EdgeInsets.all(isNestedReply ? 6 : 8),',
-               'padding: EdgeInsets.all(isNestedReply ? 5 : 7),'),
-              ('radius: isNestedReply ? 11 : 16,',
-               'radius: isNestedReply ? 10 : 14,'),
-              ("? const Icon(Icons.person, size: 16)",
-               "? const Icon(Icons.person, size: 14)"),
-              ('const SizedBox(width: 8),\n              Expanded(\n                child: Column(',
-               'const SizedBox(width: 6),\n              Expanded(\n                child: Column('),
-              ('margin: const EdgeInsets.only(top: 5),\n      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),',
-               'margin: const EdgeInsets.only(top: 4),\n      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),'),
-              ('width: 30,\n              height: 30,',
-               'width: 28,\n              height: 28,'),
-              ('size: 17,', 'size: 16,'),
-              ('padding: const EdgeInsets.all(8),\n      child: Column(',
-               'padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 6),\n      child: Column('),
-              ('padding: const EdgeInsets.only(bottom: 6),',
-               'padding: const EdgeInsets.only(bottom: 4),'),
-              ('padding: const EdgeInsets.all(6),\n                  decoration: BoxDecoration(',
-               'padding: const EdgeInsets.all(5),\n                  decoration: BoxDecoration('),
-              ('child: const Icon(Icons.image, color: Colors.green, size: 20),',
-               'child: const Icon(Icons.image, color: Colors.green, size: 18),'),
-              ('const SizedBox(width: 8),\n              Expanded(\n                child: TextField(',
-               'const SizedBox(width: 6),\n              Expanded(\n                child: TextField('),
-              ('contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),',
-               'contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),'),
-              ('const SizedBox(width: 8),\n              _isUploading',
-               'const SizedBox(width: 6),\n              _isUploading'),
-              ('width: 34,\n                      height: 34,',
-               'width: 30,\n                      height: 30,'),
-              ('padding: const EdgeInsets.all(8),\n                        decoration: BoxDecoration(',
-               'padding: const EdgeInsets.all(7),\n                        decoration: BoxDecoration('),
-              ('size: 18,\n                        ),',
-               'size: 17,\n                        ),'),
-              ('padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),',
-               'padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),'),
-              ('const Icon(Icons.mic, color: Colors.blue, size: 18)',
-               'const Icon(Icons.mic, color: Colors.blue, size: 17)'),
-              ('padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),',
-               'padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),'),
-              ('border: Border.all(color: Colors.red, width: 2),',
-               'border: Border.all(color: Colors.red, width: 1.5),'),
-              ('const SizedBox(width: 10),\n          Text(',
-               'const SizedBox(width: 8),\n          Text('),
-              ('fontWeight: FontWeight.bold, fontSize: 16',
-               'fontWeight: FontWeight.bold, fontSize: 14'),
-              ('const SizedBox(width: 20),', 'const SizedBox(width: 14),'),
-              ('padding: const EdgeInsets.all(8),\n              decoration: BoxDecoration(color: Colors.grey.withOpacity(0.2), shape: BoxShape.circle),',
-               'padding: const EdgeInsets.all(6),\n              decoration: BoxDecoration(color: Colors.grey.withOpacity(0.2), shape: BoxShape.circle),'),
-              ('child: const Icon(Icons.close, color: Colors.grey, size: 20),',
-               'child: const Icon(Icons.close, color: Colors.grey, size: 18),'),
-              ('const SizedBox(width: 12),\n          GestureDetector(\n            onTap: _stopRecording,',
-               'const SizedBox(width: 10),\n          GestureDetector(\n            onTap: _stopRecording,'),
-              ('padding: const EdgeInsets.all(10),\n              decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),',
-               'padding: const EdgeInsets.all(8),\n              decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),'),
-              ('child: const Icon(Icons.stop, color: Colors.white, size: 24),',
-               'child: const Icon(Icons.stop, color: Colors.white, size: 20),'),
-          ]
-          changed = False
-          for old, new in replacements:
-              if old in text:
-                  text = text.replace(old, new, 1)
-                  changed = True
-          if changed:
-              path.write_text(text, encoding='utf-8')
+          p = Path('lib/comment_section.dart')
+          s = p.read_text(encoding='utf-8')
+          pairs = {
+            'padding: EdgeInsets.all(isNestedReply ? 6 : 8),': 'padding: EdgeInsets.all(isNestedReply ? 5 : 7),',
+            'radius: isNestedReply ? 11 : 16,': 'radius: isNestedReply ? 10 : 14,',
+            '? const Icon(Icons.person, size: 16)': '? const Icon(Icons.person, size: 14)',
+            'contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),': 'contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),',
+            'padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),': 'padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),',
+            'padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),': 'padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),',
+            'border: Border.all(color: Colors.red, width: 2),': 'border: Border.all(color: Colors.red, width: 1.5),',
+            'fontWeight: FontWeight.bold, fontSize: 16': 'fontWeight: FontWeight.bold, fontSize: 14',
+            'const SizedBox(width: 20),': 'const SizedBox(width: 14),',
+            'child: const Icon(Icons.close, color: Colors.grey, size: 20),': 'child: const Icon(Icons.close, color: Colors.grey, size: 18),',
+            'child: const Icon(Icons.stop, color: Colors.white, size: 24),': 'child: const Icon(Icons.stop, color: Colors.white, size: 20),',
+            'child: const Icon(Icons.image, color: Colors.green, size: 20),': 'child: const Icon(Icons.image, color: Colors.green, size: 18),',
+          }
+          for old, new in pairs.items():
+              s = s.replace(old, new, 1)
+          p.write_text(s, encoding='utf-8')
           PY
-
-      - name: Verify targeted parity changes
-        shell: bash
-        run: |
+          git diff --check
           grep -Fq 'minimumSize: const Size(0, 32)' lib/add_product.dart
           grep -Fq 'radius: isNestedReply ? 10 : 14' lib/comment_section.dart
           grep -Fq 'contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7)' lib/comment_section.dart
-          grep -Fq 'padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8)' lib/comment_section.dart
           grep -Fq 'child: const Icon(Icons.stop, color: Colors.white, size: 20)' lib/comment_section.dart
-          git diff --check
-
-      - name: Commit parity patch
-        shell: bash
+      - name: Commit
         run: |
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git add lib/add_product.dart lib/comment_section.dart
-          if git diff --cached --quiet; then
-            echo 'No changes to commit.'
-            exit 0
-          fi
+          if git diff --cached --quiet; then exit 0; fi
           git commit -m 'Compact iOS product comments and Add Product AI button'
           git push origin HEAD:ios-sync-android46
