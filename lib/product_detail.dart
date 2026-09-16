@@ -2620,8 +2620,8 @@ Android: $androidPlayStoreLink
                 onPressed: isAddToCartDisabled
                     ? null
                     : () async {
-                        await _addToCart(widget.product);
-                        if (context.mounted) {
+                        final added = await _addToCart(widget.product);
+                        if (added && context.mounted) {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
@@ -2733,55 +2733,134 @@ Android: $androidPlayStoreLink
   }
 
   // ២. កូដ addToCart ដែលកែសម្រួលរួច
-  Future<void> _addToCart(Map<String, dynamic> product) async {
+  Future<bool> _addToCart(Map<String, dynamic> product) async {
     final String finalImageUrl =
         product['image_url'] ??
         (product['image_urls'] != null &&
                 (product['image_urls'] as List).isNotEmpty
             ? product['image_urls'][0]
             : "");
-    // លុប context ចេញពីក្នុងនេះ
+
+    final tracksStock = product['track_stock'] == true;
+    final stock = product['stock_quantity'] is num
+        ? (product['stock_quantity'] as num).toInt()
+        : int.tryParse(product['stock_quantity']?.toString() ?? '') ?? 0;
+
+    if (tracksStock && (stock <= 0 || _tempQty > stock)) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              stock <= 0
+                  ? appText(
+                      context,
+                      km: 'ទំនិញនេះអស់ពីស្តុកហើយ។',
+                      en: 'This product is out of stock.',
+                    )
+                  : appText(
+                      context,
+                      km: 'ទំនិញនៅសល់តែ $stock ប៉ុណ្ណោះ។',
+                      en: 'Only $stock item(s) remain.',
+                    ),
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return false;
+    }
+
     try {
       final prefs = await SharedPreferences.getInstance();
-      String? userId = prefs.getString('user_uid');
-      if (userId == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("សូមចូលប្រើប្រាស់កម្មវិធីសិន!")),
-        );
-        return;
+      final userId = prefs.getString('user_uid');
+      if (userId == null || userId.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                appText(
+                  context,
+                  km: 'សូមចូលប្រើប្រាស់កម្មវិធីសិន!',
+                  en: 'Please sign in first!',
+                ),
+              ),
+            ),
+          );
+        }
+        return false;
+      }
+
+      final productId = (product['id'] ?? product['product_id'] ?? '').toString();
+      if (productId.isEmpty) return false;
+
+      final currentCart = await FirebaseFirestore.instance
+          .collection('carts')
+          .where('customer_id', isEqualTo: userId)
+          .get();
+      final alreadyInCart = currentCart.docs.any(
+        (doc) => (doc.data()['product_id'] ?? '').toString() == productId,
+      );
+
+      if (alreadyInCart) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                appText(
+                  context,
+                  km: '✓ ទំនិញនេះមានក្នុងកន្ត្រករួចហើយ',
+                  en: '✓ This product is already in your cart',
+                ),
+                style: const TextStyle(fontFamily: 'Siemreap'),
+              ),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+        return true;
       }
 
       await FirebaseFirestore.instance.collection('carts').add({
         'customer_id': userId,
-        // កែត្រង់នេះ៖ បើ .id ក្រហម ប្រើ ['id'] ឬ ['product_id'] ជំនួស
-        'product_id': widget.product['id'] ?? '',
-        'product_name': widget.product['product_name'] ?? 'គ្មានឈ្មោះ',
-        'price': widget.product['price'] ?? 0,
+        'product_id': productId,
+        'product_name': product['product_name'] ?? 'គ្មានឈ្មោះ',
+        'price': product['price'] ?? 0,
         'image_url': finalImageUrl,
-        // កែពី _quantity ទៅជា _tempQty
         'quantity': _tempQty,
+        'track_stock': tracksStock,
+        if (tracksStock) 'stock_quantity': stock,
+        if (tracksStock) 'stock_unit': product['stock_unit'] ?? 'item',
         'created_at': FieldValue.serverTimestamp(),
-        'seller_id': widget.product['seller_id'] ?? 'UNKNOWN_ID',
-        'seller_name': widget.product['seller_name'] ?? 'អាជីវករ សេសាន',
-        'seller_phone': widget.product['seller_phone'] ?? '',
-        'seller_photo': widget.product['seller_photo'] ?? '',
+        'seller_id': product['seller_id'] ?? 'UNKNOWN_ID',
+        'seller_name': product['seller_name'] ?? 'អាជីវករ សេសាន',
+        'seller_phone': product['seller_phone'] ?? '',
+        'seller_photo': product['seller_photo'] ?? '',
       });
 
       await ProductDetailMarketplaceActions(
-        product: widget.product,
+        product: product,
         currentUserId: userId,
       ).logAddToCart();
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("✅ បន្ថែមទៅកន្ត្រករួចរាល់!"),
+          SnackBar(
+            content: Text(
+              appText(
+                context,
+                km: '✅ បន្ថែមទៅកន្ត្រករួចរាល់!',
+                en: '✅ Added to cart successfully!',
+              ),
+            ),
             backgroundColor: Colors.green,
           ),
         );
       }
+      return true;
     } catch (e) {
-      debugPrint("Error: $e");
+      debugPrint('Error adding to cart: $e');
+      return false;
     }
   }
+
 }
