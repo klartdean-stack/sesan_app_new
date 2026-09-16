@@ -21,3 +21,5 @@ jobs:
           gh workflow run ios-build.yml \
             --repo klartdean-stack/sesan_app_new \
             --ref ios-sync-android46
+
+# Triggered for current iOS parity build and App Store Connect upload: 2026-09-17
