@@ -1,12 +1,16 @@
 import 'dart:async';
 import 'dart:io';
+
 import 'package:app_links/app_links.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+
 import 'category_localization.dart';
+
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:gal/gal.dart';
 import 'package:get/get.dart'
@@ -15,7 +19,9 @@ import 'package:intl/intl.dart';
 import 'package:my_app/comment_section.dart';
 import 'package:my_app/seller_profile_screen.dart';
 import 'package:my_app/share_service.dart';
+
 import 'localized_text.dart';
+
 import 'package:path_provider/path_provider.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
@@ -25,33 +31,34 @@ import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+
 import 'video_player_screen.dart';
 import 'related_products_widget.dart';
 import 'chat_screen.dart';
 import 'cart_screen.dart';
 import 'product_detail_marketplace_actions.dart';
 import 'sesan_ai_assistant_screen.dart';
+
 import 'package:flutter/services.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:video_player/video_player.dart';
-
-
 
 // ✅ កែពី StatelessWidget ទៅជា StatefulWidget
 class ProductDetailScreen extends StatefulWidget {
   final Map<String, dynamic> product;
   const ProductDetailScreen({super.key, required this.product});
 
-
   @override
   State<ProductDetailScreen> createState() => _ProductDetailScreenState();
 }
 
-
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
   String _maskSellerPhone(dynamic value) {
-    final phone = (value ?? '').toString().trim().replaceAll(RegExp(r'\s+'), '');
+    final phone = (value ?? '').toString().trim().replaceAll(
+      RegExp(r'\s+'),
+      '',
+    );
     if (phone.isEmpty) return '';
     if (phone.length <= 3) return 'XXX';
     return '${phone.substring(0, phone.length - 3)}XXX';
@@ -69,7 +76,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   bool _isTranslatingProduct = false;
   String? _translatedProductName;
   String? _translatedDescription;
-
+  final PageController _webGalleryController = PageController();
+  final ScrollController _webCommentsController = ScrollController();
 
   // ១. ប្រកាស variable នេះនៅខាងលើក្នុង Class _ProductDetailScreenState
   late AppLinks _appLinks;
@@ -77,7 +85,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
   VideoPlayerController? _videoController;
   bool _isVideoInitialized = false;
-
 
   @override
   void initState() {
@@ -90,11 +97,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     _linkSubscription = _appLinks.uriLinkStream.listen((uri) {
       debugPrint("ទទួល បាន Link ថ្មីក្នុង Detail: $uri");
 
-
       final segments = uri.pathSegments;
       if (segments.contains('product')) {
         final String newProductId = segments.last;
-
 
         // បើ ID ថ្មីខុសពី ID ចាស់ដែលកំពុងមើល ទើប Refresh
         if (newProductId != widget.product['id']) {
@@ -103,15 +108,18 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       }
     });
   }
+
   void _initVideo() {
     final videoUrl = widget.product['video_url'];
     if (videoUrl != null && videoUrl.toString().isNotEmpty) {
       _videoController = VideoPlayerController.networkUrl(Uri.parse(videoUrl))
-        ..initialize().then((_) {
-          if (mounted) setState(() => _isVideoInitialized = true);
-        }).catchError((error) {
-          debugPrint('Product video initialization error: $error');
-        });
+        ..initialize()
+            .then((_) {
+              if (mounted) setState(() => _isVideoInitialized = true);
+            })
+            .catchError((error) {
+              debugPrint('Product video initialization error: $error');
+            });
     }
   }
 
@@ -144,11 +152,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           .doc(productId)
           .get();
 
-
       if (doc.exists) {
         var newData = doc.data() as Map<String, dynamic>;
         newData['id'] = productId;
-
 
         // ប្តូរទៅទំព័រ Detail ថ្មីជាមួយទិន្នន័យថ្មី
         if (mounted) {
@@ -170,6 +176,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     _videoController?.pause();
     _videoController?.dispose();
     _linkSubscription?.cancel();
+    _webGalleryController.dispose();
+    _webCommentsController.dispose();
     super.dispose();
   }
 
@@ -194,16 +202,18 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     }
   }
 
-
-
   String _shownProductName(String fallback) {
-    if (_showTranslatedProduct && (_translatedProductName?.trim().isNotEmpty ?? false)) return _translatedProductName!.trim();
+    if (_showTranslatedProduct &&
+        (_translatedProductName?.trim().isNotEmpty ?? false))
+      return _translatedProductName!.trim();
     final value = (widget.product['product_name'] ?? '').toString().trim();
     return value.isEmpty ? fallback : value;
   }
 
   String _shownProductDescription(String fallback) {
-    if (_showTranslatedProduct && (_translatedDescription?.trim().isNotEmpty ?? false)) return _translatedDescription!.trim();
+    if (_showTranslatedProduct &&
+        (_translatedDescription?.trim().isNotEmpty ?? false))
+      return _translatedDescription!.trim();
     final value = (widget.product['description'] ?? '').toString().trim();
     return value.isEmpty ? fallback : value;
   }
@@ -215,13 +225,22 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   }
 
   Future<void> _toggleProductTranslation() async {
-    if (_showTranslatedProduct) { setState(() => _showTranslatedProduct = false); return; }
-    if (_translatedProductName != null || _translatedDescription != null) { setState(() => _showTranslatedProduct = true); return; }
+    if (_showTranslatedProduct) {
+      setState(() => _showTranslatedProduct = false);
+      return;
+    }
+    if (_translatedProductName != null || _translatedDescription != null) {
+      setState(() => _showTranslatedProduct = true);
+      return;
+    }
     if (_isTranslatingProduct) return;
     setState(() => _isTranslatingProduct = true);
-    final locale = Localizations.localeOf(context).languageCode == 'en' ? 'en' : 'km';
+    final locale = Localizations.localeOf(context).languageCode == 'en'
+        ? 'en'
+        : 'km';
     try {
-      final callable = FirebaseFunctions.instanceFor(region: 'asia-southeast1').httpsCallable('generateProductAiContent');
+      final callable = FirebaseFunctions.instanceFor(region: 'asia-southeast1')
+          .httpsCallable('generateProductAiContent');
       final result = await callable.call(<String, dynamic>{
         'productName': (widget.product['product_name'] ?? '').toString(),
         'notes': (widget.product['description'] ?? '').toString(),
@@ -231,16 +250,25 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       final data = Map<String, dynamic>.from(result.data as Map);
       if (!mounted) return;
       setState(() {
-        _translatedProductName = (data[locale == 'en' ? 'title_en' : 'title_km'] ?? '').toString();
-        _translatedDescription = (data[locale == 'en' ? 'description_en' : 'description_km'] ?? '').toString();
+        _translatedProductName =
+            (data[locale == 'en' ? 'title_en' : 'title_km'] ?? '').toString();
+        _translatedDescription =
+            (data[locale == 'en' ? 'description_en' : 'description_km'] ?? '')
+                .toString();
         _showTranslatedProduct = true;
       });
     } catch (error) {
       debugPrint('Product translation error: $error');
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(
-        Localizations.localeOf(context).languageCode == 'en'
-          ? 'Could not translate this product. Please try again.'
-          : 'មិនអាចបកប្រែទំនិញនេះបានទេ សូមសាកម្ដងទៀត។')));
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              Localizations.localeOf(context).languageCode == 'en'
+                  ? 'Could not translate this product. Please try again.'
+                  : 'មិនអាចបកប្រែទំនិញនេះបានទេ សូមសាកម្ដងទៀត។',
+            ),
+          ),
+        );
     } finally {
       if (mounted) setState(() => _isTranslatingProduct = false);
     }
@@ -254,9 +282,14 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     final price = (widget.product['price'] ?? '').toString();
     final currency = (widget.product['currency'] ?? '៛').toString();
     final category = (widget.product['category'] ?? '').toString();
-    final seller = (widget.product['seller_name'] ?? widget.product['shop_name'] ?? widget.product['seller_id'] ?? '').toString();
+    final seller =
+        (widget.product['seller_name'] ??
+                widget.product['shop_name'] ??
+                widget.product['seller_id'] ??
+                '')
+            .toString();
     final prompt = english
-      ? '''I am considering buying this product on Sesan App.
+        ? '''I am considering buying this product on Sesan App.
 Product ID: $productId
 Product: $name
 Description: $description
@@ -265,7 +298,7 @@ Category: $category
 Seller/Shop: $seller
 
 Please inspect the attached product image and the information above. Explain its likely uses, what I should verify with the seller, and important cautions before buying. Do not invent missing details.'''
-      : '''ខ្ញុំកំពុងពិចារណាទិញទំនិញនេះនៅក្នុង Sesan App។
+        : '''ខ្ញុំកំពុងពិចារណាទិញទំនិញនេះនៅក្នុង Sesan App។
 Product ID៖ $productId
 ឈ្មោះទំនិញ៖ $name
 បរិយាយ៖ $description
@@ -274,21 +307,28 @@ Product ID៖ $productId
 អ្នកលក់/ហាង៖ $seller
 
 សូមពិនិត្យរូបទំនិញដែលបានភ្ជាប់ និងព័ត៌មានខាងលើ។ ជួយពន្យល់ការប្រើប្រាស់ ចំណុចដែលគួរសួរបញ្ជាក់ពីអ្នកលក់ និងអ្វីត្រូវប្រុងប្រយ័ត្នមុនទិញ។ កុំបង្កើតព័ត៌មានដែលមិនមាន។''';
-    Navigator.push(context, MaterialPageRoute(builder: (_) => SesanAiAssistantScreen(
-      initialPrompt: prompt, initialRole: 'agriculture', initialImageUrl: _firstProductImage())));
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => SesanAiAssistantScreen(
+          initialPrompt: prompt,
+          initialRole: 'agriculture',
+          initialImageUrl: _firstProductImage(),
+        ),
+      ),
+    );
   }
 
   // ── Screenshot Controller ────────────────────────────────────────
   final ScreenshotController _screenshotController = ScreenshotController();
 
-
   // ── ២. Function បង្កើត Watermark (ជាប់ Logo និង QR ច្បាស់) ──────────────────
   Widget _buildWatermarkImage(
-      String imageUrl,
-      String sellerName,
-      String sellerPhone,
-      String productId,
-      ) {
+    String imageUrl,
+    String sellerName,
+    String sellerPhone,
+    String productId,
+  ) {
     return Container(
       width: 500, // កំណត់ទំហំឱ្យច្បាស់ដើម្បីកុំឱ្យបាត់ Logo
       color: Colors.white,
@@ -374,11 +414,12 @@ Product ID៖ $productId
       ),
     );
   }
+
   Future<void> _processWatermarkAction(
-      String imageUrl, {
-        bool isShare = false,
-        String? shareText,
-      }) async {
+    String imageUrl, {
+    bool isShare = false,
+    String? shareText,
+  }) async {
     try {
       Get.dialog(
         const Center(child: CircularProgressIndicator(color: Colors.white)),
@@ -418,10 +459,9 @@ Product ID៖ $productId
       );
 
       if (isShare) {
-        await Share.shareXFiles(
-          [XFile(jpgFile.path)],
-          text: shareText ?? 'Sesan App',
-        );
+        await Share.shareXFiles([
+          XFile(jpgFile.path),
+        ], text: shareText ?? 'Sesan App');
       } else {
         // ✅ រក្សាទុកជា JPEG គុណភាពខ្ពស់
         await Gal.putImage(jpgFile.path);
@@ -447,6 +487,7 @@ Product ID៖ $productId
       );
     }
   }
+
   // ── Save Product with Watermark ──────────────────────────────────
   Future<void> _saveProductWithWatermark() async {
     try {
@@ -459,14 +500,12 @@ Product ID៖ $productId
       }
       if (images.isEmpty) return;
 
-
       // ២. បង្ហាញ Loading តូចមួយ (មិនឱ្យជាន់ UI របស់ Watermark)
       Get.rawSnackbar(
         message: "កំពុងរៀបចំរូបភាព...",
         showProgressIndicator: true,
         duration: const Duration(seconds: 2),
       );
-
 
       // ៣. ថតរូប Screenshot (បញ្ជូនទិន្នន័យ ID ឱ្យគ្រប់ដើម្បីបាត់ Error positional args)
       final image = await _screenshotController.captureFromWidget(
@@ -479,14 +518,12 @@ Product ID៖ $productId
         delay: const Duration(milliseconds: 500),
       );
 
-
       // ៤. រក្សាទុក និង Share
       final tempDir = await getTemporaryDirectory();
       final file = File(
         '${tempDir.path}/sesan_${DateTime.now().millisecondsSinceEpoch}.png',
       );
       await file.writeAsBytes(image);
-
 
       // ✅ Save ចូល Gallery (ដោះស្រាយបញ្ហា Save អត់ចូល)
       await Gal.putImage(file.path);
@@ -509,6 +546,7 @@ Product ID៖ $productId
       );
     }
   }
+
   Future<void> _shareProductWithWatermark() async {
     // 1. ទាញរូបភាពទីមួយ
     String firstImage = "";
@@ -525,7 +563,10 @@ Product ID៖ $productId
     final String productId = widget.product['id'] ?? '';
     final String productName = widget.product['product_name'] ?? 'ទំនិញថ្មី';
 
-    String priceString = (widget.product['price'] ?? '0').toString().replaceAll(',', '');
+    String priceString = (widget.product['price'] ?? '0').toString().replaceAll(
+      ',',
+      '',
+    );
     double priceValue = double.tryParse(priceString) ?? 0;
     String price = NumberFormat('#,###').format(priceValue);
     String currency = widget.product['currency']?.toString() ?? '៛';
@@ -535,11 +576,14 @@ Product ID៖ $productId
     final String webLink = "https://sesanshop.com/product/$productId";
 
     // 4. Link ទាញយក App
-    final String iosAppStoreLink = "https://apps.apple.com/app/sesan-agri/idYOUR_APP_STORE_ID";
-    final String androidPlayStoreLink = "https://play.google.com/store/apps/details?id=com.sesan.app";
+    final String iosAppStoreLink =
+        "https://apps.apple.com/app/sesan-agri/idYOUR_APP_STORE_ID";
+    final String androidPlayStoreLink =
+        "https://play.google.com/store/apps/details?id=com.sesan.app";
 
     // 5. បង្កើតសារចែករំលែក (ប្រើតែ Web Link ដើម្បីឲ្យចុចបានគ្រប់កម្មវិធី)
-    final String shareMessage = '''
+    final String shareMessage =
+        '''
 🛍️ $productName
 💰 តម្លៃ៖ $price $currency
 📍 $location
@@ -575,7 +619,6 @@ Android: $androidPlayStoreLink
       firstImage = widget.product['image_url'] ?? "";
     }
 
-
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -609,7 +652,6 @@ Android: $androidPlayStoreLink
                 ),
                 const SizedBox(height: 20),
 
-
                 // ✅ Share Link (ឥឡូវភ្ជាប់រូប Watermark)
                 _buildOptionTile(
                   icon: Icons.link,
@@ -623,7 +665,6 @@ Android: $androidPlayStoreLink
                 ),
                 const SizedBox(height: 12),
 
-
                 // ✅ Save រូបភាព (ទុកដដែល)
                 _buildOptionTile(
                   icon: Icons.download,
@@ -636,7 +677,6 @@ Android: $androidPlayStoreLink
                   },
                 ),
 
-
                 // ❌ លុប Share រូបភាព Watermark ចេញ
                 const SizedBox(height: 15),
               ],
@@ -647,15 +687,13 @@ Android: $androidPlayStoreLink
     );
   }
 
-
   // ── ៥. ប៊ូតុងក្នុងអេក្រង់មើលរូបភាពធំ (Viewer) ឱ្យដើរតាម Index ──────────────────
   void _openImageViewer(
-      BuildContext context,
-      List<String> urls,
-      int initialIndex,
-      ) {
+    BuildContext context,
+    List<String> urls,
+    int initialIndex,
+  ) {
     int currentIndex = initialIndex;
-
 
     Navigator.push(
       context,
@@ -703,7 +741,6 @@ Android: $androidPlayStoreLink
     );
   }
 
-
   // ── Build Option Tile ────────────────────────────────────────────
   Widget _buildOptionTile({
     required IconData icon,
@@ -742,7 +779,6 @@ Android: $androidPlayStoreLink
     );
   }
 
-
   // ── Share Original Image ─────────────────────────────────────────
   Future<void> _shareOriginalImage() async {
     try {
@@ -754,22 +790,18 @@ Android: $androidPlayStoreLink
         images = [widget.product['image_url']];
       }
 
-
       if (images.isEmpty) return;
-
 
       Get.dialog(
         const Center(child: CircularProgressIndicator()),
         barrierDismissible: false,
       );
 
-
       // Download image
       final response = await Dio().get(
         images[0],
         options: Options(responseType: ResponseType.bytes),
       );
-
 
       // Save to temp file
       final tempDir = await getTemporaryDirectory();
@@ -778,9 +810,7 @@ Android: $androidPlayStoreLink
       );
       await file.writeAsBytes(response.data);
 
-
       Get.back();
-
 
       // Share
       await Share.shareXFiles([
@@ -791,7 +821,6 @@ Android: $androidPlayStoreLink
       _showSnack('❌ កំហុស: $e', Colors.red);
     }
   }
-
 
   // ── Load User ID និង Rating របស់គណនីនេះ ─────────────────────────
   Future<void> _loadUid() async {
@@ -831,7 +860,6 @@ Android: $androidPlayStoreLink
       debugPrint("Error loading UID/rating: $e");
     }
   }
-
 
   // ── Submit Rating: User ម្នាក់ = Rating មួយ ─────────────────────
   Future<void> _submitRating(double rating) async {
@@ -874,8 +902,7 @@ Android: $androidPlayStoreLink
 
         final oldAverage =
             (productData['avgRating'] as num?)?.toDouble() ?? 0.0;
-        final oldCount =
-            (productData['totalReviews'] as num?)?.toInt() ?? 0;
+        final oldCount = (productData['totalReviews'] as num?)?.toInt() ?? 0;
 
         double newAverage;
         int newCount;
@@ -887,18 +914,13 @@ Android: $androidPlayStoreLink
 
           newCount = oldCount > 0 ? oldCount : 1;
           final oldTotalScore = oldAverage * newCount;
-          newAverage =
-              (oldTotalScore - oldUserRating + rating) / newCount;
+          newAverage = (oldTotalScore - oldUserRating + rating) / newCount;
 
-          transaction.set(
-            ratingRef,
-            {
-              'userId': uid,
-              'rating': rating,
-              'updatedAt': FieldValue.serverTimestamp(),
-            },
-            SetOptions(merge: true),
-          );
+          transaction.set(ratingRef, {
+            'userId': uid,
+            'rating': rating,
+            'updatedAt': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true));
         } else {
           // User ថ្មី៖ បន្ថែម Review ១ និងគណនា Average ថ្មី
           newCount = oldCount + 1;
@@ -945,7 +967,6 @@ Android: $androidPlayStoreLink
     }
   }
 
-
   // ── Share Current Image from Viewer ──────────────────────────────
   Future<void> _shareCurrentImage(String url) async {
     try {
@@ -954,12 +975,10 @@ Android: $androidPlayStoreLink
         barrierDismissible: false,
       );
 
-
       final response = await Dio().get(
         url,
         options: Options(responseType: ResponseType.bytes),
       );
-
 
       final tempDir = await getTemporaryDirectory();
       final file = File(
@@ -967,9 +986,7 @@ Android: $androidPlayStoreLink
       );
       await file.writeAsBytes(response.data);
 
-
       Get.back();
-
 
       await Share.shareXFiles([
         XFile(file.path),
@@ -979,7 +996,6 @@ Android: $androidPlayStoreLink
       _showSnack('❌ កំហុស: $e', Colors.red);
     }
   }
-
 
   // ── Show Snack Bar ───────────────────────────────────────────────
   void _showSnack(String message, Color color) {
@@ -995,6 +1011,174 @@ Android: $androidPlayStoreLink
     );
   }
 
+  Widget _buildGalleryThumbnails({
+    required List<String> images,
+    required bool hasVideo,
+  }) {
+    final total = images.length + (hasVideo ? 1 : 0);
+    if (total <= 1) return const SizedBox.shrink();
+    return SizedBox(
+      height: 62,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
+        itemCount: total,
+        separatorBuilder: (_, __) => const SizedBox(width: 7),
+        itemBuilder: (context, index) {
+          final selected = _currentPage == index;
+          final isVideo = hasVideo && index == images.length;
+          return InkWell(
+            borderRadius: BorderRadius.circular(8),
+            onTap: () => _webGalleryController.animateToPage(
+              index,
+              duration: const Duration(milliseconds: 250),
+              curve: Curves.easeOut,
+            ),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              width: 48,
+              height: 48,
+              clipBehavior: Clip.antiAlias,
+              decoration: BoxDecoration(
+                color: isVideo ? Colors.black : Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: selected ? Colors.blue : Colors.grey.shade300,
+                  width: selected ? 2.5 : 1,
+                ),
+              ),
+              child: isVideo
+                  ? const Icon(
+                      Icons.play_arrow_rounded,
+                      color: Colors.white,
+                      size: 28,
+                    )
+                  : CachedNetworkImage(
+                      imageUrl: images[index],
+                      fit: BoxFit.cover,
+                      memCacheWidth: 144,
+                      errorWidget: (_, __, ___) =>
+                          const Icon(Icons.broken_image_outlined, size: 20),
+                    ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildWebGalleryExtras({
+    required List<String> images,
+    required bool hasVideo,
+  }) {
+    final sellerId = (widget.product['seller_id'] ?? '').toString();
+    final sellerName =
+        (widget.product['seller_name'] ??
+                appText(context, km: 'អ្នកលក់', en: 'Seller'))
+            .toString();
+    final sellerPhoto = (widget.product['seller_photo'] ?? '').toString();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _buildGalleryThumbnails(images: images, hasVideo: hasVideo),
+        const SizedBox(height: 10),
+        Card(
+          elevation: 0,
+          color: const Color(0xFFF4FAF1),
+          child: ListTile(
+            onTap: sellerId.isEmpty
+                ? null
+                : () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => SellerProfileScreen(
+                        sellerId: sellerId,
+                        sellerName: sellerName,
+                      ),
+                    ),
+                  ),
+            leading: CircleAvatar(
+              backgroundImage: sellerPhoto.isNotEmpty
+                  ? NetworkImage(sellerPhoto)
+                  : null,
+              child: sellerPhoto.isEmpty ? const Icon(Icons.storefront) : null,
+            ),
+            title: Text(
+              sellerName,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            subtitle: Text(
+              appText(context, km: 'ព័ត៌មានអ្នកលក់', en: 'Seller information'),
+            ),
+            trailing: const Icon(Icons.chevron_right),
+          ),
+        ),
+        const SizedBox(height: 10),
+        Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF7F9FC),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: const Color(0xFFE1E6ED)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                appText(
+                  context,
+                  km: 'សុវត្ថិភាពអ្នកទិញ',
+                  en: 'Buyer protection',
+                ),
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                appText(
+                  context,
+                  km: '✓ ពិនិត្យព័ត៌មានអ្នកលក់មុនទិញ',
+                  en: '✓ Check seller information before buying',
+                ),
+              ),
+              Text(
+                appText(
+                  context,
+                  km: '✓ អាចដាក់បណ្ដឹងតាម Sesan',
+                  en: '✓ Report an issue through Sesan',
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (widget.product['id'] != null &&
+            widget.product['id'].toString().isNotEmpty) ...[
+          const SizedBox(height: 14),
+          Container(
+            height: 420,
+            clipBehavior: Clip.antiAlias,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: const Color(0xFFE1E6ED)),
+            ),
+            child: Scrollbar(
+              controller: _webCommentsController,
+              thumbVisibility: true,
+              child: SingleChildScrollView(
+                controller: _webCommentsController,
+                child: CommentSection(
+                  productId: widget.product['id'],
+                  sellerId: widget.product['seller_id'] ?? '',
+                  currentUserId: _currentUserId,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
 
   double? _mapCoordinate(dynamic value) {
     if (value is num) return value.toDouble();
@@ -1002,24 +1186,92 @@ Android: $androidPlayStoreLink
   }
 
   bool _validMapLocation(double? lat, double? lng) {
-    return lat != null && lng != null && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
+    return lat != null &&
+        lng != null &&
+        lat >= -90 &&
+        lat <= 90 &&
+        lng >= -180 &&
+        lng <= 180;
   }
 
   Future<void> _openInGoogleMaps(LatLng location) async {
-    final uri = Uri.https('www.google.com', '/maps/search/', <String, String>{'api': '1', 'query': '${location.latitude},${location.longitude}'});
-    if (!await launchUrl(uri, mode: LaunchMode.externalApplication) && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(Localizations.localeOf(context).languageCode == 'en' ? 'Could not open Google Maps.' : 'មិនអាចបើក Google Maps បានទេ។')));
+    final uri = Uri.https('www.google.com', '/maps/search/', <String, String>{
+      'api': '1',
+      'query': '${location.latitude},${location.longitude}',
+    });
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication) &&
+        mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            Localizations.localeOf(context).languageCode == 'en'
+                ? 'Could not open Google Maps.'
+                : 'មិនអាចបើក Google Maps បានទេ។',
+          ),
+        ),
+      );
     }
   }
 
   void _openProductMap(LatLng location, String address) {
-    Navigator.push(context, MaterialPageRoute(builder: (mapContext) => Scaffold(
-      appBar: AppBar(backgroundColor: Colors.green.shade700, foregroundColor: Colors.white, title: Text(Localizations.localeOf(mapContext).languageCode == 'en' ? 'Product location' : 'ទីតាំងទំនិញ')),
-      body: Stack(children: [
-        GoogleMap(initialCameraPosition: CameraPosition(target: location, zoom: 16), markers: {Marker(markerId: const MarkerId('product_location'), position: location, infoWindow: InfoWindow(title: address))}, myLocationButtonEnabled: false, zoomControlsEnabled: false, mapToolbarEnabled: false),
-        Positioned(left: 18, right: 18, bottom: 18, child: SafeArea(top: false, child: ElevatedButton.icon(onPressed: () => _openInGoogleMaps(location), icon: const Icon(Icons.directions), label: Text(Localizations.localeOf(mapContext).languageCode == 'en' ? 'Open in Google Maps' : 'បើកក្នុង Google Maps'), style: ElevatedButton.styleFrom(minimumSize: const Size.fromHeight(50), backgroundColor: Colors.green.shade700, foregroundColor: Colors.white))))
-      ]),
-    )));
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (mapContext) => Scaffold(
+          appBar: AppBar(
+            backgroundColor: Colors.green.shade700,
+            foregroundColor: Colors.white,
+            title: Text(
+              Localizations.localeOf(mapContext).languageCode == 'en'
+                  ? 'Product location'
+                  : 'ទីតាំងទំនិញ',
+            ),
+          ),
+          body: Stack(
+            children: [
+              GoogleMap(
+                initialCameraPosition: CameraPosition(
+                  target: location,
+                  zoom: 16,
+                ),
+                markers: {
+                  Marker(
+                    markerId: const MarkerId('product_location'),
+                    position: location,
+                    infoWindow: InfoWindow(title: address),
+                  ),
+                },
+                myLocationButtonEnabled: false,
+                zoomControlsEnabled: false,
+                mapToolbarEnabled: false,
+              ),
+              Positioned(
+                left: 18,
+                right: 18,
+                bottom: 18,
+                child: SafeArea(
+                  top: false,
+                  child: ElevatedButton.icon(
+                    onPressed: () => _openInGoogleMaps(location),
+                    icon: const Icon(Icons.directions),
+                    label: Text(
+                      Localizations.localeOf(mapContext).languageCode == 'en'
+                          ? 'Open in Google Maps'
+                          : 'បើកក្នុង Google Maps',
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(50),
+                      backgroundColor: Colors.green.shade700,
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildSellerMapPreview() {
@@ -1028,39 +1280,116 @@ Android: $androidPlayStoreLink
     if (!_validMapLocation(lat, lng)) return const SizedBox.shrink();
     final location = LatLng(lat!, lng!);
     final address = (widget.product['location'] ?? '').toString().trim();
-    return Padding(padding: const EdgeInsets.only(top: 4, bottom: 2), child: AspectRatio(aspectRatio: 4, child: ClipRRect(borderRadius: BorderRadius.circular(13), child: Stack(fit: StackFit.expand, children: [
-      IgnorePointer(child: GoogleMap(initialCameraPosition: CameraPosition(target: location, zoom: 14), markers: {Marker(markerId: const MarkerId('product_preview'), position: location)}, myLocationButtonEnabled: false, zoomControlsEnabled: false, mapToolbarEnabled: false, rotateGesturesEnabled: false, scrollGesturesEnabled: false, tiltGesturesEnabled: false, zoomGesturesEnabled: false)),
-      Material(color: Colors.transparent, child: InkWell(onTap: () => _openProductMap(location, address))),
-      IgnorePointer(child: Center(child: Container(padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9), decoration: BoxDecoration(color: Colors.white.withOpacity(0.94), borderRadius: BorderRadius.circular(10), boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 6, offset: Offset(0, 2))]), child: Row(mainAxisSize: MainAxisSize.min, children: [const Icon(Icons.location_on, color: Colors.green, size: 20), const SizedBox(width: 7), Text(Localizations.localeOf(context).languageCode == 'en' ? 'View location on map' : 'មើលទីតាំងលើផែនទី', style: const TextStyle(fontFamily: 'Siemreap', fontSize: 11, fontWeight: FontWeight.bold))]))))
-    ]))));
+    return Padding(
+      padding: const EdgeInsets.only(top: 4, bottom: 2),
+      child: AspectRatio(
+        aspectRatio: 4,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(13),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              IgnorePointer(
+                child: GoogleMap(
+                  initialCameraPosition: CameraPosition(
+                    target: location,
+                    zoom: 14,
+                  ),
+                  markers: {
+                    Marker(
+                      markerId: const MarkerId('product_preview'),
+                      position: location,
+                    ),
+                  },
+                  liteModeEnabled: !kIsWeb,
+                  myLocationButtonEnabled: false,
+                  zoomControlsEnabled: false,
+                  mapToolbarEnabled: false,
+                  rotateGesturesEnabled: false,
+                  scrollGesturesEnabled: false,
+                  tiltGesturesEnabled: false,
+                  zoomGesturesEnabled: false,
+                ),
+              ),
+              Material(
+                color: Colors.transparent,
+                child: InkWell(onTap: () => _openProductMap(location, address)),
+              ),
+              IgnorePointer(
+                child: Center(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 9,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.94),
+                      borderRadius: BorderRadius.circular(10),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Colors.black26,
+                          blurRadius: 6,
+                          offset: Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.location_on,
+                          color: Colors.green,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 7),
+                        Text(
+                          Localizations.localeOf(context).languageCode == 'en'
+                              ? 'View location on map'
+                              : 'មើលទីតាំងលើផែនទី',
+                          style: const TextStyle(
+                            fontFamily: 'Siemreap',
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final bool isAddToCartDisabled =
         widget.product['is_locked'] == true ||
-            widget.product['shipping_included'] == false;
+        widget.product['shipping_included'] == false;
     // ក្នុង build() មុន return Scaffold...
     List<String> displayImages = [];
-    if (widget.product['image_urls'] != null && widget.product['image_urls'] is List) {
+    if (widget.product['image_urls'] != null &&
+        widget.product['image_urls'] is List) {
       displayImages = List<String>.from(widget.product['image_urls']);
-    } else if (widget.product['image_url'] != null && widget.product['image_url'] != "") {
+    } else if (widget.product['image_url'] != null &&
+        widget.product['image_url'] != "") {
       displayImages = [widget.product['image_url']];
     }
 
-    final bool hasVideo = widget.product['video_url'] != null &&
+    final bool hasVideo =
+        widget.product['video_url'] != null &&
         widget.product['video_url'].toString().isNotEmpty;
     final int imageCount = displayImages.length;
     final int totalSlides = imageCount + (hasVideo ? 1 : 0);
 
-
     final NumberFormat currencyFormat = NumberFormat("#,###", "en_US");
-
 
     for (var url in displayImages) {
       precacheImage(CachedNetworkImageProvider(url), context);
     }
-
 
     return Scaffold(
       appBar: AppBar(
@@ -1080,20 +1409,19 @@ Android: $androidPlayStoreLink
           StreamBuilder<QuerySnapshot>(
             stream: FirebaseFirestore.instance
                 .collection('bookmarks')
-            // ❌ ចាស់
+                // ❌ ចាស់
                 .where(
-              'userId',
-              isEqualTo: FirebaseAuth.instance.currentUser?.uid,
-            )
-            // ✅ ថ្មី — ប្រើ _currentUserId ពី initState
+                  'userId',
+                  isEqualTo: FirebaseAuth.instance.currentUser?.uid,
+                )
+                // ✅ ថ្មី — ប្រើ _currentUserId ពី initState
                 .where('userId', isEqualTo: _currentUserId)
-            // កែពី widget.productId មកជា widget.product['id']
+                // កែពី widget.productId មកជា widget.product['id']
                 .where('productId', isEqualTo: widget.product['id'])
                 .snapshots(),
             builder: (context, snapshot) {
               bool alreadySaved =
                   snapshot.hasData && snapshot.data!.docs.isNotEmpty;
-
 
               return IconButton(
                 icon: Icon(
@@ -1117,913 +1445,1117 @@ Android: $androidPlayStoreLink
         behavior: HitTestBehavior.translucent,
         child: Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 1000),
+            constraints: const BoxConstraints(maxWidth: 1200),
             child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // ១. រូបភាពស្លាយ
-                  // ១. រូបភាពស្លាយ (Square 1:1)
-                  Stack(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final isDesktop = constraints.maxWidth >= 900;
+                  final galleryWidth = isDesktop ? 520.0 : constraints.maxWidth;
+                  final detailsWidth = isDesktop
+                      ? constraints.maxWidth - galleryWidth - 20
+                      : constraints.maxWidth;
+                  return Wrap(
+                    alignment: WrapAlignment.center,
+                    crossAxisAlignment: WrapCrossAlignment.start,
+                    spacing: 20,
+                    runSpacing: isDesktop ? 20 : 0,
                     children: [
-                      AspectRatio(
-                        aspectRatio: 1 / 1,
-                        child: PageView.builder(
-                          itemCount: totalSlides,
-                          onPageChanged: (index) {
-                            setState(() => _currentPage = index);
-                            // ឈប់វីដេអូពេលចេញពីសន្លឹកវីដេអូ
-                            if (_videoController != null && _isVideoInitialized && _videoController!.value.isPlaying) {
-                              // បើសន្លឹកបច្ចុប្បន្នមិនមែនជាវីដេអូ → ឈប់
-                              if (index != imageCount) {
-                                _videoController!.pause();
-                                setState(() {});
-                              }
-                            }
-                          },
-                          itemBuilder: (context, index) {
-                            // បើជាសន្លឹកវីដេអូ
-                            if (hasVideo && index == imageCount) {
-                              final isPlaying = _videoController?.value.isPlaying ?? false;
-                              return GestureDetector(
-                                onTap: _toggleVideoPlayback,
-                                child: Container(
-                                  color: Colors.black,
-                                  child: Stack(
-                                    alignment: Alignment.center,
-                                    children: [
-                                      // វីដេអូ / រង់ចាំផ្ទុក
-                                      if (_videoController != null && _isVideoInitialized)
-                                        AspectRatio(
-                                          aspectRatio: _videoController!.value.aspectRatio,
-                                          child: VideoPlayer(_videoController!),
-                                        )
-                                      else
-                                        const Center(
-                                          child: CircularProgressIndicator(color: Colors.white),
-                                        ),
-
-                                      // ប៊ូតុង Play/Pause (បង្ហាញលុះត្រាតែបានផ្ទុករួច)
-                                      if (_isVideoInitialized)
-                                        IgnorePointer(
-                                          // ឲ្យការចុចឆ្លងទៅ GestureDetector ខាងលើ
-                                          ignoring: true,
-                                          child: AnimatedOpacity(
-                                            duration: const Duration(milliseconds: 300),
-                                            opacity: isPlaying ? 0.0 : 1.0,
-                                            child: Container(
-                                              width: 64,
-                                              height: 64,
-                                              decoration: BoxDecoration(
-                                                shape: BoxShape.circle,
-                                                color: Colors.black.withOpacity(0.5),
-                                              ),
-                                              child: Icon(
-                                                isPlaying ? Icons.pause : Icons.play_arrow_rounded,
-                                                color: Colors.white,
-                                                size: 48,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            }
-
-                            // រូបភាពធម្មតា
-                            return GestureDetector(
-                              onLongPress: () => _showSaveOption(context),
-                              onTap: () {
-                                if (displayImages.isNotEmpty) {
-                                  _openImageViewer(context, displayImages, index);
-                                }
-                              },
-                              child: CachedNetworkImage(
-                                imageUrl: displayImages[index],
-                                fit: BoxFit.cover,
-                                maxWidthDiskCache: 1000,
-                                placeholder: (context, url) => Container(color: Colors.grey[200]),
-                                errorWidget: (context, url, error) => const Icon(
-                                  Icons.broken_image, size: 50, color: Colors.grey,
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                      // លេខរាប់រូបភាព និងវីដេអូ
-                      if (totalSlides > 1)
-                        Positioned(
-                          bottom: 15,
-                          right: 15,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                            decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.6),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Text(
-                              "${_currentPage + 1} / $totalSlides", // ✅ ប្រើ totalSlides
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                  // ... កូដផ្នែកខាងក្រោមរបស់មេ
-                  Padding(
-                    padding: const EdgeInsets.all(15.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "${widget.product['price'] ?? '0'} ${widget.product['currency'] ?? '៛'}",
-                          style: const TextStyle(
-                            fontSize: 28,
-                            color: Colors.red,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        // ✅ បន្ថែមការបញ្ជាក់ថ្លៃដឹក (បើមាន field shipping_included)
-                        if (widget.product['shipping_included'] != null) ...[
-                          const SizedBox(height: 4),
-                          Container(
-                            // ❌ remove margin horizontal — already inside Padding(15)
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: widget.product['shipping_included'] == true
-                                  ? Colors.green.shade50
-                                  : Colors.orange.shade50,
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(
-                                color:
-                                (widget.product['shipping_included'] == true
-                                    ? Colors.green.shade700
-                                    : Colors.orange.shade700)
-                                    .withOpacity(0.3),
-                              ),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize
-                                  .min, // shrink-wrap instead of stretching
-                              children: [
-                                Icon(
-                                  widget.product['shipping_included'] == true
-                                      ? Icons.check_circle_outline
-                                      : Icons.local_shipping_outlined,
-                                  color:
-                                  widget.product['shipping_included'] == true
-                                      ? Colors.green.shade700
-                                      : Colors.orange.shade700,
-                                  size: 16,
-                                ),
-                                const SizedBox(width: 4),
-                                Flexible(
-                                  child: Text(
-                                    widget.product['shipping_included'] == true
-                                        ? 'បូកថ្លៃដឹកជញ្ជូនរួចរាល់'
-                                        : 'មិនទាន់បូកថ្លៃដឹកជញ្ជូន',
-                                    style: TextStyle(
-                                      color:
-                                      widget.product['shipping_included'] ==
-                                          true
-                                          ? Colors.green.shade700
-                                          : Colors.orange.shade700,
-                                      fontSize: 9,
-                                      fontWeight: FontWeight.w500,
-                                      fontFamily: 'Siemreap',
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                        Text(
-                          _shownProductName('គ្មានឈ្មោះ'),
-                          style: const TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-
-
-
-                        const SizedBox(height: 8),
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: OutlinedButton.icon(
-                            onPressed: _isTranslatingProduct ? null : _toggleProductTranslation,
-                            icon: _isTranslatingProduct
-                                ? const SizedBox(width: 15, height: 15, child: CircularProgressIndicator(strokeWidth: 2))
-                                : Icon(_showTranslatedProduct ? Icons.undo_rounded : Icons.translate_rounded),
-                            label: Text(_showTranslatedProduct
-                                ? (Localizations.localeOf(context).languageCode == 'en' ? 'Original' : 'អត្ថបទដើម')
-                                : (Localizations.localeOf(context).languageCode == 'en' ? 'Translate Product' : 'បកប្រែទំនិញ')),
-                          ),
-                        ),
-
-                        // ✅ បន្ថែមពីទីនេះ - បង្ហាញ Category និង Sub Category
-                        const SizedBox(height: 6),
-                        Row(
+                      SizedBox(
+                        width: galleryWidth,
+                        child: Column(
                           children: [
-                            // Category មេ
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.green.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(
-                                  color: Colors.green.withOpacity(0.3),
-                                ),
-                              ),
-                              child: Text(
-                                localizedCategoryLabel(context, (widget.product['category'] ?? 'ផ្សេងៗ').toString()),
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.green,
-                                  fontWeight: FontWeight.w600,
-                                  fontFamily: 'Siemreap',
-                                ),
-                              ),
-                            ),
-
-
-                            // Sub Category (បង្ហាញតែពេលមាន និងមិនមែន "ទាំងអស់")
-                            if (widget.product['sub_category'] != null &&
-                                widget.product['sub_category']
-                                    .toString()
-                                    .isNotEmpty &&
-                                widget.product['sub_category'] != 'ទាំងអស់') ...[
-                              const SizedBox(width: 8),
-                              const Icon(
-                                Icons.arrow_forward_ios,
-                                size: 10,
-                                color: Colors.grey,
-                              ),
-                              const SizedBox(width: 8),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.orange.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(
-                                    color: Colors.orange.withOpacity(0.3),
-                                  ),
-                                ),
-                                child: Text(
-                                  localizedCategoryLabel(context, (widget.product['sub_category'] ?? '').toString()),
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.orange,
-                                    fontWeight: FontWeight.w600,
-                                    fontFamily: 'Siemreap',
-                                  ),
-                                ),
-                              ),
-                            ],
-
-
-                            // Sub-Sub Category (បង្ហាញតែពេលមាន និងមិនមែន "ទាំងអស់")
-                            if (widget.product['sub_sub_category'] != null &&
-                                widget.product['sub_sub_category']
-                                    .toString()
-                                    .isNotEmpty &&
-                                widget.product['sub_sub_category'] !=
-                                    'ទាំងអស់') ...[
-                              const SizedBox(width: 8),
-                              const Icon(
-                                Icons.arrow_forward_ios,
-                                size: 10,
-                                color: Colors.grey,
-                              ),
-                              const SizedBox(width: 8),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.red.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(
-                                    color: Colors.red.withOpacity(0.3),
-                                  ),
-                                ),
-                                child: Text(
-                                  localizedCategoryLabel(context, (widget.product['sub_sub_category'] ?? '').toString()),
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.red,
-                                    fontWeight: FontWeight.w600,
-                                    fontFamily: 'Siemreap',
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-
-
-                        // Android Build 46 parity: live bookmark/save count
-                        if ((widget.product['id'] ?? '').toString().isNotEmpty)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 8),
-                            child: StreamBuilder<QuerySnapshot>(
-                              stream: FirebaseFirestore.instance
-                                  .collection('bookmarks')
-                                  .where(
-                                    'productId',
-                                    isEqualTo: widget.product['id'] ?? '',
-                                  )
-                                  .snapshots(),
-                              builder: (context, bookmarkSnapshot) {
-                                final saveCount =
-                                    bookmarkSnapshot.data?.docs.length ?? 0;
-                                return Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      Icons.bookmark_rounded,
-                                      color: Colors.blue.shade700,
-                                      size: 16,
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      Localizations.localeOf(context).languageCode == 'en'
-                                          ? '$saveCount saves'
-                                          : 'បានរក្សាទុក $saveCount ដង',
-                                      style: const TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.black87,
-                                      ),
-                                    ),
-                                  ],
-                                );
-                              },
-                            ),
-                          ),
-
-                        // ✅ Average រួម + Rating ផ្ទាល់របស់គណនីនេះ
-                        StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-                          stream: FirebaseFirestore.instance
-                              .collection('products')
-                              .doc(widget.product['id'])
-                              .snapshots(),
-                          builder: (context, productSnapshot) {
-                            double avgRating =
-                                (widget.product['avgRating'] as num?)
-                                    ?.toDouble() ??
-                                    0.0;
-                            int totalReviews =
-                                (widget.product['totalReviews'] as num?)
-                                    ?.toInt() ??
-                                    0;
-
-                            if (productSnapshot.hasData &&
-                                productSnapshot.data!.exists) {
-                              final data = productSnapshot.data!.data();
-                              avgRating =
-                                  (data?['avgRating'] as num?)?.toDouble() ??
-                                      0.0;
-                              totalReviews =
-                                  (data?['totalReviews'] as num?)?.toInt() ?? 0;
-                            }
-
-                            final uid = _currentUserId;
-
-                            Widget buildRating(double myRating) {
-                              return Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      RatingBarIndicator(
-                                        rating: avgRating,
-                                        itemBuilder: (context, _) => const Icon(
-                                          Icons.star,
-                                          color: Colors.amber,
-                                        ),
-                                        itemCount: 5,
-                                        itemSize: 22,
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        '${avgRating.toStringAsFixed(1)} '
-                                            '($totalReviews នាក់)',
-                                        style: const TextStyle(
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.black87,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    myRating > 0
-                                        ? 'ពិន្ទុរបស់អ្នក៖ ${myRating.toStringAsFixed(1)}'
-                                        : 'ចុចផ្កាយដើម្បីផ្ដល់ពិន្ទុ',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: myRating > 0
-                                          ? Colors.green.shade700
-                                          : Colors.grey.shade600,
-                                      fontFamily: 'Siemreap',
-                                    ),
-                                  ),
-                                  const SizedBox(height: 3),
-                                  IgnorePointer(
-                                    ignoring: _isSubmittingRating,
-                                    child: Opacity(
-                                      opacity: _isSubmittingRating ? 0.5 : 1.0,
-                                      child: RatingBar.builder(
-                                        initialRating: myRating,
-                                        minRating: 1,
-                                        direction: Axis.horizontal,
-                                        allowHalfRating: true,
-                                        itemCount: 5,
-                                        itemSize: 30,
-                                        itemPadding: const EdgeInsets.symmetric(
-                                          horizontal: 3,
-                                        ),
-                                        itemBuilder: (context, _) => const Icon(
-                                          Icons.star,
-                                          color: Colors.amber,
-                                        ),
-                                        onRatingUpdate: _submitRating,
-                                      ),
-                                    ),
-                                  ),
-                                  if (_isSubmittingRating)
-                                    const Padding(
-                                      padding: EdgeInsets.only(top: 6),
-                                      child: SizedBox(
-                                        width: 18,
-                                        height: 18,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                        ),
-                                      ),
-                                    ),
-                                ],
-                              );
-                            }
-
-                            if (uid == null || uid.isEmpty) {
-                              return buildRating(0.0);
-                            }
-
-                            return StreamBuilder<
-                                DocumentSnapshot<Map<String, dynamic>>>(
-                              stream: FirebaseFirestore.instance
-                                  .collection('products')
-                                  .doc(widget.product['id'])
-                                  .collection('ratings')
-                                  .doc(uid)
-                                  .snapshots(),
-                              builder: (context, ratingSnapshot) {
-                                double myRating = _myRating;
-
-                                if (ratingSnapshot.hasData &&
-                                    ratingSnapshot.data!.exists) {
-                                  myRating = (ratingSnapshot.data!
-                                      .data()?['rating'] as num?)
-                                      ?.toDouble() ??
-                                      0.0;
-                                }
-
-                                return buildRating(myRating);
-                              },
-                            );
-                          },
-                        ),
-
-
-                        const Divider(
-                          height: 30,
-                        ), // ៤. ចំនួនកម្ម៉ង់ និង តម្លៃសរុប
-                        const Text(
-                          "ជ្រើសរើសចំនួន៖",
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        // --- ផ្នែកជ្រើសរើសចំនួន និង តម្លៃសរុប (កូដដែលកែរួច) ---
-                        StatefulBuilder(
-                          builder: (context, setState) {
-                            double unitPrice =
-                                double.tryParse(
-                                  widget.product['price'].toString().replaceAll(
-                                    ',',
-                                    '',
-                                  ),
-                                ) ??
-                                    0;
-                            double totalPrice = unitPrice * _tempQty;
-
-
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                            Stack(
                               children: [
-                                Row(
-                                  children: [
-                                    _qtyActionBtn(Icons.remove, () {
-                                      if (_tempQty > 1)
-                                        setState(() => _tempQty--);
-                                    }),
-                                    Container(
-                                      width: 80, // កែទំហំឱ្យល្មម
-                                      margin: const EdgeInsets.symmetric(
-                                        horizontal: 10,
-                                      ),
-                                      child: TextField(
-                                        keyboardType: TextInputType.number,
-                                        textAlign: TextAlign.center,
-                                        // ✅ កំណត់ឱ្យវាយបានត្រឹម 3 ខ្ទង់ (999)
-                                        inputFormatters: [
-                                          LengthLimitingTextInputFormatter(3),
-                                          FilteringTextInputFormatter.digitsOnly,
-                                        ],
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                        decoration: InputDecoration(
-                                          contentPadding:
-                                          const EdgeInsets.symmetric(
-                                            vertical: 8,
-                                          ),
-                                          border: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              8,
+                                AspectRatio(
+                                  aspectRatio: 1 / 1,
+                                  child: PageView.builder(
+                                    controller: _webGalleryController,
+                                    itemCount: totalSlides,
+                                    onPageChanged: (index) {
+                                      setState(() => _currentPage = index);
+                                      // ឈប់វីដេអូពេលចេញពីសន្លឹកវីដេអូ
+                                      if (_videoController != null &&
+                                          _isVideoInitialized &&
+                                          _videoController!.value.isPlaying) {
+                                        // បើសន្លឹកបច្ចុប្បន្នមិនមែនជាវីដេអូ → ឈប់
+                                        if (index != imageCount) {
+                                          _videoController!.pause();
+                                          setState(() {});
+                                        }
+                                      }
+                                    },
+                                    itemBuilder: (context, index) {
+                                      // បើជាសន្លឹកវីដេអូ
+                                      if (hasVideo && index == imageCount) {
+                                        final isPlaying =
+                                            _videoController?.value.isPlaying ??
+                                            false;
+                                        return GestureDetector(
+                                          onTap: _toggleVideoPlayback,
+                                          child: Container(
+                                            color: Colors.black,
+                                            child: Stack(
+                                              alignment: Alignment.center,
+                                              children: [
+                                                // វីដេអូ / រង់ចាំផ្ទុក
+                                                if (_videoController != null &&
+                                                    _isVideoInitialized)
+                                                  AspectRatio(
+                                                    aspectRatio:
+                                                        _videoController!
+                                                            .value
+                                                            .aspectRatio,
+                                                    child: VideoPlayer(
+                                                      _videoController!,
+                                                    ),
+                                                  )
+                                                else
+                                                  const Center(
+                                                    child:
+                                                        CircularProgressIndicator(
+                                                          color: Colors.white,
+                                                        ),
+                                                  ),
+
+                                                // ប៊ូតុង Play/Pause (បង្ហាញលុះត្រាតែបានផ្ទុករួច)
+                                                if (_isVideoInitialized)
+                                                  IgnorePointer(
+                                                    // ឲ្យការចុចឆ្លងទៅ GestureDetector ខាងលើ
+                                                    ignoring: true,
+                                                    child: AnimatedOpacity(
+                                                      duration: const Duration(
+                                                        milliseconds: 300,
+                                                      ),
+                                                      opacity: isPlaying
+                                                          ? 0.0
+                                                          : 1.0,
+                                                      child: Container(
+                                                        width: 64,
+                                                        height: 64,
+                                                        decoration:
+                                                            BoxDecoration(
+                                                              shape: BoxShape
+                                                                  .circle,
+                                                              color: Colors
+                                                                  .black
+                                                                  .withOpacity(
+                                                                    0.5,
+                                                                  ),
+                                                            ),
+                                                        child: Icon(
+                                                          isPlaying
+                                                              ? Icons.pause
+                                                              : Icons
+                                                                    .play_arrow_rounded,
+                                                          color: Colors.white,
+                                                          size: 48,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                              ],
                                             ),
                                           ),
-                                          counterText:
-                                          "", // បិទអក្សររាប់ខ្ទង់ខាងក្រោម
-                                        ),
-                                        controller:
-                                        TextEditingController(
-                                          text: "$_tempQty",
-                                        )
-                                          ..selection =
-                                          TextSelection.collapsed(
-                                            offset: "$_tempQty".length,
-                                          ),
-                                        onChanged: (value) {
-                                          int? val = int.tryParse(value);
-                                          if (val != null) {
-                                            if (val > 999) {
-                                              setState(() => _tempQty = 999);
-                                            } else if (val > 0) {
-                                              setState(() => _tempQty = val);
-                                            }
+                                        );
+                                      }
+
+                                      // រូបភាពធម្មតា
+                                      return GestureDetector(
+                                        onLongPress: () =>
+                                            _showSaveOption(context),
+                                        onTap: () {
+                                          if (displayImages.isNotEmpty) {
+                                            _openImageViewer(
+                                              context,
+                                              displayImages,
+                                              index,
+                                            );
                                           }
                                         },
-                                      ),
-                                    ),
-                                    _qtyActionBtn(Icons.add, () {
-                                      // ✅ ចុចបូកបានត្រឹម 999
-                                      if (_tempQty < 999)
-                                        setState(() => _tempQty++);
-                                    }),
-                                    const SizedBox(width: 10),
-                                    const Text(
-                                      "ចំនួន",
-                                      style: TextStyle(
-                                        color: Colors.grey,
-                                        fontFamily: 'Siemreap',
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 15),
-                                Container(
-                                  padding: const EdgeInsets.all(12),
-                                  decoration: BoxDecoration(
-                                    color: Colors.blue.withOpacity(0.05),
-                                    borderRadius: BorderRadius.circular(10),
-                                    border: Border.all(
-                                      color: Colors.blue.withOpacity(0.2),
-                                    ),
-                                  ),
-                                  child: Row(
-                                    mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      const Text(
-                                        "តម្លៃសរុប៖",
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w500,
-                                          fontFamily: 'Siemreap',
-                                        ),
-                                      ),
-                                      const SizedBox(
-                                        width: 10,
-                                      ), // បន្ថែមចន្លោះតិចតួច
-                                      // ✅ ប្រើ Expanded ការពារការបែក UI (Overflow) ពេលតម្លៃឡើងកោដិ
-                                      Expanded(
-                                        child: Text(
-                                          "${currencyFormat.format(totalPrice)} ${widget.product['currency'] ?? '៛'}",
-                                          textAlign: TextAlign.right,
-                                          style: const TextStyle(
-                                            fontSize: 20,
-                                            color: Colors.blue,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                          overflow: TextOverflow
-                                              .ellipsis, // បើវែងពេកវាចេញ ...
-                                          maxLines: 1,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            );
-                          },
-                        ),
-
-
-                        const Divider(height: 30),
-                        const Text(
-                          "ការពិពណ៌នា៖",
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Text(
-                          _shownProductDescription('មិនមានការពិពណ៌នា...'),
-                          style: const TextStyle(fontSize: 16),
-                        ),
-
-
-                        const SizedBox(height: 12),
-                        SizedBox(
-                          width: double.infinity,
-                          child: OutlinedButton.icon(
-                            onPressed: _openProductAssistant,
-                            icon: const Icon(Icons.auto_awesome_rounded),
-                            label: Text(Localizations.localeOf(context).languageCode == 'en'
-                                ? 'Ask Sesan AI about this product'
-                                : 'សួរ Sesan AI អំពីទំនិញនេះ'),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: Colors.green.shade700,
-                              side: BorderSide(color: Colors.green.shade300),
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                            ),
-                          ),
-                        ),
-
-                        // --- ផ្នែកព័ត៌មានអ្នកលក់ (Update ថ្មី អាចចុចចូលមើល Profile បាន) ---
-                        Container(
-                          padding: const EdgeInsets.all(15),
-                          decoration: BoxDecoration(
-                            color: Colors.green.withOpacity(0.05),
-                            borderRadius: BorderRadius.circular(15),
-                            border: Border.all(
-                              color: Colors.green.withOpacity(0.2),
-                            ),
-                          ),
-                          child: Column(
-                            children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Row(
-                                    children: [
-                                      const Icon(
-                                        Icons.storefront,
-                                        color: Colors.green,
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        appText(context, km: 'ព័ត៌មានអ្នកលក់', en: 'Seller information'),
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.green.shade800,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  // 🎯 ប៊ូតុង "ចូលមើលហាង"
-                                  TextButton.icon(
-                                    onPressed: () {
-                                      // ហៅទៅកាន់អេក្រង់ SellerProfileScreen ដែលមេបានបង្កើត
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) =>
-                                              SellerProfileScreen(
-                                                sellerId:
-                                                widget.product['seller_id'] ??
-                                                    '',
-                                                sellerName:
-                                                widget
-                                                    .product['seller_name'] ??
-                                                    'អ្នកលក់',
+                                        child: CachedNetworkImage(
+                                          imageUrl: displayImages[index],
+                                          fit: BoxFit.cover,
+                                          maxWidthDiskCache: 1000,
+                                          placeholder: (context, url) =>
+                                              Container(
+                                                color: Colors.grey[200],
+                                              ),
+                                          errorWidget: (context, url, error) =>
+                                              const Icon(
+                                                Icons.broken_image,
+                                                size: 50,
+                                                color: Colors.grey,
                                               ),
                                         ),
                                       );
                                     },
-                                    icon: const Icon(
-                                      Icons.arrow_forward,
-                                      size: 16,
-                                    ),
-                                    label: Text(appText(context, km: 'មើលហាង', en: 'View shop')),
-                                    style: TextButton.styleFrom(
-                                      foregroundColor: Colors.blue,
-                                    ),
                                   ),
-                                ],
-                              ),
-                              const Divider(height: 20),
-                              // 🎯 ចុចលើ Profile ក៏អាចចូលទៅមើលបានដែរ
-                              InkWell(
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => SellerProfileScreen(
-                                        sellerId:
-                                        widget.product['seller_id'] ?? '',
-                                        sellerName:
-                                        widget.product['seller_name'] ??
-                                            'អ្នកលក់',
+                                ),
+                                // លេខរាប់រូបភាព និងវីដេអូ
+                                if (totalSlides > 1)
+                                  Positioned(
+                                    bottom: 15,
+                                    right: 15,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 5,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.black.withOpacity(0.6),
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      child: Text(
+                                        "${_currentPage + 1} / $totalSlides", // ✅ ប្រើ totalSlides
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                       ),
                                     ),
-                                  );
-                                },
-                                child: ListTile(
-                                  contentPadding: EdgeInsets.zero,
-                                  leading: CircleAvatar(
-                                    radius: 25,
-                                    backgroundColor: Colors.green.shade100,
-                                    backgroundImage:
-                                    (widget.product['seller_photo'] != null &&
-                                        widget.product['seller_photo'] != '')
-                                        ? NetworkImage(
-                                      widget.product['seller_photo'],
-                                    )
-                                        : null,
-                                    child:
-                                    (widget.product['seller_photo'] == null ||
-                                        widget.product['seller_photo'] == '')
-                                        ? const Icon(
-                                      Icons.person,
-                                      color: Colors.green,
-                                      size: 30,
-                                    )
-                                        : null,
                                   ),
-                                  title: Row(
-                                    mainAxisSize: MainAxisSize.min,
+                              ],
+                            ),
+                            if (!isDesktop)
+                              _buildGalleryThumbnails(
+                                images: displayImages,
+                                hasVideo: hasVideo,
+                              ),
+                            if (isDesktop)
+                              _buildWebGalleryExtras(
+                                images: displayImages,
+                                hasVideo: hasVideo,
+                              ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(
+                        width: detailsWidth,
+                        child: Padding(
+                          padding: EdgeInsets.fromLTRB(
+                            15,
+                            isDesktop ? 15 : 4,
+                            15,
+                            15,
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "${widget.product['price'] ?? '0'} ${widget.product['currency'] ?? '៛'}",
+                                style: const TextStyle(
+                                  fontSize: 28,
+                                  color: Colors.red,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              // ✅ បន្ថែមការបញ្ជាក់ថ្លៃដឹក (បើមាន field shipping_included)
+                              if (widget.product['shipping_included'] !=
+                                  null) ...[
+                                const SizedBox(height: 4),
+                                Container(
+                                  // ❌ remove margin horizontal — already inside Padding(15)
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color:
+                                        widget.product['shipping_included'] ==
+                                            true
+                                        ? Colors.green.shade50
+                                        : Colors.orange.shade50,
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                      color:
+                                          (widget.product['shipping_included'] ==
+                                                      true
+                                                  ? Colors.green.shade700
+                                                  : Colors.orange.shade700)
+                                              .withOpacity(0.3),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min, // shrink-wrap instead of stretching
                                     children: [
+                                      Icon(
+                                        widget.product['shipping_included'] ==
+                                                true
+                                            ? Icons.check_circle_outline
+                                            : Icons.local_shipping_outlined,
+                                        color:
+                                            widget.product['shipping_included'] ==
+                                                true
+                                            ? Colors.green.shade700
+                                            : Colors.orange.shade700,
+                                        size: 16,
+                                      ),
+                                      const SizedBox(width: 4),
                                       Flexible(
                                         child: Text(
-                                          widget.product['seller_name'] ?? appText(context, km: 'មិនមានឈ្មោះ', en: 'Unnamed seller'),
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 16,
+                                          widget.product['shipping_included'] ==
+                                                  true
+                                              ? 'បូកថ្លៃដឹកជញ្ជូនរួចរាល់'
+                                              : 'មិនទាន់បូកថ្លៃដឹកជញ្ជូន',
+                                          style: TextStyle(
+                                            color:
+                                                widget.product['shipping_included'] ==
+                                                    true
+                                                ? Colors.green.shade700
+                                                : Colors.orange.shade700,
+                                            fontSize: 9,
+                                            fontWeight: FontWeight.w500,
+                                            fontFamily: 'Siemreap',
                                           ),
-                                          overflow: TextOverflow.ellipsis,
                                         ),
                                       ),
-                                      // ✅ Verified Badge
-                                      if (widget.product['shop_tier'] != null &&
-                                          (widget.product['shop_tier'] == 'basic' ||
-                                              widget.product['shop_tier'] == 'premium'))
-                                        Container(
-                                          margin: const EdgeInsets.only(left: 8),
-                                          padding: const EdgeInsets.all(2),
-                                          decoration: BoxDecoration(
-                                            color: widget.product['shop_tier'] == 'premium'
-                                                ? Colors.amber.withOpacity(0.8)
-                                                : Colors.blueAccent.withOpacity(0.8),
-                                            shape: BoxShape.circle,
-                                          ),
-                                          child: Icon(
-                                            widget.product['shop_tier'] == 'premium'
-                                                ? Icons.diamond_rounded
-                                                : Icons.verified_user_rounded,
-                                            color: Colors.white,
-                                            size: 14,
-                                          ),
-                                        ),
                                     ],
                                   ),
-                                  subtitle: Text(
-                                    widget.product['updated_at'] != null
-                                        ? "ផុសនៅ៖ ${DateFormat('dd-MM-yyyy HH:mm').format((widget.product['updated_at'] as Timestamp).toDate())}"
-                                        : "ម្ចាស់ចំការ / អ្នកលក់",
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey.shade600,
+                                ),
+                              ],
+                              Text(
+                                _shownProductName('គ្មានឈ្មោះ'),
+                                style: const TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+
+                              const SizedBox(height: 8),
+                              Align(
+                                alignment: Alignment.centerLeft,
+                                child: OutlinedButton.icon(
+                                  onPressed: _isTranslatingProduct
+                                      ? null
+                                      : _toggleProductTranslation,
+                                  icon: _isTranslatingProduct
+                                      ? const SizedBox(
+                                          width: 15,
+                                          height: 15,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                          ),
+                                        )
+                                      : Icon(
+                                          _showTranslatedProduct
+                                              ? Icons.undo_rounded
+                                              : Icons.translate_rounded,
+                                        ),
+                                  label: Text(
+                                    _showTranslatedProduct
+                                        ? (Localizations.localeOf(context)
+                                                      .languageCode ==
+                                                  'en'
+                                              ? 'Original'
+                                              : 'អត្ថបទដើម')
+                                        : (Localizations.localeOf(context)
+                                                      .languageCode ==
+                                                  'en'
+                                              ? 'Translate Product'
+                                              : 'បកប្រែទំនិញ'),
+                                  ),
+                                ),
+                              ),
+
+                              // ✅ បន្ថែមពីទីនេះ - បង្ហាញ Category និង Sub Category
+                              const SizedBox(height: 6),
+                              Row(
+                                children: [
+                                  // Category មេ
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.green.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(20),
+                                      border: Border.all(
+                                        color: Colors.green.withOpacity(0.3),
+                                      ),
+                                    ),
+                                    child: Text(
+                                      localizedCategoryLabel(
+                                        context,
+                                        (widget.product['category'] ?? 'ផ្សេងៗ')
+                                            .toString(),
+                                      ),
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.green,
+                                        fontWeight: FontWeight.w600,
+                                        fontFamily: 'Siemreap',
+                                      ),
                                     ),
                                   ),
-                                  trailing: const Icon(
-                                    Icons.chevron_right,
-                                    color: Colors.grey,
+
+                                  // Sub Category (បង្ហាញតែពេលមាន និងមិនមែន "ទាំងអស់")
+                                  if (widget.product['sub_category'] != null &&
+                                      widget.product['sub_category']
+                                          .toString()
+                                          .isNotEmpty &&
+                                      widget.product['sub_category'] !=
+                                          'ទាំងអស់') ...[
+                                    const SizedBox(width: 8),
+                                    const Icon(
+                                      Icons.arrow_forward_ios,
+                                      size: 10,
+                                      color: Colors.grey,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 4,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.orange.withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(20),
+                                        border: Border.all(
+                                          color: Colors.orange.withOpacity(0.3),
+                                        ),
+                                      ),
+                                      child: Text(
+                                        localizedCategoryLabel(
+                                          context,
+                                          (widget.product['sub_category'] ?? '')
+                                              .toString(),
+                                        ),
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.orange,
+                                          fontWeight: FontWeight.w600,
+                                          fontFamily: 'Siemreap',
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+
+                                  // Sub-Sub Category (បង្ហាញតែពេលមាន និងមិនមែន "ទាំងអស់")
+                                  if (widget.product['sub_sub_category'] !=
+                                          null &&
+                                      widget.product['sub_sub_category']
+                                          .toString()
+                                          .isNotEmpty &&
+                                      widget.product['sub_sub_category'] !=
+                                          'ទាំងអស់') ...[
+                                    const SizedBox(width: 8),
+                                    const Icon(
+                                      Icons.arrow_forward_ios,
+                                      size: 10,
+                                      color: Colors.grey,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 4,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.red.withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(20),
+                                        border: Border.all(
+                                          color: Colors.red.withOpacity(0.3),
+                                        ),
+                                      ),
+                                      child: Text(
+                                        localizedCategoryLabel(
+                                          context,
+                                          (widget.product['sub_sub_category'] ??
+                                                  '')
+                                              .toString(),
+                                        ),
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.red,
+                                          fontWeight: FontWeight.w600,
+                                          fontFamily: 'Siemreap',
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+
+                              // Android Build 46 parity: live bookmark/save count
+                              if ((widget.product['id'] ?? '')
+                                  .toString()
+                                  .isNotEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 8),
+                                  child: StreamBuilder<QuerySnapshot>(
+                                    stream: FirebaseFirestore.instance
+                                        .collection('bookmarks')
+                                        .where(
+                                          'productId',
+                                          isEqualTo: widget.product['id'] ?? '',
+                                        )
+                                        .snapshots(),
+                                    builder: (context, bookmarkSnapshot) {
+                                      final saveCount =
+                                          bookmarkSnapshot.data?.docs.length ??
+                                          0;
+                                      return Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            Icons.bookmark_rounded,
+                                            color: Colors.blue.shade700,
+                                            size: 16,
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            Localizations.localeOf(context)
+                                                        .languageCode ==
+                                                    'en'
+                                                ? '$saveCount saves'
+                                                : 'បានរក្សាទុក $saveCount ដង',
+                                            style: const TextStyle(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.w600,
+                                              color: Colors.black87,
+                                            ),
+                                          ),
+                                        ],
+                                      );
+                                    },
+                                  ),
+                                ),
+
+                              // ✅ Average រួម + Rating ផ្ទាល់របស់គណនីនេះ
+                              StreamBuilder<
+                                DocumentSnapshot<Map<String, dynamic>>
+                              >(
+                                stream: FirebaseFirestore.instance
+                                    .collection('products')
+                                    .doc(widget.product['id'])
+                                    .snapshots(),
+                                builder: (context, productSnapshot) {
+                                  double avgRating =
+                                      (widget.product['avgRating'] as num?)
+                                          ?.toDouble() ??
+                                      0.0;
+                                  int totalReviews =
+                                      (widget.product['totalReviews'] as num?)
+                                          ?.toInt() ??
+                                      0;
+
+                                  if (productSnapshot.hasData &&
+                                      productSnapshot.data!.exists) {
+                                    final data = productSnapshot.data!.data();
+                                    avgRating =
+                                        (data?['avgRating'] as num?)
+                                            ?.toDouble() ??
+                                        0.0;
+                                    totalReviews =
+                                        (data?['totalReviews'] as num?)
+                                            ?.toInt() ??
+                                        0;
+                                  }
+
+                                  final uid = _currentUserId;
+
+                                  Widget buildRating(double myRating) {
+                                    return Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            RatingBarIndicator(
+                                              rating: avgRating,
+                                              itemBuilder: (context, _) =>
+                                                  const Icon(
+                                                    Icons.star,
+                                                    color: Colors.amber,
+                                                  ),
+                                              itemCount: 5,
+                                              itemSize: 22,
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Text(
+                                              '${avgRating.toStringAsFixed(1)} '
+                                              '($totalReviews នាក់)',
+                                              style: const TextStyle(
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.black87,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          myRating > 0
+                                              ? 'ពិន្ទុរបស់អ្នក៖ ${myRating.toStringAsFixed(1)}'
+                                              : 'ចុចផ្កាយដើម្បីផ្ដល់ពិន្ទុ',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: myRating > 0
+                                                ? Colors.green.shade700
+                                                : Colors.grey.shade600,
+                                            fontFamily: 'Siemreap',
+                                          ),
+                                        ),
+                                        const SizedBox(height: 3),
+                                        IgnorePointer(
+                                          ignoring: _isSubmittingRating,
+                                          child: Opacity(
+                                            opacity: _isSubmittingRating
+                                                ? 0.5
+                                                : 1.0,
+                                            child: RatingBar.builder(
+                                              initialRating: myRating,
+                                              minRating: 1,
+                                              direction: Axis.horizontal,
+                                              allowHalfRating: true,
+                                              itemCount: 5,
+                                              itemSize: 30,
+                                              itemPadding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 3,
+                                                  ),
+                                              itemBuilder: (context, _) =>
+                                                  const Icon(
+                                                    Icons.star,
+                                                    color: Colors.amber,
+                                                  ),
+                                              onRatingUpdate: _submitRating,
+                                            ),
+                                          ),
+                                        ),
+                                        if (_isSubmittingRating)
+                                          const Padding(
+                                            padding: EdgeInsets.only(top: 6),
+                                            child: SizedBox(
+                                              width: 18,
+                                              height: 18,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                              ),
+                                            ),
+                                          ),
+                                      ],
+                                    );
+                                  }
+
+                                  if (uid == null || uid.isEmpty) {
+                                    return buildRating(0.0);
+                                  }
+
+                                  return StreamBuilder<
+                                    DocumentSnapshot<Map<String, dynamic>>
+                                  >(
+                                    stream: FirebaseFirestore.instance
+                                        .collection('products')
+                                        .doc(widget.product['id'])
+                                        .collection('ratings')
+                                        .doc(uid)
+                                        .snapshots(),
+                                    builder: (context, ratingSnapshot) {
+                                      double myRating = _myRating;
+
+                                      if (ratingSnapshot.hasData &&
+                                          ratingSnapshot.data!.exists) {
+                                        myRating =
+                                            (ratingSnapshot.data!
+                                                        .data()?['rating']
+                                                    as num?)
+                                                ?.toDouble() ??
+                                            0.0;
+                                      }
+
+                                      return buildRating(myRating);
+                                    },
+                                  );
+                                },
+                              ),
+
+                              const Divider(
+                                height: 30,
+                              ), // ៤. ចំនួនកម្ម៉ង់ និង តម្លៃសរុប
+                              const Text(
+                                "ជ្រើសរើសចំនួន៖",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              // --- ផ្នែកជ្រើសរើសចំនួន និង តម្លៃសរុប (កូដដែលកែរួច) ---
+                              StatefulBuilder(
+                                builder: (context, setState) {
+                                  double unitPrice =
+                                      double.tryParse(
+                                        widget.product['price']
+                                            .toString()
+                                            .replaceAll(',', ''),
+                                      ) ??
+                                      0;
+                                  double totalPrice = unitPrice * _tempQty;
+
+                                  return Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          _qtyActionBtn(Icons.remove, () {
+                                            if (_tempQty > 1)
+                                              setState(() => _tempQty--);
+                                          }),
+                                          Container(
+                                            width: 80, // កែទំហំឱ្យល្មម
+                                            margin: const EdgeInsets.symmetric(
+                                              horizontal: 10,
+                                            ),
+                                            child: TextField(
+                                              keyboardType:
+                                                  TextInputType.number,
+                                              textAlign: TextAlign.center,
+                                              // ✅ កំណត់ឱ្យវាយបានត្រឹម 3 ខ្ទង់ (999)
+                                              inputFormatters: [
+                                                LengthLimitingTextInputFormatter(
+                                                  3,
+                                                ),
+                                                FilteringTextInputFormatter
+                                                    .digitsOnly,
+                                              ],
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                              decoration: InputDecoration(
+                                                contentPadding:
+                                                    const EdgeInsets.symmetric(
+                                                      vertical: 8,
+                                                    ),
+                                                border: OutlineInputBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(8),
+                                                ),
+                                                counterText: "", // បិទអក្សររាប់ខ្ទង់ខាងក្រោម
+                                              ),
+                                              controller:
+                                                  TextEditingController(
+                                                      text: "$_tempQty",
+                                                    )
+                                                    ..selection =
+                                                        TextSelection.collapsed(
+                                                          offset: "$_tempQty"
+                                                              .length,
+                                                        ),
+                                              onChanged: (value) {
+                                                int? val = int.tryParse(value);
+                                                if (val != null) {
+                                                  if (val > 999) {
+                                                    setState(
+                                                      () => _tempQty = 999,
+                                                    );
+                                                  } else if (val > 0) {
+                                                    setState(
+                                                      () => _tempQty = val,
+                                                    );
+                                                  }
+                                                }
+                                              },
+                                            ),
+                                          ),
+                                          _qtyActionBtn(Icons.add, () {
+                                            // ✅ ចុចបូកបានត្រឹម 999
+                                            if (_tempQty < 999)
+                                              setState(() => _tempQty++);
+                                          }),
+                                          const SizedBox(width: 10),
+                                          const Text(
+                                            "ចំនួន",
+                                            style: TextStyle(
+                                              color: Colors.grey,
+                                              fontFamily: 'Siemreap',
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 15),
+                                      Container(
+                                        padding: const EdgeInsets.all(12),
+                                        decoration: BoxDecoration(
+                                          color: Colors.blue.withOpacity(0.05),
+                                          borderRadius: BorderRadius.circular(
+                                            10,
+                                          ),
+                                          border: Border.all(
+                                            color: Colors.blue.withOpacity(0.2),
+                                          ),
+                                        ),
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            const Text(
+                                              "តម្លៃសរុប៖",
+                                              style: TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.w500,
+                                                fontFamily: 'Siemreap',
+                                              ),
+                                            ),
+                                            const SizedBox(
+                                              width: 10,
+                                            ), // បន្ថែមចន្លោះតិចតួច
+                                            // ✅ ប្រើ Expanded ការពារការបែក UI (Overflow) ពេលតម្លៃឡើងកោដិ
+                                            Expanded(
+                                              child: Text(
+                                                "${currencyFormat.format(totalPrice)} ${widget.product['currency'] ?? '៛'}",
+                                                textAlign: TextAlign.right,
+                                                style: const TextStyle(
+                                                  fontSize: 20,
+                                                  color: Colors.blue,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                                overflow: TextOverflow.ellipsis, // បើវែងពេកវាចេញ ...
+                                                maxLines: 1,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                },
+                              ),
+
+                              const Divider(height: 30),
+                              const Text(
+                                "ការពិពណ៌នា៖",
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                _shownProductDescription('មិនមានការពិពណ៌នា...'),
+                                style: const TextStyle(fontSize: 16),
+                              ),
+
+                              const SizedBox(height: 12),
+                              SizedBox(
+                                width: double.infinity,
+                                child: OutlinedButton.icon(
+                                  onPressed: _openProductAssistant,
+                                  icon: const Icon(Icons.auto_awesome_rounded),
+                                  label: Text(
+                                    Localizations.localeOf(context)
+                                                .languageCode ==
+                                            'en'
+                                        ? 'Ask Sesan AI about this product'
+                                        : 'សួរ Sesan AI អំពីទំនិញនេះ',
+                                  ),
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: Colors.green.shade700,
+                                    side: BorderSide(
+                                      color: Colors.green.shade300,
+                                    ),
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 12,
+                                    ),
                                   ),
                                 ),
                               ),
-                              // ... កូដផ្នែកលេខទូរស័ព្ទ និងទីតាំងរបស់មេទុកដដែល
-                              SellerPhonePrivacyTile(
-                                phone: (widget.product['phone1'] ??
-                                        widget.product['seller_phone'] ??
-                                        '')
-                                    .toString(),
-                                onReveal: () => ProductDetailMarketplaceActions(
-                                  product: widget.product,
-                                  currentUserId: _currentUserId,
-                                ).logPhoneReveal(),
+
+                              // --- ផ្នែកព័ត៌មានអ្នកលក់ (Update ថ្មី អាចចុចចូលមើល Profile បាន) ---
+                              Container(
+                                padding: const EdgeInsets.all(15),
+                                decoration: BoxDecoration(
+                                  color: Colors.green.withOpacity(0.05),
+                                  borderRadius: BorderRadius.circular(15),
+                                  border: Border.all(
+                                    color: Colors.green.withOpacity(0.2),
+                                  ),
+                                ),
+                                child: Column(
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            const Icon(
+                                              Icons.storefront,
+                                              color: Colors.green,
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Text(
+                                              appText(
+                                                context,
+                                                km: 'ព័ត៌មានអ្នកលក់',
+                                                en: 'Seller information',
+                                              ),
+                                              style: TextStyle(
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.green.shade800,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        // 🎯 ប៊ូតុង "ចូលមើលហាង"
+                                        TextButton.icon(
+                                          onPressed: () {
+                                            // ហៅទៅកាន់អេក្រង់ SellerProfileScreen ដែលមេបានបង្កើត
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    SellerProfileScreen(
+                                                      sellerId:
+                                                          widget
+                                                              .product['seller_id'] ??
+                                                          '',
+                                                      sellerName:
+                                                          widget
+                                                              .product['seller_name'] ??
+                                                          'អ្នកលក់',
+                                                    ),
+                                              ),
+                                            );
+                                          },
+                                          icon: const Icon(
+                                            Icons.arrow_forward,
+                                            size: 16,
+                                          ),
+                                          label: Text(
+                                            appText(
+                                              context,
+                                              km: 'មើលហាង',
+                                              en: 'View shop',
+                                            ),
+                                          ),
+                                          style: TextButton.styleFrom(
+                                            foregroundColor: Colors.blue,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const Divider(height: 20),
+                                    // 🎯 ចុចលើ Profile ក៏អាចចូលទៅមើលបានដែរ
+                                    InkWell(
+                                      onTap: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => SellerProfileScreen(
+                                              sellerId:
+                                                  widget.product['seller_id'] ??
+                                                  '',
+                                              sellerName:
+                                                  widget
+                                                      .product['seller_name'] ??
+                                                  'អ្នកលក់',
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                      child: ListTile(
+                                        contentPadding: EdgeInsets.zero,
+                                        leading: CircleAvatar(
+                                          radius: 25,
+                                          backgroundColor:
+                                              Colors.green.shade100,
+                                          backgroundImage:
+                                              (widget.product['seller_photo'] !=
+                                                      null &&
+                                                  widget.product['seller_photo'] !=
+                                                      '')
+                                              ? NetworkImage(
+                                                  widget
+                                                      .product['seller_photo'],
+                                                )
+                                              : null,
+                                          child:
+                                              (widget.product['seller_photo'] ==
+                                                      null ||
+                                                  widget.product['seller_photo'] ==
+                                                      '')
+                                              ? const Icon(
+                                                  Icons.person,
+                                                  color: Colors.green,
+                                                  size: 30,
+                                                )
+                                              : null,
+                                        ),
+                                        title: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Flexible(
+                                              child: Text(
+                                                widget.product['seller_name'] ??
+                                                    appText(
+                                                      context,
+                                                      km: 'មិនមានឈ្មោះ',
+                                                      en: 'Unnamed seller',
+                                                    ),
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 16,
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                            // ✅ Verified Badge
+                                            if (widget.product['shop_tier'] !=
+                                                    null &&
+                                                (widget.product['shop_tier'] ==
+                                                        'basic' ||
+                                                    widget.product['shop_tier'] ==
+                                                        'premium'))
+                                              Container(
+                                                margin: const EdgeInsets.only(
+                                                  left: 8,
+                                                ),
+                                                padding: const EdgeInsets.all(
+                                                  2,
+                                                ),
+                                                decoration: BoxDecoration(
+                                                  color:
+                                                      widget.product['shop_tier'] ==
+                                                          'premium'
+                                                      ? Colors.amber
+                                                            .withOpacity(0.8)
+                                                      : Colors.blueAccent
+                                                            .withOpacity(0.8),
+                                                  shape: BoxShape.circle,
+                                                ),
+                                                child: Icon(
+                                                  widget.product['shop_tier'] ==
+                                                          'premium'
+                                                      ? Icons.diamond_rounded
+                                                      : Icons
+                                                            .verified_user_rounded,
+                                                  color: Colors.white,
+                                                  size: 14,
+                                                ),
+                                              ),
+                                          ],
+                                        ),
+                                        subtitle: Text(
+                                          widget.product['updated_at'] != null
+                                              ? "ផុសនៅ៖ ${DateFormat('dd-MM-yyyy HH:mm').format((widget.product['updated_at'] as Timestamp).toDate())}"
+                                              : "ម្ចាស់ចំការ / អ្នកលក់",
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.grey.shade600,
+                                          ),
+                                        ),
+                                        trailing: const Icon(
+                                          Icons.chevron_right,
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                    ),
+                                    // ... កូដផ្នែកលេខទូរស័ព្ទ និងទីតាំងរបស់មេទុកដដែល
+                                    SellerPhonePrivacyTile(
+                                      phone:
+                                          (widget.product['phone1'] ??
+                                                  widget
+                                                      .product['seller_phone'] ??
+                                                  '')
+                                              .toString(),
+                                      onReveal: () =>
+                                          ProductDetailMarketplaceActions(
+                                            product: widget.product,
+                                            currentUserId: _currentUserId,
+                                          ).logPhoneReveal(),
+                                    ),
+                                    if (widget.product['phone2'] != null &&
+                                        widget.product['phone2']
+                                            .toString()
+                                            .isNotEmpty)
+                                      SellerPhonePrivacyTile(
+                                        phone: widget.product['phone2']
+                                            .toString(),
+                                        secondary: true,
+                                        onReveal: () =>
+                                            ProductDetailMarketplaceActions(
+                                              product: widget.product,
+                                              currentUserId: _currentUserId,
+                                            ).logPhoneReveal(),
+                                      ),
+                                    ListTile(
+                                      contentPadding: EdgeInsets.zero,
+                                      leading: const Icon(
+                                        Icons.location_on,
+                                        color: Colors.red,
+                                      ),
+                                      title: Text(
+                                        widget.product['location'] ??
+                                            appText(
+                                              context,
+                                              km: 'មិនមានទីតាំង',
+                                              en: 'Location not provided',
+                                            ),
+                                      ),
+                                    ),
+                                    _buildSellerMapPreview(),
+                                  ],
+                                ),
                               ),
-                              if (widget.product['phone2'] != null &&
-                                  widget.product['phone2'].toString().isNotEmpty)
-                                SellerPhonePrivacyTile(
-                                  phone: widget.product['phone2'].toString(),
-                                  secondary: true,
-                                  onReveal: () => ProductDetailMarketplaceActions(
-                                    product: widget.product,
+                              if (!isDesktop) ...[
+                                const SizedBox(height: 20),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                  ),
+                                  child: Text(
+                                    appText(
+                                      context,
+                                      km: 'មតិយោបល់',
+                                      en: 'Comments',
+                                    ),
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                                if (widget.product['id'] != null &&
+                                    widget.product['id'].toString().isNotEmpty)
+                                  CommentSection(
+                                    productId: widget.product['id'],
+                                    sellerId: widget.product['seller_id'] ?? '',
                                     currentUserId: _currentUserId,
-                                  ).logPhoneReveal(),
-                                ),
-                              ListTile(
-                                contentPadding: EdgeInsets.zero,
-                                leading: const Icon(
-                                  Icons.location_on,
-                                  color: Colors.red,
-                                ),
-                                title: Text(
-                                  widget.product['location'] ?? appText(context, km: 'មិនមានទីតាំង', en: 'Location not provided'),
-                                ),
+                                  )
+                                else
+                                  Center(
+                                    child: Text(
+                                      appText(
+                                        context,
+                                        km: 'មិនមានទិន្នន័យផលិតផល',
+                                        en: 'No product data',
+                                      ),
+                                    ),
+                                  ),
+                                const SizedBox(height: 30),
+                              ],
+                              // ៦. Related Products
+                              RelatedProductsWidget(
+                                category: widget.product['category'] ?? '',
+                                currentProductId: widget.product['id'] ?? '',
                               ),
-                              _buildSellerMapPreview(),
+                              const SizedBox(height: 100),
                             ],
                           ),
                         ),
-                        // 🎯 ដាក់ចូលក្នុងជួរ 598 (ចន្លោះ ListTile ទីតាំង និង RelatedProducts)
-                        const SizedBox(height: 20),
-                        const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 16),
-                          child: Text(
-                            "មតិយោបល់",
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-
-
-                        // ហៅ Widget Comment មកបង្ហាញតែ ១ ដូចដែលមេចង់បាន
-                        // កុំឱ្យវាហៅ CommentSection បើអត់មាន ID ពិតប្រាកដ
-                        if (widget.product['id'] != null &&
-                            widget.product['id'].toString().isNotEmpty)
-                          CommentSection(
-                            productId: widget.product['id'],
-                            sellerId: widget.product['seller_id'] ?? '',
-                            currentUserId: _currentUserId, // ✅ បន្ថែមអង្គនេះ
-                          )
-                        else
-                          const Center(child: Text("មិនមានទិន្នន័យផលិតផល")),
-                        const SizedBox(height: 30),
-                        // ៦. Related Products
-                        RelatedProductsWidget(
-                          category: widget.product['category'] ?? '',
-                          currentProductId: widget.product['id'] ?? '',
-                        ),
-                        const SizedBox(height: 100),
-                      ],
-                    ),
-                  ),
-                ],
+                      ),
+                    ],
+                  );
+                },
               ),
             ),
           ),
         ),
       ),
-
 
       // ៧. Bottom Bar
       bottomNavigationBar: Container(
@@ -2054,7 +2586,6 @@ Android: $androidPlayStoreLink
               );
             }),
             const SizedBox(width: 15),
-
 
             // 🎯 ឆែកមើលស្ថានភាព Lock
             // បើជាប់ Lock ឱ្យប៊ូតុងទៅជាពណ៌ប្រផេះ ហើយចុចលែងកើត
@@ -2089,16 +2620,16 @@ Android: $androidPlayStoreLink
                 onPressed: isAddToCartDisabled
                     ? null
                     : () async {
-                  await _addToCart(widget.product);
-                  if (context.mounted) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const CartScreen(),
-                      ),
-                    );
-                  }
-                },
+                        await _addToCart(widget.product);
+                        if (context.mounted) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const CartScreen(),
+                            ),
+                          );
+                        }
+                      },
                 child: Text(
                   appText(context, km: 'ទិញឥឡូវ', en: 'Buy now'),
                   style: TextStyle(fontWeight: FontWeight.bold),
@@ -2107,25 +2638,20 @@ Android: $androidPlayStoreLink
             ),
           ],
         ),
-
       ),
     );
   }
 
-
   Future<void> _toggleSave(bool alreadySaved, BuildContext context) async {
     final prefs = await SharedPreferences.getInstance();
     final String? savedUid = prefs.getString('user_uid');
-
 
     if (savedUid == null || savedUid.isEmpty) {
       Get.snackbar("ចូលប្រើប្រាស់", "សូមមេ Login សិន ទើបអាច Save បាន!");
       return;
     }
 
-
     final bookmarkRef = FirebaseFirestore.instance.collection('bookmarks');
-
 
     if (alreadySaved) {
       var docs = await bookmarkRef
@@ -2149,31 +2675,34 @@ Android: $androidPlayStoreLink
         'location': widget.product['location'] ?? '',
         'description': widget.product['description'] ?? '',
         'category': widget.product['category'] ?? '',
-        'sub_category': localizedCategoryLabel(context, (widget.product['sub_category'] ?? '').toString()),
-        'sub_sub_category': localizedCategoryLabel(context, (widget.product['sub_sub_category'] ?? '').toString()),
+        'sub_category': localizedCategoryLabel(
+          context,
+          (widget.product['sub_category'] ?? '').toString(),
+        ),
+        'sub_sub_category': localizedCategoryLabel(
+          context,
+          (widget.product['sub_sub_category'] ?? '').toString(),
+        ),
         'seller_id': widget.product['seller_id'] ?? '',
         'seller_name': widget.product['seller_name'] ?? 'មិនស្គាល់',
         'seller_photo': widget.product['seller_photo'] ?? '',
         'seller_phone':
-        widget.product['phone1'] ?? widget.product['seller_phone'] ?? '',
+            widget.product['phone1'] ?? widget.product['seller_phone'] ?? '',
         'image_urls': widget.product['image_urls'] ?? [],
         'image_url': widget.product['image_url'] ?? '',
         'is_locked': widget.product['is_locked'] ?? false,
         'is_available': widget.product['is_available'] ?? true,
         'created_at':
-        widget.product['created_at'] ?? FieldValue.serverTimestamp(),
+            widget.product['created_at'] ?? FieldValue.serverTimestamp(),
         'avgRating': widget.product['avgRating'] ?? 0.0,
         'totalReviews': widget.product['totalReviews'] ?? 0,
         'savedAt': FieldValue.serverTimestamp(),
       });
 
-
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("រក្សាទុកជោគជ័យ! ✅")));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text("រក្សាទុកជោគជ័យ! ✅")));
     }
   }
-
 
   Widget _qtyActionBtn(IconData icon, VoidCallback onTap) {
     return InkWell(
@@ -2189,7 +2718,6 @@ Android: $androidPlayStoreLink
     );
   }
 
-
   Widget _actionIcon(IconData icon, Color color, VoidCallback onTap) {
     return InkWell(
       onTap: onTap,
@@ -2204,15 +2732,14 @@ Android: $androidPlayStoreLink
     );
   }
 
-
   // ២. កូដ addToCart ដែលកែសម្រួលរួច
   Future<void> _addToCart(Map<String, dynamic> product) async {
     final String finalImageUrl =
         product['image_url'] ??
-            (product['image_urls'] != null &&
+        (product['image_urls'] != null &&
                 (product['image_urls'] as List).isNotEmpty
-                ? product['image_urls'][0]
-                : "");
+            ? product['image_urls'][0]
+            : "");
     // លុប context ចេញពីក្នុងនេះ
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -2223,7 +2750,6 @@ Android: $androidPlayStoreLink
         );
         return;
       }
-
 
       await FirebaseFirestore.instance.collection('carts').add({
         'customer_id': userId,
@@ -2246,7 +2772,6 @@ Android: $androidPlayStoreLink
         currentUserId: userId,
       ).logAddToCart();
 
-
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -2260,6 +2785,3 @@ Android: $androidPlayStoreLink
     }
   }
 }
-
-
-
