@@ -34,9 +34,7 @@ class PreOrderGridView extends StatelessWidget {
   Widget build(BuildContext context) {
     return CustomScrollView(
       slivers: [
-        // ✅ Info Card នៅខាងលើ
-        SliverToBoxAdapter(child: _buildInfoCard(context)),
-        // ✅ GridView ដែលឥឡូវប្រើជា SliverGrid
+        // Pre-order products start immediately below the tab bar.
         StreamBuilder<QuerySnapshot>(
           stream: FirebaseFirestore.instance
               .collection('pre_orders')
