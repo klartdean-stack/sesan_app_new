@@ -1,4 +1,4 @@
-name: iOS V51 Compact Parity
+name: iOS V51 Compact Seller Card Parity
 
 on: [push]
 
@@ -13,51 +13,47 @@ jobs:
         with:
           ref: ios-sync-android46
           fetch-depth: 0
-      - name: Patch compact UI
+      - name: Compact Product Detail seller card
         run: |
           python3 - <<'PY'
           from pathlib import Path
-
-          p = Path('lib/add_product.dart')
+          p = Path('lib/product_detail.dart')
           s = p.read_text(encoding='utf-8')
-          old = "                  side: BorderSide(color: Colors.deepPurple.withOpacity(0.75)),\n                  visualDensity: VisualDensity.compact,\n"
-          new = "                  side: BorderSide(color: Colors.deepPurple.withOpacity(0.75)),\n                  minimumSize: const Size(0, 32),\n                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),\n                  visualDensity: VisualDensity.compact,\n"
-          if 'minimumSize: const Size(0, 32)' not in s:
-              if old not in s:
-                  raise SystemExit('Add Product AI anchor missing')
-              s = s.replace(old, new, 1)
-              p.write_text(s, encoding='utf-8')
 
-          p = Path('lib/comment_section.dart')
-          s = p.read_text(encoding='utf-8')
-          pairs = {
-            'padding: EdgeInsets.all(isNestedReply ? 6 : 8),': 'padding: EdgeInsets.all(isNestedReply ? 5 : 7),',
-            'radius: isNestedReply ? 11 : 16,': 'radius: isNestedReply ? 10 : 14,',
-            '? const Icon(Icons.person, size: 16)': '? const Icon(Icons.person, size: 14)',
-            'contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),': 'contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),',
-            'padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),': 'padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),',
-            'padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),': 'padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),',
-            'border: Border.all(color: Colors.red, width: 2),': 'border: Border.all(color: Colors.red, width: 1.5),',
-            'fontWeight: FontWeight.bold, fontSize: 16': 'fontWeight: FontWeight.bold, fontSize: 14',
-            'const SizedBox(width: 20),': 'const SizedBox(width: 14),',
-            'child: const Icon(Icons.close, color: Colors.grey, size: 20),': 'child: const Icon(Icons.close, color: Colors.grey, size: 18),',
-            'child: const Icon(Icons.stop, color: Colors.white, size: 24),': 'child: const Icon(Icons.stop, color: Colors.white, size: 20),',
-            'child: const Icon(Icons.image, color: Colors.green, size: 20),': 'child: const Icon(Icons.image, color: Colors.green, size: 18),',
-          }
-          for old, new in pairs.items():
-              s = s.replace(old, new, 1)
+          replacements = [
+            ('// --- ផ្នែកព័ត៌មានអ្នកលក់ (Update ថ្មី អាចចុចចូលមើល Profile បាន) ---\n                              Container(\n                                padding: const EdgeInsets.all(15),',
+             '// --- ផ្នែកព័ត៌មានអ្នកលក់ (Update ថ្មី អាចចុចចូលមើល Profile បាន) ---\n                              Container(\n                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),'),
+            ('borderRadius: BorderRadius.circular(15),\n                                  border: Border.all(\n                                    color: Colors.green.withOpacity(0.2),',
+             'borderRadius: BorderRadius.circular(12),\n                                  border: Border.all(\n                                    color: Colors.green.withOpacity(0.2),'),
+            ('const Icon(\n                                              Icons.storefront,\n                                              color: Colors.green,\n                                            ),',
+             'const Icon(\n                                              Icons.storefront,\n                                              color: Colors.green,\n                                              size: 19,\n                                            ),'),
+            ('const SizedBox(width: 8),\n                                            Text(\n                                              appText(\n                                                context,\n                                                km: \'ព័ត៌មានអ្នកលក់\',\n                                                en: \'Seller information\',\n                                              ),\n                                              style: TextStyle(\n                                                fontSize: 18,',
+             'const SizedBox(width: 6),\n                                            Text(\n                                              appText(\n                                                context,\n                                                km: \'ព័ត៌មានអ្នកលក់\',\n                                                en: \'Seller information\',\n                                              ),\n                                              style: TextStyle(\n                                                fontSize: 15,'),
+            ('icon: const Icon(\n                                            Icons.arrow_forward,\n                                            size: 16,\n                                          ),',
+             'icon: const Icon(\n                                            Icons.arrow_forward,\n                                            size: 14,\n                                          ),'),
+            ('const Divider(height: 20),', 'const Divider(height: 12),'),
+            ('radius: 25,', 'radius: 20,'),
+            ('Icons.person,\n                                                  color: Colors.green,\n                                                  size: 30,',
+             'Icons.person,\n                                                  color: Colors.green,\n                                                  size: 24,'),
+            ('fontWeight: FontWeight.bold,\n                                                  fontSize: 16,',
+             'fontWeight: FontWeight.bold,\n                                                  fontSize: 14,'),
+          ]
+          for old, new in replacements:
+              if old in s:
+                  s = s.replace(old, new, 1)
+              else:
+                  print('Anchor already changed or not found:', old[:70])
           p.write_text(s, encoding='utf-8')
           PY
           git diff --check
-          grep -Fq 'minimumSize: const Size(0, 32)' lib/add_product.dart
-          grep -Fq 'radius: isNestedReply ? 10 : 14' lib/comment_section.dart
-          grep -Fq 'contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7)' lib/comment_section.dart
-          grep -Fq 'child: const Icon(Icons.stop, color: Colors.white, size: 20)' lib/comment_section.dart
+          grep -Fq 'padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9)' lib/product_detail.dart
+          grep -Fq 'fontSize: 15' lib/product_detail.dart
+          grep -Fq 'radius: 20' lib/product_detail.dart
       - name: Commit
         run: |
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add lib/add_product.dart lib/comment_section.dart
+          git add lib/product_detail.dart
           if git diff --cached --quiet; then exit 0; fi
-          git commit -m 'Compact iOS product comments and Add Product AI button'
+          git commit -m 'Compact iOS Product Detail seller card'
           git push origin HEAD:ios-sync-android46
