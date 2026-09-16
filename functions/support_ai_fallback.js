@@ -105,6 +105,9 @@ exports.supportAiFallback = onDocumentCreated(
 
     await sleep(FALLBACK_DELAY_MS);
 
+    // AI is first-line support. Admin presence alone does not suppress AI.
+    // AI pauses only after a human Admin has actually joined/replied and
+    // remains online. If Admin later goes offline, AI automatically resumes.
     const adminSnap = await db.collection("users").doc(ADMIN_UID).get();
     const adminOnline = adminSnap.exists && adminSnap.data()?.isOnline === true;
 
@@ -116,6 +119,9 @@ exports.supportAiFallback = onDocumentCreated(
       return null;
     }
 
+    // Debounce: if the user sent another message after this one, this older
+    // invocation does nothing. The newest user-message invocation will answer
+    // using recent conversation context, preventing duplicate AI replies.
     const laterMessages = await messagesRef
       .where("createdAt", ">", triggerCreatedAt)
       .orderBy("createdAt", "asc")
@@ -130,6 +136,10 @@ exports.supportAiFallback = onDocumentCreated(
       return null;
     }
 
+    // If Admin replied earlier in this conversation and is still online,
+    // keep the conversation with the human. Once Admin goes offline, the
+    // next user message is handled by AI again. No extra Firestore index is
+    // needed because we inspect the recent timeline in memory.
     if (adminOnline) {
       const recentForHandoff = await messagesRef
         .orderBy("createdAt", "desc")
@@ -152,6 +162,7 @@ exports.supportAiFallback = onDocumentCreated(
       return null;
     }
 
+    // Avoid retry/duplicate replies for the same trigger message.
     const existingFallback = await messagesRef
       .where("fallbackForMessageId", "==", messageId)
       .limit(1)
@@ -190,6 +201,8 @@ exports.supportAiFallback = onDocumentCreated(
         history: recent.slice(0, -1),
       });
 
+      // Re-check immediately before writing: a human Admin may have replied
+      // while OpenAI was generating the answer. Human reply always wins.
       const postAiCheck = await messagesRef
         .where("createdAt", ">", triggerCreatedAt)
         .orderBy("createdAt", "asc")
