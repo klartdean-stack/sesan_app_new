@@ -18,42 +18,54 @@ jobs:
           ref: ios-sync-android46
           fetch-depth: 0
 
-      - name: Disable related-product cart for closed shops
+      - name: Patch payment links and compact AI button
         shell: bash
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          path = Path('lib/related_products_widget.dart')
-          text = path.read_text(encoding='utf-8')
-          new = """                final bool isLocked =
-                    (item['is_locked'] ?? false) || item['shop_closed'] == true;
-"""
-          if new in text:
-              print('related-product closed-shop parity already present')
-          else:
-              old = "                final bool isLocked = item['is_locked'] ?? false;\n"
-              if old not in text:
-                  raise SystemExit('Expected isLocked line not found in related_products_widget.dart')
-              path.write_text(text.replace(old, new, 1), encoding='utf-8')
-          PY
 
-      - name: Format
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.38.8'
-          channel: stable
-      - run: dart format lib/related_products_widget.dart
+          old_link = 'https://pay.ababank.com/oRF8/lq8jgwzb'
+          new_link = 'https://pay.ababank.com/oRF8/oizn40j9'
+          for filename in ['lib/shop_upgrade_screen.dart', 'lib/auction_add_screen.dart']:
+              path = Path(filename)
+              text = path.read_text(encoding='utf-8')
+              if old_link in text:
+                  text = text.replace(old_link, new_link)
+                  path.write_text(text, encoding='utf-8')
+              elif new_link not in text:
+                  raise SystemExit(f'ABA payment link not found in {filename}')
+
+          path = Path('lib/add_product.dart')
+          text = path.read_text(encoding='utf-8')
+          wanted = """                  side: BorderSide(color: Colors.deepPurple.withOpacity(0.75)),
+                  minimumSize: const Size(0, 32),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  visualDensity: VisualDensity.compact,
+"""
+          if wanted not in text:
+              old = """                  side: BorderSide(color: Colors.deepPurple.withOpacity(0.75)),
+                  visualDensity: VisualDensity.compact,
+"""
+              if old not in text:
+                  raise SystemExit('Add Product AI button style anchor not found')
+              text = text.replace(old, wanted, 1)
+              path.write_text(text, encoding='utf-8')
+          PY
 
       - name: Verify and commit
         shell: bash
         run: |
-          grep -Fq "item['shop_closed'] == true" lib/related_products_widget.dart
+          grep -Fq 'https://pay.ababank.com/oRF8/oizn40j9' lib/shop_upgrade_screen.dart
+          grep -Fq 'https://pay.ababank.com/oRF8/oizn40j9' lib/auction_add_screen.dart
+          grep -Fq 'minimumSize: const Size(0, 32)' lib/add_product.dart
+          grep -Fq 'padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5)' lib/add_product.dart
+          git diff --check
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add lib/related_products_widget.dart
+          git add lib/shop_upgrade_screen.dart lib/auction_add_screen.dart lib/add_product.dart
           if git diff --cached --quiet; then
             echo 'No changes to commit.'
             exit 0
           fi
-          git commit -m 'Disable related product cart for closed shops on iOS'
+          git commit -m 'Match iOS payment links and Add Product AI button to Android V51'
           git push origin HEAD:ios-sync-android46
