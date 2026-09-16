@@ -1167,30 +1167,95 @@ class _AddProductPageState extends State<AddProductPage> {
                 /// =========================
                 Expanded(
                   flex: 1,
-                  child: InkWell(
-                    onTap: () async {
-                      final result = await Navigator.push<LatLng>(
-                        context,
-                        MaterialPageRoute(builder: (_) => MapPickerScreen(initialLat: selectedLat, initialLng: selectedLng)),
-                      );
-                      if (result == null || !mounted) return;
-                      setState(() { selectedLat = result.latitude; selectedLng = result.longitude; });
-                      await _fillLocationFromMap(result);
-                    },
-                    borderRadius: BorderRadius.circular(14),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      decoration: BoxDecoration(
-                        color: selectedLat != null && selectedLng != null ? Colors.green.withValues(alpha: 0.12) : Colors.green.withValues(alpha: 0.06),
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      InkWell(
+                        onTap: () async {
+                          final result = await Navigator.push<LatLng>(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => MapPickerScreen(
+                                initialLat: selectedLat,
+                                initialLng: selectedLng,
+                              ),
+                            ),
+                          );
+                          if (result == null || !mounted) return;
+                          setState(() {
+                            selectedLat = result.latitude;
+                            selectedLng = result.longitude;
+                          });
+                          await _fillLocationFromMap(result);
+                        },
                         borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: selectedLat != null && selectedLng != null ? Colors.green : Colors.green.shade300),
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          decoration: BoxDecoration(
+                            color: selectedLat != null && selectedLng != null
+                                ? Colors.green.withValues(alpha: 0.12)
+                                : Colors.green.withValues(alpha: 0.06),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: selectedLat != null && selectedLng != null
+                                  ? Colors.green
+                                  : Colors.green.shade300,
+                            ),
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                selectedLat != null && selectedLng != null
+                                    ? Icons.location_on
+                                    : Icons.map_outlined,
+                                color: Colors.green.shade700,
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                selectedLat != null && selectedLng != null
+                                    ? _t('បាន Pin', 'Pinned')
+                                    : 'Maps',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: Colors.green.shade800,
+                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'Siemreap',
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
-                      child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                        Icon(selectedLat != null && selectedLng != null ? Icons.location_on : Icons.map_outlined, color: Colors.green.shade700),
-                        const SizedBox(height: 2),
-                        Text(selectedLat != null && selectedLng != null ? _t('បាន Pin', 'Pinned') : 'Maps', style: TextStyle(fontSize: 10, color: Colors.green.shade800, fontWeight: FontWeight.bold, fontFamily: 'Siemreap')),
-                      ]),
-                    ),
+                      if (selectedLat != null && selectedLng != null)
+                        Positioned(
+                          top: -9,
+                          right: -9,
+                          child: Material(
+                            color: Colors.red,
+                            shape: const CircleBorder(),
+                            elevation: 2,
+                            child: InkWell(
+                              customBorder: const CircleBorder(),
+                              onTap: () {
+                                setState(() {
+                                  selectedLat = null;
+                                  selectedLng = null;
+                                });
+                              },
+                              child: const Padding(
+                                padding: EdgeInsets.all(5),
+                                child: Icon(
+                                  Icons.close,
+                                  size: 16,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                 ),
               ],
