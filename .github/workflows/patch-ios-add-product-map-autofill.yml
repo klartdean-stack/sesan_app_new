@@ -1,0 +1,121 @@
+name: Patch iOS Add Product map auto-fill
+
+on:
+  push:
+    branches:
+      - ios-sync-android46
+    paths:
+      - '.github/workflows/patch-ios-add-product-map-autofill.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout parity branch
+        uses: actions/checkout@v4
+        with:
+          ref: ios-sync-android46
+          fetch-depth: 0
+
+      - name: Add map reverse geocoding parity
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('lib/add_product.dart')
+          text = path.read_text(encoding='utf-8')
+
+          geocoder_line = '  final Geocoding _geocoding = Geocoding();\n'
+          if geocoder_line not in text:
+              anchor = '  final TextEditingController locationController = TextEditingController();\n'
+              if anchor not in text:
+                  raise SystemExit('locationController anchor not found')
+              text = text.replace(anchor, anchor + geocoder_line, 1)
+
+          if 'Future<void> _fillLocationFromMap(LatLng point)' not in text:
+              method = r'''  Future<void> _fillLocationFromMap(LatLng point) async {
+    if (_locationChosenManually || !mounted) return;
+
+    try {
+      final placemarks = await _geocoding.placemarkFromCoordinates(
+        point.latitude,
+        point.longitude,
+        locale: const Locale('km', 'KH'),
+      );
+      if (!mounted || _locationChosenManually) return;
+
+      final parts = <String>[];
+      void addPart(String? value) {
+        final clean = value?.trim() ?? '';
+        if (clean.isEmpty) return;
+        if (parts.any((part) => part.toLowerCase() == clean.toLowerCase())) {
+          return;
+        }
+        parts.add(clean);
+      }
+
+      if (placemarks.isNotEmpty) {
+        final place = placemarks.first;
+        addPart(place.administrativeArea);
+        addPart(place.subAdministrativeArea);
+        addPart(place.locality);
+        addPart(place.subLocality);
+      }
+
+      setState(() {
+        locationController.text = parts.isNotEmpty
+            ? parts.join(', ')
+            : '${point.latitude.toStringAsFixed(6)}, '
+                  '${point.longitude.toStringAsFixed(6)}';
+      });
+    } catch (error) {
+      debugPrint('Reverse geocoding failed: $error');
+      if (mounted && !_locationChosenManually) {
+        setState(() {
+          locationController.text =
+              '${point.latitude.toStringAsFixed(6)}, '
+              '${point.longitude.toStringAsFixed(6)}';
+        });
+      }
+    }
+  }
+
+'''
+              anchor = '  @override\n  void dispose() {'
+              if anchor not in text:
+                  raise SystemExit('dispose anchor not found')
+              text = text.replace(anchor, method + anchor, 1)
+
+          if 'await _fillLocationFromMap(result);' not in text:
+              raise SystemExit('Map picker call to _fillLocationFromMap is missing')
+          if '_locationChosenManually = true;' not in text:
+              raise SystemExit('Manual location selection guard is missing')
+
+          path.write_text(text, encoding='utf-8')
+          PY
+
+      - name: Verify patch
+        shell: bash
+        run: |
+          grep -Fq 'final Geocoding _geocoding = Geocoding();' lib/add_product.dart
+          grep -Fq 'Future<void> _fillLocationFromMap(LatLng point)' lib/add_product.dart
+          grep -Fq 'await _fillLocationFromMap(result);' lib/add_product.dart
+          git diff --check
+
+      - name: Commit patch
+        shell: bash
+        run: |
+          if git diff --quiet -- lib/add_product.dart; then
+            echo 'No changes to commit.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add lib/add_product.dart
+          git commit -m 'Auto-fill iOS product location from selected map pin'
+          git push origin HEAD:ios-sync-android46
