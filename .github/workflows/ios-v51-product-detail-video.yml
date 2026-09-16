@@ -17,6 +17,9 @@ jobs:
         with:
           ref: ios-sync-android46
           fetch-depth: 0
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
       - name: Patch Product Detail web layout
         run: |
           python3 .github/scripts/patch_product_detail_web_layout.py
