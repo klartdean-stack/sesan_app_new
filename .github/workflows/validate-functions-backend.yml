@@ -8,11 +8,17 @@ on:
       - 'firebase.json'
       - '.github/workflows/validate-functions-backend.yml'
 
+permissions:
+  contents: write
+
 jobs:
   validate-functions:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ios-sync-android46
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -21,16 +27,44 @@ jobs:
       - name: Install Functions dependencies
         working-directory: functions
         run: npm install --no-audit --no-fund
-      - name: Validate Functions entry loads
+      - name: Validate complete V51 Functions entry loads
         working-directory: functions
         run: |
           node - <<'NODE'
           const exported = require('./entry.js');
-          const required = ['secureAdminPreviewRefund', 'secureAdminProcessRefund'];
-          for (const name of required) {
-            if (!exported[name]) {
-              throw new Error(`Missing export: ${name}`);
-            }
+          const required = [
+            'secureCreateOrder',
+            'secureSellerOrderStatus',
+            'secureBuyerConfirmReceipt',
+            'secureWithdraw',
+            'secureApproveWithdrawal',
+            'secureRejectWithdrawal',
+            'secureAdminConfirmOrder',
+            'secureAdminRejectOrder',
+            'secureSubmitInvestment',
+            'secureApproveInvestment',
+            'secureRejectInvestment',
+            'secureUpdateEquitySettings',
+            'secureAdminPreviewRefund',
+            'secureAdminProcessRefund',
+            'supportAiFallback',
+            'scheduledWalletSettlement',
+          ];
+          const missing = required.filter((name) => !exported[name]);
+          if (missing.length) {
+            throw new Error(`Missing exports: ${missing.join(', ')}`);
           }
-          console.log('Functions entry OK:', required.join(', '));
+          console.log(`Functions entry OK: ${Object.keys(exported).length} exports`);
+          console.log('Required V51 exports OK:', required.join(', '));
           NODE
+      - name: Commit dependency lock when generated
+        run: |
+          if git diff --quiet -- functions/package-lock.json; then
+            echo 'package-lock.json unchanged'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add functions/package-lock.json
+          git commit -m 'Lock Firebase Functions dependencies'
+          git push origin ios-sync-android46
