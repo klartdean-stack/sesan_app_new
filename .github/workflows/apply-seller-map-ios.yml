@@ -13,51 +13,50 @@ jobs:
         with:
           ref: ios-sync-android46
           fetch-depth: 0
-      - name: Patch remaining V51 parity
+      - name: Patch Sesan AI auth refresh parity
         run: |
           python3 - <<'PY'
           from pathlib import Path
-
-          old_link='https://pay.ababank.com/oRF8/lq8jgwzb'
-          new_link='https://pay.ababank.com/oRF8/oizn40j9'
-          for filename in ['lib/shop_upgrade_screen.dart','lib/auction_add_screen.dart']:
-            p=Path(filename)
-            s=p.read_text(encoding='utf-8')
-            if old_link in s:
-              s=s.replace(old_link,new_link)
-              p.write_text(s,encoding='utf-8')
-            elif new_link not in s:
-              raise SystemExit(f'ABA link missing in {filename}')
-
-          p=Path('lib/add_product.dart')
+          p=Path('lib/sesan_ai_assistant_screen.dart')
           s=p.read_text(encoding='utf-8')
-          wanted="""                  side: BorderSide(color: Colors.deepPurple.withOpacity(0.75)),
-                  minimumSize: const Size(0, 32),
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  visualDensity: VisualDensity.compact,
+          old="""    if (user == null) return null;
+
+    return FirebaseFunctions.instanceFor(
+      region: 'asia-southeast1',
+    ).httpsCallable('askFarmAssistant');
 """
-          old="""                  side: BorderSide(color: Colors.deepPurple.withOpacity(0.75)),
-                  visualDensity: VisualDensity.compact,
+          new="""    if (user == null) return null;
+
+    try {
+      await user.getIdToken(true);
+      await user.reload();
+      if (FirebaseAuth.instance.currentUser == null) return null;
+    } catch (e) {
+      debugPrint('Sesan AI auth refresh failed: $e');
+      return null;
+    }
+
+    return FirebaseFunctions.instanceFor(
+      region: 'asia-southeast1',
+    ).httpsCallable('askFarmAssistant');
 """
-          if wanted not in s:
+          if "await user.getIdToken(true);" not in s:
             if old not in s:
-              raise SystemExit('AI button style anchor not found')
-            s=s.replace(old,wanted,1)
+              raise SystemExit('AI auth callable anchor not found')
+            s=s.replace(old,new,1)
             p.write_text(s,encoding='utf-8')
           PY
-          grep -Fq 'https://pay.ababank.com/oRF8/oizn40j9' lib/shop_upgrade_screen.dart
-          grep -Fq 'https://pay.ababank.com/oRF8/oizn40j9' lib/auction_add_screen.dart
-          grep -Fq 'minimumSize: const Size(0, 32)' lib/add_product.dart
-          grep -Fq 'padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5)' lib/add_product.dart
+          grep -Fq 'await user.getIdToken(true);' lib/sesan_ai_assistant_screen.dart
+          grep -Fq 'await user.reload();' lib/sesan_ai_assistant_screen.dart
           git diff --check
       - name: Commit
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add lib/shop_upgrade_screen.dart lib/auction_add_screen.dart lib/add_product.dart
+          git add lib/sesan_ai_assistant_screen.dart
           if git diff --cached --quiet; then
             echo 'No changes to commit.'
             exit 0
           fi
-          git commit -m 'Match iOS payment links and Add Product AI button to Android V51'
+          git commit -m 'Refresh iOS Firebase auth before Sesan AI requests'
           git push origin HEAD:ios-sync-android46
