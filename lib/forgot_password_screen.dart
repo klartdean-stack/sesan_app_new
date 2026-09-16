@@ -1,6 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'auth_session_store.dart';
+import 'user_service.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -32,7 +36,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     super.dispose();
   }
 
-  // ── ពណ៌ ──────────────────────────────────────
   static const Color bgColor = Color(0xFF0A0E21);
   static const Color cardColor = Color(0xFF1A1F3D);
   static const Color accentColor = Color(0xFF3B5BFF);
@@ -41,18 +44,21 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   Future<void> _sendOtp() async {
     if (!_formKey.currentState!.validate()) return;
     final phone = _phoneController.text.trim();
-    String phoneWith855 = phone.startsWith('+855')
+    final phoneWith855 = phone.startsWith('+855')
         ? phone
         : phone.startsWith('0')
-        ? '+855${phone.substring(1)}'
-        : '+855$phone';
+            ? '+855${phone.substring(1)}'
+            : '+855$phone';
 
     final query = await FirebaseFirestore.instance
         .collection('users')
-        .where('phone', whereIn: [
-      phoneWith855,
-      phone.startsWith('+855') ? '0${phone.substring(4)}' : phone
-    ])
+        .where(
+          'phone',
+          whereIn: [
+            phoneWith855,
+            phone.startsWith('+855') ? '0${phone.substring(4)}' : phone,
+          ],
+        )
         .limit(1)
         .get();
 
@@ -67,22 +73,21 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       await FirebaseAuth.instance.verifyPhoneNumber(
         phoneNumber: phoneWith855,
         timeout: const Duration(seconds: 60),
-
         verificationCompleted: (PhoneAuthCredential credential) async {
-          if (credential.smsCode != null) {
+          if (credential.smsCode != null && mounted) {
             setState(() {
               _codeController.text = credential.smsCode!;
               _isLoading = false;
             });
           }
         },
-
         verificationFailed: (FirebaseAuthException e) {
+          if (!mounted) return;
           _showSnack('បរាជ័យ៖ ${e.message}', isError: true);
           setState(() => _isLoading = false);
         },
-
         codeSent: (String verificationId, int? resendToken) {
+          if (!mounted) return;
           setState(() {
             _verificationId = verificationId;
             _codeSent = true;
@@ -90,12 +95,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           });
           _showSnack('បានផ្ញើ OTP ជោគជ័យ!', isError: false);
         },
-
         codeAutoRetrievalTimeout: (String verificationId) {
           _verificationId = verificationId;
         },
       );
     } catch (e) {
+      if (!mounted) return;
       setState(() => _isLoading = false);
       _showSnack('មានបញ្ហា៖ $e', isError: true);
     }
@@ -118,47 +123,113 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       _showSnack('លេខសម្ងាត់មិនត្រូវគ្នា', isError: true);
       return;
     }
+    if (_verificationId == null || _verificationId!.isEmpty) {
+      _showSnack('សូមផ្ញើ OTP ម្ដងទៀត', isError: true);
+      return;
+    }
+
     final credential = PhoneAuthProvider.credential(
       verificationId: _verificationId!,
       smsCode: code,
     );
     await _verifyCodeAndReset(credential);
-  }Future<void> _verifyCodeAndReset(PhoneAuthCredential credential) async {
+  }
+
+  Future<void> _verifyCodeAndReset(PhoneAuthCredential credential) async {
     setState(() => _isLoading = true);
     try {
-      await FirebaseAuth.instance.signInWithCredential(credential);
+      final authResult = await FirebaseAuth.instance.signInWithCredential(
+        credential,
+      );
+      final firebaseUser = authResult.user;
+      if (firebaseUser == null) {
+        throw FirebaseAuthException(
+          code: 'missing-user',
+          message: 'Firebase user is unavailable after OTP verification.',
+        );
+      }
+
       final phone = _phoneController.text.trim();
-      String phoneWith855 = phone.startsWith('+855')
+      final phoneWith855 = phone.startsWith('+855')
           ? phone
           : phone.startsWith('0')
-          ? '+855${phone.substring(1)}'
-          : '+855$phone';
+              ? '+855${phone.substring(1)}'
+              : '+855$phone';
+      final phoneWithZero = phone.startsWith('+855')
+          ? '0${phone.substring(4)}'
+          : phone.startsWith('0')
+              ? phone
+              : '0$phone';
+
       final query = await FirebaseFirestore.instance
           .collection('users')
-          .where('phone', whereIn: [
-        phoneWith855,
-        phone.startsWith('+855') ? '0${phone.substring(4)}' : phone,
-      ])
+          .where('phone', whereIn: [phoneWith855, phoneWithZero])
           .limit(1)
           .get();
 
       if (query.docs.isEmpty) {
-        _showSnack('រកមិនឃើញគណនី', isError: true);
-        setState(() => _isLoading = false);
-        return;
+        throw FirebaseAuthException(
+          code: 'account-not-found',
+          message: 'Sesan account not found.',
+        );
       }
 
-      await query.docs.first.reference.update({
-        'password': _passwordController.text.trim(),
+      final userDoc = query.docs.first;
+      if (userDoc.id != firebaseUser.uid) {
+        throw FirebaseAuthException(
+          code: 'user-mismatch',
+          message: 'Phone verification does not match the Sesan account.',
+        );
+      }
+
+      final newPassword = _passwordController.text.trim();
+
+      // Sesan uses PHONE + PASSWORD in the UI. Under the hood the phone
+      // account is linked to a private synthetic email/password provider.
+      // Updating Firebase Auth here is required so the new password works on
+      // the next normal login, not only in Firestore.
+      await firebaseUser.updatePassword(newPassword);
+
+      await userDoc.reference.update({
+        'password': newPassword,
+        'updated_at': FieldValue.serverTimestamp(),
       });
 
+      // The secure session may still contain the old password. Remove it and
+      // clear only login state so the next launch cannot restore stale creds.
+      await AuthSessionStore.clear();
+      await FirebaseAuth.instance.signOut();
+      UserService.clearCache();
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('user_uid');
+      await prefs.remove('is_logged_in');
+      await prefs.remove('is_guest');
+      await prefs.remove('user_name');
+      await prefs.remove('user_phone');
+      await prefs.remove('user_photo');
+      await prefs.remove('user_role');
+
+      if (!mounted) return;
       setState(() {
         _isLoading = false;
         _passwordReset = true;
       });
-    } catch (e) {
+    } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
       setState(() => _isLoading = false);
-      _showSnack('កូដមិនត្រឹមត្រូវ ឬផុតកំណត់', isError: true);
+      final message = e.code == 'weak-password'
+          ? 'លេខសម្ងាត់ថ្មីមិនគ្រប់លក្ខខណ្ឌ Firebase'
+          : e.code == 'requires-recent-login'
+              ? 'សូមផ្ទៀងផ្ទាត់ OTP ម្ដងទៀត'
+              : e.code == 'user-mismatch'
+                  ? 'OTP មិនត្រូវនឹងគណនីនេះទេ'
+                  : 'កូដមិនត្រឹមត្រូវ ឬមិនអាចប្ដូរលេខសម្ងាត់បាន';
+      _showSnack(message, isError: true);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      _showSnack('មិនអាចប្ដូរលេខសម្ងាត់បាន៖ $e', isError: true);
     }
   }
 
@@ -166,8 +237,16 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(msg, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
-        backgroundColor: isError ? const Color(0xFFDA3633) : const Color(0xFF238636),
+        content: Text(
+          msg,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        backgroundColor: isError
+            ? const Color(0xFFDA3633)
+            : const Color(0xFF238636),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         margin: const EdgeInsets.all(16),
@@ -186,8 +265,15 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text('ភ្លេចលេខសម្ងាត់',
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontFamily: 'Siemreap', fontSize: 17)),
+        title: const Text(
+          'ភ្លេចលេខសម្ងាត់',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontFamily: 'Siemreap',
+            fontSize: 17,
+          ),
+        ),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
@@ -197,8 +283,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           child: _passwordReset
               ? _buildSuccessView()
               : _codeSent
-              ? _buildCodeVerification()
-              : _buildPhoneInput(),
+                  ? _buildCodeVerification()
+                  : _buildPhoneInput(),
         ),
       ),
     );
@@ -206,127 +292,227 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   Widget _buildPhoneInput() {
     return Column(
-        children: [
+      children: [
         const SizedBox(height: 40),
-    Container(
-    width: 90, height: 90,
-    decoration: BoxDecoration(
-    shape: BoxShape.circle,
-    color: accentColor.withOpacity(0.12),
-    border: Border.all(color: accentColor.withOpacity(0.35), width: 2),
-    ),
-    child: const Icon(Icons.lock_reset, color: accentColor, size: 42),
-    ),
-    const SizedBox(height: 24),
-    const Text('កំណត់លេខសម្ងាត់ឡើងវិញ',
-    style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'Siemreap')),
-    const SizedBox(height: 8),
-    Text('បញ្ចូលលេខទូរស័ព្ទដែលបានចុះឈ្មោះ\nប្រព័ន្ធនឹងផ្ញើ OTP ទៅលេខរបស់អ្នក',
-    textAlign: TextAlign.center,
-    style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 13, height: 1.6, fontFamily: 'Siemreap')),
-    const SizedBox(height: 36),
-    _buildStepRow(step: 1),
-    const SizedBox(height: 32),
-    _buildLabel('លេខទូរស័ព្ទ'),
-    const SizedBox(height: 8),
-    TextFormField(
-    controller: _phoneController,
-    keyboardType: TextInputType.phone,style: const TextStyle(color: Colors.white, fontSize: 15),
-      decoration: _inputDeco('ឧ. 012 345 678', Icons.phone_android_outlined),
-      validator: (v) => v!.isEmpty ? 'សូមបញ្ចូលលេខទូរស័ព្ទ' : null,
-    ),
-          const SizedBox(height: 28),
-          _buildMainButton(label: 'ផ្ញើ OTP', icon: Icons.send_rounded, onTap: _sendOtp),
-          const SizedBox(height: 40),
-        ],
+        Container(
+          width: 90,
+          height: 90,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: accentColor.withOpacity(0.12),
+            border: Border.all(
+              color: accentColor.withOpacity(0.35),
+              width: 2,
+            ),
+          ),
+          child: const Icon(Icons.lock_reset, color: accentColor, size: 42),
+        ),
+        const SizedBox(height: 24),
+        const Text(
+          'កំណត់លេខសម្ងាត់ឡើងវិញ',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            fontFamily: 'Siemreap',
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'បញ្ចូលលេខទូរស័ព្ទដែលបានចុះឈ្មោះ\nប្រព័ន្ធនឹងផ្ញើ OTP ទៅលេខរបស់អ្នក',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: Colors.white.withOpacity(0.5),
+            fontSize: 13,
+            height: 1.6,
+            fontFamily: 'Siemreap',
+          ),
+        ),
+        const SizedBox(height: 36),
+        _buildStepRow(step: 1),
+        const SizedBox(height: 32),
+        _buildLabel('លេខទូរស័ព្ទ'),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: _phoneController,
+          keyboardType: TextInputType.phone,
+          style: const TextStyle(color: Colors.white, fontSize: 15),
+          decoration: _inputDeco(
+            'ឧ. 012 345 678',
+            Icons.phone_android_outlined,
+          ),
+          validator: (v) => v == null || v.trim().isEmpty
+              ? 'សូមបញ្ចូលលេខទូរស័ព្ទ'
+              : null,
+        ),
+        const SizedBox(height: 28),
+        _buildMainButton(
+          label: 'ផ្ញើ OTP',
+          icon: Icons.send_rounded,
+          onTap: _sendOtp,
+        ),
+        const SizedBox(height: 40),
+      ],
     );
   }
 
   Widget _buildCodeVerification() {
     return Column(
-        children: [
+      children: [
         const SizedBox(height: 40),
-    Container(
-    width: 90, height: 90,
-    decoration: BoxDecoration(
-    shape: BoxShape.circle,
-    color: greenColor.withOpacity(0.12),
-    border: Border.all(color: greenColor.withOpacity(0.35), width: 2),
-    ),
-    child: const Icon(Icons.mark_email_read_outlined, color: greenColor, size: 42),
-    ),
-    const SizedBox(height: 24),
-    const Text('ផ្ទៀងផ្ទាត់ OTP',
-    style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'Siemreap')),
-    const SizedBox(height: 8),
-    Text('លេខកូដ ៦ ខ្ទង់ត្រូវបានផ្ញើទៅ\n${_phoneController.text.trim()}',
-    textAlign: TextAlign.center,
-    style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 13, height: 1.6, fontFamily: 'Siemreap')),
-    const SizedBox(height: 36),
-    _buildStepRow(step: 2),
-    const SizedBox(height: 32),
-    _buildLabel('លេខកូដ OTP'),
-    const SizedBox(height: 8),
-    TextFormField(
-    controller: _codeController,
-    keyboardType: TextInputType.number,
-    maxLength: 6,
-    style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold, letterSpacing: 8),
-    textAlign: TextAlign.center,
-    decoration: _inputDeco('_ _ _ _ _ _', Icons.pin_outlined).copyWith(counterText: ''),
-    ),
-    const SizedBox(height: 20),
-    _buildLabel('លេខសម្ងាត់ថ្មី'),
-    const SizedBox(height: 8),
-    TextFormField(
-    controller: _passwordController,
-    obscureText: _obscurePass,
-    style: const TextStyle(color: Colors.white, fontSize: 15),
-    decoration: _inputDeco('យ៉ាងតិច ៦ តួ', Icons.lock_outline).copyWith(
-    suffixIcon: IconButton(
-    icon: Icon(_obscurePass ? Icons.visibility_off_outlined : Icons.visibility_outlined, color: Colors.white38, size: 20),
-    onPressed: () => setState(() => _obscurePass = !_obscurePass),
-    ),
-    ),
-    validator: (v) => (v == null || v.length < 6) ? 'យ៉ាងតិច ៦ តួ' : null,
-    ),
-    const SizedBox(height: 16),
-    _buildLabel('បញ្ជាក់លេខសម្ងាត់'),
-    const SizedBox(height: 8),
-    TextFormField(
-    controller: _confirmController,
-    obscureText: _obscureConfirm,
-    style: const TextStyle(color: Colors.white, fontSize: 15),
-    decoration: _inputDeco('វាយម្ដងទៀត', Icons.lock_outline).copyWith(
-    suffixIcon: IconButton(
-    icon: Icon(_obscureConfirm ? Icons.visibility_off_outlined : Icons.visibility_outlined, color: Colors.white38, size: 20),
-    onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm),
-    ),
-    ),
-    ),
-    const SizedBox(height: 28),
-    Row(
-    children: [
-    Expanded(
-    child: OutlinedButton.icon(
-    style: OutlinedButton.styleFrom(
-    side: BorderSide(color: Colors.white.withOpacity(0.2)),
-    padding: const EdgeInsets.symmetric(vertical: 14),
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-    ),
-    onPressed: () => setState(() { _codeSent = false; _verificationId = null; }),icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white54, size: 15),
-      label: const Text('ថយក្រោយ', style: TextStyle(color: Colors.white60, fontFamily: 'Siemreap')),
-    ),
-    ),
-      const SizedBox(width: 14),
-      Expanded(
-        flex: 2,
-        child: _buildMainButton(label: 'ប្ដូរលេខសម្ងាត់', icon: Icons.check_rounded, onTap: _verifyAndReset, color: greenColor),
-      ),
-    ],
-    ),
-          const SizedBox(height: 40),
-        ],
+        Container(
+          width: 90,
+          height: 90,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: greenColor.withOpacity(0.12),
+            border: Border.all(
+              color: greenColor.withOpacity(0.35),
+              width: 2,
+            ),
+          ),
+          child: const Icon(
+            Icons.mark_email_read_outlined,
+            color: greenColor,
+            size: 42,
+          ),
+        ),
+        const SizedBox(height: 24),
+        const Text(
+          'ផ្ទៀងផ្ទាត់ OTP',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            fontFamily: 'Siemreap',
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'លេខកូដ ៦ ខ្ទង់ត្រូវបានផ្ញើទៅ\n${_phoneController.text.trim()}',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: Colors.white.withOpacity(0.5),
+            fontSize: 13,
+            height: 1.6,
+            fontFamily: 'Siemreap',
+          ),
+        ),
+        const SizedBox(height: 36),
+        _buildStepRow(step: 2),
+        const SizedBox(height: 32),
+        _buildLabel('លេខកូដ OTP'),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: _codeController,
+          keyboardType: TextInputType.number,
+          maxLength: 6,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 8,
+          ),
+          textAlign: TextAlign.center,
+          decoration: _inputDeco(
+            '_ _ _ _ _ _',
+            Icons.pin_outlined,
+          ).copyWith(counterText: ''),
+        ),
+        const SizedBox(height: 20),
+        _buildLabel('លេខសម្ងាត់ថ្មី'),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: _passwordController,
+          obscureText: _obscurePass,
+          style: const TextStyle(color: Colors.white, fontSize: 15),
+          decoration: _inputDeco(
+            'យ៉ាងតិច ៦ តួ',
+            Icons.lock_outline,
+          ).copyWith(
+            suffixIcon: IconButton(
+              icon: Icon(
+                _obscurePass
+                    ? Icons.visibility_off_outlined
+                    : Icons.visibility_outlined,
+                color: Colors.white38,
+                size: 20,
+              ),
+              onPressed: () => setState(() => _obscurePass = !_obscurePass),
+            ),
+          ),
+          validator: (v) => (v == null || v.length < 6)
+              ? 'យ៉ាងតិច ៦ តួ'
+              : null,
+        ),
+        const SizedBox(height: 16),
+        _buildLabel('បញ្ជាក់លេខសម្ងាត់'),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: _confirmController,
+          obscureText: _obscureConfirm,
+          style: const TextStyle(color: Colors.white, fontSize: 15),
+          decoration: _inputDeco(
+            'វាយម្ដងទៀត',
+            Icons.lock_outline,
+          ).copyWith(
+            suffixIcon: IconButton(
+              icon: Icon(
+                _obscureConfirm
+                    ? Icons.visibility_off_outlined
+                    : Icons.visibility_outlined,
+                color: Colors.white38,
+                size: 20,
+              ),
+              onPressed: () =>
+                  setState(() => _obscureConfirm = !_obscureConfirm),
+            ),
+          ),
+        ),
+        const SizedBox(height: 28),
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  side: BorderSide(color: Colors.white.withOpacity(0.2)),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+                onPressed: () => setState(() {
+                  _codeSent = false;
+                  _verificationId = null;
+                }),
+                icon: const Icon(
+                  Icons.arrow_back_ios_new,
+                  color: Colors.white54,
+                  size: 15,
+                ),
+                label: const Text(
+                  'ថយក្រោយ',
+                  style: TextStyle(
+                    color: Colors.white60,
+                    fontFamily: 'Siemreap',
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              flex: 2,
+              child: _buildMainButton(
+                label: 'ប្ដូរលេខសម្ងាត់',
+                icon: Icons.check_rounded,
+                onTap: _verifyAndReset,
+                color: greenColor,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 40),
+      ],
     );
   }
 
@@ -337,25 +523,55 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            width: 110, height: 110,
+            width: 110,
+            height: 110,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: greenColor.withOpacity(0.12),
-              border: Border.all(color: greenColor.withOpacity(0.4), width: 3),
-              boxShadow: [BoxShadow(color: greenColor.withOpacity(0.25), blurRadius: 30, spreadRadius: -5)],
+              border: Border.all(
+                color: greenColor.withOpacity(0.4),
+                width: 3,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: greenColor.withOpacity(0.25),
+                  blurRadius: 30,
+                  spreadRadius: -5,
+                ),
+              ],
             ),
             child: const Icon(Icons.check_rounded, color: greenColor, size: 56),
           ),
           const SizedBox(height: 28),
-          const Text('ជោគជ័យ!', style: TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.bold, fontFamily: 'Siemreap')),
+          const Text(
+            'ជោគជ័យ!',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 26,
+              fontWeight: FontWeight.bold,
+              fontFamily: 'Siemreap',
+            ),
+          ),
           const SizedBox(height: 10),
-          Text('លេខសម្ងាត់ត្រូវបានប្ដូរជោគជ័យ\nអ្នកអាចចូលប្រើប្រាស់ App បានហើយ',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 14, height: 1.6, fontFamily: 'Siemreap')),
+          Text(
+            'លេខសម្ងាត់ត្រូវបានប្ដូរជោគជ័យ\nអ្នកអាចចូលប្រើប្រាស់ App បានហើយ',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.5),
+              fontSize: 14,
+              height: 1.6,
+              fontFamily: 'Siemreap',
+            ),
+          ),
           const SizedBox(height: 40),
           SizedBox(
             width: double.infinity,
-            child: _buildMainButton(label: 'ត្រឡប់ទៅចូលប្រើ', icon: Icons.login_rounded, onTap: () => Navigator.pop(context), color: accentColor),
+            child: _buildMainButton(
+              label: 'ត្រឡប់ទៅចូលប្រើ',
+              icon: Icons.login_rounded,
+              onTap: () => Navigator.pop(context),
+              color: accentColor,
+            ),
           ),
         ],
       ),
@@ -372,8 +588,17 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             child: Container(
               height: 2,
               decoration: BoxDecoration(
-                gradient: lineStep < step - 1 ? LinearGradient(colors: [accentColor, accentColor.withOpacity(0.3)]) : null,
-                color: lineStep < step - 1 ? null : Colors.white.withOpacity(0.1),
+                gradient: lineStep < step - 1
+                    ? LinearGradient(
+                        colors: [
+                          accentColor,
+                          accentColor.withOpacity(0.3),
+                        ],
+                      )
+                    : null,
+                color: lineStep < step - 1
+                    ? null
+                    : Colors.white.withOpacity(0.1),
               ),
             ),
           );
@@ -384,21 +609,48 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         return Column(
           children: [
             Container(
-              width: 34, height: 34,
+              width: 34,
+              height: 34,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: isActive ? accentColor : Colors.white.withOpacity(0.08),
-                border: isCurrent ? Border.all(color: Colors.white, width: 2) : null,
-                boxShadow: isActive ? [BoxShadow(color: accentColor.withOpacity(0.4), blurRadius: 10, spreadRadius: -2)] : null,
+                color: isActive
+                    ? accentColor
+                    : Colors.white.withOpacity(0.08),
+                border: isCurrent
+                    ? Border.all(color: Colors.white, width: 2)
+                    : null,
+                boxShadow: isActive
+                    ? [
+                        BoxShadow(
+                          color: accentColor.withOpacity(0.4),
+                          blurRadius: 10,
+                          spreadRadius: -2,
+                        ),
+                      ]
+                    : null,
               ),
               child: Center(
                 child: isActive && !isCurrent
                     ? const Icon(Icons.check, color: Colors.white, size: 16)
-                    : Text('$dotStep', style: TextStyle(color: isActive ? Colors.white : Colors.white30, fontWeight: FontWeight.bold, fontSize: 13)),
+                    : Text(
+                        '$dotStep',
+                        style: TextStyle(
+                          color: isActive ? Colors.white : Colors.white30,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                        ),
+                      ),
               ),
             ),
             const SizedBox(height: 6),
-            Text(steps[dotStep - 1], style: TextStyle(color: isActive ? Colors.white70 : Colors.white24, fontSize: 10, fontFamily: 'Siemreap')),
+            Text(
+              steps[dotStep - 1],
+              style: TextStyle(
+                color: isActive ? Colors.white70 : Colors.white24,
+                fontSize: 10,
+                fontFamily: 'Siemreap',
+              ),
+            ),
           ],
         );
       }),
@@ -406,40 +658,97 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   }
 
   Widget _buildLabel(String text) {
-    return Text(text, style: TextStyle(color: Colors.white.withOpacity(0.65), fontSize: 13, fontFamily: 'Siemreap', fontWeight: FontWeight.w500));
-  }InputDecoration _inputDeco(String hint, IconData icon) {
+    return Text(
+      text,
+      style: TextStyle(
+        color: Colors.white.withOpacity(0.65),
+        fontSize: 13,
+        fontFamily: 'Siemreap',
+        fontWeight: FontWeight.w500,
+      ),
+    );
+  }
+
+  InputDecoration _inputDeco(String hint, IconData icon) {
     return InputDecoration(
       hintText: hint,
-      hintStyle: TextStyle(color: Colors.white.withOpacity(0.25), fontSize: 13),
-      prefixIcon: Icon(icon, color: Colors.white.withOpacity(0.35), size: 20),
+      hintStyle: TextStyle(
+        color: Colors.white.withOpacity(0.25),
+        fontSize: 13,
+      ),
+      prefixIcon: Icon(
+        icon,
+        color: Colors.white.withOpacity(0.35),
+        size: 20,
+      ),
       filled: true,
       fillColor: Colors.white.withOpacity(0.05),
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide(color: Colors.white.withOpacity(0.1))),
-      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide(color: Colors.white.withOpacity(0.1))),
-      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: accentColor, width: 1.5)),
-      errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Colors.redAccent)),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: const BorderSide(color: accentColor, width: 1.5),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: const BorderSide(color: Colors.redAccent),
+      ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
     );
   }
 
-  Widget _buildMainButton({required String label, required IconData icon, required VoidCallback onTap, Color color = accentColor}) {
+  Widget _buildMainButton({
+    required String label,
+    required IconData icon,
+    required VoidCallback onTap,
+    Color color = accentColor,
+  }) {
     return SizedBox(
-      width: double.infinity, height: 52,
+      width: double.infinity,
+      height: 52,
       child: ElevatedButton.icon(
         style: ElevatedButton.styleFrom(
           backgroundColor: color,
           foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
           elevation: 4,
           shadowColor: color.withOpacity(0.4),
         ),
         onPressed: _isLoading ? null : onTap,
         icon: _isLoading
-            ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+            ? const SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2,
+                ),
+              )
             : Icon(icon, size: 18),
         label: _isLoading
-            ? const Text('កំពុងដំណើរការ...', style: TextStyle(fontFamily: 'Siemreap', fontWeight: FontWeight.bold))
-            : Text(label, style: const TextStyle(fontFamily: 'Siemreap', fontWeight: FontWeight.bold, fontSize: 15)),
+            ? const Text(
+                'កំពុងដំណើរការ...',
+                style: TextStyle(
+                  fontFamily: 'Siemreap',
+                  fontWeight: FontWeight.bold,
+                ),
+              )
+            : Text(
+                label,
+                style: const TextStyle(
+                  fontFamily: 'Siemreap',
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
+                ),
+              ),
       ),
     );
   }
