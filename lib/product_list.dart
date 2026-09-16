@@ -599,6 +599,9 @@ class ProductGridView extends StatefulWidget {
   final String? filterProvince;
   final String? filterDistrict;
   final String? filterCommune;
+  final String? filterProvince;
+  final String? filterDistrict;
+  final String? filterCommune;
 
 
   const ProductGridView({
@@ -607,6 +610,9 @@ class ProductGridView extends StatefulWidget {
     this.searchQuery = "",
     this.isHome = false,
     this.isAuction = false, // 🎯 ២. និងដាក់វាចូលក្នុង Constructor ទីនេះ!
+    this.filterProvince,
+    this.filterDistrict,
+    this.filterCommune,
     this.filterProvince,
     this.filterDistrict,
     this.filterCommune,
@@ -918,9 +924,10 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
               subSubCategory == _selectedSubSubCategory;
 
 
-      return (query.isEmpty || name.contains(query)) &&
+      return _matchesSmartSearch(data, query) &&
           matchesSub &&
-          matchesSubSub;
+          matchesSubSub &&
+          _matchesLocationFilter(data);
     }).toList();
 
 
