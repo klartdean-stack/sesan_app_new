@@ -69,3 +69,5 @@ jobs:
           fi
           git commit -m 'Match iOS payment links and Add Product AI button to Android V51'
           git push origin HEAD:ios-sync-android46
+
+      # Retriggered on 2026-09-16 to apply the compact AI button after map parity verification.
