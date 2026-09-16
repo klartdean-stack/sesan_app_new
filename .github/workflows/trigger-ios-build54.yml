@@ -18,8 +18,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh workflow run ios-build.yml \
+          gh workflow run ios-build-current.yml \
             --repo klartdean-stack/sesan_app_new \
             --ref ios-sync-android46
 
-# Triggered for current iOS parity build and App Store Connect upload: 2026-09-17
+# Triggered for current iOS parity Build 54 and App Store Connect upload: 2026-09-17 retry
