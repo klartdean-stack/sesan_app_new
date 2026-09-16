@@ -508,7 +508,7 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
  🔗 View this shop in the app: $sellerShopUrl
  📲 Don't have the app yet? Download it here:
  Android: https://play.google.com/store/apps/details?id=com.sesan.app
- iOS: https://apps.apple.com/app/sesan-app/idXXXXXXXXXX''';
+ iOS: https://apps.apple.com/kh/app/sesan-app/id6789862316''';
     final shareMessage = Localizations.localeOf(context).languageCode == 'en'
         ? englishShareMessage
         : '''
@@ -517,7 +517,7 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
  🔗 មើលហាងក្នុង App៖ https://sesanshop.com/shop/${widget.sellerId}
  📲 មិនទាន់មាន App? ទាញយកទីនេះ៖
  Android: https://play.google.com/store/apps/details?id=com.sesan.app
- iOS: https://apps.apple.com/app/sesan-app/idXXXXXXXXXX''';
+ iOS: https://apps.apple.com/kh/app/sesan-app/id6789862316''';
     try {
       if (mounted) Get.dialog(const Center(child: CircularProgressIndicator(color: Colors.white)), barrierDismissible: false);
       final image = await _screenshotController.captureFromWidget(_buildShopWatermarkWidget(coverUrl: coverUrl, photoUrl: photoUrl, shopName: shopName, sesanId: sesanId, sellerId: widget.sellerId, phone: phone, productCount: productCount), delay: const Duration(milliseconds: 1500), pixelRatio: 2.0);
