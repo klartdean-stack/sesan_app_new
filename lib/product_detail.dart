@@ -1731,7 +1731,8 @@ Android: $androidPlayStoreLink
                               Text(
                                 _shownProductName('គ្មានឈ្មោះ'),
                                 style: const TextStyle(
-                                  fontSize: 22,
+                                  fontSize: 18,
+                                  height: 1.25,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -1980,35 +1981,30 @@ Android: $androidPlayStoreLink
                                       children: [
                                         Row(
                                           children: [
-                                            RatingBarIndicator(
-                                              rating: avgRating,
-                                              itemBuilder: (context, _) =>
-                                                  const Icon(
-                                                    Icons.star,
-                                                    color: Colors.amber,
-                                                  ),
-                                              itemCount: 5,
-                                              itemSize: 22,
+                                            const Icon(
+                                              Icons.star_rounded,
+                                              color: Colors.amber,
+                                              size: 17,
                                             ),
-                                            const SizedBox(width: 8),
+                                            const SizedBox(width: 4),
                                             Text(
                                               '${avgRating.toStringAsFixed(1)} '
                                               '($totalReviews នាក់)',
                                               style: const TextStyle(
-                                                fontSize: 13,
+                                                fontSize: 11,
                                                 fontWeight: FontWeight.bold,
                                                 color: Colors.black87,
                                               ),
                                             ),
                                           ],
                                         ),
-                                        const SizedBox(height: 8),
+                                        const SizedBox(height: 4),
                                         Text(
                                           myRating > 0
                                               ? 'ពិន្ទុរបស់អ្នក៖ ${myRating.toStringAsFixed(1)}'
                                               : 'ចុចផ្កាយដើម្បីផ្ដល់ពិន្ទុ',
                                           style: TextStyle(
-                                            fontSize: 12,
+                                            fontSize: 11,
                                             color: myRating > 0
                                                 ? Colors.green.shade700
                                                 : Colors.grey.shade600,
@@ -2028,10 +2024,10 @@ Android: $androidPlayStoreLink
                                               direction: Axis.horizontal,
                                               allowHalfRating: true,
                                               itemCount: 5,
-                                              itemSize: 30,
+                                              itemSize: 22,
                                               itemPadding:
                                                   const EdgeInsets.symmetric(
-                                                    horizontal: 3,
+                                                    horizontal: 2,
                                                   ),
                                               itemBuilder: (context, _) =>
                                                   const Icon(
@@ -2044,10 +2040,10 @@ Android: $androidPlayStoreLink
                                         ),
                                         if (_isSubmittingRating)
                                           const Padding(
-                                            padding: EdgeInsets.only(top: 6),
+                                            padding: EdgeInsets.only(top: 4),
                                             child: SizedBox(
-                                              width: 18,
-                                              height: 18,
+                                              width: 14,
+                                              height: 14,
                                               child: CircularProgressIndicator(
                                                 strokeWidth: 2,
                                               ),
@@ -2090,16 +2086,16 @@ Android: $androidPlayStoreLink
                               ),
 
                               const Divider(
-                                height: 30,
+                                height: 18,
                               ), // ៤. ចំនួនកម្ម៉ង់ និង តម្លៃសរុប
                               const Text(
                                 "ជ្រើសរើសចំនួន៖",
                                 style: TextStyle(
-                                  fontSize: 16,
+                                  fontSize: 14,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              const SizedBox(height: 10),
+                              const SizedBox(height: 6),
                               // --- ផ្នែកជ្រើសរើសចំនួន និង តម្លៃសរុប (កូដដែលកែរួច) ---
                               StatefulBuilder(
                                 builder: (context, setState) {
@@ -2123,9 +2119,9 @@ Android: $androidPlayStoreLink
                                               setState(() => _tempQty--);
                                           }),
                                           Container(
-                                            width: 80, // កែទំហំឱ្យល្មម
+                                            width: 60, // Compact quantity field
                                             margin: const EdgeInsets.symmetric(
-                                              horizontal: 10,
+                                              horizontal: 6,
                                             ),
                                             child: TextField(
                                               keyboardType:
@@ -2140,12 +2136,13 @@ Android: $androidPlayStoreLink
                                                     .digitsOnly,
                                               ],
                                               style: const TextStyle(
+                                                fontSize: 14,
                                                 fontWeight: FontWeight.bold,
                                               ),
                                               decoration: InputDecoration(
                                                 contentPadding:
                                                     const EdgeInsets.symmetric(
-                                                      vertical: 8,
+                                                      vertical: 4,
                                                     ),
                                                 border: OutlineInputBorder(
                                                   borderRadius:
@@ -2194,11 +2191,12 @@ Android: $androidPlayStoreLink
                                               setState(() => _tempQty++);
                                             }
                                           }),
-                                          const SizedBox(width: 10),
+                                          const SizedBox(width: 6),
                                           const Text(
                                             "ចំនួន",
                                             style: TextStyle(
                                               color: Colors.grey,
+                                              fontSize: 12,
                                               fontFamily: 'Siemreap',
                                             ),
                                           ),
@@ -2228,9 +2226,9 @@ Android: $androidPlayStoreLink
                                           ),
                                         ),
                                       ],
-                                      const SizedBox(height: 15),
+                                      const SizedBox(height: 7),
                                       Container(
-                                        padding: const EdgeInsets.all(12),
+                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                                         decoration: BoxDecoration(
                                           color: Colors.blue.withOpacity(0.05),
                                           borderRadius: BorderRadius.circular(
@@ -2247,7 +2245,7 @@ Android: $androidPlayStoreLink
                                             const Text(
                                               "តម្លៃសរុប៖",
                                               style: TextStyle(
-                                                fontSize: 16,
+                                                fontSize: 13,
                                                 fontWeight: FontWeight.w500,
                                                 fontFamily: 'Siemreap',
                                               ),
@@ -2764,13 +2762,14 @@ Android: $androidPlayStoreLink
   Widget _qtyActionBtn(IconData icon, VoidCallback onTap) {
     return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(7),
       child: Container(
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.all(6),
         decoration: BoxDecoration(
           color: Colors.blue.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(7),
         ),
-        child: Icon(icon, color: Colors.blue, size: 20),
+        child: Icon(icon, color: Colors.blue, size: 18),
       ),
     );
   }
