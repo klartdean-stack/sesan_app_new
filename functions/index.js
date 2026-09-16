@@ -17,15 +17,18 @@ exports.notifySellerOnConfirmedOrder = onDocumentUpdated({
 }, async (event) => {
     const beforeData = event.data.before.data();
     const afterData = event.data.after.data();
-    const sellerId = afterData.seller_id;
+    const sellerId = afterData.seller_id; // 👈 មេឆែកមើលក្នុង DB ថាឈ្មោះ field ហ្នឹងមែនអត់
 
+    // 🎯 ឆែកថា Status ទើបតែប្តូរមកជា confirmed មែនអត់
     if (beforeData.status !== "confirmed" && afterData.status === "confirmed") {
         if (!sellerId) return null;
 
         try {
+            // ១. ទៅយក fcmToken របស់ Seller ពី Collection users
             const sellerDoc = await admin.firestore().collection("users").doc(sellerId).get();
             const token = sellerDoc.data()?.fcmToken;
 
+            // ជួសត្រង់ចំណុចដែលផ្ញើសារ (Line 33-40)
             if (token) {
                 await admin.messaging().send({
                     token: token,
@@ -33,6 +36,7 @@ exports.notifySellerOnConfirmedOrder = onDocumentUpdated({
                         title: "មានការកម្ម៉ង់ថ្មី! 🚀",
                         body: "មានអតិថិជនកម្ម៉ង់ទំនិញថ្មី!",
                     },
+                    // 🚀 ត្រូវថែមផ្នែកខាងក្រោមនេះ ដើម្បីបំបាត់ Logo Flutter
                     android: {
                         priority: "high",
                         notification: {
@@ -53,6 +57,7 @@ exports.notifySellerOnConfirmedOrder = onDocumentUpdated({
     return null;
 });
 
+// 🔔 ២. ជូនដំណឹងទៅ Customer ពេល Status ប្រែប្រួល
 exports.handleOrderTrackingNotifications = onDocumentUpdated({
     document: "orders/{orderId}",
     region: "asia-southeast1"
@@ -86,15 +91,15 @@ exports.handleOrderTrackingNotifications = onDocumentUpdated({
                 await admin.messaging().send({
                     notification: { title, body },
                     android: {
-                        priority: "high",
-                        notification: {
-                            channelId: "order_channel", 
-                            icon: 'ic_stat_sesan',
-                            color: '#FF4500',
-                            sound: "default",
-                            clickAction: "FLUTTER_NOTIFICATION_CLICK",
-                        }
-                    },
+            priority: "high",
+            notification: {
+                channelId: "order_channel", 
+                icon: 'ic_stat_sesan',
+                color: '#FF4500',
+                sound: "default",
+                clickAction: "FLUTTER_NOTIFICATION_CLICK",
+            }
+        },
                     token: token
                 });
             }
@@ -105,7 +110,9 @@ exports.handleOrderTrackingNotifications = onDocumentUpdated({
     return null;
 });
 
+// 🔐 ៣. មុខងារដកលុយដោយផ្ទៀងផ្ទាត់ PIN (Secure Withdraw)
 exports.secureWithdraw = onCall({ region: "asia-southeast1" }, async (request) => {
+    // 🛡️ ឆែក Auth សិនដើម្បីការពារ Error uid
     if (!request.auth) {
         throw new HttpsError('unauthenticated', 'សូមចូលគណនីជាមុនសិន!');
     }
@@ -122,19 +129,23 @@ exports.secureWithdraw = onCall({ region: "asia-southeast1" }, async (request) =
             if (!userDoc.exists) throw new HttpsError('not-found', 'រកមិនឃើញអ្នកប្រើប្រាស់!');
 
             const userData = userDoc.data();
+            
+            // 🎯 ផ្ទៀងផ្ទាត់ PIN (សំខាន់បំផុតដើម្បីកុំឱ្យរំលង)
             if (!pin || String(pin) !== String(userData.password)) {
                 throw new HttpsError('permission-denied', 'លេខសម្ងាត់មិនត្រឹមត្រូវ!');
             }
 
+            // ឆែកឈ្មោះ Field ឱ្យត្រូវ (ក្នុង DB មេឈ្មោះ 'balance' ឬ 'wallet_balance'?)
             const currentBalance = userData.balance || 0; 
             if (amount <= 0 || amount > currentBalance) {
                 throw new HttpsError('invalid-argument', 'សមតុល្យមិនគ្រប់គ្រាន់!');
-            }
+            }// ១. កាត់លុយចេញ
             transaction.update(userRef, {
                 balance: admin.firestore.FieldValue.increment(-amount),
                 total_withdraw: admin.firestore.FieldValue.increment(amount)
             });
 
+            // ២. បង្កើតសំណើដកប្រាក់
             const withdrawRef = admin.firestore().collection('withdraw_requests').doc();
             transaction.set(withdrawRef, {
                 seller_id: uid,
@@ -150,11 +161,12 @@ exports.secureWithdraw = onCall({ region: "asia-southeast1" }, async (request) =
         throw new HttpsError('internal', error.message);
     }
 });
-
+// 🎯 ផាសបន្តពីក្រោមជួរទី 138 មកមេ
 exports.sendSellerNotification = onCall(async (request) => {
     const { sellerId, title, body } = request.data;
 
     try {
+        // ១. ទៅទាញយក fcm_token របស់អ្នកលក់ពី Firestore
         const userDoc = await admin.firestore().collection('users').doc(sellerId).get();
         const userData = userDoc.data();
 
@@ -163,21 +175,22 @@ exports.sendSellerNotification = onCall(async (request) => {
             return { success: false, error: "No token found" };
         }
 
+        // ២. រៀបចំសារបាញ់ទៅកាន់ Messaging
         const message = {
             notification: {
                 title: title,
                 body: body
             },
-            android: {
-                priority: "high",
-                notification: {
-                    channelId: "high_importance_channel", 
-                    icon: 'ic_stat_sesan',
-                    color: '#FF4500',
-                    sound: "default",
-                    clickAction: "FLUTTER_NOTIFICATION_CLICK",
-                }
-            },
+                android: {
+            priority: "high",
+            notification: {
+                channelId: "high_importance_channel", 
+                icon: 'ic_stat_sesan',
+                color: '#FF4500',
+                sound: "default",
+                clickAction: "FLUTTER_NOTIFICATION_CLICK",
+            }
+        },
             token: userData.fcmToken,   
         };
 
@@ -191,15 +204,20 @@ exports.sendSellerNotification = onCall(async (request) => {
     }
 });
 
+// កូដសម្រាប់តេស្ត (ដាក់ពីក្រោម exports.scheduledWalletSettlement ក៏បាន)
 exports.testWalletNow = onDocumentUpdated({
     document: "orders/{orderId}",
     region: "asia-southeast1"
 }, async (event) => {
     const db = admin.firestore();
     const orderData = event.data.after.data();
+    
     console.log("--- ចាប់ផ្ដើមតេស្ត Logic ៥ ថ្ងៃ ---");
+    
     const now = new Date();
+    // ឆែកមើលថាមាន packing_date អត់ បើអត់ទេឱ្យវាស្មើម៉ោងឥឡូវ
     const packingDate = orderData.packing_date ? orderData.packing_date.toDate() : new Date();
+    
     console.log("ម៉ោងឥឡូវ (Server):", now.toISOString());
     console.log("ម៉ោងក្នុងបុង (Packing Date):", packingDate.toISOString());
 
@@ -213,6 +231,8 @@ exports.testWalletNow = onDocumentUpdated({
             "wallet_balance": admin.firestore.FieldValue.increment(-orderData.seller_earnings),
             "available_balance": admin.firestore.FieldValue.increment(orderData.seller_earnings)
         }, { merge: true });
+        
+        // ចំណាំថាទូទាត់រួច
         await event.data.after.ref.update({ is_settled: true });
     } else {
         console.log("❌ មិនទាន់គ្រប់ ៥ ថ្ងៃ ឬ ទូទាត់រួចហើយ");
@@ -233,19 +253,34 @@ exports.notifyOnNewChatMessage = onDocumentCreated({
     }
     
     try {
-        const senderDoc = await admin.firestore().collection("users").doc(senderId).get();
-        const senderName = senderDoc.exists ? (senderDoc.data().name || 'អ្នកប្រើប្រាស់') : 'អ្នកប្រើប្រាស់';
-        const userDoc = await admin.firestore().collection("users").doc(receiverId).get();
+        // ✅ ទាញឈ្មោះអ្នកផ្ញើពី Firestore
+        const senderDoc = await admin.firestore()
+            .collection("users")
+            .doc(senderId)
+            .get();
+        
+        const senderName = senderDoc.exists 
+            ? (senderDoc.data().name || 'អ្នកប្រើប្រាស់') 
+            : 'អ្នកប្រើប្រាស់';
+        
+        // ✅ ទាញ FCM Token របស់អ្នកទទួល
+        const userDoc = await admin.firestore()
+            .collection("users")
+            .doc(receiverId)
+            .get();
+        
         if (!userDoc.exists) return null;
 
         const token = userDoc.data().fcmToken;
 
         if (token) {
+            // ✅ ប្រើឈ្មោះអ្នកផ្ញើជាចំណងជើង
             const messageBody = data.message || "បានផ្ញើសារថ្មី...";
+            
             const message = {
                 token: token,
                 notification: {
-                    title: senderName,
+                    title: senderName, // ✅ ឈ្មោះអ្នកផ្ញើ
                     body: messageBody,
                 },
                 android: {
@@ -286,10 +321,18 @@ exports.notifyAdminOnNewOrder = onDocumentCreated({
 
     if (orderData.status === "pending") {
         try {
-            const adminUID = "WBdQVvrgEIPBTcgIlumu6bAZGUl2";
-            const adminDoc = await admin.firestore().collection("users").doc(adminUID).get();
+            // ✅ ដាក់ UID របស់ Admin នៅទីនេះ
+            const adminUID = "WBdQVvrgEIPBTcgIlumu6bAZGUl2"; // ជំនួសដោយ UID ពិតរបស់ Admin
+            
+            // ទាញយក FCM Token របស់ Admin
+            const adminDoc = await admin.firestore()
+                .collection("users")
+                .doc(adminUID)
+                .get();
+            
             if (adminDoc.exists) {
                 const token = adminDoc.data().fcmToken;
+                
                 if (token) {
                     const message = {
                         token: token,
@@ -306,6 +349,7 @@ exports.notifyAdminOnNewOrder = onDocumentCreated({
                             }
                         }
                     };
+                    
                     await admin.messaging().send(message);
                     console.log("Notification sent to admin:", adminUID);
                 }
@@ -317,6 +361,7 @@ exports.notifyAdminOnNewOrder = onDocumentCreated({
     return null;
 });
 
+// 💰 គណនេយ្យករអូតូ (រុញលុយឱ្យអ្នកលក់ក្រោយ ៥ ថ្ងៃ)
 exports.scheduledWalletSettlement = onSchedule({
     schedule: "0 0 * * *", 
     timeZone: "Asia/Phnom_Penh",
@@ -324,11 +369,13 @@ exports.scheduledWalletSettlement = onSchedule({
 }, async (event) => {
     const db = admin.firestore();
     const now = admin.firestore.Timestamp.now();
+    
+    // កាលបរិច្ឆេទ ៥ ថ្ងៃមុន
     const fiveDaysAgo = new Date(now.toDate().getTime() - 5 * 24 * 60 * 60 * 1000);
     const fiveDaysAgoTimestamp = admin.firestore.Timestamp.fromDate(fiveDaysAgo);
 
     const ordersSnapshot = await db.collection("orders")
-        .where("is_settled", "==", false)
+        .where("is_settled", "==", false) // រកបុងដែលមិនទាន់ទូទាត់
         .where("packing_date", "<=", fiveDaysAgoTimestamp)
         .get();
 
@@ -345,14 +392,16 @@ exports.scheduledWalletSettlement = onSchedule({
             const userRef = db.collection("users").doc(sellerId);
             const orderRef = db.collection("orders").doc(doc.id);
 
+            // ១. ប្ដូរលុយក្នុងកាបូបអ្នកលក់
             batch.set(userRef, {
-                "wallet_balance": admin.firestore.FieldValue.increment(-earnings),
-                "available_balance": admin.firestore.FieldValue.increment(earnings),
+                "wallet_balance": admin.firestore.FieldValue.increment(-earnings), // ដកពី Pending
+                "available_balance": admin.firestore.FieldValue.increment(earnings), // បូកចូល Available
             }, { merge: true });
 
+            // ២. 🎯 សំខាន់បំផុត៖ Update បុងនេះថាបានទូទាត់រួចហើយ (Clear បុង)
             batch.update(orderRef, {
                 "is_settled": true,
-                "settled_at": now
+                "settled_at": now // ដាក់ថ្ងៃដែលទូទាត់ទុកមើល
             });
         }
     });
@@ -360,19 +409,23 @@ exports.scheduledWalletSettlement = onSchedule({
     return batch.commit(); 
 });
 
+// ⚡ អាដិតលុយភ្លាមៗ (Real-time Today Income)
 exports.onOrderPackingUpdate = onDocumentUpdated({
-    document: "orders/{orderId}",
+    document: "orders/{orderId}", // 🎯 ត្រូវតែមានជួរនេះ
     region: "asia-southeast1"
 }, async (event) => {
     const newData = event.data.after.data();
     const oldData = event.data.before.data();
 
+    // បើ Status ទើបតែដូរពីអីផ្សេង មកជា 'packing'
     if (newData.status === 'packing' && oldData.status !== 'packing') {
         const sellerId = newData.seller_id;
         const earnings = parseFloat(newData.seller_earnings || 0);
 
         if (sellerId && earnings > 0) {
             const userRef = admin.firestore().collection("users").doc(sellerId);
+            
+            // បូកចូល today_income ភ្លាមៗ (វានឹងបង្កើត Key អូតូបើមិនទាន់មាន)
             await userRef.set({
                 "today_income": admin.firestore.FieldValue.increment(earnings)
             }, { merge: true });
@@ -380,9 +433,10 @@ exports.onOrderPackingUpdate = onDocumentUpdated({
     }
 });
 
+// 🎯 ប្រើ onDocumentUpdated របស់ v2 វិញដើម្បីកុំឱ្យវា Error
 exports.approveSale = onDocumentUpdated({
     document: 'sales/{saleId}',
-    region: 'asia-southeast1'
+    region: 'asia-southeast1' // ដាក់ឱ្យត្រូវជាមួយ Region របស់មេ
 }, async (event) => {
     const newData = event.data.after.data();
     const oldData = event.data.before.data();
@@ -401,7 +455,9 @@ exports.approveSale = onDocumentUpdated({
                 if (!userDoc.exists) return;
 
                 transaction.update(userRef, {
+                    // ១. ដកចេញពីលុយរងចាំ
                     wallet_balance: admin.firestore.FieldValue.increment(-amount),
+                    // ២. បញ្ចូលទៅក្នុងលុយអាចដកបាន
                     available_balance: admin.firestore.FieldValue.increment(amount)
                 });
             });
@@ -411,13 +467,156 @@ exports.approveSale = onDocumentUpdated({
     }
     return null;
 });
+// 💰 មុខងារដកប្រាក់ចំណូល និងជូនដំណឹងទៅ Admin ភ្លាមៗ (Secure Withdraw)
+exports.secureWithdraw = onCall({
+    region: "asia-southeast1"
+}, async (request) => {
+    // ១. ទាញទិន្នន័យពី App
+    const amount = request.data.amount;
+    const inputPin = request.data.pin;
+    const uid = request.data.uid; 
 
+    // ២. ឆែកសុពលភាពទិន្នន័យ
+    if (!uid) {
+        throw new HttpsError('unauthenticated', 'រកមិនឃើញអត្តសញ្ញាណអ្នកប្រើប្រាស់! សូមសាកល្បង Login ម្ដងទៀត។');
+    }
+
+    if (amount <= 0) {
+        throw new HttpsError('invalid-argument', 'ចំនួនទឹកប្រាក់ត្រូវតែធំជាង ០៛');
+    }
+
+    try {
+        const db = admin.firestore();
+        const userRef = db.collection("users").doc(uid);
+        const userDoc = await userRef.get();
+
+        if (!userDoc.exists) {
+            throw new HttpsError('not-found', 'រកមិនឃើញគណនីអ្នកប្រើប្រាស់ឡើយ');
+        }
+
+        const userData = userDoc.data();
+
+        // ៣. ផ្ទៀងផ្ទាត់ PIN
+        if (userData.pin !== inputPin) {
+            throw new HttpsError('permission-denied', 'លេខសម្ងាត់ភីន (PIN) មិនត្រឹមត្រូវទេ!');
+        }
+
+        // ៤. ឆែកសមតុល្យលុយ
+        const currentBalance = userData.available_balance || 0;
+        if (currentBalance < amount) {
+            throw new HttpsError('resource-exhausted', 'សមតុល្យលុយរបស់មេមិនគ្រប់គ្រាន់សម្រាប់ដកចំនួននេះទេ');
+        }
+
+        // 🔢 Format លុយឱ្យមានក្បៀស (ឧទាហរណ៍៖ 150,000) សម្រាប់ផ្ញើសារទៅ Admin
+        const formattedAmount = Number(amount).toLocaleString("en-US");
+        const sellerName = userData.full_name_kh || userData.full_name || "មិនស្គាល់ឈ្មោះ";
+
+        // ៥. ចាប់ផ្ដើមដកលុយ (Transaction)
+        const withdrawRequestId = await db.runTransaction(async (t) => {
+            // ក. ដកលុយពី available_balance
+            t.update(userRef, {
+                available_balance: admin.firestore.FieldValue.increment(-amount)
+            });
+
+            // ខ. បង្កើតបុងដកលុយ (Withdraw Request)
+            const withdrawRef = db.collection("withdraw_requests").doc();
+            t.set(withdrawRef, {
+                uid: uid,
+                seller_id: uid, // ដាក់សមកាលកម្មដើម្បីកុំឱ្យខុសលក្ខខណ្ឌចាស់
+                seller_name: sellerName,
+                bank_name: userData.bank_name || "ABA",
+                account_name: sellerName,
+                account_number: userData.bank_account_number || "",
+                amount: amount,
+                khqr_url: userData.bank_qr_url || "",
+                status: "pending",
+                created_at: admin.firestore.FieldValue.serverTimestamp(),
+                method: "ABA/Other" 
+            });
+
+            return withdrawRef.id;
+        });
+
+        // ─── 🔔 ផ្នែកបន្ថែមថ្មី៖ ផ្ញើសារជូនដំណឹងទៅកាន់ Admin ភ្លាមៗ ───
+        try {
+            const adminUID = "WBdQVvrgEIPBTcgIlumu6bAZGUl2"; // Admin ID របស់មេ
+            const adminDoc = await db.collection("users").doc(adminUID).get();
+
+            const notificationTitle = "💰 មានសំណើដកប្រាក់ថ្មី!";
+            const notificationBody = `អ្នកលក់៖ ${sellerName} បានស្នើដកប្រាក់ចំនួន ${formattedAmount} ៛`;
+
+            // ក. រក្សាទុកក្នុង In-App Notification របស់ Admin សម្រាប់បង្ហាញក្នុង App
+            await db.collection("users")
+                .doc(adminUID)
+                .collection("notifications")
+                .add({
+                    title: notificationTitle,
+                    body: notificationBody,
+                    type: "withdraw_request",
+                    requestId: withdrawRequestId,
+                    isRead: false,
+                    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                });
+
+            // ខ. បាញ់ Push Notification ទៅលើអេក្រង់ទូរស័ព្ទ Admin (FCM)
+            if (adminDoc.exists) {
+                const adminToken = adminDoc.data().fcmToken; // ទាញ Token របស់ Admin
+
+                if (adminToken) {const message = {
+                        token: adminToken,
+                        notification: {
+                            title: notificationTitle,
+                            body: notificationBody,
+                        },
+                        android: {
+                            priority: "high",
+                            notification: {
+                                channelId: "order_channel", // ប្រើ Channel ដូចកូដចាស់មេ
+                                icon: 'ic_stat_sesan',
+                                color: '#FF4500',
+                                sound: "default",
+                                clickAction: "FLUTTER_NOTIFICATION_CLICK",
+                            }
+                        },
+                        data: {
+                            requestId: withdrawRequestId,
+                            type: 'withdraw_request',
+                        }
+                    };
+
+                    await admin.messaging().send(message);
+                    console.log("✅ Sent withdraw notification to admin successfully!");
+                }
+            }
+        } catch (notiError) {
+            console.error("⚠️ Error sending withdraw notification to admin:", notiError);
+            // មិន return error ទេដើម្បីកុំឱ្យគាំងការដកលុយរបស់ User
+        }
+
+        return {
+            success: true,
+            message: "សំណើដកប្រាក់ចំនួន " + formattedAmount + "៛ របស់មេត្រូវបានបញ្ជូនទៅកាន់ Admin រួចរាល់!"
+        };
+
+    } catch (error) {
+        console.error("Withdraw Error:", error);
+        if (error instanceof HttpsError) throw error;
+        throw new HttpsError('internal', 'មានបញ្ហាបច្ចេកទេស៖ ' + error.message);
+    }
+});
+
+// 🔔 ជូនដំណឹងទៅម្ចាស់ទំនិញ ពេល Admin អនុម័តការដេញថ្លៃ
 exports.notifyOwnerOnAuctionApproved = onDocumentCreated({
     document: "products/{productId}",
     region: "asia-southeast1"
 }, async (event) => {
     const productData = event.data.data();
-    if (productData.status !== 'auction') return null;
+
+    // ពិនិត្យថាជា Auction ដែលទើបនឹង Approve
+    // (_approveAuction បង្កើត Document ថ្មីដែលមាន status: 'auction')
+    if (productData.status !== 'auction') {
+        return null;
+    }
 
     const ownerId = productData.owner_id;
     const productName = productData.product_name || 'ទំនិញ';
@@ -425,14 +624,32 @@ exports.notifyOwnerOnAuctionApproved = onDocumentCreated({
     const startPrice = productData.start_price || 0;
     const endTime = productData.end_time;
 
-    if (!ownerId) return null;
+    if (!ownerId) {
+        console.log('No owner_id found for product:', productId);
+        return null;
+    }
 
     try {
-        const userDoc = await admin.firestore().collection("users").doc(ownerId).get();
-        if (!userDoc.exists) return null;
-        const token = userDoc.data().fcmToken;
-        if (!token) return null;
+        // ១. ទាញយក FCM Token របស់ម្ចាស់ទំនិញ
+        const userDoc = await admin.firestore()
+            .collection("users")
+            .doc(ownerId)
+            .get();
 
+        if (!userDoc.exists) {
+            console.log('User not found:', ownerId);
+            return null;
+        }
+
+        const userData = userDoc.data();
+        const token = userData.fcmToken;
+
+        if (!token) {
+            console.log('No FCM token for user:', ownerId);
+            return null;
+        }
+
+        // ២. បង្កើតសារជូនដំណឹង
         let endTimeStr = '';
         if (endTime) {
             const endDate = endTime.toDate();
@@ -443,7 +660,7 @@ exports.notifyOwnerOnAuctionApproved = onDocumentCreated({
             token: token,
             notification: {
                 title: "🎉 ការដេញថ្លៃត្រូវបានអនុម័ត!",
-                body: `ទំនិញ "${productName}" របស់អ្នកត្រូវបានអនុម័តដោយ Admin។ តម្លៃចាប់ផ្តើម៖ ${startPrice} ៛${endTimeStr}`,
+body: `ទំនិញ "${productName}" របស់អ្នកត្រូវបានអនុម័តដោយ Admin។ តម្លៃចាប់ផ្តើម៖ ${startPrice} ៛${endTimeStr}`,
             },
             android: {
                 priority: "high",
@@ -461,15 +678,23 @@ exports.notifyOwnerOnAuctionApproved = onDocumentCreated({
             }
         };
 
-        await admin.messaging().send(message);
-        await admin.firestore().collection("users").doc(ownerId).collection("notifications").add({
-            title: "ការដេញថ្លៃត្រូវបានអនុម័ត!",
-            body: `ទំនិញ "${productName}" ត្រូវបានអនុម័ត`,
-            productId: productId,
-            type: 'auction_approved',
-            isRead: false,
-            createdAt: admin.firestore.FieldValue.serverTimestamp(),
-        });
+        // ៣. ផ្ញើ Notification
+        const response = await admin.messaging().send(message);
+        console.log('Auction approval notification sent:', response);
+
+        // ៤. រក្សាទុក Notification ក្នុង Firestore
+        await admin.firestore()
+            .collection("users")
+            .doc(ownerId)
+            .collection("notifications")
+            .add({
+                title: "ការដេញថ្លៃត្រូវបានអនុម័ត!",
+                body: `ទំនិញ "${productName}" ត្រូវបានអនុម័ត`,
+                productId: productId,
+                type: 'auction_approved',
+                isRead: false,
+                createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            });
 
         return null;
     } catch (error) {
@@ -482,25 +707,69 @@ exports.notifyOwnerOnNewBid = onDocumentCreated({
     document: "auction_products/{productId}/bids/{bidId}",
     region: "asia-southeast1"
 }, async (event) => {
+    console.log('🔥 New bid received!');
+    console.log('Product ID:', event.params.productId);
+    console.log('Bid ID:', event.params.bidId);
+    
     const bidData = event.data.data();
+    console.log('Bid data:', JSON.stringify(bidData));
+    
     const productId = event.params.productId;
 
     try {
-        const productDoc = await admin.firestore().collection("auction_products").doc(productId).get();
-        if (!productDoc.exists) return null;
-        const productData = productDoc.data();
-        const ownerId = productData.owner_id;
-        if (!ownerId || bidData.bidder_id === ownerId) return null;
+        const productDoc = await admin.firestore()
+            .collection("auction_products")
+            .doc(productId)
+            .get();
 
-        const userDoc = await admin.firestore().collection("users").doc(ownerId).get();
-        if (!userDoc.exists) return null;
-        const token = userDoc.data().fcmToken;
-        if (!token) return null;
+        if (!productDoc.exists) {
+            console.log('❌ Product not found:', productId);
+            return null;
+        }
+
+        const productData = productDoc.data();
+        console.log('Product data:', JSON.stringify(productData));
+        
+        const ownerId = productData.owner_id;
+        console.log('Owner ID:', ownerId);
+
+        if (!ownerId) {
+            console.log('❌ No owner_id');
+            return null;
+        }
+        
+        if (bidData.bidder_id === ownerId) {
+            console.log('❌ Bidder is owner, skipping');
+            return null;
+        }
+
+        const userDoc = await admin.firestore()
+            .collection("users")
+            .doc(ownerId)
+            .get();
+
+        if (!userDoc.exists) {
+            console.log('❌ Owner user doc not found');
+            return null;
+        }
+
+        const userData = userDoc.data();
+        console.log('Owner data keys:', Object.keys(userData));
+        
+        const token = userData.fcmToken;
+        console.log('FCM Token exists:', !!token);
+
+        if (!token) {
+            console.log('❌ No FCM token for owner');
+            return null;
+        }
 
         const productName = productData.product_name || 'ទំនិញ';
         const bidAmount = bidData.bid_amount || 0;
         const bidderName = bidData.bidder_name || 'អ្នកដេញថ្លៃ';
 
+        console.log('📤 Sending notification to owner...');
+        
         const message = {
             token: token,
             notification: {
@@ -523,14 +792,17 @@ exports.notifyOwnerOnNewBid = onDocumentCreated({
             }
         };
 
-        await admin.messaging().send(message);
+        const response = await admin.messaging().send(message);
+        console.log('✅ Notification sent successfully:', response);
+
         return null;
     } catch (error) {
         console.error('❌ Error:', error);
+        console.error('Error message:', error.message);
         return null;
     }
 });
-
+// 🔔 ជូនដំណឹងទៅម្ចាស់ទំនិញ ពេល Admin អនុម័ត
 exports.notifyOwnerOnAuctionApproved = onDocumentUpdated({
     document: "auction_products/{productId}",
     region: "asia-southeast1"
@@ -539,6 +811,7 @@ exports.notifyOwnerOnAuctionApproved = onDocumentUpdated({
     const afterData = event.data.after.data();
     const productId = event.params.productId;
 
+    // ✅ ពិនិត្យថា Status ទើបតែប្តូរពី pending → auction
     if (beforeData.status !== 'auction' && afterData.status === 'auction') {
         const productName = afterData.product_name || 'ទំនិញ';
         const startPrice = afterData.start_price || 0;
@@ -548,16 +821,23 @@ exports.notifyOwnerOnAuctionApproved = onDocumentUpdated({
         if (!ownerId) return null;
 
         try {
-            const userDoc = await admin.firestore().collection("users").doc(ownerId).get();
+            // 1. ជូនដំណឹងទៅម្ចាស់ទំនិញ
+            const userDoc = await admin.firestore()
+                .collection("users")
+                .doc(ownerId)
+                .get();
+
             if (userDoc.exists) {
                 const token = userDoc.data().fcmToken;
+
                 if (token) {
                     let endTimeStr = '';
                     if (endTime) {
                         const endDate = endTime.toDate();
                         endTimeStr = ' បញ្ចប់នៅ: ' + endDate.getDate() + '/' + (endDate.getMonth() + 1) + '/' + endDate.getFullYear();
                     }
-                    await admin.messaging().send({
+
+                    const ownerMessage = {
                         token: token,
                         notification: {
                             title: "🎉 ការដេញថ្លៃត្រូវបានអនុម័ត!",
@@ -573,27 +853,38 @@ exports.notifyOwnerOnAuctionApproved = onDocumentUpdated({
                                 clickAction: "FLUTTER_NOTIFICATION_CLICK",
                             }
                         },
-                        data: { productId: productId, type: 'auction_approved' }
-                    });
+                        data: {
+                            productId: productId,
+                            type: 'auction_approved',
+                        }
+                    };
+
+                    await admin.messaging().send(ownerMessage);
                 }
 
-                await admin.firestore().collection("users").doc(ownerId).collection("notifications").add({
-                    title: "ការដេញថ្លៃត្រូវបានអនុម័ត!",
-                    body: 'ទំនិញ "' + productName + '" ត្រូវបានអនុម័ត',
-                    productId: productId,
-                    type: 'auction_approved',
-                    isRead: false,
-                    createdAt: admin.firestore.FieldValue.serverTimestamp(),
-                });
+                // រក្សាទុក Notification ក្នុង Firestore
+                await admin.firestore()
+                    .collection("users")
+                    .doc(ownerId)
+                    .collection("notifications")
+                    .add({
+                        title: "ការដេញថ្លៃត្រូវបានអនុម័ត!",
+                        body: 'ទំនិញ "' + productName + '" ត្រូវបានអនុម័ត',
+                        productId: productId,
+                        type: 'auction_approved',
+                        isRead: false,
+                        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                    });
             }
 
+            // 2. ជូនដំណឹងទៅកាន់អ្នកប្រើប្រាស់ទាំងអស់
             let allUsersEndTimeStr = '';
             if (endTime) {
                 const endDate = endTime.toDate();
                 allUsersEndTimeStr = ' បញ្ចប់នៅ: ' + endDate.getDate() + '/' + (endDate.getMonth() + 1) + '/' + endDate.getFullYear();
             }
 
-            await admin.messaging().send({
+            const allUsersMessage = {
                 topic: 'all_users',
                 notification: {
                     title: "🎉 មានការដេញថ្លៃថ្មី!",
@@ -601,16 +892,22 @@ exports.notifyOwnerOnAuctionApproved = onDocumentUpdated({
                 },
                 android: {
                     priority: "high",
-                    notification: {
-                        channelId: "high_importance_channel",
+                    notification: {channelId: "high_importance_channel",
                         icon: 'ic_stat_sesan',
                         color: '#FF4500',
                         sound: "default",
                         clickAction: "FLUTTER_NOTIFICATION_CLICK",
                     }
                 },
-                data: { productId: productId, type: 'auction_approved_all' }
-            });
+                data: {
+                    productId: productId,
+                    type: 'auction_approved_all',
+                }
+            };
+
+            await admin.messaging().send(allUsersMessage);
+            console.log('✅ Auction approved notifications sent:', productId);
+
             return null;
         } catch (error) {
             console.error('❌ Error:', error);
@@ -619,18 +916,21 @@ exports.notifyOwnerOnAuctionApproved = onDocumentUpdated({
     }
     return null;
 });
-
 exports.productPreview = functions.https.onRequest(async (req, res) => {
     try {
         const parts = req.path.split('/').filter(Boolean);
         const productId = parts.pop();
 
-        if (!productId) return res.status(400).send('Missing product ID');
+        if (!productId) {
+            return res.status(400).send('Missing product ID');
+        }
 
         const doc = await admin.firestore().collection('products').doc(productId).get();
+
         if (!doc.exists) return res.status(404).send('Not found');
 
         const data = doc.data();
+
         const escapeHtml = (str) => String(str ?? '')
             .replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')
@@ -638,11 +938,15 @@ exports.productPreview = functions.https.onRequest(async (req, res) => {
             .replace(/"/g, '&quot;')
             .replace(/'/g, '&#039;');
 
-        const rawImageUrl = (data.image_urls && data.image_urls.length > 0) ? data.image_urls[0] : (data.image_url || '');
+        const rawImageUrl = (data.image_urls && data.image_urls.length > 0)
+            ? data.image_urls[0]
+            : (data.image_url || '');
+
         const rawPrice = data.price || 0;
         const cleanPrice = typeof rawPrice === 'string' ? rawPrice.replace(/,/g, '') : rawPrice;
         const numPrice = Number(cleanPrice);
         const formattedPrice = isNaN(numPrice) ? '0' : numPrice.toLocaleString('en-US');
+
         const productName = escapeHtml(data.product_name || 'ទំនិញ');
         const location = escapeHtml(data.location || '');
         const sellerName = escapeHtml(data.seller_name || data.owner_name || 'មិនស្គាល់');
@@ -650,7 +954,81 @@ exports.productPreview = functions.https.onRequest(async (req, res) => {
         const imageUrl = escapeHtml(rawImageUrl);
         const safeProductId = escapeHtml(productId);
 
-        const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta property="og:title" content="${productName}"><meta property="og:description" content="តម្លៃ៖ ${formattedPrice} ៛"><meta property="og:image" content="${imageUrl}"><meta property="og:url" content="https://sesanshop.com/product/${safeProductId}"><meta property="og:type" content="website"><title>${productName} - Sesan Marketplace</title></head><body><div>${imageUrl ? `<img src="${imageUrl}" alt="${productName}">` : ''}<h1>${productName}</h1><div>${formattedPrice} ៛</div>${location ? `<div>📍 ${location}</div>` : ''}${sellerName ? `<div>👤 ${sellerName} ${sellerPhone ? '| 📞 ' + sellerPhone : ''}</div>` : ''}</div><script>function openApp(){const productId="${safeProductId}";const fallbackUrl="https://sesanshop.com/product/"+productId;const ua=navigator.userAgent;if(/android/i.test(ua)){window.location.href="intent://product/"+productId+"#Intent;scheme=sesanapp;package=com.sesan.app;S.browser_fallback_url="+encodeURIComponent(fallbackUrl)+";end";}else if(/iphone|ipad|ipod/i.test(ua)){const appScheme="sesanapp://product/"+productId;const start=Date.now();window.location.href=appScheme;setTimeout(function(){if(Date.now()-start<2000){window.location.href=fallbackUrl;}},1000);}else{window.location.href=fallbackUrl;}}</script></body></html>`;
+        const html = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta property="og:title" content="${productName}">
+    <meta property="og:description" content="តម្លៃ៖ ${formattedPrice} ៛">
+    <meta property="og:image" content="${imageUrl}">
+    <meta property="og:url" content="https://sesanshop.com/product/${safeProductId}">
+    <meta property="og:type" content="website">
+    <title>${productName} - Sesan Marketplace</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f5f5; padding: 20px; }
+        .card { max-width: 500px; margin: 0 auto; background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .card img { width: 100%; height: 300px; object-fit: cover; }
+        .card-body { padding: 20px; }
+        .card-body h1 { font-size: 20px; margin-bottom: 8px; color: #333; }
+        .price { font-size: 28px; font-weight: bold; color: #e53935; margin-bottom: 8px; }
+        .location { color: #666; font-size: 14px; margin-bottom: 8px; }
+        .seller { color: #666; font-size: 14px; margin-bottom: 15px; }
+        .btn { display: block; text-align: center; background: #1B5E20; color: white; padding: 14px; border-radius: 25px; text-decoration: none; font-weight: bold; font-size: 16px; margin-bottom: 10px; }
+        .btn-outline { display: block; text-align: center; border: 2px solid #1B5E20; color: #1B5E20; padding: 12px; border-radius: 25px; text-decoration: none; font-weight: bold; font-size: 14px; margin-bottom: 10px; }
+        .app-badge { text-align: center; margin-top: 15px; color: #999; font-size: 12px; }
+        .status { text-align: center; margin-top: 10px; color: #999; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        ${imageUrl ? `<img src="${imageUrl}" alt="${productName}">` : ''}
+        <div class="card-body">
+            <h1>${productName}</h1>
+            <div class="price">${formattedPrice} ៛</div>
+            ${location ? `<div class="location">📍 ${location}</div>` : ''}
+            ${sellerName ? `<div class="seller">👤 ${sellerName} ${sellerPhone ? '| 📞 ' + sellerPhone : ''}</div>` : ''}</div>
+    </div>
+    <div style="text-align: center; margin-top: 20px;">
+        <a href="javascript:void(0)" onclick="openApp()" class="btn">🔗 មើលទំនិញក្នុង Sesan App</a>
+        <a href="https://play.google.com/store/apps/details?id=com.sesan.app" class="btn-outline">📲 ទាញយក App Android</a>
+        <a href="https://apps.apple.com/app/sesan-app/idXXXXXXXXXX" class="btn-outline">📱 ទាញយក App iOS</a>
+    </div>
+    <div id="status" class="status"></div>
+
+   <script>
+function openApp() {
+    const productId = "${safeProductId}";
+    const fallbackUrl = "https://sesanshop.com/product/" + productId;
+    const ua = navigator.userAgent;
+
+    if (/android/i.test(ua)) {
+        // Android Intent URL: opens app if installed, falls back to browser URL if not
+        const intentUrl = "intent://product/" + productId +
+            "#Intent;scheme=sesanapp;package=com.sesan.app;S.browser_fallback_url=" +
+            encodeURIComponent(fallbackUrl) + ";end";
+        window.location.href = intentUrl;
+    } else if (/iphone|ipad|ipod/i.test(ua)) {
+        // iOS: try custom scheme, fallback via timeout
+        const appScheme = "sesanapp://product/" + productId;
+        const start = Date.now();
+        window.location.href = appScheme;
+        setTimeout(function() {
+            if (Date.now() - start < 2000) {
+                window.location.href = fallbackUrl;
+            }
+        }, 1000);
+    } else {
+        // Desktop / unknown -> go straight to web
+        window.location.href = fallbackUrl;
+    }
+}
+</script>
+</body>
+</html>`;
+
         res.set('Cache-Control', 'public, max-age=3600');
         return res.status(200).send(html);
     } catch (e) {
@@ -658,13 +1036,18 @@ exports.productPreview = functions.https.onRequest(async (req, res) => {
         return res.status(500).send('Error');
     }
 });
-
+// 🔔 ជូនដំណឹងទៅ Admin ពេលមានការដេញថ្លៃថ្មី (Pending)
 exports.notifyAdminOnNewAuction = onDocumentCreated({
     document: "auction_products/{productId}",
     region: "asia-southeast1"
 }, async (event) => {
     const productData = event.data.data();
-    if (productData.status !== 'pending') return null;
+    
+    // ✅ ពិនិត្យតែ status: "pending"
+    if (productData.status !== 'pending') {
+        return null;
+    }
+    
     const productName = productData.product_name || 'ទំនិញថ្មី';
     const startPrice = productData.start_price || 0;
     const ownerName = productData.owner_name || 'មិនស្គាល់';
@@ -672,12 +1055,19 @@ exports.notifyAdminOnNewAuction = onDocumentCreated({
 
     try {
         const adminUID = "WBdQVvrgEIPBTcgIlumu6bAZGUl2";
-        const adminDoc = await admin.firestore().collection('users').doc(adminUID).get();
+        
+        const adminDoc = await admin.firestore()
+            .collection('users')
+            .doc(adminUID)
+            .get();
+
         if (!adminDoc.exists) return null;
+
         const adminToken = adminDoc.data().fcmToken;
+
         if (!adminToken) return null;
 
-        await admin.messaging().send({
+        const message = {
             token: adminToken,
             notification: {
                 title: "📢 មានការដេញថ្លៃថ្មីរង់ចាំអនុម័ត!",
@@ -693,15 +1083,22 @@ exports.notifyAdminOnNewAuction = onDocumentCreated({
                     clickAction: "FLUTTER_NOTIFICATION_CLICK",
                 }
             },
-            data: { productId: productId, type: 'new_auction_pending' }
-        });
+            data: {
+                productId: productId,
+                type: 'new_auction_pending',
+            }
+        };
+
+        await admin.messaging().send(message);
+        console.log('✅ Admin notified about new auction:', productId);
+
         return null;
     } catch (error) {
         console.error('❌ Error:', error);
         return null;
     }
 });
-
+// 🔔 ជូនដំណឹងទៅ All Users ពេល Admin អនុម័តការដេញថ្លៃ
 exports.notifyAllUsersOnAuctionApproved = onDocumentUpdated({
     document: "auction_products/{productId}",
     region: "asia-southeast1"
@@ -710,6 +1107,7 @@ exports.notifyAllUsersOnAuctionApproved = onDocumentUpdated({
     const afterData = event.data.after.data();
     const productId = event.params.productId;
 
+    // ✅ ពិនិត្យថា Status ទើបតែប្តូរពី pending → auction
     if (beforeData.status !== 'auction' && afterData.status === 'auction') {
         const productName = afterData.product_name || 'ទំនិញ';
         const startPrice = afterData.start_price || 0;
@@ -723,7 +1121,8 @@ exports.notifyAllUsersOnAuctionApproved = onDocumentUpdated({
                 endTimeStr = ' | បញ្ចប់: ' + endDate.getDate() + '/' + (endDate.getMonth() + 1) + '/' + endDate.getFullYear();
             }
 
-            await admin.messaging().send({
+            // ✅ បាញ់ទៅកាន់អ្នកប្រើប្រាស់ទាំងអស់
+            const allUsersMessage = {
                 topic: 'all_users',
                 notification: {
                     title: "🎉 មានការដេញថ្លៃថ្មី!",
@@ -740,22 +1139,34 @@ exports.notifyAllUsersOnAuctionApproved = onDocumentUpdated({
                     }
                 },
                 apns: {
-                    payload: { aps: { sound: "default", badge: 1 } }
+                    payload: {
+                        aps: {
+                            sound: "default",
+                            badge: 1,
+                        },
+                    },
                 },
                 data: {
                     productId: productId,
                     type: 'auction_started',
                     click_action: 'FLUTTER_NOTIFICATION_CLICK',
                 }
-            });
+            };
 
-            await admin.firestore().collection("announcements").add({
-                title: "ការដេញថ្លៃថ្មី!",
-                body: '"' + productName + '" តម្លៃចាប់ផ្តើម ' + startPrice + ' ៛',
-                productId: productId,
-                type: 'auction_started',
-                createdAt: admin.firestore.FieldValue.serverTimestamp(),
-            });
+            const response = await admin.messaging().send(allUsersMessage);
+            console.log('✅ Sent to all users for auction:', productId, response);
+
+            // រក្សាទុកក្នុង Collection announcements
+            await admin.firestore()
+                .collection("announcements")
+                .add({
+                    title: "ការដេញថ្លៃថ្មី!",
+                    body: '"' + productName + '" តម្លៃចាប់ផ្តើម ' + startPrice + ' ៛',
+                    productId: productId,
+                    type: 'auction_started',
+                    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                });
+
             return null;
         } catch (error) {
             console.error('❌ Error sending to all users:', error);
@@ -765,41 +1176,111 @@ exports.notifyAllUsersOnAuctionApproved = onDocumentUpdated({
     return null;
 });
 
+// 🔔 ជូនដំណឹងទៅម្ចាស់ទំនិញ ពេលមាន Comment ថ្មី
 exports.notifyOwnerOnNewComment = onDocumentCreated({
     document: "products/{productId}/comments/{commentId}",
     region: "asia-southeast1"
 }, async (event) => {
     const commentData = event.data.data();
     const productId = event.params.productId;
+    
+    console.log('🔥 New comment on product:', productId);
+    
     try {
-        const productDoc = await admin.firestore().collection("products").doc(productId).get();
-        if (!productDoc.exists) return null;
+        // 1. ទាញព័ត៌មានទំនិញ
+        const productDoc = await admin.firestore()
+            .collection("products")
+            .doc(productId)
+            .get();
+
+        if (!productDoc.exists) {
+            console.log('❌ Product not found');
+            return null;
+        }
+
         const productData = productDoc.data();
         const ownerId = productData.seller_id || productData.owner_id;
         const productName = productData.product_name || 'ទំនិញ';
         const commenterName = commentData.userName || 'អ្នកប្រើប្រាស់';
         const commentText = commentData.content || '';
-        if (!ownerId || commentData.userId === ownerId) return null;
 
-        const userDoc = await admin.firestore().collection("users").doc(ownerId).get();
-        if (!userDoc.exists) return null;
+        if (!ownerId) {
+            console.log('❌ No owner_id found');
+            return null;
+        }
+
+        // 2. កុំផ្ញើ Noti បើម្ចាស់ទំនិញខមិនខ្លួនឯង
+        if (commentData.userId === ownerId) {
+            console.log('❌ Owner commented on own product, skipping');
+            return null;
+        }
+
+        // 3. ទាញ FCM Token របស់ម្ចាស់ទំនិញ
+        const userDoc = await admin.firestore()
+            .collection("users")
+            .doc(ownerId)
+            .get();
+
+        if (!userDoc.exists) {
+            console.log('❌ Owner user doc not found');
+            return null;
+        }
+
         const token = userDoc.data().fcmToken;
-        if (!token) return null;
 
+        if (!token) {
+            console.log('❌ No FCM token for owner');
+            return null;
+        }
+
+        // 4. បង្កើតសារជូនដំណឹង
         let bodyText = commenterName + ' បានបញ្ចេញមតិ';
-        if (commentText) bodyText += ': "' + (commentText.length > 50 ? commentText.substring(0, 50) + '...' : commentText) + '"';
+        if (commentText) {
+            bodyText += ': "' + (commentText.length > 50 ? commentText.substring(0, 50) + '...' : commentText) + '"';
+        }
         bodyText += ' លើទំនិញ "' + productName + '"';
 
-        await admin.messaging().send({
+        const message = {
             token: token,
-            notification: { title: "💬 មានមតិយោបល់ថ្មី!", body: bodyText },
-            android: { priority: "high", notification: { channelId: "order_channel", icon: 'ic_stat_sesan', color: '#FF4500', sound: "default", clickAction: "FLUTTER_NOTIFICATION_CLICK" } },
-            data: { productId: productId, commentId: event.params.commentId, type: 'new_comment' }
-        });
+            notification: {
+                title: "💬 មានមតិយោបល់ថ្មី!",
+                body: bodyText,
+            },
+            android: {
+                priority: "high",
+                notification: {
+                    channelId: "order_channel",
+                    icon: 'ic_stat_sesan',
+                    color: '#FF4500',
+                    sound: "default",
+                    clickAction: "FLUTTER_NOTIFICATION_CLICK",
+                }
+            },
+            data: {
+                productId: productId,
+                commentId: event.params.commentId,
+                type: 'new_comment',
+            }
+        };
 
-        await admin.firestore().collection("users").doc(ownerId).collection("notifications").add({
-            title: "មតិយោបល់ថ្មី", body: bodyText, productId: productId, commentId: event.params.commentId, type: 'new_comment', isRead: false, createdAt: admin.firestore.FieldValue.serverTimestamp()
-        });
+        const response = await admin.messaging().send(message);
+        console.log('✅ Comment notification sent to owner:', ownerId);
+
+        // 5. រក្សាទុកក្នុង Firestore Notifications
+        await admin.firestore()
+            .collection("users")
+            .doc(ownerId)
+            .collection("notifications")
+            .add({
+                title: "មតិយោបល់ថ្មី",
+                body: bodyText,
+                productId: productId,
+                commentId: event.params.commentId,
+                type: 'new_comment',
+                isRead: false,
+                createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            });
+
         return null;
     } catch (error) {
         console.error('❌ Error:', error);
@@ -807,6 +1288,7 @@ exports.notifyOwnerOnNewComment = onDocumentCreated({
     }
 });
 
+// 🔔 ជូនដំណឹងទៅម្ចាស់ Comment ពេលមាន Reply
 exports.notifyOnCommentReply = onDocumentCreated({
     document: "products/{productId}/comments/{commentId}/replies/{replyId}",
     region: "asia-southeast1"
@@ -814,49 +1296,130 @@ exports.notifyOnCommentReply = onDocumentCreated({
     const replyData = event.data.data();
     const productId = event.params.productId;
     const commentId = event.params.commentId;
+    
+    console.log('🔥 New reply on comment:', commentId);
+    
     try {
-        const commentDoc = await admin.firestore().collection("products").doc(productId).collection("comments").doc(commentId).get();
-        if (!commentDoc.exists) return null;
+        // 1. ទាញព័ត៌មាន Comment ដើម
+        const commentDoc = await admin.firestore()
+            .collection("products")
+            .doc(productId)
+            .collection("comments")
+            .doc(commentId)
+            .get();
+
+        if (!commentDoc.exists) {
+            console.log('❌ Original comment not found');
+            return null;
+        }
+
         const commentData = commentDoc.data();
         const commentOwnerId = commentData.userId;
+        const commentOwnerName = commentData.userName || 'អ្នកប្រើប្រាស់';
         const replierName = replyData.userName || 'អ្នកប្រើប្រាស់';
         const replyText = replyData.content || '';
-        if (!commentOwnerId || replyData.userId === commentOwnerId) return null;
 
-        const userDoc = await admin.firestore().collection("users").doc(commentOwnerId).get();
-        if (!userDoc.exists) return null;
+        if (!commentOwnerId) {
+            console.log('❌ No comment owner_id');
+            return null;
+        }
+
+        // 2. កុំផ្ញើ Noti បើ Reply ខ្លួនឯង
+        if (replyData.userId === commentOwnerId) {
+            console.log('❌ Owner replied to own comment, skipping');
+            return null;
+        }
+
+        // 3. ទាញ FCM Token របស់ម្ចាស់ Comment
+        const userDoc = await admin.firestore()
+            .collection("users")
+            .doc(commentOwnerId)
+            .get();
+
+        if (!userDoc.exists) {
+            console.log('❌ Comment owner user doc not found');
+            return null;
+        }
+
         const token = userDoc.data().fcmToken;
-        if (!token) return null;
 
-        const productDoc = await admin.firestore().collection("products").doc(productId).get();
+        if (!token) {
+            console.log('❌ No FCM token for comment owner');
+            return null;
+        }
+
+        // 4. ទាញឈ្មោះទំនិញ
+        const productDoc = await admin.firestore()
+            .collection("products")
+            .doc(productId)
+            .get();
         const productName = productDoc.exists ? (productDoc.data().product_name || 'ទំនិញ') : 'ទំនិញ';
+
+        // 5. បង្កើតសារជូនដំណឹង
         let bodyText = replierName + ' បានឆ្លើយតបមតិរបស់អ្នក';
-        if (replyText) bodyText += ': "' + (replyText.length > 50 ? replyText.substring(0, 50) + '...' : replyText) + '"';
+        if (replyText) {
+            bodyText += ': "' + (replyText.length > 50 ? replyText.substring(0, 50) + '...' : replyText) + '"';
+        }
         bodyText += ' លើទំនិញ "' + productName + '"';
 
-        await admin.messaging().send({
+        const message = {
             token: token,
-            notification: { title: "💬 មានការឆ្លើយតបមតិរបស់អ្នក!", body: bodyText },
-            android: { priority: "high", notification: { channelId: "order_channel", icon: 'ic_stat_sesan', color: '#FF4500', sound: "default", clickAction: "FLUTTER_NOTIFICATION_CLICK" } },
-            data: { productId: productId, commentId: commentId, replyId: event.params.replyId, type: 'comment_reply' }
-        });
+            notification: {
+                title: "💬 មានការឆ្លើយតបមតិរបស់អ្នក!",
+                body: bodyText,
+            },
+            android: {
+                priority: "high",
+                notification: {
+                    channelId: "order_channel",
+                    icon: 'ic_stat_sesan',
+                    color: '#FF4500',
+                    sound: "default",
+                    clickAction: "FLUTTER_NOTIFICATION_CLICK",
+                }
+            },
+            data: {
+                productId: productId,
+                commentId: commentId,
+                replyId: event.params.replyId,
+                type: 'comment_reply',
+            }
+        };
 
-        await admin.firestore().collection("users").doc(commentOwnerId).collection("notifications").add({
-            title: "ការឆ្លើយតបមតិ", body: bodyText, productId: productId, commentId: commentId, replyId: event.params.replyId, type: 'comment_reply', isRead: false, createdAt: admin.firestore.FieldValue.serverTimestamp()
-        });
+        const response = await admin.messaging().send(message);
+        console.log('✅ Reply notification sent to comment owner:', commentOwnerId);
+
+        // 6. រក្សាទុកក្នុង Firestore Notifications
+        await admin.firestore()
+            .collection("users")
+            .doc(commentOwnerId)
+            .collection("notifications")
+            .add({
+                title: "ការឆ្លើយតបមតិ",
+                body: bodyText,
+                productId: productId,
+                commentId: commentId,
+                replyId: event.params.replyId,
+                type: 'comment_reply',
+                isRead: false,
+                createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            });
+
         return null;
     } catch (error) {
         console.error('❌ Error:', error);
         return null;
     }
 });
-
+// 🔔 ជូនដំណឹងទៅ Admin ពេលមានសំណើ VIP ថ្មី
 exports.notifyAdminOnNewVipRequest = onDocumentCreated({
     document: "vip_requests/{requestId}",
     region: "asia-southeast1"
 }, async (event) => {
     const requestData = event.data.data();
     const requestId = event.params.requestId;
+
+    // ព័ត៌មានអ្នកស្នើ
     const userName = requestData.name || 'មិនស្គាល់';
     const phone = requestData.phone || 'គ្មានលេខ';
     const sesanId = requestData.sesan_id || 'មិនមាន';
@@ -864,37 +1427,81 @@ exports.notifyAdminOnNewVipRequest = onDocumentCreated({
 
     try {
         const adminUID = "WBdQVvrgEIPBTcgIlumu6bAZGUl2";
-        const adminDoc = await admin.firestore().collection('users').doc(adminUID).get();
-        if (!adminDoc.exists) return null;
+
+        // ទាញយក FCM Token របស់ Admin
+        const adminDoc = await admin.firestore()
+            .collection('users')
+            .doc(adminUID)
+            .get();
+
+        if (!adminDoc.exists) {
+            console.log('Admin user doc not found');
+            return null;
+        }
+
         const adminToken = adminDoc.data().fcmToken;
+
+        // ចំណងជើង និងសារ
         const title = "💎 មានសំណើ VIP ថ្មី!";
         const body = `${userName} (📞 ${phone}) ស្នើសុំ VIP | Sesan ID: ${sesanId} | ទឹកប្រាក់: ${amount} ៛`;
 
+        // 1. បាញ់ Push Notification បើមាន Token
         if (adminToken) {
-            await admin.messaging().send({
+            const message = {
                 token: adminToken,
-                notification: { title: title, body: body },
-                android: { priority: "high", notification: { channelId: "order_channel", icon: 'ic_stat_sesan', color: '#FF4500', sound: "default", clickAction: "FLUTTER_NOTIFICATION_CLICK" } },
-                data: { requestId: requestId, type: 'vip_request' }
-            });
+                notification: {
+                    title: title,
+                    body: body,
+                },
+                android: {
+                    priority: "high",
+                    notification: {
+                        channelId: "order_channel",
+                        icon: 'ic_stat_sesan',
+                        color: '#FF4500',
+                        sound: "default",
+                        clickAction: "FLUTTER_NOTIFICATION_CLICK",
+                    }
+                },
+                data: {
+                    requestId: requestId,
+                    type: 'vip_request',
+                }
+            };
+            await admin.messaging().send(message);
+            console.log('✅ VIP request notification sent to admin');
+        } else {
+            console.log('⚠️ Admin has no FCM token');
         }
 
-        await admin.firestore().collection("users").doc(adminUID).collection("notifications").add({
-            title: title, body: body, requestId: requestId, type: 'vip_request', isRead: false, createdAt: admin.firestore.FieldValue.serverTimestamp()
-        });
+        // 2. រក្សាទុក Notification ក្នុង Firestore (In-App)
+        await admin.firestore()
+            .collection("users")
+            .doc(adminUID)
+            .collection("notifications")
+            .add({
+                title: title,
+                body: body,
+                requestId: requestId,
+                type: 'vip_request',
+                isRead: false,
+                createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            });
+
         return null;
     } catch (error) {
         console.error('❌ Error sending VIP request notification:', error);
         return null;
     }
-});
-
+});// 🔔 ជូនដំណឹងទៅ Admin ពេលមានសំណើដំឡើងហាងថ្មី
 exports.notifyAdminOnNewShopUpgrade = onDocumentCreated({
     document: "shop_upgrade_requests/{requestId}",
     region: "asia-southeast1"
 }, async (event) => {
     const requestData = event.data.data();
     const requestId = event.params.requestId;
+
+    // ព័ត៌មានអ្នកស្នើ
     const userName = requestData.name || 'មិនស្គាល់';
     const phone = requestData.phone || 'គ្មានលេខ';
     const sesanId = requestData.sesan_id || 'មិនមាន';
@@ -904,33 +1511,80 @@ exports.notifyAdminOnNewShopUpgrade = onDocumentCreated({
 
     try {
         const adminUID = "WBdQVvrgEIPBTcgIlumu6bAZGUl2";
-        const adminDoc = await admin.firestore().collection('users').doc(adminUID).get();
-        if (!adminDoc.exists) return null;
-        const adminToken = adminDoc.data().fcmToken;
-        const title = "🏪 មានសំណើដំឡើងហាងថ្មី!";
-        let body = `${userName} (📞 ${phone}) ស្នើរដំឡើងហាងជា ${tier === 'premium' ? 'Premium' : 'Basic'} | ទឹកប្រាក់: ${price} ៛`;
-        if (sesanId !== 'មិនមាន') body += `| Sesan ID: ${sesanId}`;
-        if (shopName) body += `| ឈ្មោះហាង: ${shopName}`;
 
-        if (adminToken) {
-            await admin.messaging().send({
-                token: adminToken,
-                notification: { title: title, body: body },
-                android: { priority: "high", notification: { channelId: "order_channel", icon: 'ic_stat_sesan', color: '#FF4500', sound: "default", clickAction: "FLUTTER_NOTIFICATION_CLICK" } },
-                data: { requestId: requestId, type: 'shop_upgrade_request' }
-            });
+        // ទាញយក FCM Token របស់ Admin
+        const adminDoc = await admin.firestore()
+            .collection('users')
+            .doc(adminUID)
+            .get();
+
+        if (!adminDoc.exists) {
+            console.log('Admin user doc not found');
+            return null;
         }
 
-        await admin.firestore().collection("users").doc(adminUID).collection("notifications").add({
-            title: title, body: body, requestId: requestId, type: 'shop_upgrade_request', isRead: false, createdAt: admin.firestore.FieldValue.serverTimestamp()
-        });
+        const adminToken = adminDoc.data().fcmToken;
+
+        // ចំណងជើង និងសារ
+        const title = "🏪 មានសំណើដំឡើងហាងថ្មី!";
+        let body = `${userName} (📞 ${phone}) ស្នើរដំឡើងហាងជា ${tier === 'premium' ? 'Premium' : 'Basic'} | ទឹកប្រាក់: ${price} ៛`;
+        if (sesanId !== 'មិនមាន') {
+            body +=  `| Sesan ID: ${sesanId}`;
+        }
+        if (shopName) {
+            body +=  `| ឈ្មោះហាង: ${shopName}`;
+        }
+
+        // 1. បាញ់ Push Notification បើមាន Token
+        if (adminToken) {
+            const message = {
+                token: adminToken,
+                notification: {
+                    title: title,
+                    body: body,
+                },
+                android: {
+                    priority: "high",
+                    notification: {
+                        channelId: "order_channel",
+                        icon: 'ic_stat_sesan',
+                        color: '#FF4500',
+                        sound: "default",
+                        clickAction: "FLUTTER_NOTIFICATION_CLICK",
+                    }
+                },
+                data: {
+                    requestId: requestId,
+                    type: 'shop_upgrade_request',
+                }
+            };
+            await admin.messaging().send(message);
+            console.log('✅ Shop upgrade request notification sent to admin');
+        } else {
+            console.log('⚠️ Admin has no FCM token');
+        }
+
+        // 2. រក្សាទុក Notification ក្នុង Firestore (In-App)
+        await admin.firestore()
+            .collection("users")
+            .doc(adminUID)
+            .collection("notifications")
+            .add({
+                title: title,
+                body: body,
+                requestId: requestId,
+                type: 'shop_upgrade_request',
+                isRead: false,
+                createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            });
+
         return null;
     } catch (error) {
         console.error('❌ Error sending shop upgrade request notification:', error);
         return null;
     }
 });
-
+// 🔔 ជូនដំណឹងទៅម្ចាស់ទំនិញ ពេលមានអ្នកវាយតម្លៃថ្មី
 exports.notifyOwnerOnNewRating = onDocumentUpdated({
     document: "products/{productId}",
     region: "asia-southeast1"
@@ -938,37 +1592,71 @@ exports.notifyOwnerOnNewRating = onDocumentUpdated({
     const beforeData = event.data.before.data();
     const afterData = event.data.after.data();
     const productId = event.params.productId;
+
+    // ពិនិត្យថាចំនួនអ្នកវាយតម្លៃ (totalReviews) បានកើនឡើង
     const beforeReviews = beforeData.totalReviews || 0;
     const afterReviews = afterData.totalReviews || 0;
-    if (afterReviews <= beforeReviews) return null;
+
+    if (afterReviews <= beforeReviews) {
+        return null; // មិនមានការវាយតម្លៃថ្មី
+    }
 
     const ownerId = afterData.seller_id;
     if (!ownerId) return null;
+
     const productName = afterData.product_name || 'ទំនិញ';
     const avgRating = afterData.avgRating || 0;
 
     try {
-        await admin.firestore().collection("users").doc(ownerId).collection("notifications").add({
-            title: "⭐ មានការវាយតម្លៃថ្មី",
-            body: `ផលិតផល "${productName}" ទទួលបានពិន្ទុថ្មី ${avgRating} ផ្កាយ`,
-            productId: productId,
-            type: 'new_rating',
-            isRead: false,
-            createdAt: admin.firestore.FieldValue.serverTimestamp(),
-        });
+        // 1. រក្សាទុក Notification ក្នុង Firestore សម្រាប់ម្ចាស់ទំនិញ
+        await admin.firestore()
+            .collection("users")
+            .doc(ownerId)
+            .collection("notifications")
+            .add({
+                title: "⭐ មានការវាយតម្លៃថ្មី",
+                body: `ផលិតផល "${productName}" ទទួលបានពិន្ទុថ្មី ${avgRating} ផ្កាយ`,
+                productId: productId,
+                type: 'new_rating',
+                isRead: false,
+                createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            });
 
-        const ownerDoc = await admin.firestore().collection("users").doc(ownerId).get();
+        // 2. បាញ់ Push Notification បើម្ចាស់ទំនិញមាន FCM Token
+        const ownerDoc = await admin.firestore()
+            .collection("users")
+            .doc(ownerId)
+            .get();
+
         if (ownerDoc.exists) {
             const token = ownerDoc.data().fcmToken;
             if (token) {
-                await admin.messaging().send({
+                const message = {
                     token: token,
-                    notification: { title: "⭐ មានការវាយតម្លៃថ្មី", body: `ទំនិញ "${productName}" ទទួលបាន ${avgRating} ផ្កាយ` },
-                    android: { priority: "high", notification: { channelId: "order_channel", icon: 'ic_stat_sesan', color: '#FF4500', sound: "default", clickAction: "FLUTTER_NOTIFICATION_CLICK" } },
-                    data: { productId: productId, type: 'new_rating' }
-                });
+                    notification: {
+                        title: "⭐ មានការវាយតម្លៃថ្មី",
+                        body: `ទំនិញ "${productName}" ទទួលបាន ${avgRating} ផ្កាយ`,
+                    },
+                    android: {
+                        priority: "high",
+                        notification: {
+                            channelId: "order_channel",
+                            icon: 'ic_stat_sesan',
+                            color: '#FF4500',
+                            sound: "default",
+                            clickAction: "FLUTTER_NOTIFICATION_CLICK",
+                        }
+                    },
+                    data: {
+                        productId: productId,
+                        type: 'new_rating',
+                    }
+                };
+                await admin.messaging().send(message);
+                console.log('✅ Rating notification sent to owner:', ownerId);
             }
         }
+
         return null;
     } catch (error) {
         console.error('❌ Error sending rating notification:', error);
@@ -976,6 +1664,7 @@ exports.notifyOwnerOnNewRating = onDocumentUpdated({
     }
 });
 
+// ✅ បន្ថែម shop_tier ទៅផលិតផលថ្មី (v2)
 exports.autoAddShopTierToProduct = onDocumentCreated({
     document: "products/{productId}",
     region: "asia-southeast1"
@@ -987,13 +1676,17 @@ exports.autoAddShopTierToProduct = onDocumentCreated({
     try {
         const userDoc = await admin.firestore().collection('users').doc(sellerId).get();
         const shopTier = userDoc.exists ? userDoc.data()?.shop_tier : null;
-        if (shopTier) await event.data.ref.update({ shop_tier: shopTier });
+
+        if (shopTier) {
+            await event.data.ref.update({ shop_tier: shopTier });
+            console.log(`✅ Auto-set shop_tier for product ${event.params.productId}: ${shopTier}`);
+        }
     } catch (e) {
         console.error('❌ Error auto-setting shop_tier:', e);
     }
     return null;
 });
-
+// ✅ អាប់ដេត shop_tier លើផលិតផលដែលមានស្រាប់ ពេលហាងដំឡើង (v2)
 exports.updateProductsShopTierOnUserTierChange = onDocumentUpdated({
     document: "users/{userId}",
     region: "asia-southeast1"
@@ -1002,23 +1695,34 @@ exports.updateProductsShopTierOnUserTierChange = onDocumentUpdated({
     const afterData = event.data.after.data();
     const oldTier = beforeData.shop_tier;
     const newTier = afterData.shop_tier;
+
+    // តែនៅពេលដែល shop_tier បានផ្លាស់ប្ដូរ
     if (oldTier === newTier) return null;
 
     const sellerId = event.params.userId;
+
     try {
-        const productsSnap = await admin.firestore().collection('products').where('seller_id', '==', sellerId).get();
+        const productsSnap = await admin.firestore()
+            .collection('products')
+            .where('seller_id', '==', sellerId)
+            .get();
+
         if (productsSnap.empty) return null;
+
         const batch = admin.firestore().batch();
         productsSnap.forEach(doc => {
             batch.update(doc.ref, { shop_tier: newTier || admin.firestore.FieldValue.delete() });
         });
+
         await batch.commit();
+        console.log(`✅ Updated ${productsSnap.size} products for seller ${sellerId} to shop_tier=${newTier}`);
     } catch (e) {
         console.error('❌ Error updating products shop_tier:', e);
     }
     return null;
 });
 
+// ✅ អាប់ដេត seller_name, seller_photo លើផលិតផលទាំងអស់ ពេលអ្នកលក់កែ Profile (v2 - Improved)
 exports.updateSellerInfoOnProducts = onDocumentUpdated({
     document: "users/{userId}",
     region: "asia-southeast1"
@@ -1026,27 +1730,65 @@ exports.updateSellerInfoOnProducts = onDocumentUpdated({
     const beforeData = event.data.before.data();
     const afterData = event.data.after.data();
     const sellerId = event.params.userId;
+
+    // 🔍 យក Field ដែលអាចមាន (ដើម្បីកុំឱ្យខុស)
     const oldName = beforeData.name || beforeData.fullName || beforeData.displayName || '';
     const newName = afterData.name || afterData.fullName || afterData.displayName || '';
     const oldPhoto = beforeData.photoUrl || beforeData.avatar || beforeData.profilePic || '';
     const newPhoto = afterData.photoUrl || afterData.avatar || afterData.profilePic || '';
-    if (oldName === newName && oldPhoto === newPhoto) return null;
+
+    // 🟢 Log ដើម្បីមើលថាមានការផ្លាស់ប្ដូរឬអត់
+    console.log(`🔍 Checking seller ${sellerId}: oldName="${oldName}" → newName="${newName}"`);
+    console.log(`🔍 Checking seller ${sellerId}: oldPhoto="${oldPhoto}" → newPhoto="${newPhoto}"`);
+
+    // ប្រសិនបើមិនមានការផ្លាស់ប្ដូរ ចេញ
+    if (oldName === newName && oldPhoto === newPhoto) {
+        console.log(`ℹ️ No change for seller ${sellerId}`);
+        return null;
+    }
+
+    console.log(`🔄 Updating products for seller ${sellerId}: name="${newName}", photo="${newPhoto}"`);
 
     try {
-        const productsSnap = await admin.firestore().collection('products').where('seller_id', '==', sellerId).get();
-        if (productsSnap.empty) return null;
+        // ១. ទាញយកផលិតផលទាំងអស់របស់អ្នកលក់
+        const productsSnap = await admin.firestore()
+            .collection('products')
+            .where('seller_id', '==', sellerId)
+            .get();
+
+        if (productsSnap.empty) {
+            console.log(`ℹ️ No products found for seller ${sellerId}`);
+            return null;
+        }
+
+        console.log(`📦 Found ${productsSnap.size} products to update`);
+
+        // ២. ប្រើ batch ដើម្បីធ្វើបច្ចុប្បន្នភាព
         const batch = admin.firestore().batch();
         let updateCount = 0;
+
         productsSnap.forEach(doc => {
             const updates = {};
-            if (oldName !== newName && newName) updates.seller_name = newName;
-            if (oldPhoto !== newPhoto && newPhoto) updates.seller_photo = newPhoto;
+            if (oldName !== newName && newName) {
+                updates.seller_name = newName;
+            }
+            if (oldPhoto !== newPhoto && newPhoto) {
+                updates.seller_photo = newPhoto;
+            }
+
             if (Object.keys(updates).length > 0) {
                 batch.update(doc.ref, updates);
                 updateCount++;
             }
         });
-        if (updateCount > 0) await batch.commit();
+
+        if (updateCount > 0) {
+            await batch.commit();
+            console.log(`✅ Successfully updated ${updateCount} products for seller ${sellerId}`);
+        } else {
+            console.log(`ℹ️ No updates needed for seller ${sellerId}`);
+        }
+
         return null;
     } catch (error) {
         console.error(`❌ Error updating seller info on products:`, error);
@@ -1054,12 +1796,14 @@ exports.updateSellerInfoOnProducts = onDocumentUpdated({
     }
 });
 
+// ✅ នេះជាកូដដែលអ្នកត្រូវបន្ថែម (កុំថែម const admin ទៀត!)
 exports.addBlockedUsersField = functions.https.onCall(async (data, context) => {
+    // 🛡️ ឆែកថាអ្នកហៅជា Admin
     if (!context.auth) {
         throw new functions.https.HttpsError('unauthenticated', 'សូម Login ជាមុនសិន!');
     }
 
-    const adminUid = "WBdQVvrgEIPBTcgIlumu6bAZGUl2";
+    const adminUid = "WBdQVvrgEIPBTcgIlumu6bAZGUl2"; // ដាក់ UID របស់ Admin
     if (context.auth.uid !== adminUid) {
         throw new functions.https.HttpsError('permission-denied', 'មានតែ Admin ទេដែលអាចហៅមុខងារនេះ!');
     }
@@ -1072,7 +1816,9 @@ exports.addBlockedUsersField = functions.https.onCall(async (data, context) => {
         usersSnapshot.forEach((doc) => {
             const data = doc.data();
             if (!data.hasOwnProperty('blockedUsers')) {
-                batch.update(doc.ref, { blockedUsers: [] });
+                batch.update(doc.ref, {
+                    blockedUsers: [],
+                });
                 count++;
             }
         });
@@ -1089,13 +1835,25 @@ exports.addBlockedUsersField = functions.https.onCall(async (data, context) => {
     }
 });
 
+// ============================================================================
+// PERMANENT ACCOUNT DELETION AFTER THE 15-DAY RECOVERY WINDOW
+// Keeps chat and order history, but removes personal display information.
+// ============================================================================
 async function anonymizeExpiredUserHistory(db, uid) {
     const deletedName = "Deleted user";
-    const chatSnapshot = await db.collection("chats").where("users", "array-contains", uid).get();
+
+    // Chat messages keep their text/media for history and disputes. The UID is
+    // retained as a historical reference, while any denormalized names are removed.
+    const chatSnapshot = await db.collection("chats")
+        .where("users", "array-contains", uid)
+        .get();
+
     const chatWriter = db.bulkWriter();
     for (const chatDoc of chatSnapshot.docs) {
         const data = chatDoc.data();
-        const update = { deletedUsers: admin.firestore.FieldValue.arrayUnion(uid) };
+        const update = {
+            deletedUsers: admin.firestore.FieldValue.arrayUnion(uid)
+        };
         if (data.sender === uid) {
             update.sender_name = deletedName;
             update.senderName = deletedName;
@@ -1108,6 +1866,7 @@ async function anonymizeExpiredUserHistory(db, uid) {
     }
     await chatWriter.close();
 
+    // Support both the current snake_case schema and older camelCase orders.
     const orderQueries = [
         ["customer_id", uid, "buyer"],
         ["customerId", uid, "buyer"],
@@ -1119,7 +1878,9 @@ async function anonymizeExpiredUserHistory(db, uid) {
     const orderWriter = db.bulkWriter();
 
     for (const [field, value, role] of orderQueries) {
-        const snapshot = await db.collection("orders").where(field, "==", value).get();
+        const snapshot = await db.collection("orders")
+            .where(field, "==", value)
+            .get();
 
         for (const orderDoc of snapshot.docs) {
             const key = `${orderDoc.id}:${role}`;
@@ -1127,7 +1888,9 @@ async function anonymizeExpiredUserHistory(db, uid) {
             handledOrderIds.add(key);
 
             const data = orderDoc.data();
-            const update = { deletedUsers: admin.firestore.FieldValue.arrayUnion(uid) };
+            const update = {
+                deletedUsers: admin.firestore.FieldValue.arrayUnion(uid)
+            };
 
             if (role === "buyer") {
                 update.customer_name = deletedName;
@@ -1178,6 +1941,7 @@ exports.cleanupExpiredDeletedAccounts = onSchedule({
     const db = admin.firestore();
     const now = admin.firestore.Timestamp.now();
 
+    // Querying by status only avoids requiring a new composite Firestore index.
     const recoverableSnapshot = await db.collection("deleted_accounts")
         .where("status", "==", "recoverable")
         .get();
@@ -1185,9 +1949,13 @@ exports.cleanupExpiredDeletedAccounts = onSchedule({
     const expiredDocs = recoverableSnapshot.docs
         .filter((doc) => {
             const deadline = doc.data().restoreDeadline;
-            return deadline && typeof deadline.toMillis === "function" && deadline.toMillis() <= now.toMillis();
+            return deadline &&
+                typeof deadline.toMillis === "function" &&
+                deadline.toMillis() <= now.toMillis();
         })
-        .sort((a, b) => a.data().restoreDeadline.toMillis() - b.data().restoreDeadline.toMillis())
+        .sort((a, b) =>
+            a.data().restoreDeadline.toMillis() -
+            b.data().restoreDeadline.toMillis())
         .slice(0, 100);
 
     if (expiredDocs.length === 0) {
@@ -1208,7 +1976,9 @@ exports.cleanupExpiredDeletedAccounts = onSchedule({
 
                 const data = freshArchive.data();
                 const deadline = data.restoreDeadline;
-                const isExpired = deadline && typeof deadline.toMillis === "function" && deadline.toMillis() <= now.toMillis();
+                const isExpired = deadline &&
+                    typeof deadline.toMillis === "function" &&
+                    deadline.toMillis() <= now.toMillis();
 
                 if (data.status !== "recoverable" || !isExpired) return false;
 
@@ -1221,7 +1991,10 @@ exports.cleanupExpiredDeletedAccounts = onSchedule({
 
             if (!claimed) continue;
 
+            // Preserve chat/order records but remove the expired user's identity.
             await anonymizeExpiredUserHistory(db, uid);
+
+            // Remove the public profile and Firebase Authentication account.
             await db.collection("users").doc(uid).delete();
             try {
                 await admin.auth().deleteUser(uid);
@@ -1229,13 +2002,17 @@ exports.cleanupExpiredDeletedAccounts = onSchedule({
                 if (authError.code !== "auth/user-not-found") throw authError;
             }
 
+            // Delete the archive root and every document in its content subcollection.
             await db.recursiveDelete(archiveDoc.ref);
+
             deletedCount++;
             console.log(`Permanently deleted expired account: ${uid}`);
         } catch (error) {
             failedCount++;
             console.error(`Failed to delete expired account ${uid}:`, error);
 
+            // The recovery window is already over; reset only so the next hourly
+            // run can safely retry any unfinished cleanup.
             try {
                 await archiveDoc.ref.set({
                     status: "recoverable",
@@ -1251,3 +2028,4 @@ exports.cleanupExpiredDeletedAccounts = onSchedule({
     console.log(`Expired account cleanup finished. Deleted: ${deletedCount}, failed: ${failedCount}`);
     return null;
 });
+
