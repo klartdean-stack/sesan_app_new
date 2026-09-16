@@ -16,15 +16,12 @@ import 'package:video_player/video_player.dart';
 import 'package:get/get.dart';
 import 'package:my_app/upload_controller.dart';
 
-
 class AuctionAddScreen extends StatefulWidget {
   const AuctionAddScreen({super.key});
-
 
   @override
   State<AuctionAddScreen> createState() => _AuctionAddScreenState();
 }
-
 
 class _AuctionAddScreenState extends State<AuctionAddScreen>
     with TickerProviderStateMixin {
@@ -35,7 +32,6 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
   final _phoneCtrl = TextEditingController();
   final _descriptionCtrl = TextEditingController();
   final UploadController _uploadController = Get.put(UploadController());
-
 
   List<File> _productImages = [];
   File? _productVideo;
@@ -50,10 +46,8 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
   bool _isVideoPreviewReady = false;
   OverlayEntry? _overlayEntry;
 
-
   late AnimationController _fadeCtrl;
   late Animation<double> _fadeAnim;
-
 
   static const _bg = Color(0xFF0D1117);
   static const _card = Color(0xFF161B22);
@@ -63,7 +57,6 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
   static const _text = Color(0xFFE6EDF3);
   static const _textMuted = Color(0xFF8B949E);
   static const _red = Color(0xFFDA3633);
-
 
   final List<Map<String, dynamic>> _packages = [
     {
@@ -77,7 +70,6 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
     },
   ];
 
-
   @override
   void initState() {
     super.initState();
@@ -89,7 +81,6 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
     _fadeAnim = CurvedAnimation(parent: _fadeCtrl, curve: Curves.easeOut);
     _fadeCtrl.forward();
   }
-
 
   @override
   void dispose() {
@@ -104,16 +95,14 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
     super.dispose();
   }
 
-
   Future<void> _launchABA() async {
-    final Uri _url = Uri.parse('https://pay.ababank.com/oRF8/lq8jgwzb');
+    final Uri _url = Uri.parse('https://pay.ababank.com/oRF8/oizn40j9');
     try {
       await launchUrl(_url, mode: LaunchMode.externalApplication);
     } catch (e) {
       await launchUrl(_url, mode: LaunchMode.platformDefault);
     }
   }
-
 
   // Android Build 46 parity: QR result above payment dialog
   void _showTopMessage(String message, {bool isError = false}) {
@@ -131,12 +120,20 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
             decoration: BoxDecoration(
               color: isError ? const Color(0xFFDA3633) : const Color(0xFF238636),
               borderRadius: BorderRadius.circular(14),
-              boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 12, offset: Offset(0, 4))],
+              boxShadow: const [
+                BoxShadow(
+                  color: Colors.black26,
+                  blurRadius: 12,
+                  offset: Offset(0, 4),
+                ),
+              ],
             ),
             child: Row(
               children: [
                 Icon(
-                  isError ? Icons.error_outline_rounded : Icons.check_circle_outline_rounded,
+                  isError
+                      ? Icons.error_outline_rounded
+                      : Icons.check_circle_outline_rounded,
                   color: Colors.white,
                   size: 21,
                 ),
@@ -190,7 +187,6 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
     }
   }
 
-
   Future<void> _pickProductImages() async {
     if (_isPickingImage) return;
     if (_productImages.length >= 8) {
@@ -215,7 +211,6 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
     }
   }
 
-
   Future<void> _pickProductVideo() async {
     if (_isPickingImage) return;
     try {
@@ -236,7 +231,6 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
     }
   }
 
-
   void _initVideoPreview() {
     _videoPreviewController?.dispose();
     if (_productVideo != null) {
@@ -246,7 +240,6 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
         });
     }
   }
-
 
   Future<void> _pickPaymentImage({StateSetter? dialogSetState}) async {
     final picker = ImagePicker();
@@ -261,7 +254,6 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
     }
   }
 
-
   Future<String?> _uploadFile(File file, String folder) async {
     try {
       final name =
@@ -274,33 +266,25 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
     }
   }
 
-
   Future<void> _submitAuction() async {
     if (_isProcessing) return;
-
 
     if (_productNameCtrl.text.isEmpty || _startPriceCtrl.text.isEmpty) {
       _showErrorSnack('❌ សូមបំពេញព័ត៌មានឱ្យបានគ្រប់គ្រាន់');
       return;
     }
 
-
-    // បិទ dialog
     Navigator.of(context, rootNavigator: true).pop();
     Navigator.of(context).pop();
 
-
-    // បង្ហាញ Progress
     _uploadController.isUploading.value = true;
     _uploadController.uploadProgress.value = 0.05;
-
 
     try {
       final prefs = await SharedPreferences.getInstance();
       String ownerId = prefs.getString('user_uid') ?? '';
       String ownerName = prefs.getString('user_name') ?? 'Sesan User';
       String ownerPhoto = prefs.getString('user_photo') ?? '';
-
 
       if (ownerId.isEmpty) {
         final currentUser = FirebaseAuth.instance.currentUser;
@@ -311,16 +295,12 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
         }
       }
 
-
-      // Upload video
       String? videoUrl;
       if (_productVideo != null) {
         _uploadController.uploadProgress.value = 0.1;
         videoUrl = await _uploadFile(_productVideo!, 'auction_videos');
       }
 
-
-      // Upload images
       final List<String> productUrls = [];
       for (int i = 0; i < _productImages.length; i++) {
         _uploadController.uploadProgress.value =
@@ -329,19 +309,14 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
         if (url != null) productUrls.add(url);
       }
 
-
-      // Upload payment
       String? paymentUrl;
       if (_paymentImage != null) {
         _uploadController.uploadProgress.value = 0.8;
         paymentUrl = await _uploadFile(_paymentImage!, 'auction_payments');
       }
 
-
       _uploadController.uploadProgress.value = 0.95;
 
-
-      // 🎯 កែប្រែទៅកាន់ Collection ថ្មីដាច់ដោយឡែកសម្រាប់របស់ដេញថ្លៃ
       await FirebaseFirestore.instance.collection('auction_products').add({
         'product_name': _productNameCtrl.text.trim(),
         'description': _descriptionCtrl.text.trim(),
@@ -353,14 +328,12 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
         'image_urls': productUrls,
         'payment_image_url': paymentUrl,
         'selected_package': _selectedPackage,
-        'status':
-        'pending', // រក្សាទុក 'pending' ដដែល ដើម្បីឱ្យ Admin ពិនិត្យក្នុងទំព័រ Auction Admin
+        'status': 'pending',
         'owner_id': ownerId,
         'owner_name': ownerName,
         'owner_photo': ownerPhoto,
         'created_at': FieldValue.serverTimestamp(),
       });
-
 
       _uploadController.uploadProgress.value = 1.0;
       _showSuccessSnack('🎉 បញ្ជូនការដេញថ្លៃជោគជ័យ!');
@@ -375,10 +348,8 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
     }
   }
 
-
   String? _validateRequired(String? v) =>
       (v == null || v.trim().isEmpty) ? 'សូមបំពេញព័ត៌មាននេះ' : null;
-
 
   String? _validateNumber(String? v) {
     if (v == null || v.trim().isEmpty) return 'សូមបំពេញលេខ';
@@ -387,13 +358,13 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
     return null;
   }
 
-
   bool get _step0Valid =>
       _productNameCtrl.text.isNotEmpty && _productImages.isNotEmpty;
   bool get _step1Valid =>
       _validateNumber(_startPriceCtrl.text) == null &&
-          _validateNumber(_bidStepCtrl.text) == null &&
-          _endDate != null;
+      _validateNumber(_bidStepCtrl.text) == null &&
+      _endDate != null;
+
   void _nextStep() {
     if (_currentStep == 0 && !_step0Valid) {
       _showErrorSnack('សូមបំពេញឈ្មោះទំនិញ និងរូបភាព');
@@ -417,7 +388,6 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
     }
   }
 
-
   void _showSuccessSnack(String msg) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
@@ -436,7 +406,6 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
       ),
     );
   }
-
 
   void _showErrorSnack(String msg) {
     if (!mounted) return;
@@ -457,11 +426,9 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
     );
   }
 
-
   void _showProgressOverlay(String message, double progress) {
     _overlayEntry?.remove();
     if (!mounted) return;
-
 
     _overlayEntry = OverlayEntry(
       builder: (ctx) => Positioned(
@@ -472,9 +439,9 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
           color: Colors.transparent,
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: const Color(0xFF1B5E20),
-              borderRadius: const BorderRadius.vertical(
+            decoration: const BoxDecoration(
+              color: Color(0xFF1B5E20),
+              borderRadius: BorderRadius.vertical(
                 bottom: Radius.circular(12),
               ),
             ),
@@ -511,16 +478,13 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
       ),
     );
 
-
     Overlay.of(context).insert(_overlayEntry!);
   }
-
 
   void _hideProgressOverlay() {
     _overlayEntry?.remove();
     _overlayEntry = null;
   }
-
 
   Future<void> _selectEndDate() async {
     final date = await showDatePicker(
@@ -568,7 +532,6 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
     });
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -578,7 +541,7 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
         onTap: () => FocusScope.of(context).unfocus(),
         behavior: HitTestBehavior.translucent,
         child: Obx(
-              () => Stack(
+          () => Stack(
             children: [
               Column(
                 children: [
@@ -610,9 +573,9 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
                         horizontal: 16,
                         vertical: 10,
                       ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF1B5E20),
-                        borderRadius: const BorderRadius.vertical(
+                      decoration: const BoxDecoration(
+                        color: Color(0xFF1B5E20),
+                        borderRadius: BorderRadius.vertical(
                           bottom: Radius.circular(12),
                         ),
                       ),
@@ -654,8 +617,6 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
     );
   }
 
-
-  // បន្ថែមមុខងារនេះដើម្បីបាត់ក្រហមត្រង់ជួរ 447
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
       backgroundColor: _bg,
@@ -684,7 +645,6 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
       ),
     );
   }
-
 
   Widget _buildStepIndicator() {
     final steps = ['ទំនិញ', 'តម្លៃ និងសេវា'];
@@ -721,32 +681,32 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
                   color: isDone
                       ? _accent
                       : isActive
-                      ? _accentBlue
-                      : _card,
+                          ? _accentBlue
+                          : _card,
                   border: Border.all(
                     color: isDone
                         ? _accent
                         : isActive
-                        ? _accentBlue
-                        : _border,
+                            ? _accentBlue
+                            : _border,
                     width: 2,
                   ),
                 ),
                 child: Center(
                   child: isDone
                       ? const Icon(
-                    Icons.check_rounded,
-                    color: Colors.white,
-                    size: 18,
-                  )
+                          Icons.check_rounded,
+                          color: Colors.white,
+                          size: 18,
+                        )
                       : Text(
-                    '${idx + 1}',
-                    style: TextStyle(
-                      color: isActive ? Colors.white : _textMuted,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 14,
-                    ),
-                  ),
+                          '${idx + 1}',
+                          style: TextStyle(
+                            color: isActive ? Colors.white : _textMuted,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                          ),
+                        ),
                 ),
               ),
               const SizedBox(height: 6),
@@ -766,7 +726,6 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
     );
   }
 
-
   Widget _buildCurrentStep() {
     switch (_currentStep) {
       case 0:
@@ -782,7 +741,6 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
         return const SizedBox();
     }
   }
-
 
   Widget _buildStep0() {
     return Column(
@@ -802,7 +760,9 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
         const SizedBox(height: 8),
         _buildTextField(
           controller: _productNameCtrl,
-          hint: Get.locale?.languageCode == 'km' ? 'ឧ. ម៉ាស៊ីនច្រូតស្រូវ' : 'e.g. Rice harvester',
+          hint: Get.locale?.languageCode == 'km'
+              ? 'ឧ. ត្រាក់ទ័រខ្នាតតូចសម្រាប់ស្រែ'
+              : 'e.g. Rice micro-tractor',
           icon: Icons.shopping_bag_outlined,
           validator: _validateRequired,
           onChanged: (_) => setState(() {}),
@@ -833,7 +793,6 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
     );
   }
 
-
   Widget _buildVideoPicker() {
     return GestureDetector(
       onTap: _productVideo == null ? _pickProductVideo : null,
@@ -846,100 +805,99 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
           border: Border.all(color: _productVideo != null ? _accent : _border),
         ),
         child: _productVideo == null
-            ? Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
-            Icon(Icons.video_call_rounded, color: _accentBlue),
-            SizedBox(width: 10),
-            Text(
-              'ចុចដើម្បីបន្ថែមវីដេអូ',
-              style: TextStyle(
-                color: _accentBlue,
-                fontFamily: 'Siemreap',
-              ),
-            ),
-          ],
-        )
-            : Stack(
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(14),
-              child:
-              _isVideoPreviewReady && _videoPreviewController != null
-                  ? SizedBox.expand(
-                child: FittedBox(
-                  fit: BoxFit.cover,
-                  child: SizedBox(
-                    width:
-                    _videoPreviewController!.value.size.width,
-                    height:
-                    _videoPreviewController!.value.size.height,
-                    child: VideoPlayer(_videoPreviewController!),
-                  ),
-                ),
-              )
-                  : Container(
-                color: Colors.black,
-                child: const Center(
-                  child: CircularProgressIndicator(
-                    color: Colors.white,
-                    strokeWidth: 2,
-                  ),
-                ),
-              ),
-            ),
-            if (_isVideoPreviewReady)
-              Positioned.fill(
-                child: GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _videoPreviewController!.value.isPlaying
-                          ? _videoPreviewController!.pause()
-                          : _videoPreviewController!.play();
-                    });
-                  },
-                  child: Center(
-                    child: Icon(
-                      _videoPreviewController!.value.isPlaying
-                          ? Icons.pause_circle_filled
-                          : Icons.play_circle_fill,
-                      color: Colors.white70,
-                      size: 40,
+            ? const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.video_call_rounded, color: _accentBlue),
+                  SizedBox(width: 10),
+                  Text(
+                    'ចុចដើម្បីបន្ថែមវីដេអូ',
+                    style: TextStyle(
+                      color: _accentBlue,
+                      fontFamily: 'Siemreap',
                     ),
                   ),
-                ),
-              ),
-            Positioned(
-              top: 6,
-              right: 6,
-              child: GestureDetector(
-                onTap: () {
-                  _videoPreviewController?.dispose();
-                  setState(() {
-                    _productVideo = null;
-                    _isVideoPreviewReady = false;
-                  });
-                },
-                child: Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: const BoxDecoration(
-                    color: Colors.red,
-                    shape: BoxShape.circle,
+                ],
+              )
+            : Stack(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(14),
+                    child:
+                        _isVideoPreviewReady && _videoPreviewController != null
+                            ? SizedBox.expand(
+                                child: FittedBox(
+                                  fit: BoxFit.cover,
+                                  child: SizedBox(
+                                    width:
+                                        _videoPreviewController!.value.size.width,
+                                    height:
+                                        _videoPreviewController!.value.size.height,
+                                    child: VideoPlayer(_videoPreviewController!),
+                                  ),
+                                ),
+                              )
+                            : Container(
+                                color: Colors.black,
+                                child: const Center(
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                ),
+                              ),
                   ),
-                  child: const Icon(
-                    Icons.close,
-                    color: Colors.white,
-                    size: 14,
+                  if (_isVideoPreviewReady)
+                    Positioned.fill(
+                      child: GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _videoPreviewController!.value.isPlaying
+                                ? _videoPreviewController!.pause()
+                                : _videoPreviewController!.play();
+                          });
+                        },
+                        child: Center(
+                          child: Icon(
+                            _videoPreviewController!.value.isPlaying
+                                ? Icons.pause_circle_filled
+                                : Icons.play_circle_fill,
+                            color: Colors.white70,
+                            size: 40,
+                          ),
+                        ),
+                      ),
+                    ),
+                  Positioned(
+                    top: 6,
+                    right: 6,
+                    child: GestureDetector(
+                      onTap: () {
+                        _videoPreviewController?.dispose();
+                        setState(() {
+                          _productVideo = null;
+                          _isVideoPreviewReady = false;
+                        });
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: const BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.close,
+                          color: Colors.white,
+                          size: 14,
+                        ),
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
-            ),
-          ],
-        ),
       ),
     );
   }
-
 
   Widget _buildImagePicker() {
     return GestureDetector(
@@ -956,94 +914,93 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
         ),
         child: _productImages.isEmpty
             ? Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: _accentBlue.withOpacity(0.12),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.add_photo_alternate_outlined,
-                color: _accentBlue,
-                size: 28,
-              ),
-            ),
-            const SizedBox(height: 10),
-            const Text(
-              'ចុចដើម្បីបន្ថែមរូបភាព',
-              style: TextStyle(
-                color: _accentBlue,
-                fontWeight: FontWeight.w600,
-                fontSize: 14,
-              ),
-            ),
-            const SizedBox(height: 4),
-            const Text(
-              'JPG, PNG · រើសបានច្រើនបំផុត 8 សន្លឹក',
-              style: TextStyle(color: _textMuted, fontSize: 12),
-            ),
-          ],
-        )
-            : ListView.builder(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.all(8),
-          itemCount:
-          _productImages.length + (_productImages.length < 8 ? 1 : 0),
-          itemBuilder: (ctx, i) {
-            if (i == _productImages.length) {
-              return GestureDetector(
-                onTap: _pickProductImages,
-                child: Container(
-                  width: 90,
-                  margin: const EdgeInsets.only(left: 8),
-                  decoration: BoxDecoration(
-                    color: _accentBlue.withOpacity(0.08),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: _accentBlue.withOpacity(0.4),
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: _accentBlue.withOpacity(0.12),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.add_photo_alternate_outlined,
+                      color: _accentBlue,
+                      size: 28,
                     ),
                   ),
-                  child: const Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.add_rounded,
-                        color: _accentBlue,
-                        size: 24,
-                      ),
-                      SizedBox(height: 4),
-                      Text(
-                        'បន្ថែម',
-                        style: TextStyle(
-                          color: _accentBlue,
-                          fontSize: 11,
+                  const SizedBox(height: 10),
+                  const Text(
+                    'ចុចដើម្បីបន្ថែមរូបភាព',
+                    style: TextStyle(
+                      color: _accentBlue,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'រើសបានច្រើនបំផុត 8 សន្លឹក',
+                    style: TextStyle(color: _textMuted, fontSize: 12),
+                  ),
+                ],
+              )
+            : ListView.builder(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.all(8),
+                itemCount:
+                    _productImages.length + (_productImages.length < 8 ? 1 : 0),
+                itemBuilder: (ctx, i) {
+                  if (i == _productImages.length) {
+                    return GestureDetector(
+                      onTap: _pickProductImages,
+                      child: Container(
+                        width: 90,
+                        margin: const EdgeInsets.only(left: 8),
+                        decoration: BoxDecoration(
+                          color: _accentBlue.withOpacity(0.08),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: _accentBlue.withOpacity(0.4),
+                          ),
+                        ),
+                        child: const Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.add_rounded,
+                              color: _accentBlue,
+                              size: 24,
+                            ),
+                            SizedBox(height: 4),
+                            Text(
+                              'បន្ថែម',
+                              style: TextStyle(
+                                color: _accentBlue,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ],
-                  ),
-                ),
-              );
-            }
-            return Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: Image.file(
-                  _productImages[i],
-                  width: 90,
-                  height: 90,
-                  fit: BoxFit.cover,
-                ),
+                    );
+                  }
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.file(
+                        _productImages[i],
+                        width: 90,
+                        height: 90,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  );
+                },
               ),
-            );
-          },
-        ),
       ),
     );
   }
-
 
   Widget _buildStep1() {
     return Column(
@@ -1089,7 +1046,6 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
     );
   }
 
-
   Widget _buildPricePreview() {
     final start = int.tryParse(_startPriceCtrl.text.replaceAll(',', '')) ?? 0;
     final step = int.tryParse(_bidStepCtrl.text.replaceAll(',', '')) ?? 0;
@@ -1114,7 +1070,6 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
       ),
     );
   }
-
 
   Widget _miniStat(String label, String value, Color color) {
     return Expanded(
@@ -1144,7 +1099,6 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
       ),
     );
   }
-
 
   Widget _buildDateTile() {
     return GestureDetector(
@@ -1204,7 +1158,6 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
       ),
     );
   }
-
 
   Widget _buildStep2() {
     return Column(
@@ -1280,7 +1233,7 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
                         ),
                         const SizedBox(height: 10),
                         ...((pkg['features'] as List<String>).map(
-                              (f) => Padding(
+                          (f) => Padding(
                             padding: const EdgeInsets.only(bottom: 4),
                             child: Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1339,13 +1292,11 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
     );
   }
 
-
   void _showPaymentDialog() {
     final selectedPkgData = _packages.firstWhere(
-          (p) => p['key'] == _selectedPackage,
+      (p) => p['key'] == _selectedPackage,
     );
     final total = selectedPkgData['price'] as int;
-
 
     showModalBottomSheet(
       context: context,
@@ -1387,7 +1338,7 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
                 ),
                 const Divider(color: _border, height: 40),
                 const Text(
-                  "ស្កេនបង់ប្រាក់មកកាន់ QR ខាងក្រោម",
+                  'ស្កេនបង់ប្រាក់មកកាន់ QR ខាងក្រោម',
                   style: TextStyle(color: _textMuted, fontFamily: 'Siemreap'),
                 ),
                 const SizedBox(height: 15),
@@ -1402,7 +1353,7 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(12),
                       child: Image.asset(
-                        "assets/aba_qr.png",
+                        'assets/aba_qr.png',
                         height: 160,
                         width: 160,
                         fit: BoxFit.contain,
@@ -1417,7 +1368,7 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  "${NumberFormat('#,###').format(total)} ៛",
+                  '${NumberFormat('#,###').format(total)} ៛',
                   style: const TextStyle(
                     fontSize: 26,
                     color: _accent,
@@ -1432,7 +1383,7 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
                     color: Colors.white,
                   ),
                   label: const Text(
-                    "ចុចដើម្បីបង់ប្រាក់តាម App ABA",
+                    'ចុចដើម្បីបង់ប្រាក់តាម App ABA',
                     style: TextStyle(color: Colors.white),
                   ),
                   style: ElevatedButton.styleFrom(
@@ -1445,7 +1396,7 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
                 ),
                 const SizedBox(height: 15),
                 const Text(
-                  "បញ្ជាក់៖ សូមចុចសង្កត់លើ QR ដើម្បីរក្សាទុក រួចថតរូបវិក្កយបត្របញ្ចូលខាងក្រោម",
+                  'បញ្ជាក់៖ សូមចុចសង្កត់លើ QR ដើម្បីរក្សាទុក រួចថតរូបវិក្កយបត្របញ្ចូលខាងក្រោម',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 11,
@@ -1470,32 +1421,32 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
                       ),
                     ),
                     child: _paymentImage == null
-                        ? Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: const [
-                        Icon(
-                          Icons.add_a_photo_rounded,
-                          size: 40,
-                          color: _textMuted,
-                        ),
-                        SizedBox(height: 8),
-                        Text(
-                          "ដាក់រូបវិក្កយបត្រ",
-                          style: TextStyle(
-                            color: _textMuted,
-                            fontSize: 12,
-                            fontFamily: 'Siemreap',
-                          ),
-                        ),
-                      ],
-                    )
+                        ? const Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.add_a_photo_rounded,
+                                size: 40,
+                                color: _textMuted,
+                              ),
+                              SizedBox(height: 8),
+                              Text(
+                                'ដាក់រូបវិក្កយបត្រ',
+                                style: TextStyle(
+                                  color: _textMuted,
+                                  fontSize: 12,
+                                  fontFamily: 'Siemreap',
+                                ),
+                              ),
+                            ],
+                          )
                         : ClipRRect(
-                      borderRadius: BorderRadius.circular(14),
-                      child: Image.file(
-                        _paymentImage!,
-                        fit: BoxFit.contain,
-                      ),
-                    ),
+                            borderRadius: BorderRadius.circular(14),
+                            child: Image.file(
+                              _paymentImage!,
+                              fit: BoxFit.contain,
+                            ),
+                          ),
                   ),
                 ),
                 const SizedBox(height: 30),
@@ -1511,35 +1462,39 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
                   onPressed: (isLoader || _paymentImage == null)
                       ? null
                       : () async {
-                    FocusManager.instance.primaryFocus?.unfocus();
-                    setSheet(() => isLoader = true);
-                    try {
-                      await _submitAuction();
-                    } catch (e) {
-                      if (ctx.mounted) setSheet(() => isLoader = false);
-                      _showErrorSnack("បញ្ហាបច្ចេកទេស៖ $e");
-                    } finally {
-                      if (ctx.mounted) setSheet(() => isLoader = false);
-                    }
-                  },
+                          FocusManager.instance.primaryFocus?.unfocus();
+                          setSheet(() => isLoader = true);
+                          try {
+                            await _submitAuction();
+                          } catch (e) {
+                            if (ctx.mounted) {
+                              setSheet(() => isLoader = false);
+                            }
+                            _showErrorSnack('បញ្ហាបច្ចេកទេស៖ $e');
+                          } finally {
+                            if (ctx.mounted) {
+                              setSheet(() => isLoader = false);
+                            }
+                          }
+                        },
                   child: _isProcessing
                       ? const SizedBox(
-                    height: 24,
-                    width: 24,
-                    child: CircularProgressIndicator(
-                      color: Colors.white,
-                      strokeWidth: 2,
-                    ),
-                  )
+                          height: 24,
+                          width: 24,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
                       : const Text(
-                    "បញ្ជាក់ និងបញ្ជូនសំណើ",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: 'Siemreap',
-                    ),
-                  ),
+                          'បញ្ជាក់ និងបញ្ជូនសំណើ',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'Siemreap',
+                          ),
+                        ),
                 ),
               ],
             ),
@@ -1548,7 +1503,6 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
       ),
     );
   }
-
 
   Widget _buildBottomBar() {
     return Container(
@@ -1594,7 +1548,6 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
     );
   }
 
-
   Widget _sectionHeader(String emoji, String title, String subtitle) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1627,7 +1580,6 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
     );
   }
 
-
   Widget _buildLabel(String text) {
     return Text(
       text,
@@ -1639,7 +1591,6 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
       ),
     );
   }
-
 
   Widget _buildTextField({
     required TextEditingController controller,
@@ -1661,6 +1612,7 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
       style: const TextStyle(color: _text, fontSize: 14),
       validator: validator,
       onChanged: onChanged,
+      inputFormatters: inputFormatters,
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: const TextStyle(
@@ -1706,13 +1658,12 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
   }
 }
 
-
 class CurrencyInputFormatter extends TextInputFormatter {
   @override
   TextEditingValue formatEditUpdate(
-      TextEditingValue oldValue,
-      TextEditingValue newValue,
-      ) {
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
     if (newValue.selection.baseOffset == 0) return newValue;
     double value = double.parse(newValue.text.replaceAll(',', ''));
     final formatter = NumberFormat('#,###');
@@ -1723,6 +1674,3 @@ class CurrencyInputFormatter extends TextInputFormatter {
     );
   }
 }
-
-
-
