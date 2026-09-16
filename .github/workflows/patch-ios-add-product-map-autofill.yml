@@ -21,99 +21,39 @@ jobs:
           ref: ios-sync-android46
           fetch-depth: 0
 
-      - name: Add map reverse geocoding parity
+      - name: Patch Add Product map auto-fill
         shell: bash
+        env:
+          METHOD_B64: ICBGdXR1cmU8dm9pZD4gX2ZpbGxMb2NhdGlvbkZyb21NYXAoTGF0TG5nIHBvaW50KSBhc3luYyB7CiAgICBpZiAoX2xvY2F0aW9uQ2hvc2VuTWFudWFsbHkgfHwgIW1vdW50ZWQpIHJldHVybjsKCiAgICB0cnkgewogICAgICBmaW5hbCBwbGFjZW1hcmtzID0gYXdhaXQgX2dlb2NvZGluZy5wbGFjZW1hcmtGcm9tQ29vcmRpbmF0ZXMoCiAgICAgICAgcG9pbnQubGF0aXR1ZGUsCiAgICAgICAgcG9pbnQubG9uZ2l0dWRlLAogICAgICAgIGxvY2FsZTogY29uc3QgTG9jYWxlKCdrbScsICdLSCcpLAogICAgICApOwogICAgICBpZiAoIW1vdW50ZWQgfHwgX2xvY2F0aW9uQ2hvc2VuTWFudWFsbHkpIHJldHVybjsKCiAgICAgIGZpbmFsIHBhcnRzID0gPFN0cmluZz5bXTsKICAgICAgdm9pZCBhZGRQYXJ0KFN0cmluZz8gdmFsdWUpIHsKICAgICAgICBmaW5hbCBjbGVhbiA9IHZhbHVlPy50cmltKCkgPz8gJyc7CiAgICAgICAgaWYgKGNsZWFuLmlzRW1wdHkpIHJldHVybjsKICAgICAgICBpZiAocGFydHMuYW55KChwYXJ0KSA9PiBwYXJ0LnRvTG93ZXJDYXNlKCkgPT0gY2xlYW4udG9Mb3dlckNhc2UoKSkpIHsKICAgICAgICAgIHJldHVybjsKICAgICAgICB9CiAgICAgICAgcGFydHMuYWRkKGNsZWFuKTsKICAgICAgfQoKICAgICAgaWYgKHBsYWNlbWFya3MuaXNOb3RFbXB0eSkgewogICAgICAgIGZpbmFsIHBsYWNlID0gcGxhY2VtYXJrcy5maXJzdDsKICAgICAgICBhZGRQYXJ0KHBsYWNlLmFkbWluaXN0cmF0aXZlQXJlYSk7CiAgICAgICAgYWRkUGFydChwbGFjZS5zdWJBZG1pbmlzdHJhdGl2ZUFyZWEpOwogICAgICAgIGFkZFBhcnQocGxhY2UubG9jYWxpdHkpOwogICAgICAgIGFkZFBhcnQocGxhY2Uuc3ViTG9jYWxpdHkpOwogICAgICB9CgogICAgICBzZXRTdGF0ZSgoKSB7CiAgICAgICAgbG9jYXRpb25Db250cm9sbGVyLnRleHQgPSBwYXJ0cy5pc05vdEVtcHR5CiAgICAgICAgICAgID8gcGFydHMuam9pbignLCAnKQogICAgICAgICAgICA6ICcke3BvaW50LmxhdGl0dWRlLnRvU3RyaW5nQXNGaXhlZCg2KX0sICcKICAgICAgICAgICAgICAgICAgJyR7cG9pbnQubG9uZ2l0dWRlLnRvU3RyaW5nQXNGaXhlZCg2KX0nOwogICAgICB9KTsKICAgIH0gY2F0Y2ggKGVycm9yKSB7CiAgICAgIGRlYnVnUHJpbnQoJ1JldmVyc2UgZ2VvY29kaW5nIGZhaWxlZDogJGVycm9yJyk7CiAgICAgIGlmIChtb3VudGVkICYmICFfbG9jYXRpb25DaG9zZW5NYW51YWxseSkgewogICAgICAgIHNldFN0YXRlKCgpIHsKICAgICAgICAgIGxvY2F0aW9uQ29udHJvbGxlci50ZXh0ID0KICAgICAgICAgICAgICAnJHtwb2ludC5sYXRpdHVkZS50b1N0cmluZ0FzRml4ZWQoNil9LCAnCiAgICAgICAgICAgICAgJyR7cG9pbnQubG9uZ2l0dWRlLnRvU3RyaW5nQXNGaXhlZCg2KX0nOwogICAgICAgIH0pOwogICAgICB9CiAgICB9CiAgfQoK
         run: |
           python3 - <<'PY'
+          import base64, os
           from pathlib import Path
-
           path = Path('lib/add_product.dart')
           text = path.read_text(encoding='utf-8')
-
-          geocoder_line = '  final Geocoding _geocoding = Geocoding();\n'
-          if geocoder_line not in text:
-              anchor = '  final TextEditingController locationController = TextEditingController();\n'
-              if anchor not in text:
-                  raise SystemExit('locationController anchor not found')
-              text = text.replace(anchor, anchor + geocoder_line, 1)
-
-          if 'Future<void> _fillLocationFromMap(LatLng point)' not in text:
-              method = r'''  Future<void> _fillLocationFromMap(LatLng point) async {
-    if (_locationChosenManually || !mounted) return;
-
-    try {
-      final placemarks = await _geocoding.placemarkFromCoordinates(
-        point.latitude,
-        point.longitude,
-        locale: const Locale('km', 'KH'),
-      );
-      if (!mounted || _locationChosenManually) return;
-
-      final parts = <String>[];
-      void addPart(String? value) {
-        final clean = value?.trim() ?? '';
-        if (clean.isEmpty) return;
-        if (parts.any((part) => part.toLowerCase() == clean.toLowerCase())) {
-          return;
-        }
-        parts.add(clean);
-      }
-
-      if (placemarks.isNotEmpty) {
-        final place = placemarks.first;
-        addPart(place.administrativeArea);
-        addPart(place.subAdministrativeArea);
-        addPart(place.locality);
-        addPart(place.subLocality);
-      }
-
-      setState(() {
-        locationController.text = parts.isNotEmpty
-            ? parts.join(', ')
-            : '${point.latitude.toStringAsFixed(6)}, '
-                  '${point.longitude.toStringAsFixed(6)}';
-      });
-    } catch (error) {
-      debugPrint('Reverse geocoding failed: $error');
-      if (mounted && !_locationChosenManually) {
-        setState(() {
-          locationController.text =
-              '${point.latitude.toStringAsFixed(6)}, '
-              '${point.longitude.toStringAsFixed(6)}';
-        });
-      }
-    }
-  }
-
-'''
+          geocoder = '  final Geocoding _geocoding = Geocoding();\n'
+          controller = '  final TextEditingController locationController = TextEditingController();\n'
+          if geocoder not in text:
+              if controller not in text: raise SystemExit('locationController anchor not found')
+              text = text.replace(controller, controller + geocoder, 1)
+          signature = 'Future<void> _fillLocationFromMap(LatLng point)'
+          if signature not in text:
               anchor = '  @override\n  void dispose() {'
-              if anchor not in text:
-                  raise SystemExit('dispose anchor not found')
+              if anchor not in text: raise SystemExit('dispose anchor not found')
+              method = base64.b64decode(os.environ['METHOD_B64']).decode('utf-8')
               text = text.replace(anchor, method + anchor, 1)
-
-          if 'await _fillLocationFromMap(result);' not in text:
-              raise SystemExit('Map picker call to _fillLocationFromMap is missing')
-          if '_locationChosenManually = true;' not in text:
-              raise SystemExit('Manual location selection guard is missing')
-
+          required = ['await _fillLocationFromMap(result);', '_locationChosenManually = true;']
+          if any(item not in text for item in required): raise SystemExit('existing map parity call/guard missing')
           path.write_text(text, encoding='utf-8')
           PY
 
-      - name: Verify patch
+      - name: Verify and commit
         shell: bash
         run: |
           grep -Fq 'final Geocoding _geocoding = Geocoding();' lib/add_product.dart
           grep -Fq 'Future<void> _fillLocationFromMap(LatLng point)' lib/add_product.dart
-          grep -Fq 'await _fillLocationFromMap(result);' lib/add_product.dart
           git diff --check
-
-      - name: Commit patch
-        shell: bash
-        run: |
-          if git diff --quiet -- lib/add_product.dart; then
-            echo 'No changes to commit.'
-            exit 0
-          fi
+          if git diff --quiet -- lib/add_product.dart; then exit 0; fi
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add lib/add_product.dart
