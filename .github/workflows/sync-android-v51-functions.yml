@@ -21,7 +21,7 @@ jobs:
 
       - name: Clone authoritative Android V51 branch
         run: |
-          git clone --depth 1 --branch english-local-android \
+          git -c http.https://github.com/.extraheader= clone --depth 1 --branch english-local-android \
             https://github.com/klartdean-stack/sesan_app_android.git /tmp/sesan_android
 
       - name: Sync complete Functions source
