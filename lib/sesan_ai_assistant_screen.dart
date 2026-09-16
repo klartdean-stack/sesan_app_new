@@ -121,6 +121,15 @@ class _SesanAiAssistantScreenState extends State<SesanAiAssistantScreen> {
     }
     if (user == null) return null;
 
+    try {
+      await user.getIdToken(true);
+      await user.reload();
+      if (FirebaseAuth.instance.currentUser == null) return null;
+    } catch (e) {
+      debugPrint('Sesan AI auth refresh failed: $e');
+      return null;
+    }
+
     return FirebaseFunctions.instanceFor(
       region: 'asia-southeast1',
     ).httpsCallable('askFarmAssistant');
