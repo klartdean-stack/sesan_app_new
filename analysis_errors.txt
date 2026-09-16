@@ -73,7 +73,7 @@ Downloading packages...
   intl 0.20.2 (0.20.3 available)
   jni_flutter 1.0.2 (1.0.3 available)
   local_auth 2.3.0 (3.0.2 available)
-  local_auth_android 1.0.56 (2.0.10 available)
+  local_auth_android 1.0.56 (2.1.0 available)
   local_auth_darwin 1.4.3 (2.0.4 available)
   local_auth_windows 1.0.11 (2.0.2 available)
   matcher 0.12.17 (0.12.20 available)
@@ -1174,4 +1174,4 @@ warning • The value of the local variable 'permission' isn't used • lib/weat
    info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/weight_calc.dart:115:15 • deprecated_member_use
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/weight_calc.dart:272:22 • deprecated_member_use
 
-1036 issues found. (ran in 14.6s)
+1036 issues found. (ran in 17.0s)
