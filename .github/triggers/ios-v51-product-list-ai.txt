@@ -7,3 +7,4 @@ Trigger smart search filter blocker fix after commit 012bf1d.
 Trigger Manage Posts + Pre-order parity after commit f5a92a8.
 Trigger hardened Manage Posts parity after commit b97d6a3.
 Trigger Manage Posts-only workflow after commit 4fc5a4c.
+Trigger duplicate location field cleanup after commit 6220b4f.
