@@ -18,22 +18,23 @@ jobs:
           ref: ios-sync-android46
           fetch-depth: 0
 
-      - name: Preserve closed-shop state in saved products
+      - name: Disable related-product cart for closed shops
         shell: bash
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          path = Path('lib/product_detail.dart')
+          path = Path('lib/related_products_widget.dart')
           text = path.read_text(encoding='utf-8')
-          field = "        'shop_closed': widget.product['shop_closed'] ?? false,\n"
-          if field in text:
-              print('shop_closed bookmark parity already present')
+          new = """                final bool isLocked =
+                    (item['is_locked'] ?? false) || item['shop_closed'] == true;
+"""
+          if new in text:
+              print('related-product closed-shop parity already present')
           else:
-              old = "        'is_locked': widget.product['is_locked'] ?? false,\n        'is_available': widget.product['is_available'] ?? true,\n"
+              old = "                final bool isLocked = item['is_locked'] ?? false;\n"
               if old not in text:
-                  raise SystemExit('saved product block not found')
-              text = text.replace(old, "        'is_locked': widget.product['is_locked'] ?? false,\n" + field + "        'is_available': widget.product['is_available'] ?? true,\n", 1)
-              path.write_text(text, encoding='utf-8')
+                  raise SystemExit('Expected isLocked line not found in related_products_widget.dart')
+              path.write_text(text.replace(old, new, 1), encoding='utf-8')
           PY
 
       - name: Format
@@ -41,18 +42,18 @@ jobs:
         with:
           flutter-version: '3.38.8'
           channel: stable
-      - run: dart format lib/product_detail.dart
+      - run: dart format lib/related_products_widget.dart
 
       - name: Verify and commit
         shell: bash
         run: |
-          grep -Fq "'shop_closed': widget.product['shop_closed'] ?? false" lib/product_detail.dart
+          grep -Fq "item['shop_closed'] == true" lib/related_products_widget.dart
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add lib/product_detail.dart
+          git add lib/related_products_widget.dart
           if git diff --cached --quiet; then
             echo 'No changes to commit.'
             exit 0
           fi
-          git commit -m 'Preserve closed shop state in saved products on iOS'
+          git commit -m 'Disable related product cart for closed shops on iOS'
           git push origin HEAD:ios-sync-android46
