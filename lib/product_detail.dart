@@ -1366,9 +1366,23 @@ Android: $androidPlayStoreLink
 
   @override
   Widget build(BuildContext context) {
+    final bool tracksStock = widget.product['track_stock'] == true;
+    final int stockQuantity = widget.product['stock_quantity'] is num
+        ? (widget.product['stock_quantity'] as num).toInt()
+        : int.tryParse(widget.product['stock_quantity']?.toString() ?? '') ?? 0;
+    final rawStockUnit =
+        widget.product['stock_unit']?.toString().trim() ?? '';
+    final stockUnit = const {'item', 'items', 'item(s)'}.contains(
+      rawStockUnit.toLowerCase(),
+    )
+        ? ''
+        : rawStockUnit;
+    final bool isOutOfStock = tracksStock && stockQuantity <= 0;
     final bool isAddToCartDisabled =
         widget.product['is_locked'] == true ||
-        widget.product['shipping_included'] == false;
+        widget.product['shop_closed'] == true ||
+        widget.product['shipping_included'] == false ||
+        isOutOfStock;
     // ក្នុង build() មុន return Scaffold...
     List<String> displayImages = [];
     if (widget.product['image_urls'] != null &&
@@ -2146,11 +2160,16 @@ Android: $androidPlayStoreLink
                                                               .length,
                                                         ),
                                               onChanged: (value) {
-                                                int? val = int.tryParse(value);
+                                                final val = int.tryParse(value);
                                                 if (val != null) {
-                                                  if (val > 999) {
+                                                  final maxQty = tracksStock
+                                                      ? stockQuantity
+                                                          .clamp(1, 999)
+                                                          .toInt()
+                                                      : 999;
+                                                  if (val > maxQty) {
                                                     setState(
-                                                      () => _tempQty = 999,
+                                                      () => _tempQty = maxQty,
                                                     );
                                                   } else if (val > 0) {
                                                     setState(
@@ -2162,9 +2181,14 @@ Android: $androidPlayStoreLink
                                             ),
                                           ),
                                           _qtyActionBtn(Icons.add, () {
-                                            // ✅ ចុចបូកបានត្រឹម 999
-                                            if (_tempQty < 999)
+                                            final maxQty = tracksStock
+                                                ? stockQuantity
+                                                    .clamp(1, 999)
+                                                    .toInt()
+                                                : 999;
+                                            if (_tempQty < maxQty) {
                                               setState(() => _tempQty++);
+                                            }
                                           }),
                                           const SizedBox(width: 10),
                                           const Text(
@@ -2176,6 +2200,30 @@ Android: $androidPlayStoreLink
                                           ),
                                         ],
                                       ),
+                                      if (tracksStock) ...[
+                                        const SizedBox(height: 5),
+                                        Text(
+                                          isOutOfStock
+                                              ? appText(
+                                                  context,
+                                                  km: 'អស់ពីស្តុក',
+                                                  en: 'Out of stock',
+                                                )
+                                              : appText(
+                                                  context,
+                                                  km: 'នៅសល់៖ $stockQuantity${stockUnit.isEmpty ? '' : ' $stockUnit'}',
+                                                  en: 'Available: $stockQuantity${stockUnit.isEmpty ? '' : ' $stockUnit'}',
+                                                ),
+                                          style: TextStyle(
+                                            color: isOutOfStock
+                                                ? Colors.red
+                                                : Colors.green.shade700,
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 11,
+                                            fontFamily: 'Siemreap',
+                                          ),
+                                        ),
+                                      ],
                                       const SizedBox(height: 15),
                                       Container(
                                         padding: const EdgeInsets.all(12),
