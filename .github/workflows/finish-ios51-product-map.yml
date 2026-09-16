@@ -18,56 +18,94 @@ jobs:
           ref: ios-sync-android46
           fetch-depth: 0
 
-      - name: Patch payment links and compact AI button
+      - name: Patch Product Detail compact parity and Add Product AI button
         shell: bash
         run: |
           python3 - <<'PY'
           from pathlib import Path
 
-          old_link = 'https://pay.ababank.com/oRF8/lq8jgwzb'
-          new_link = 'https://pay.ababank.com/oRF8/oizn40j9'
-          for filename in ['lib/shop_upgrade_screen.dart', 'lib/auction_add_screen.dart']:
-              path = Path(filename)
-              text = path.read_text(encoding='utf-8')
-              if old_link in text:
-                  text = text.replace(old_link, new_link)
-                  path.write_text(text, encoding='utf-8')
-              elif new_link not in text:
-                  raise SystemExit(f'ABA payment link not found in {filename}')
-
-          path = Path('lib/add_product.dart')
-          text = path.read_text(encoding='utf-8')
-          wanted = """                  side: BorderSide(color: Colors.deepPurple.withOpacity(0.75)),
-                  minimumSize: const Size(0, 32),
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  visualDensity: VisualDensity.compact,
-"""
-          if wanted not in text:
-              old = """                  side: BorderSide(color: Colors.deepPurple.withOpacity(0.75)),
-                  visualDensity: VisualDensity.compact,
-"""
+          def replace_once(text, old, new, label):
+              if new in text:
+                  print(f'{label}: already present')
+                  return text
               if old not in text:
+                  raise SystemExit(f'{label}: anchor not found')
+              return text.replace(old, new, 1)
+
+          p = Path('lib/product_detail.dart')
+          s = p.read_text(encoding='utf-8')
+
+          s = replace_once(s,
+              """                                style: const TextStyle(\n                                  fontSize: 22,\n                                  fontWeight: FontWeight.bold,\n                                ),\n""",
+              """                                style: const TextStyle(\n                                  fontSize: 18,\n                                  height: 1.25,\n                                  fontWeight: FontWeight.bold,\n                                ),\n""",
+              'title compact')
+
+          s = replace_once(s,
+              """                                            RatingBarIndicator(\n                                              rating: avgRating,\n                                              itemBuilder: (context, _) =>\n                                                  const Icon(\n                                                    Icons.star,\n                                                    color: Colors.amber,\n                                                  ),\n                                              itemCount: 5,\n                                              itemSize: 22,\n                                            ),\n                                            const SizedBox(width: 8),\n""",
+              """                                            const Icon(\n                                              Icons.star_rounded,\n                                              color: Colors.amber,\n                                              size: 17,\n                                            ),\n                                            const SizedBox(width: 4),\n""",
+              'single-star summary')
+
+          for old, new, label in [
+              ('                                                fontSize: 13,\n', '                                                fontSize: 11,\n', 'rating summary font'),
+              ('                                        const SizedBox(height: 8),\n                                        Text(\n                                          myRating > 0\n', '                                        const SizedBox(height: 4),\n                                        Text(\n                                          myRating > 0\n', 'rating spacing'),
+              ('                                            fontSize: 12,\n                                            color: myRating > 0\n', '                                            fontSize: 11,\n                                            color: myRating > 0\n', 'my rating font'),
+              ('                                              itemSize: 30,\n', '                                              itemSize: 22,\n', 'rating input size'),
+              ('                                                    horizontal: 3,\n', '                                                    horizontal: 2,\n', 'rating input padding'),
+              ('                                            padding: EdgeInsets.only(top: 6),\n', '                                            padding: EdgeInsets.only(top: 4),\n', 'rating loader padding'),
+              ('                                              width: 18,\n                                              height: 18,\n', '                                              width: 14,\n                                              height: 14,\n', 'rating loader size'),
+              ('                                height: 30,\n', '                                height: 18,\n', 'quantity divider'),
+              ('                                  fontSize: 16,\n                                  fontWeight: FontWeight.bold,\n', '                                  fontSize: 14,\n                                  fontWeight: FontWeight.bold,\n', 'quantity title'),
+              ('                              const SizedBox(height: 10),\n                              // --- ផ្នែកជ្រើសរើសចំនួន', '                              const SizedBox(height: 6),\n                              // --- ផ្នែកជ្រើសរើសចំនួន', 'quantity title spacing'),
+              ('                                            width: 80, // កែទំហំឱ្យល្មម\n', '                                            width: 60, // Compact quantity field\n', 'quantity field width'),
+              ('                                              horizontal: 10,\n', '                                              horizontal: 6,\n', 'quantity field margin'),
+              ('                                              style: const TextStyle(\n                                                fontWeight: FontWeight.bold,\n', '                                              style: const TextStyle(\n                                                fontSize: 14,\n                                                fontWeight: FontWeight.bold,\n', 'quantity field font'),
+              ('                                                      vertical: 8,\n', '                                                      vertical: 4,\n', 'quantity field vertical padding'),
+              ('                                          const SizedBox(width: 10),\n                                          const Text(\n                                            \"ចំនួន\",\n', '                                          const SizedBox(width: 6),\n                                          const Text(\n                                            \"ចំនួន\",\n', 'quantity label spacing'),
+              ('                                              color: Colors.grey,\n                                              fontFamily: \'Siemreap\',\n', '                                              color: Colors.grey,\n                                              fontSize: 12,\n                                              fontFamily: \'Siemreap\',\n', 'quantity label font'),
+              ('                                        const SizedBox(height: 15),\n                                      Container(\n                                        padding: const EdgeInsets.all(12),\n', '                                        const SizedBox(height: 7),\n                                      Container(\n                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),\n', 'total card compact'),
+              ('                                                fontSize: 16,\n                                                fontWeight: FontWeight.w500,\n', '                                                fontSize: 13,\n                                                fontWeight: FontWeight.w500,\n', 'total label font'),
+              ('                                            fontSize: 20,\n                                            color: Colors.blue,\n', '                                            fontSize: 17,\n                                            color: Colors.blue,\n', 'total value font'),
+              ('        padding: const EdgeInsets.all(8),\n        decoration: BoxDecoration(\n          color: Colors.blue.withOpacity(0.1),\n          borderRadius: BorderRadius.circular(8),\n        ),\n        child: Icon(icon, color: Colors.blue, size: 20),\n', '        padding: const EdgeInsets.all(6),\n        decoration: BoxDecoration(\n          color: Colors.blue.withOpacity(0.1),\n          borderRadius: BorderRadius.circular(7),\n        ),\n        child: Icon(icon, color: Colors.blue, size: 18),\n', 'qty action button compact'),
+          ]:
+              if old in s:
+                  s = s.replace(old, new, 1)
+              elif new not in s:
+                  raise SystemExit(f'{label}: anchor not found')
+
+          if 'Widget _qtyActionBtn' in s and 'borderRadius: BorderRadius.circular(7),\n      child: Container(' not in s:
+              s = s.replace(
+                  '  Widget _qtyActionBtn(IconData icon, VoidCallback onTap) {\n    return InkWell(\n      onTap: onTap,\n      child: Container(',
+                  '  Widget _qtyActionBtn(IconData icon, VoidCallback onTap) {\n    return InkWell(\n      onTap: onTap,\n      borderRadius: BorderRadius.circular(7),\n      child: Container(',
+                  1,
+              )
+
+          p.write_text(s, encoding='utf-8')
+
+          p = Path('lib/add_product.dart')
+          s = p.read_text(encoding='utf-8')
+          wanted = """                  side: BorderSide(color: Colors.deepPurple.withOpacity(0.75)),\n                  minimumSize: const Size(0, 32),\n                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),\n                  visualDensity: VisualDensity.compact,\n"""
+          if wanted not in s:
+              old = """                  side: BorderSide(color: Colors.deepPurple.withOpacity(0.75)),\n                  visualDensity: VisualDensity.compact,\n"""
+              if old not in s:
                   raise SystemExit('Add Product AI button style anchor not found')
-              text = text.replace(old, wanted, 1)
-              path.write_text(text, encoding='utf-8')
+              s = s.replace(old, wanted, 1)
+              p.write_text(s, encoding='utf-8')
           PY
 
       - name: Verify and commit
         shell: bash
         run: |
-          grep -Fq 'https://pay.ababank.com/oRF8/oizn40j9' lib/shop_upgrade_screen.dart
-          grep -Fq 'https://pay.ababank.com/oRF8/oizn40j9' lib/auction_add_screen.dart
+          grep -Fq 'Icons.star_rounded' lib/product_detail.dart
+          grep -Fq 'width: 60, // Compact quantity field' lib/product_detail.dart
+          grep -Fq 'fontSize: 18' lib/product_detail.dart
           grep -Fq 'minimumSize: const Size(0, 32)' lib/add_product.dart
-          grep -Fq 'padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5)' lib/add_product.dart
           git diff --check
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add lib/shop_upgrade_screen.dart lib/auction_add_screen.dart lib/add_product.dart
+          git add lib/product_detail.dart lib/add_product.dart
           if git diff --cached --quiet; then
             echo 'No changes to commit.'
             exit 0
           fi
-          git commit -m 'Match iOS payment links and Add Product AI button to Android V51'
+          git commit -m 'Compact iOS Product Detail and Add Product AI controls'
           git push origin HEAD:ios-sync-android46
-
-      # Retriggered on 2026-09-16 to apply the compact AI button after map parity verification.
