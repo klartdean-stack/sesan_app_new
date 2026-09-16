@@ -1,3 +1,4 @@
 Port Product List AI/Image/Voice/Location from authoritative Android V51 english-local-android.
 Rerun after parity audit on 2026-09-16: product_list.dart is still behind Android V51 at branch head 72e0a47.
 Trigger after workflow repair commit 11fcc2a.
+Trigger after correcting checkout source to sesan_app_new/english-local-android.
