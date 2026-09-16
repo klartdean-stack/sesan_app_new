@@ -478,6 +478,9 @@ exports.secureAdminDeductBalance = onCall(
   }
 );
 
+// Override the legacy/earlier scheduler with one authoritative settlement path.
+// It supports partial admin deductions through seller_earnings_payable and checks
+// every unsettled order so due orders cannot be starved behind a fixed first-page limit.
 exports.scheduledWalletSettlement = onSchedule(
   {
     schedule: "0 * * * *",
