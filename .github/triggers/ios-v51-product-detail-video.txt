@@ -1,1 +1,1 @@
-verify Product Detail video handling with Android V51 after sync
+sync Product Detail web layout and video with Android V51
