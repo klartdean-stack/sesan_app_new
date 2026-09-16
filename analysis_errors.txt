@@ -706,7 +706,17 @@ warning • The value of the field '_slideAnimation' isn't used • lib/location
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/location_picker.dart:893:38 • deprecated_member_use
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/location_picker.dart:1018:43 • deprecated_member_use
    info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/location_picker_sheet.dart:191:9 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/login_screen.dart:310:47 • deprecated_member_use
+warning • Unused import: 'package:my_app/localization/app_translations.dart' • lib/login_screen.dart:3:8 • unused_import
+   info • The import of 'package:get/get_core/src/get_main.dart' is unnecessary because all of the used elements are also provided by the import of 'package:get/get.dart' • lib/login_screen.dart:6:8 • unnecessary_import
+   info • The import of 'package:get/get_instance/src/extension_instance.dart' is unnecessary because all of the used elements are also provided by the import of 'package:get/get.dart' • lib/login_screen.dart:7:8 • unnecessary_import
+   info • The import of 'package:get/get_navigation/src/extension_navigation.dart' is unnecessary because all of the used elements are also provided by the import of 'package:get/get.dart' • lib/login_screen.dart:8:8 • unnecessary_import
+warning • Unused import: 'package:my_app/home_screen.dart' • lib/login_screen.dart:11:8 • unused_import
+warning • Unused import: 'user_service.dart' • lib/login_screen.dart:14:8 • unused_import
+  error • Invalid constant value • lib/login_screen.dart:301:28 • invalid_constant
+  error • The method 'LanguageSwitcher' isn't defined for the type '_LoginScreenState' • lib/login_screen.dart:301:28 • undefined_method
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/login_screen.dart:315:47 • deprecated_member_use
+   info • Statements in an if should be enclosed in a block • lib/login_screen.dart:371:25 • curly_braces_in_flow_control_structures
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/login_screen.dart:526:61 • deprecated_member_use
 warning • The declaration '_bg' isn't referenced • lib/luxury_appbar_screen.dart:7:13 • unused_element
 warning • The declaration '_text' isn't referenced • lib/luxury_appbar_screen.dart:8:13 • unused_element
 warning • A value for optional parameter 'key' isn't ever given • lib/luxury_appbar_screen.dart:28:30 • unused_element_parameter
@@ -757,6 +767,7 @@ warning • Unnecessary cast • lib/order_history_screen.dart:77:20 • unneces
    info • Unnecessary 'const' keyword • lib/order_tracking_screen.dart:222:28 • unnecessary_const
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/order_tracking_screen.dart:326:35 • deprecated_member_use
    info • Unnecessary 'const' keyword • lib/order_tracking_screen.dart:400:24 • unnecessary_const
+   info • Use 'rethrow' to rethrow a caught exception • lib/otp_screen.dart:91:15 • use_rethrow_when_possible
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/pesticide_calc_page.dart:116:42 • deprecated_member_use
    info • Function literals shouldn't be passed to 'forEach' • lib/pig_feed_calc.dart:68:38 • avoid_function_literals_in_foreach_calls
    info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/pig_feed_calc.dart:104:15 • deprecated_member_use
@@ -1023,6 +1034,15 @@ warning • The value of the field 'cardColor' isn't used • lib/shop_upgrade_s
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/shop_upgrade_screen.dart:840:52 • deprecated_member_use
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/shop_upgrade_screen.dart:846:37 • deprecated_member_use
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/shop_upgrade_screen.dart:853:50 • deprecated_member_use
+warning • Unused import: 'package:my_app/localization/app_translations.dart' • lib/signup_screen.dart:3:8 • unused_import
+  error • Invalid constant value • lib/signup_screen.dart:209:26 • invalid_constant
+  error • The method 'LanguageSwitcher' isn't defined for the type '_SignUpScreenState' • lib/signup_screen.dart:209:26 • undefined_method
+   info • Statements in an if should be enclosed in a block • lib/signup_screen.dart:229:23 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • lib/signup_screen.dart:249:23 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • lib/signup_screen.dart:271:23 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • lib/signup_screen.dart:273:23 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • lib/signup_screen.dart:305:23 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • lib/signup_screen.dart:307:23 • curly_braces_in_flow_control_structures
 warning • Unused import: 'package:firebase_auth/firebase_auth.dart' • lib/stock_management_screen.dart:3:8 • unused_import
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/stock_management_screen.dart:208:47 • deprecated_member_use
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/stock_management_screen.dart:212:35 • deprecated_member_use
@@ -1156,4 +1176,4 @@ warning • The value of the local variable 'permission' isn't used • lib/weat
    info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/weight_calc.dart:115:15 • deprecated_member_use
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/weight_calc.dart:272:22 • deprecated_member_use
 
-1016 issues found. (ran in 20.5s)
+1036 issues found. (ran in 21.2s)
