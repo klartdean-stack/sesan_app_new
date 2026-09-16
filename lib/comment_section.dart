@@ -609,7 +609,7 @@ class _CommentSectionState extends State<CommentSection> {
     final bool isCommentExpanded = _expandedComments.contains(commentKey);
 
     return Container(
-      padding: EdgeInsets.all(isNestedReply ? 6 : 8),
+      padding: EdgeInsets.all(isNestedReply ? 5 : 7),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -619,12 +619,12 @@ class _CommentSectionState extends State<CommentSection> {
               GestureDetector(
                 onTap: commenterId == null ? null : () => _goToProfile(commenterId),
                 child: CircleAvatar(
-                  radius: isNestedReply ? 11 : 16,
+                  radius: isNestedReply ? 10 : 14,
                   backgroundImage: (photoUrl ?? '').isNotEmpty
                       ? CachedNetworkImageProvider(photoUrl!)
                       : null,
                   child: (photoUrl ?? '').isEmpty
-                      ? const Icon(Icons.person, size: 16)
+                      ? const Icon(Icons.person, size: 14)
                       : null,
                 ),
               ),
@@ -999,7 +999,7 @@ class _CommentSectionState extends State<CommentSection> {
                     color: Colors.green.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Icon(Icons.image, color: Colors.green, size: 20),
+                  child: const Icon(Icons.image, color: Colors.green, size: 18),
                 ),
               ),
               const SizedBox(width: 8),
@@ -1031,7 +1031,7 @@ class _CommentSectionState extends State<CommentSection> {
                       borderRadius: BorderRadius.circular(16),
                       borderSide: BorderSide.none,
                     ),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
                   ),
                   onSubmitted: (_) {
                     _postComment(
@@ -1081,7 +1081,7 @@ class _CommentSectionState extends State<CommentSection> {
     return GestureDetector(
       onTap: _startRecording,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
           color: Colors.blue.withOpacity(0.08),
           borderRadius: BorderRadius.circular(16),
@@ -1110,11 +1110,11 @@ class _CommentSectionState extends State<CommentSection> {
 
   Widget _buildRecordingWidget() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: Colors.red.withOpacity(0.1),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.red, width: 2),
+        border: Border.all(color: Colors.red, width: 1.5),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -1127,15 +1127,15 @@ class _CommentSectionState extends State<CommentSection> {
           const SizedBox(width: 10),
           Text(
             _formatDuration(_recordSeconds),
-            style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 16),
+            style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 14),
           ),
-          const SizedBox(width: 20),
+          const SizedBox(width: 14),
           GestureDetector(
             onTap: _cancelRecording,
             child: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(color: Colors.grey.withOpacity(0.2), shape: BoxShape.circle),
-              child: const Icon(Icons.close, color: Colors.grey, size: 20),
+              child: const Icon(Icons.close, color: Colors.grey, size: 18),
             ),
           ),
           const SizedBox(width: 12),
@@ -1144,7 +1144,7 @@ class _CommentSectionState extends State<CommentSection> {
             child: Container(
               padding: const EdgeInsets.all(10),
               decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
-              child: const Icon(Icons.stop, color: Colors.white, size: 24),
+              child: const Icon(Icons.stop, color: Colors.white, size: 20),
             ),
           ),
         ],

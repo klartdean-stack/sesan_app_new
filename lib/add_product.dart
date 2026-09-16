@@ -1047,6 +1047,8 @@ class _AddProductPageState extends State<AddProductPage> {
                 style: OutlinedButton.styleFrom(
                   foregroundColor: Colors.deepPurple,
                   side: BorderSide(color: Colors.deepPurple.withOpacity(0.75)),
+                  minimumSize: const Size(0, 32),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   visualDensity: VisualDensity.compact,
                 ),
               ),
