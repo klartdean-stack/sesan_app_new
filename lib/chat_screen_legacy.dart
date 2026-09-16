@@ -2032,7 +2032,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       child: CircularProgressIndicator(strokeWidth: 2),
                     ),
                   ),
-                  errorWidget: (_, _, __) =>
+                  errorWidget: (_, error, stackTrace) =>
                       const Icon(Icons.error, color: Colors.red),
                 )
               // Fallback
