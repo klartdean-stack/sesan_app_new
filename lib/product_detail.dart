@@ -239,8 +239,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         ? 'en'
         : 'km';
     try {
-      final callable = FirebaseFunctions.instanceFor(region: 'asia-southeast1')
-          .httpsCallable('generateProductAiContent');
+      final callable = FirebaseFunctions.instanceFor(
+        region: 'asia-southeast1',
+      ).httpsCallable('generateProductAiContent');
       final result = await callable.call(<String, dynamic>{
         'productName': (widget.product['product_name'] ?? '').toString(),
         'notes': (widget.product['description'] ?? '').toString(),
@@ -1370,11 +1371,9 @@ Android: $androidPlayStoreLink
     final int stockQuantity = widget.product['stock_quantity'] is num
         ? (widget.product['stock_quantity'] as num).toInt()
         : int.tryParse(widget.product['stock_quantity']?.toString() ?? '') ?? 0;
-    final rawStockUnit =
-        widget.product['stock_unit']?.toString().trim() ?? '';
-    final stockUnit = const {'item', 'items', 'item(s)'}.contains(
-      rawStockUnit.toLowerCase(),
-    )
+    final rawStockUnit = widget.product['stock_unit']?.toString().trim() ?? '';
+    final stockUnit =
+        const {'item', 'items', 'item(s)'}.contains(rawStockUnit.toLowerCase())
         ? ''
         : rawStockUnit;
     final bool isOutOfStock = tracksStock && stockQuantity <= 0;
@@ -1691,7 +1690,8 @@ Android: $androidPlayStoreLink
                                     ),
                                   ),
                                   child: Row(
-                                    mainAxisSize: MainAxisSize.min, // shrink-wrap instead of stretching
+                                    mainAxisSize: MainAxisSize
+                                        .min, // shrink-wrap instead of stretching
                                     children: [
                                       Icon(
                                         widget.product['shipping_included'] ==
@@ -1758,13 +1758,15 @@ Android: $androidPlayStoreLink
                                         ),
                                   label: Text(
                                     _showTranslatedProduct
-                                        ? (Localizations.localeOf(context)
-                                                      .languageCode ==
+                                        ? (Localizations.localeOf(
+                                                    context,
+                                                  ).languageCode ==
                                                   'en'
                                               ? 'Original'
                                               : 'អត្ថបទដើម')
-                                        : (Localizations.localeOf(context)
-                                                      .languageCode ==
+                                        : (Localizations.localeOf(
+                                                    context,
+                                                  ).languageCode ==
                                                   'en'
                                               ? 'Translate Product'
                                               : 'បកប្រែទំនិញ'),
@@ -1920,8 +1922,9 @@ Android: $androidPlayStoreLink
                                           ),
                                           const SizedBox(width: 4),
                                           Text(
-                                            Localizations.localeOf(context)
-                                                        .languageCode ==
+                                            Localizations.localeOf(
+                                                      context,
+                                                    ).languageCode ==
                                                     'en'
                                                 ? '$saveCount saves'
                                                 : 'បានរក្សាទុក $saveCount ដង',
@@ -2148,7 +2151,8 @@ Android: $androidPlayStoreLink
                                                   borderRadius:
                                                       BorderRadius.circular(8),
                                                 ),
-                                                counterText: "", // បិទអក្សររាប់ខ្ទង់ខាងក្រោម
+                                                counterText:
+                                                    "", // បិទអក្សររាប់ខ្ទង់ខាងក្រោម
                                               ),
                                               controller:
                                                   TextEditingController(
@@ -2164,8 +2168,8 @@ Android: $androidPlayStoreLink
                                                 if (val != null) {
                                                   final maxQty = tracksStock
                                                       ? stockQuantity
-                                                          .clamp(1, 999)
-                                                          .toInt()
+                                                            .clamp(1, 999)
+                                                            .toInt()
                                                       : 999;
                                                   if (val > maxQty) {
                                                     setState(
@@ -2183,8 +2187,8 @@ Android: $androidPlayStoreLink
                                           _qtyActionBtn(Icons.add, () {
                                             final maxQty = tracksStock
                                                 ? stockQuantity
-                                                    .clamp(1, 999)
-                                                    .toInt()
+                                                      .clamp(1, 999)
+                                                      .toInt()
                                                 : 999;
                                             if (_tempQty < maxQty) {
                                               setState(() => _tempQty++);
@@ -2261,7 +2265,8 @@ Android: $androidPlayStoreLink
                                                   color: Colors.blue,
                                                   fontWeight: FontWeight.bold,
                                                 ),
-                                                overflow: TextOverflow.ellipsis, // បើវែងពេកវាចេញ ...
+                                                overflow: TextOverflow
+                                                    .ellipsis, // បើវែងពេកវាចេញ ...
                                                 maxLines: 1,
                                               ),
                                             ),
@@ -2293,8 +2298,9 @@ Android: $androidPlayStoreLink
                                   onPressed: _openProductAssistant,
                                   icon: const Icon(Icons.auto_awesome_rounded),
                                   label: Text(
-                                    Localizations.localeOf(context)
-                                                .languageCode ==
+                                    Localizations.localeOf(
+                                              context,
+                                            ).languageCode ==
                                             'en'
                                         ? 'Ask Sesan AI about this product'
                                         : 'សួរ Sesan AI អំពីទំនិញនេះ',
@@ -2739,6 +2745,7 @@ Android: $androidPlayStoreLink
         'image_urls': widget.product['image_urls'] ?? [],
         'image_url': widget.product['image_url'] ?? '',
         'is_locked': widget.product['is_locked'] ?? false,
+        'shop_closed': widget.product['shop_closed'] ?? false,
         'is_available': widget.product['is_available'] ?? true,
         'created_at':
             widget.product['created_at'] ?? FieldValue.serverTimestamp(),
@@ -2747,8 +2754,9 @@ Android: $androidPlayStoreLink
         'savedAt': FieldValue.serverTimestamp(),
       });
 
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text("រក្សាទុកជោគជ័យ! ✅")));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("រក្សាទុកជោគជ័យ! ✅")));
     }
   }
 
@@ -2838,7 +2846,8 @@ Android: $androidPlayStoreLink
         return false;
       }
 
-      final productId = (product['id'] ?? product['product_id'] ?? '').toString();
+      final productId = (product['id'] ?? product['product_id'] ?? '')
+          .toString();
       if (productId.isEmpty) return false;
 
       final currentCart = await FirebaseFirestore.instance
@@ -2910,5 +2919,4 @@ Android: $androidPlayStoreLink
       return false;
     }
   }
-
 }
