@@ -12,67 +12,61 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ios-sync-android46
-      - name: Patch Policy to Android 51
+          fetch-depth: 0
+      - name: Patch Product Detail compact parity
         shell: python
         run: |
           from pathlib import Path
-          p=Path('lib/policy_screen.dart')
-          s=p.read_text()
-          s=s.replace("static const _currentVersion = '2026.04.21';", "static const _currentVersion = '2026.08.29';")
-          anchor="  @override\n  void initState() {"
-          if '_englishTitles' not in s:
-            block=r'''  bool get _isEnglish => Localizations.localeOf(context).languageCode == 'en';
-  String _t(String km, String en) => _isEnglish ? en : km;
+          p=Path('lib/product_detail.dart')
+          s=p.read_text(encoding='utf-8')
+          reps=[
+            ('fontSize: 22,\n                                  fontWeight: FontWeight.bold,','fontSize: 18,\n                                  height: 1.25,\n                                  fontWeight: FontWeight.bold,'),
+            ('''                                            RatingBarIndicator(\n                                              rating: avgRating,\n                                              itemBuilder: (context, _) =>\n                                                  const Icon(\n                                                    Icons.star,\n                                                    color: Colors.amber,\n                                                  ),\n                                              itemCount: 5,\n                                              itemSize: 22,\n                                            ),\n                                            const SizedBox(width: 8),''','''                                            const Icon(\n                                              Icons.star_rounded,\n                                              color: Colors.amber,\n                                              size: 17,\n                                            ),\n                                            const SizedBox(width: 4),'''),
+            ('fontSize: 13,\n                                                fontWeight: FontWeight.bold,','fontSize: 11,\n                                                fontWeight: FontWeight.bold,'),
+            ('const SizedBox(height: 8),\n                                        Text(\n                                          myRating > 0','const SizedBox(height: 4),\n                                        Text(\n                                          myRating > 0'),
+            ('fontSize: 12,\n                                            color: myRating > 0','fontSize: 11,\n                                            color: myRating > 0'),
+            ('itemSize: 30,','itemSize: 22,'),
+            ('horizontal: 3,','horizontal: 2,'),
+            ('padding: EdgeInsets.only(top: 6),','padding: EdgeInsets.only(top: 4),'),
+            ('width: 18,\n                                              height: 18,','width: 14,\n                                              height: 14,'),
+            ('height: 30,\n                              ), // ៤. ចំនួនកម្ម៉ង់','height: 18,\n                              ), // ៤. ចំនួនកម្ម៉ង់'),
+            ('fontSize: 16,\n                                  fontWeight: FontWeight.bold,','fontSize: 14,\n                                  fontWeight: FontWeight.bold,'),
+            ('const SizedBox(height: 10),\n                              // --- ផ្នែកជ្រើសរើសចំនួន','const SizedBox(height: 6),\n                              // --- ផ្នែកជ្រើសរើសចំនួន'),
+            ('width: 80, // កែទំហំឱ្យល្មម','width: 60, // Compact quantity field'),
+            ('horizontal: 10,\n                                            ),\n                                            child: TextField(','horizontal: 6,\n                                            ),\n                                            child: TextField('),
+            ('style: const TextStyle(\n                                                fontWeight: FontWeight.bold,','style: const TextStyle(\n                                                fontSize: 14,\n                                                fontWeight: FontWeight.bold,'),
+            ('vertical: 8,\n                                                    ),','vertical: 4,\n                                                    ),'),
+            ('const SizedBox(width: 10),\n                                          const Text(\n                                            "ចំនួន",','const SizedBox(width: 6),\n                                          const Text(\n                                            "ចំនួន",'),
+            ('color: Colors.grey,\n                                              fontFamily: \'Siemreap\',','color: Colors.grey,\n                                              fontSize: 12,\n                                              fontFamily: \'Siemreap\','),
+            ('const SizedBox(height: 15),\n                                      Container(\n                                        padding: const EdgeInsets.all(12),','const SizedBox(height: 7),\n                                      Container(\n                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),'),
+            ('fontSize: 16,\n                                                fontWeight: FontWeight.w500,','fontSize: 13,\n                                                fontWeight: FontWeight.w500,'),
+            ('fontSize: 20,\n                                            color: Colors.blue,','fontSize: 17,\n                                            color: Colors.blue,'),
+            ('padding: const EdgeInsets.all(8),\n        decoration: BoxDecoration(\n          color: Colors.blue.withOpacity(0.1),\n          borderRadius: BorderRadius.circular(8),\n        ),\n        child: Icon(icon, color: Colors.blue, size: 20),','padding: const EdgeInsets.all(6),\n        decoration: BoxDecoration(\n          color: Colors.blue.withOpacity(0.1),\n          borderRadius: BorderRadius.circular(7),\n        ),\n        child: Icon(icon, color: Colors.blue, size: 18),'),
+          ]
+          for a,b in reps:
+            if a in s: s=s.replace(a,b,1)
+          a='  Widget _qtyActionBtn(IconData icon, VoidCallback onTap) {\n    return InkWell(\n      onTap: onTap,\n      child: Container('
+          b='  Widget _qtyActionBtn(IconData icon, VoidCallback onTap) {\n    return InkWell(\n      onTap: onTap,\n      borderRadius: BorderRadius.circular(7),\n      child: Container('
+          if a in s: s=s.replace(a,b,1)
+          p.write_text(s,encoding='utf-8')
 
-  static const List<String> _englishTitles = [
-    'Acceptance of the agreement and legal validity','Protection of financial transactions','Service fees and payment conditions','Seller responsibilities and legal penalties','Data privacy and dispute resolution','Logistics and delivery risks','Control of information and market prices','Account suspension and penalties','Intellectual property and platform identity','Force majeure','Anti-money laundering and unlawful activity','Amendments and validity of provisions','Digital records and evidence','Invalid transactions','Product-quality disclaimer','Auction conditions','Prohibited and unlawful products',
-  ];
-  static const List<String> _englishContents = [
-    'Accessing Sesan or placing an order constitutes legal acceptance of this electronic agreement. Users must comply with every stated condition and remain legally responsible for violations.',
-    'For payment security and fraud prevention, customers should use the Sesan cart and payment methods provided inside the app. A complaint may be filed within 4 days when an item materially differs from its listing.',
-    'Sesan deducts a 7% management fee from cart orders. Platform payments remain pending for 5 days and, if no complaint is filed during the first 4 days, funds become available to the seller on day 6.',
-    'Sellers must provide accurate product information and deliver the advertised quality. False information or fabricated evidence may lead to suspension and legal action.',
-    'Personal information is kept confidential. Sesan Admin reviews platform disputes using transaction records and submitted evidence without limiting rights available under Cambodian law.',
-    'Delivery time, cost and method must be agreed by buyer and seller. Responsibility for loss or damage follows the selected delivery arrangement and available evidence.',
-    'Sesan may moderate, correct or remove misleading, unlawful or harmful listings. Manipulation of prices, reviews or platform data is prohibited.',
-    'Sesan may temporarily freeze an account or transaction while investigating fraud, abuse or policy violations. Serious or repeated violations may lead to permanent suspension.',
-    'Users may upload only content they own or are legally allowed to use. Copying protected images, text, trademarks or misusing the Sesan identity is prohibited.',
-    'Sesan is not liable for failure or delay caused by events outside reasonable control, including disasters, conflict, major outages, cyberattacks, epidemics or national emergencies.',
-    'Sesan services must not be used for money laundering, terrorist financing or unlawful activity. Suspicious accounts may be suspended and reported to competent authorities.',
-    'Sesan may amend these terms when necessary and notify users. Continued use after an amendment constitutes acceptance; invalidity of one provision does not invalidate the others.',
-    'Product photos, parcel-opening videos, chat history and transaction records may be used as digital evidence in a dispute.',
-    'Admin may invalidate fraudulent transactions. Refunds may be issued after applicable administrative charges; fraudulent sellers remain responsible for resulting amounts and losses.',
-    'Sesan is a marketplace and transaction-facilitation service and does not independently guarantee product quality, safety or legality, although it may assist with dispute resolution.',
-    'A confirmed bid cannot be withdrawn. The winner must pay within 24 hours. Auction fees are 15,000 KHR for 48 hours or 25,000 KHR for Premium 72 hours and are non-refundable.',
-    'Users must not post, advertise, buy, sell or trade products prohibited by Cambodian law, including unlawful wildlife products, weapons, explosives, controlled drugs, stolen or counterfeit goods and banned chemicals. Sesan may remove listings, suspend accounts, preserve evidence and report suspected violations.',
-  ];
-  List<Map<String, dynamic>> get _localizedSections {
-    if (!_isEnglish) return _sections;
-    return List.generate(_sections.length, (index) {
-      final section=Map<String,dynamic>.from(_sections[index]);
-      section['number']='${index+1}'; section['title']=_englishTitles[index]; section['content']=_englishContents[index]; return section;
-    });
-  }
-
-'''
-            s=s.replace(anchor,block+anchor)
-          if "'number': '១៧'" not in s:
-            marker="    ];\n    _filteredSections = List.from(_sections);"
-            sec=r'''      {
-        'number': '១៧',
-        'title': 'ទំនិញ និងសកម្មភាពហាមឃាត់',
-        'content': 'អ្នកប្រើប្រាស់មិនត្រូវបង្ហោះ ផ្សព្វផ្សាយ ទិញ លក់ ឬជួញដូរទំនិញណាដែលច្បាប់នៃព្រះរាជាណាចក្រកម្ពុជាហាមឃាត់ឡើយ។\n\n• ហាមឃាត់សត្វព្រៃ ប្រភេទសត្វការពារ និងផលិតផលពីសត្វព្រៃដែលខុសច្បាប់។\n• ហាមឃាត់អាវុធ គ្រាប់រំសេវ គ្រឿងផ្ទុះ និងឧបករណ៍គ្រប់គ្រងដោយច្បាប់ដែលគ្មានការអនុញ្ញាត។\n• ហាមឃាត់គ្រឿងញៀន សារធាតុញៀន និងរុក្ខជាតិហាមឃាត់ រួមទាំងកញ្ឆា លើកលែងតែមានការអនុញ្ញាតច្បាស់លាស់ស្របតាមច្បាប់។\n• ហាមឃាត់ទំនិញលួច ទំនិញក្លែងក្លាយ សារធាតុគីមីហាមឃាត់ និងទំនិញខុសច្បាប់ដទៃទៀត។\n• សេសាន អាចលុបការបង្ហោះភ្លាមៗ ផ្អាក ឬបិទគណនី រក្សាទុកភស្តុតាងពាក់ព័ន្ធ និងរាយការណ៍ករណីសង្ស័យទៅអាជ្ញាធរមានសមត្ថកិច្ច។',
-        'icon': Icons.block,
-      },
-'''
-            s=s.replace(marker,sec+marker)
-          s=s.replace("? _sections\n                          : _filteredSections", "? _localizedSections\n                          : _filteredSections")
-          s=s.replace("'សូមអានប្រការទាំង ១៦ ឱ្យចប់", "'សូមអានប្រការទាំង ១៧ ឱ្យចប់")
-          p.write_text(s)
-      - name: Commit Policy parity
+          p=Path('lib/add_product.dart')
+          s=p.read_text(encoding='utf-8')
+          a='                  side: BorderSide(color: Colors.deepPurple.withOpacity(0.75)),\n                  visualDensity: VisualDensity.compact,\n'
+          b='                  side: BorderSide(color: Colors.deepPurple.withOpacity(0.75)),\n                  minimumSize: const Size(0, 32),\n                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),\n                  visualDensity: VisualDensity.compact,\n'
+          if a in s: s=s.replace(a,b,1)
+          p.write_text(s,encoding='utf-8')
+      - name: Verify patch
+        run: |
+          grep -Fq 'Icons.star_rounded' lib/product_detail.dart
+          grep -Fq 'width: 60, // Compact quantity field' lib/product_detail.dart
+          grep -Fq 'minimumSize: const Size(0, 32)' lib/add_product.dart
+          git diff --check
+      - name: Commit compact parity
         run: |
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add lib/policy_screen.dart
-          git diff --cached --quiet || git commit -m "Bring iOS Policy to Android 51 parity"
+          git add lib/product_detail.dart lib/add_product.dart
+          git diff --cached --quiet && exit 0
+          git commit -m 'Compact iOS Product Detail and Add Product AI controls'
           git push origin HEAD:ios-sync-android46
