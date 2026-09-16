@@ -24,15 +24,12 @@ import 'category_localization.dart';
 import 'localized_text.dart';
 import 'marketplace_analytics_service.dart';
 
-
 /// 🎯 Service យក User ID (Firebase Auth ឬ SharedPreferences)
 class UserService {
   static String? _cachedUserId;
 
-
   static Future<String?> getUserId() async {
     if (_cachedUserId != null) return _cachedUserId;
-
 
     final firebaseUser = FirebaseAuth.instance.currentUser;
     if (firebaseUser != null) {
@@ -40,21 +37,17 @@ class UserService {
       return _cachedUserId;
     }
 
-
     final prefs = await SharedPreferences.getInstance();
     _cachedUserId =
         prefs.getString('user_uid') ??
-            prefs.getString('uid') ??
-            prefs.getString('user_id');
-
+        prefs.getString('uid') ??
+        prefs.getString('user_id');
 
     return _cachedUserId;
   }
 
-
   static void clearCache() => _cachedUserId = null;
 }
-
 
 // ─────────────────────────────────────────────────────────────
 // ProductListScreen
@@ -63,11 +56,9 @@ class ProductListScreen extends StatefulWidget {
   final String category;
   const ProductListScreen({super.key, required this.category});
 
-
   @override
   State<ProductListScreen> createState() => _ProductListScreenState();
 }
-
 
 class _ProductListScreenState extends State<ProductListScreen> {
   String _currentSearch = "";
@@ -101,24 +92,30 @@ class _ProductListScreenState extends State<ProductListScreen> {
 
   void _showSearchMessage(String message, {Color color = Colors.red}) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: color),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message), backgroundColor: color));
   }
 
   bool _canUseAiSearch() {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid != null && uid.isNotEmpty) return true;
-    _showSearchMessage(_searchLabel(
-      'សូមចូលគណនីជាមុន ដើម្បីស្វែងរកតាមរូប ឬសម្លេង',
-      'Please sign in to search with a photo or voice',
-    ));
+    _showSearchMessage(
+      _searchLabel(
+        'សូមចូលគណនីជាមុន ដើម្បីស្វែងរកតាមរូប ឬសម្លេង',
+        'Please sign in to search with a photo or voice',
+      ),
+    );
     return false;
   }
 
-  Future<Map<String, dynamic>> _callAiSearch({String? image, String? audio}) async {
-    final callable = FirebaseFunctions.instanceFor(region: 'asia-southeast1')
-        .httpsCallable('analyzeProductSearch');
+  Future<Map<String, dynamic>> _callAiSearch({
+    String? image,
+    String? audio,
+  }) async {
+    final callable = FirebaseFunctions.instanceFor(
+      region: 'asia-southeast1',
+    ).httpsCallable('analyzeProductSearch');
     final response = await callable.call(<String, dynamic>{
       'locale': Localizations.localeOf(context).languageCode,
       if (image != null) 'image': image,
@@ -130,7 +127,8 @@ class _ProductListScreenState extends State<ProductListScreen> {
   void _applyAiSearch(Map<String, dynamic> data) {
     final query = (data['query'] ?? '').toString().trim();
     if (query.isEmpty) throw StateError('Empty AI search query');
-    final keywords = (data['keywords'] as List?)
+    final keywords =
+        (data['keywords'] as List?)
             ?.map((value) => value.toString().trim())
             .where((value) => value.isNotEmpty)
             .toList() ??
@@ -166,19 +164,25 @@ class _ProductListScreenState extends State<ProductListScreen> {
       if (bytes.isEmpty || bytes.length > 3300000) {
         throw StateError('Image is too large');
       }
-      final input = 'data:${_pickedImageMime(image)};base64,${base64Encode(bytes)}';
+      final input =
+          'data:${_pickedImageMime(image)};base64,${base64Encode(bytes)}';
       _applyAiSearch(await _callAiSearch(image: input));
     } on FirebaseFunctionsException catch (error) {
-      _showSearchMessage(error.message ?? _searchLabel(
-        'មិនអាចស្វែងរកតាមរូបបានទេ',
-        'Could not search with this image',
-      ));
+      _showSearchMessage(
+        error.message ??
+            _searchLabel(
+              'មិនអាចស្វែងរកតាមរូបបានទេ',
+              'Could not search with this image',
+            ),
+      );
     } catch (error) {
       debugPrint('AI image search error: $error');
-      _showSearchMessage(_searchLabel(
-        'រូបធំពេក ឬមិនអាចអានបាន',
-        'The image is too large or could not be read',
-      ));
+      _showSearchMessage(
+        _searchLabel(
+          'រូបធំពេក ឬមិនអាចអានបាន',
+          'The image is too large or could not be read',
+        ),
+      );
     } finally {
       if (mounted) setState(() => _isSearchBusy = false);
     }
@@ -188,10 +192,12 @@ class _ProductListScreenState extends State<ProductListScreen> {
     if (_isSearchBusy || _isVoiceSearching || !_canUseAiSearch()) return;
     try {
       if (!await _searchAudioRecorder.hasPermission()) {
-        _showSearchMessage(_searchLabel(
-          'សូមអនុញ្ញាត Microphone ជាមុន',
-          'Please allow microphone access first',
-        ));
+        _showSearchMessage(
+          _searchLabel(
+            'សូមអនុញ្ញាត Microphone ជាមុន',
+            'Please allow microphone access first',
+          ),
+        );
         return;
       }
       final String path;
@@ -199,7 +205,8 @@ class _ProductListScreenState extends State<ProductListScreen> {
         path = '';
       } else {
         final directory = await getTemporaryDirectory();
-        path = '${directory.path}/sesan_category_search_${DateTime.now().millisecondsSinceEpoch}.m4a';
+        path =
+            '${directory.path}/sesan_category_search_${DateTime.now().millisecondsSinceEpoch}.m4a';
       }
       await _searchAudioRecorder.start(
         RecordConfig(
@@ -252,10 +259,12 @@ class _ProductListScreenState extends State<ProductListScreen> {
       ).whenComplete(() => _voiceSheetOpen = false);
     } catch (error) {
       debugPrint('Start voice search error: $error');
-      _showSearchMessage(_searchLabel(
-        'មិនអាចចាប់ផ្តើមថតសម្លេងបានទេ',
-        'Could not start voice recording',
-      ));
+      _showSearchMessage(
+        _searchLabel(
+          'មិនអាចចាប់ផ្តើមថតសម្លេងបានទេ',
+          'Could not start voice recording',
+        ),
+      );
     }
   }
 
@@ -274,10 +283,13 @@ class _ProductListScreenState extends State<ProductListScreen> {
     }
     try {
       final path = await _searchAudioRecorder.stop();
-      if (path == null || path.isEmpty) throw StateError('Empty recording path');
+      if (path == null || path.isEmpty)
+        throw StateError('Empty recording path');
       Uint8List? bytes;
       for (var attempt = 0; attempt < 4; attempt++) {
-        await Future<void>.delayed(Duration(milliseconds: attempt == 0 ? 250 : 400));
+        await Future<void>.delayed(
+          Duration(milliseconds: attempt == 0 ? 250 : 400),
+        );
         try {
           final candidate = await XFile(path).readAsBytes();
           if (candidate.isNotEmpty) {
@@ -290,20 +302,22 @@ class _ProductListScreenState extends State<ProductListScreen> {
         throw StateError('Recorded audio could not be read');
       }
       final mime = kIsWeb ? 'audio/wav' : 'audio/m4a';
-      _applyAiSearch(await _callAiSearch(
-        audio: 'data:$mime;base64,${base64Encode(bytes)}',
-      ));
+      _applyAiSearch(
+        await _callAiSearch(audio: 'data:$mime;base64,${base64Encode(bytes)}'),
+      );
     } on FirebaseFunctionsException catch (error) {
-      _showSearchMessage(error.message ?? _searchLabel(
-        'មិនអាចយល់សម្លេងនេះបានទេ',
-        'Could not understand this recording',
-      ));
+      _showSearchMessage(
+        error.message ??
+            _searchLabel(
+              'មិនអាចយល់សម្លេងនេះបានទេ',
+              'Could not understand this recording',
+            ),
+      );
     } catch (error) {
       debugPrint('Voice search error: $error');
-      _showSearchMessage(_searchLabel(
-        'ការស្វែងរកតាមសម្លេងបរាជ័យ',
-        'Voice search failed',
-      ));
+      _showSearchMessage(
+        _searchLabel('ការស្វែងរកតាមសម្លេងបរាជ័យ', 'Voice search failed'),
+      );
     } finally {
       if (mounted) setState(() => _isSearchBusy = false);
     }
@@ -344,7 +358,9 @@ class _ProductListScreenState extends State<ProductListScreen> {
                 border: const OutlineInputBorder(),
               ),
               items: items
-                  .map((item) => DropdownMenuItem(value: item, child: Text(item)))
+                  .map(
+                    (item) => DropdownMenuItem(value: item, child: Text(item)),
+                  )
                   .toList(),
               onChanged: enabled ? onChanged : null,
             );
@@ -366,7 +382,11 @@ class _ProductListScreenState extends State<ProductListScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    appText(context, km: 'ចម្រុះតាមទីតាំង', en: 'Filter by location'),
+                    appText(
+                      context,
+                      km: 'ចម្រុះតាមទីតាំង',
+                      en: 'Filter by location',
+                    ),
                     style: const TextStyle(
                       fontFamily: 'Siemreap',
                       fontSize: 18,
@@ -375,7 +395,11 @@ class _ProductListScreenState extends State<ProductListScreen> {
                   ),
                   const SizedBox(height: 16),
                   selector(
-                    label: appText(context, km: 'ខេត្ត/រាជធានី', en: 'Province / City'),
+                    label: appText(
+                      context,
+                      km: 'ខេត្ត/រាជធានី',
+                      en: 'Province / City',
+                    ),
                     value: province,
                     items: provinces,
                     enabled: true,
@@ -417,7 +441,13 @@ class _ProductListScreenState extends State<ProductListScreen> {
                             });
                             Navigator.pop(sheetContext);
                           },
-                          child: Text(appText(context, km: 'ទាំងអស់', en: 'All locations')),
+                          child: Text(
+                            appText(
+                              context,
+                              km: 'ទាំងអស់',
+                              en: 'All locations',
+                            ),
+                          ),
                         ),
                       ),
                       const SizedBox(width: 10),
@@ -433,7 +463,9 @@ class _ProductListScreenState extends State<ProductListScreen> {
                                   });
                                   Navigator.pop(sheetContext);
                                 },
-                          child: Text(appText(context, km: 'អនុវត្ត', en: 'Apply')),
+                          child: Text(
+                            appText(context, km: 'អនុវត្ត', en: 'Apply'),
+                          ),
                         ),
                       ),
                     ],
@@ -474,7 +506,9 @@ class _ProductListScreenState extends State<ProductListScreen> {
               IconButton(
                 onPressed: _showLocationFilter,
                 icon: Icon(
-                  _hasLocationFilter ? Icons.filter_alt : Icons.filter_alt_outlined,
+                  _hasLocationFilter
+                      ? Icons.filter_alt
+                      : Icons.filter_alt_outlined,
                   color: Colors.white,
                 ),
               ),
@@ -483,7 +517,10 @@ class _ProductListScreenState extends State<ProductListScreen> {
                   right: 8,
                   top: 8,
                   child: DecoratedBox(
-                    decoration: BoxDecoration(color: Colors.amber, shape: BoxShape.circle),
+                    decoration: BoxDecoration(
+                      color: Colors.amber,
+                      shape: BoxShape.circle,
+                    ),
                     child: SizedBox(width: 8, height: 8),
                   ),
                 ),
@@ -505,8 +542,9 @@ class _ProductListScreenState extends State<ProductListScreen> {
                   ),
                   child: TextField(
                     controller: _searchController,
-                    onChanged: (value) =>
-                        setState(() => _currentSearch = value.trim().toLowerCase()),
+                    onChanged: (value) => setState(
+                      () => _currentSearch = value.trim().toLowerCase(),
+                    ),
                     decoration: InputDecoration(
                       hintText: appText(
                         context,
@@ -514,7 +552,10 @@ class _ProductListScreenState extends State<ProductListScreen> {
                         en: 'Search products in this category...',
                       ),
                       prefixIcon: const Icon(Icons.search, color: Colors.grey),
-                      suffixIconConstraints: const BoxConstraints.tightFor(width: 94, height: 45),
+                      suffixIconConstraints: const BoxConstraints.tightFor(
+                        width: 94,
+                        height: 45,
+                      ),
                       suffixIcon: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -525,9 +566,15 @@ class _ProductListScreenState extends State<ProductListScreen> {
                               child: _isSearchBusy
                                   ? const Padding(
                                       padding: EdgeInsets.all(7),
-                                      child: CircularProgressIndicator(strokeWidth: 2),
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
                                     )
-                                  : const Icon(Icons.image_search_rounded, color: Colors.purple, size: 21),
+                                  : const Icon(
+                                      Icons.image_search_rounded,
+                                      color: Colors.purple,
+                                      size: 21,
+                                    ),
                             ),
                           ),
                           SizedBox(
@@ -535,8 +582,12 @@ class _ProductListScreenState extends State<ProductListScreen> {
                             child: InkResponse(
                               onTap: _isSearchBusy ? null : _toggleVoiceSearch,
                               child: Icon(
-                                _isVoiceSearching ? Icons.stop_circle_rounded : Icons.mic_rounded,
-                                color: _isVoiceSearching ? Colors.red : Colors.green,
+                                _isVoiceSearching
+                                    ? Icons.stop_circle_rounded
+                                    : Icons.mic_rounded,
+                                color: _isVoiceSearching
+                                    ? Colors.red
+                                    : Colors.green,
                                 size: 21,
                               ),
                             ),
@@ -546,9 +597,15 @@ class _ProductListScreenState extends State<ProductListScreen> {
                             child: InkResponse(
                               onTap: () => Navigator.push(
                                 context,
-                                MaterialPageRoute(builder: (_) => const QrScannerScreen()),
+                                MaterialPageRoute(
+                                  builder: (_) => const QrScannerScreen(),
+                                ),
                               ),
-                              child: const Icon(Icons.qr_code_scanner, color: Colors.blue, size: 21),
+                              child: const Icon(
+                                Icons.qr_code_scanner,
+                                color: Colors.blue,
+                                size: 21,
+                              ),
                             ),
                           ),
                         ],
@@ -603,7 +660,6 @@ class ProductGridView extends StatefulWidget {
   final String? filterDistrict;
   final String? filterCommune;
 
-
   const ProductGridView({
     super.key,
     required this.category,
@@ -615,12 +671,12 @@ class ProductGridView extends StatefulWidget {
     this.filterCommune,
   });
 
-
   @override
   State<ProductGridView> createState() => _ProductGridViewState();
 }
 
-class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAliveClientMixin {
+class _ProductGridViewState extends State<ProductGridView>
+    with AutomaticKeepAliveClientMixin {
   final ScrollController _scrollController = ScrollController();
   final int _batchSize = 35; // ✅ ប្ដូរពី 35 → 100
   List<DocumentSnapshot> _products = [];
@@ -649,7 +705,6 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
     }
   }
 
-
   @override
   void didUpdateWidget(covariant ProductGridView oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -675,7 +730,6 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
       _selectedManageType = savedType ?? _lastManageType;
     }
 
-
     _listenToCart();
 
     // ✅ Clear តែពេលចូលមកដំបូង
@@ -687,12 +741,10 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
       });
     }
 
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _fetchProducts();
     });
   }
-
 
   void _listenToCart() {
     _cartSubscription?.cancel();
@@ -703,43 +755,42 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
         .collection('carts')
         .where('customer_id', isEqualTo: uid)
         .snapshots()
-        .listen((snapshot) {
-      final ids = snapshot.docs
-          .map((doc) => (doc.data()['product_id'] ?? '').toString())
-          .where((id) => id.isNotEmpty)
-          .toSet();
-      if (!mounted) return;
-      setState(() {
-        _cartProductIds
-          ..clear()
-          ..addAll(ids);
-        _cartAddingIds.removeWhere(ids.contains);
-      });
-    }, onError: (error) {
-      debugPrint('Cart state listener error: $error');
-    });
+        .listen(
+          (snapshot) {
+            final ids = snapshot.docs
+                .map((doc) => (doc.data()['product_id'] ?? '').toString())
+                .where((id) => id.isNotEmpty)
+                .toSet();
+            if (!mounted) return;
+            setState(() {
+              _cartProductIds
+                ..clear()
+                ..addAll(ids);
+              _cartAddingIds.removeWhere(ids.contains);
+            });
+          },
+          onError: (error) {
+            debugPrint('Cart state listener error: $error');
+          },
+        );
   }
 
   void _onScroll() {
     if (_scrollController.position.pixels >=
-        _scrollController.position.maxScrollExtent - 200 &&
+            _scrollController.position.maxScrollExtent - 200 &&
         !_isLoading &&
         _hasMore) {
       _fetchProducts();
     }
   }
 
-
   // ── FETCH PRODUCTS ──────────────────────────────────────
   Future<void> _fetchProducts() async {
     if (_isLoading || !_hasMore) return;
 
-
     if (!mounted) return; // ✅ បន្ថែម
 
-
     setState(() => _isLoading = true);
-
 
     try {
       if (widget.category == "ទំនិញរបស់ខ្ញុំ") {
@@ -751,13 +802,11 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
       debugPrint("Error fetching products: $e");
     }
 
-
     if (mounted) {
       // ✅ បន្ថែមការពិនិត្យ
       setState(() => _isLoading = false);
     }
   }
-
 
   Future<void> _fetchMyProducts() async {
     if (!mounted) return;
@@ -765,7 +814,6 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
       setState(() => _hasMore = false);
       return;
     }
-
 
     final futures = await Future.wait([
       FirebaseFirestore.instance
@@ -784,24 +832,28 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
           .get(),
     ]);
 
-
     if (!mounted) return; // ✅ បន្ថែមបន្ទាប់ពី await
-
 
     final combined = <DocumentSnapshot>[];
     combined.addAll(futures[0].docs);
     combined.addAll(futures[1].docs);
     combined.addAll(futures[2].docs);
 
-
     combined.sort((a, b) {
       final dataA = a.data() as Map<String, dynamic>;
       final dataB = b.data() as Map<String, dynamic>;
-      final timeA = dataA['created_at'] ?? dataA['createdAt'] ?? dataA['savedAt'] ?? Timestamp.now();
-      final timeB = dataB['created_at'] ?? dataB['createdAt'] ?? dataB['savedAt'] ?? Timestamp.now();
+      final timeA =
+          dataA['created_at'] ??
+          dataA['createdAt'] ??
+          dataA['savedAt'] ??
+          Timestamp.now();
+      final timeB =
+          dataB['created_at'] ??
+          dataB['createdAt'] ??
+          dataB['savedAt'] ??
+          Timestamp.now();
       return (timeB as Timestamp).compareTo(timeA as Timestamp);
     });
-
 
     if (mounted) {
       setState(() {
@@ -812,10 +864,8 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
     }
   }
 
-
   Future<void> _fetchByCategory() async {
     if (!mounted) return;
-
 
     // 🎯 ១. រើស Collection តាមកុងតាក់ (បើ true ទៅ auction_products បើ false ទៅ products ធម្មតា)
     String targetCollection = widget.isAuction
@@ -823,15 +873,12 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
         : 'products';
     Query query = FirebaseFirestore.instance.collection(targetCollection);
 
-
     bool isCategoryAll =
         widget.category == "ReadAll" || widget.category == "ទាំងអស់";
-
 
     if (!isCategoryAll) {
       query = query.where('category', isEqualTo: widget.category);
     }
-
 
     // 🎯 ២. តម្រៀបតាមថ្ងៃខែបង្កើត និងកំណត់ចំនួនទាញទិន្នន័យ (លែងមានការប្រើ status នាំឱ្យទាក់កូដទៀតហើយ)
     final hasLocationFilter =
@@ -843,20 +890,15 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
         : (widget.searchQuery.trim().isEmpty ? 50 : 200);
     query = query.orderBy('created_at', descending: true).limit(fetchLimit);
 
-
     if (_lastDoc != null) {
       query = query.startAfterDocument(_lastDoc!);
     }
 
-
     final snapshot = await query.get();
-
 
     if (!mounted) return;
 
-
     _lastDoc = snapshot.docs.isNotEmpty ? snapshot.docs.last : _lastDoc;
-
 
     if (mounted) {
       setState(() {
@@ -867,12 +909,10 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
           }
         }
 
-
         _hasMore = snapshot.docs.length >= fetchLimit;
       });
     }
   }
-
 
   String _searchableProductText(Map<String, dynamic> data) {
     final values = <dynamic>[
@@ -933,9 +973,12 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
         .where((part) => part.isNotEmpty)
         .toList();
     final exactProvince = parts.isNotEmpty && parts[0] == province;
-    final exactDistrict = district.isEmpty || (parts.length > 1 && parts[1] == district);
-    final exactCommune = commune.isEmpty || (parts.length > 2 && parts[2] == commune);
-    if (province.isNotEmpty && exactProvince && exactDistrict && exactCommune) return true;
+    final exactDistrict =
+        district.isEmpty || (parts.length > 1 && parts[1] == district);
+    final exactCommune =
+        commune.isEmpty || (parts.length > 2 && parts[2] == commune);
+    if (province.isNotEmpty && exactProvince && exactDistrict && exactCommune)
+      return true;
     if (province.isNotEmpty && !raw.contains(province)) return false;
     if (district.isNotEmpty && !raw.contains(district)) return false;
     if (commune.isNotEmpty && !raw.contains(commune)) return false;
@@ -952,22 +995,20 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
       final query = widget.searchQuery;
 
       final postType = _managePostType(doc);
-      final matchesManageType = widget.category != 'ទំនិញរបស់ខ្ញុំ' ||
+      final matchesManageType =
+          widget.category != 'ទំនិញរបស់ខ្ញុំ' ||
           postType == _selectedManageType;
 
       final subCategory = (data['sub_category'] ?? '').toString();
       final subSubCategory = (data['sub_sub_category'] ?? '').toString();
 
-
       final matchesSub =
           _selectedSubCategory == 'ទាំងអស់' ||
-              subCategory == _selectedSubCategory;
-
+          subCategory == _selectedSubCategory;
 
       final matchesSubSub =
           _selectedSubSubCategory == 'ទាំងអស់' ||
-              subSubCategory == _selectedSubSubCategory;
-
+          subSubCategory == _selectedSubSubCategory;
 
       return matchesManageType &&
           _matchesSmartSearch(data, query) &&
@@ -975,7 +1016,6 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
           matchesSubSub &&
           _matchesLocationFilter(data);
     }).toList();
-
 
     // ✅ បើគ្មានទំនិញ ហើយមិនមែនកំពុងផ្ទុក
     if (filtered.isEmpty && !_isLoading) {
@@ -994,7 +1034,6 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
         ],
       );
     }
-
 
     // ✅ បង្ហាញ Sub Category Filter + GridView
     return Column(
@@ -1021,7 +1060,7 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
               mainAxisSpacing: 10,
             ),
             itemCount:
-            filtered.length +
+                filtered.length +
                 ((_hasMore && _isLoading && !widget.isHome) ? 1 : 0),
             itemBuilder: (context, index) {
               if (!widget.isHome && _isLoading && index >= filtered.length) {
@@ -1036,7 +1075,6 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
       ],
     );
   }
-
 
   String _managePostType(DocumentSnapshot doc) {
     final path = doc.reference.path;
@@ -1102,11 +1140,9 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
   }
 
   Widget _buildSubCategoryFilter() {
-    if (widget.category == 'ទាំងអស់' ||
-        widget.category == 'ទំនិញរបស់ខ្ញុំ') {
+    if (widget.category == 'ទាំងអស់' || widget.category == 'ទំនិញរបស់ខ្ញុំ') {
       return const SizedBox.shrink();
     }
-
 
     // បញ្ជី Sub Categories
     final Map<String, dynamic> subCategories = {
@@ -1155,7 +1191,6 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
         'ផ្សេងៗ',
       ],
 
-
       'ត្រីសាច់': [
         'ទាំងអស់',
         'ត្រី',
@@ -1188,20 +1223,17 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
       ],
     };
 
-
     final subData = subCategories[widget.category];
     if (subData == null) return const SizedBox.shrink();
-
 
     // ✅ បើជា Map (មាន 3 ជាន់)
     if (subData is Map) {
       final subList = subData.keys.cast<String>().toList();
       final subSubList =
-      _selectedSubCategory != 'ទាំងអស់' &&
-          subData.containsKey(_selectedSubCategory)
+          _selectedSubCategory != 'ទាំងអស់' &&
+              subData.containsKey(_selectedSubCategory)
           ? subData[_selectedSubCategory] as List<String>?
           : null;
-
 
       return Column(
         children: [
@@ -1245,7 +1277,6 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
               },
             ),
           ),
-
 
           // Sub-Sub Category Row (បង្ហាញតែពេលមាន)
           if (subSubList != null && subSubList.length > 1)
@@ -1291,12 +1322,10 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
       );
     }
 
-
     // ✅ បើជា List (មាន 2 ជាន់)
     if (subData is List) {
       final subs = subData.cast<String>();
       if (subs.length <= 1) return const SizedBox.shrink();
-
 
       return Container(
         height: 40,
@@ -1338,14 +1367,13 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
       );
     }
 
-
     return const SizedBox.shrink();
   }
 
-
   int _stockQuantityValue(dynamic value) {
     if (value is num) return value.toInt();
-    return int.tryParse(value?.toString().replaceAll(',', '').trim() ?? '') ?? 0;
+    return int.tryParse(value?.toString().replaceAll(',', '').trim() ?? '') ??
+        0;
   }
 
   Future<void> _changeProductStock(
@@ -1354,7 +1382,8 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
     int delta,
   ) async {
     if (_stockUpdatingIds.contains(productId)) return;
-    final previous = _stockQuantityOverrides[productId] ??
+    final previous =
+        _stockQuantityOverrides[productId] ??
         _stockQuantityValue(data['stock_quantity']);
     final optimistic = (previous + delta).clamp(0, 999999999).toInt();
     setState(() {
@@ -1362,9 +1391,13 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
       _stockUpdatingIds.add(productId);
     });
 
-    final ref = FirebaseFirestore.instance.collection('products').doc(productId);
+    final ref = FirebaseFirestore.instance
+        .collection('products')
+        .doc(productId);
     try {
-      final newQuantity = await FirebaseFirestore.instance.runTransaction<int>((transaction) async {
+      final newQuantity = await FirebaseFirestore.instance.runTransaction<int>((
+        transaction,
+      ) async {
         final snapshot = await transaction.get(ref);
         final latest = snapshot.data() ?? <String, dynamic>{};
         final current = _stockQuantityValue(latest['stock_quantity']);
@@ -1394,7 +1427,13 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(appText(context, km: 'មិនអាចកែចំនួនស្តុកបានទេ', en: 'Could not update stock quantity.')),
+          content: Text(
+            appText(
+              context,
+              km: 'មិនអាចកែចំនួនស្តុកបានទេ',
+              en: 'Could not update stock quantity.',
+            ),
+          ),
           backgroundColor: Colors.red,
         ),
       );
@@ -1408,21 +1447,26 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
     int amount,
   ) async {
     if (_stockUpdatingIds.contains(productId)) return;
-    final previous = _stockQuantityOverrides[productId] ??
+    final previous =
+        _stockQuantityOverrides[productId] ??
         _stockQuantityValue(data['stock_quantity']);
     final optimistic = mode == 'add'
         ? previous + amount
         : mode == 'deduct'
-            ? (previous - amount).clamp(0, previous).toInt()
-            : amount;
+        ? (previous - amount).clamp(0, previous).toInt()
+        : amount;
     setState(() {
       _stockQuantityOverrides[productId] = optimistic;
       _stockUpdatingIds.add(productId);
     });
 
-    final ref = FirebaseFirestore.instance.collection('products').doc(productId);
+    final ref = FirebaseFirestore.instance
+        .collection('products')
+        .doc(productId);
     try {
-      final newQuantity = await FirebaseFirestore.instance.runTransaction<int>((transaction) async {
+      final newQuantity = await FirebaseFirestore.instance.runTransaction<int>((
+        transaction,
+      ) async {
         final snapshot = await transaction.get(ref);
         final latest = snapshot.data() ?? <String, dynamic>{};
         final current = _stockQuantityValue(latest['stock_quantity']);
@@ -1453,7 +1497,9 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(appText(context, km: 'បានកែចំនួនស្តុករួចរាល់', en: 'Stock updated')),
+          content: Text(
+            appText(context, km: 'បានកែចំនួនស្តុករួចរាល់', en: 'Stock updated'),
+          ),
           backgroundColor: Colors.green,
           duration: const Duration(seconds: 1),
         ),
@@ -1467,9 +1513,19 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(insufficient
-              ? appText(context, km: 'មិនអាចកាត់លើសចំនួនស្តុកបានទេ', en: 'Cannot deduct more than the available stock.')
-              : appText(context, km: 'មិនអាចកែចំនួនស្តុកបានទេ', en: 'Could not update stock quantity.')),
+          content: Text(
+            insufficient
+                ? appText(
+                    context,
+                    km: 'មិនអាចកាត់លើសចំនួនស្តុកបានទេ',
+                    en: 'Cannot deduct more than the available stock.',
+                  )
+                : appText(
+                    context,
+                    km: 'មិនអាចកែចំនួនស្តុកបានទេ',
+                    en: 'Could not update stock quantity.',
+                  ),
+          ),
           backgroundColor: Colors.red,
         ),
       );
@@ -1480,7 +1536,8 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
     String productId,
     Map<String, dynamic> data,
   ) async {
-    final current = _stockQuantityOverrides[productId] ??
+    final current =
+        _stockQuantityOverrides[productId] ??
         _stockQuantityValue(data['stock_quantity']);
     final amountController = TextEditingController();
     var mode = 'deduct';
@@ -1495,10 +1552,13 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
           final preview = mode == 'add'
               ? current + amount
               : mode == 'deduct'
-                  ? (current - amount).clamp(0, current)
-                  : amount;
+              ? (current - amount).clamp(0, current)
+              : amount;
           return AlertDialog(
-            title: Text(appText(context, km: 'កែចំនួនស្តុក', en: 'Adjust stock'), style: const TextStyle(fontFamily: 'Siemreap')),
+            title: Text(
+              appText(context, km: 'កែចំនួនស្តុក', en: 'Adjust stock'),
+              style: const TextStyle(fontFamily: 'Siemreap'),
+            ),
             content: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -1506,16 +1566,42 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
                 children: [
                   Text(
                     '${appText(context, km: 'ស្តុកបច្ចុប្បន្ន', en: 'Current stock')}: ${formatter.format(current)}',
-                    style: const TextStyle(fontFamily: 'Siemreap', fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      fontFamily: 'Siemreap',
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 12),
                   Wrap(
                     spacing: 6,
                     runSpacing: 6,
                     children: [
-                      ChoiceChip(label: Text(appText(context, km: 'កាត់', en: 'Deduct')), selected: mode == 'deduct', onSelected: (_) => setDialogState(() { mode = 'deduct'; errorText = null; })),
-                      ChoiceChip(label: Text(appText(context, km: 'បន្ថែម', en: 'Add')), selected: mode == 'add', onSelected: (_) => setDialogState(() { mode = 'add'; errorText = null; })),
-                      ChoiceChip(label: Text(appText(context, km: 'កំណត់សល់', en: 'Set remaining')), selected: mode == 'set', onSelected: (_) => setDialogState(() { mode = 'set'; errorText = null; })),
+                      ChoiceChip(
+                        label: Text(appText(context, km: 'កាត់', en: 'Deduct')),
+                        selected: mode == 'deduct',
+                        onSelected: (_) => setDialogState(() {
+                          mode = 'deduct';
+                          errorText = null;
+                        }),
+                      ),
+                      ChoiceChip(
+                        label: Text(appText(context, km: 'បន្ថែម', en: 'Add')),
+                        selected: mode == 'add',
+                        onSelected: (_) => setDialogState(() {
+                          mode = 'add';
+                          errorText = null;
+                        }),
+                      ),
+                      ChoiceChip(
+                        label: Text(
+                          appText(context, km: 'កំណត់សល់', en: 'Set remaining'),
+                        ),
+                        selected: mode == 'set',
+                        onSelected: (_) => setDialogState(() {
+                          mode = 'set';
+                          errorText = null;
+                        }),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 12),
@@ -1528,7 +1614,11 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
                       errorText = null;
                     }),
                     decoration: InputDecoration(
-                      labelText: appText(context, km: 'បញ្ចូលចំនួន', en: 'Enter quantity'),
+                      labelText: appText(
+                        context,
+                        km: 'បញ្ចូលចំនួន',
+                        en: 'Enter quantity',
+                      ),
                       errorText: errorText,
                       border: const OutlineInputBorder(),
                     ),
@@ -1537,31 +1627,49 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(color: Colors.green.shade50, borderRadius: BorderRadius.circular(10)),
+                    decoration: BoxDecoration(
+                      color: Colors.green.shade50,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                     child: Text(
                       mode == 'deduct'
                           ? '${formatter.format(current)} − ${formatter.format(amount)} = ${formatter.format(preview)}'
                           : mode == 'add'
-                              ? '${formatter.format(current)} + ${formatter.format(amount)} = ${formatter.format(preview)}'
-                              : '${appText(context, km: 'ស្តុកថ្មី', en: 'New stock')}: ${formatter.format(preview)}',
+                          ? '${formatter.format(current)} + ${formatter.format(amount)} = ${formatter.format(preview)}'
+                          : '${appText(context, km: 'ស្តុកថ្មី', en: 'New stock')}: ${formatter.format(preview)}',
                       textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(dialogContext), child: Text(appText(context, km: 'បោះបង់', en: 'Cancel'))),
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: Text(appText(context, km: 'បោះបង់', en: 'Cancel')),
+              ),
               ElevatedButton(
                 onPressed: amountController.text.trim().isEmpty
                     ? null
                     : () {
                         if (mode == 'deduct' && amount > current) {
-                          setDialogState(() => errorText = appText(context, km: 'ចំនួនលើសស្តុកបច្ចុប្បន្ន', en: 'Amount exceeds current stock'));
+                          setDialogState(
+                            () => errorText = appText(
+                              context,
+                              km: 'ចំនួនលើសស្តុកបច្ចុប្បន្ន',
+                              en: 'Amount exceeds current stock',
+                            ),
+                          );
                           return;
                         }
-                        Navigator.pop(dialogContext, {'mode': mode, 'amount': amount});
+                        Navigator.pop(dialogContext, {
+                          'mode': mode,
+                          'amount': amount,
+                        });
                       },
                 child: Text(appText(context, km: 'រក្សាទុក', en: 'Save')),
               ),
@@ -1571,7 +1679,12 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
       ),
     );
     if (result == null) return;
-    await _applyBulkStockChange(productId, data, result['mode'] as String, result['amount'] as int);
+    await _applyBulkStockChange(
+      productId,
+      data,
+      result['mode'] as String,
+      result['amount'] as int,
+    );
   }
 
   Future<void> _setInitialProductStock(
@@ -1579,25 +1692,52 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
     Map<String, dynamic> data,
   ) async {
     final quantityController = TextEditingController();
-    final unitController = TextEditingController(text: (data['stock_unit'] ?? '').toString());
+    final unitController = TextEditingController(
+      text: (data['stock_unit'] ?? '').toString(),
+    );
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text(appText(context, km: 'កំណត់ស្តុក', en: 'Set stock'), style: const TextStyle(fontFamily: 'Siemreap')),
+        title: Text(
+          appText(context, km: 'កំណត់ស្តុក', en: 'Set stock'),
+          style: const TextStyle(fontFamily: 'Siemreap'),
+        ),
         content: Row(
           children: [
-            Expanded(child: TextField(controller: quantityController, keyboardType: TextInputType.number, decoration: InputDecoration(labelText: appText(context, km: 'ចំនួន', en: 'Quantity')))),
+            Expanded(
+              child: TextField(
+                controller: quantityController,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  labelText: appText(context, km: 'ចំនួន', en: 'Quantity'),
+                ),
+              ),
+            ),
             const SizedBox(width: 10),
-            Expanded(child: TextField(controller: unitController, decoration: InputDecoration(labelText: appText(context, km: 'ឯកតា', en: 'Unit'), hintText: appText(context, km: 'ដើម/គីឡូ', en: 'item/kg')))),
+            Expanded(
+              child: TextField(
+                controller: unitController,
+                decoration: InputDecoration(
+                  labelText: appText(context, km: 'ឯកតា', en: 'Unit'),
+                  hintText: appText(context, km: 'ដើម/គីឡូ', en: 'item/kg'),
+                ),
+              ),
+            ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(dialogContext), child: Text(appText(context, km: 'បោះបង់', en: 'Cancel'))),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(appText(context, km: 'បោះបង់', en: 'Cancel')),
+          ),
           ElevatedButton(
             onPressed: () {
               final quantity = int.tryParse(quantityController.text.trim());
               if (quantity == null || quantity < 0) return;
-              Navigator.pop(dialogContext, {'quantity': quantity, 'unit': unitController.text.trim()});
+              Navigator.pop(dialogContext, {
+                'quantity': quantity,
+                'unit': unitController.text.trim(),
+              });
             },
             child: Text(appText(context, km: 'រក្សាទុក', en: 'Save')),
           ),
@@ -1608,13 +1748,16 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
     final quantity = result['quantity'] as int;
     final unit = result['unit'] as String;
     try {
-      await FirebaseFirestore.instance.collection('products').doc(productId).update({
-        'track_stock': true,
-        'stock_quantity': quantity,
-        'stock_unit': unit,
-        'is_available': quantity > 0,
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
+      await FirebaseFirestore.instance
+          .collection('products')
+          .doc(productId)
+          .update({
+            'track_stock': true,
+            'stock_quantity': quantity,
+            'stock_unit': unit,
+            'is_available': quantity > 0,
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
       if (!mounted) return;
       setState(() {
         _stockQuantityOverrides[productId] = quantity;
@@ -1629,7 +1772,8 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
   }
 
   Widget _buildInlineStockControl(String productId, Map<String, dynamic> data) {
-    final tracksStock = _stockQuantityOverrides.containsKey(productId) ||
+    final tracksStock =
+        _stockQuantityOverrides.containsKey(productId) ||
         data['track_stock'] == true ||
         data['stock_quantity'] != null;
     if (!tracksStock) {
@@ -1639,37 +1783,75 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
         child: OutlinedButton.icon(
           onPressed: () => _setInitialProductStock(productId, data),
           icon: const Icon(Icons.inventory_2_outlined, size: 15),
-          label: Text(appText(context, km: 'កំណត់ស្តុក', en: 'Set stock'), style: const TextStyle(fontFamily: 'Siemreap', fontSize: 10)),
-          style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 6), foregroundColor: Colors.green.shade700, side: BorderSide(color: Colors.green.shade200)),
+          label: Text(
+            appText(context, km: 'កំណត់ស្តុក', en: 'Set stock'),
+            style: const TextStyle(fontFamily: 'Siemreap', fontSize: 10),
+          ),
+          style: OutlinedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 6),
+            foregroundColor: Colors.green.shade700,
+            side: BorderSide(color: Colors.green.shade200),
+          ),
         ),
       );
     }
-    final quantity = _stockQuantityOverrides[productId] ?? _stockQuantityValue(data['stock_quantity']);
+    final quantity =
+        _stockQuantityOverrides[productId] ??
+        _stockQuantityValue(data['stock_quantity']);
     final isUpdating = _stockUpdatingIds.contains(productId);
-    Widget stockButton(IconData icon, VoidCallback? onPressed) => GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: onPressed,
-      child: Container(
-        width: 30,
-        height: 30,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(color: onPressed == null ? Colors.grey.shade100 : Colors.green.shade50, borderRadius: BorderRadius.circular(8)),
-        child: Icon(icon, size: 17, color: onPressed == null ? Colors.grey : Colors.green.shade700),
-      ),
-    );
+    Widget stockButton(IconData icon, VoidCallback? onPressed) =>
+        GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: onPressed,
+          child: Container(
+            width: 30,
+            height: 30,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: onPressed == null
+                  ? Colors.grey.shade100
+                  : Colors.green.shade50,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(
+              icon,
+              size: 17,
+              color: onPressed == null ? Colors.grey : Colors.green.shade700,
+            ),
+          ),
+        );
     return Row(
       children: [
-        stockButton(Icons.remove, quantity > 0 && !isUpdating ? () => _changeProductStock(productId, data, -1) : null),
+        stockButton(
+          Icons.remove,
+          quantity > 0 && !isUpdating
+              ? () => _changeProductStock(productId, data, -1)
+              : null,
+        ),
         Expanded(
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
-            onTap: isUpdating ? null : () => _showBulkStockDialog(productId, data),
+            onTap: isUpdating
+                ? null
+                : () => _showBulkStockDialog(productId, data),
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 7),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Flexible(child: Text('${appText(context, km: 'ស្តុក', en: 'Stock')}: ${NumberFormat('#,###').format(quantity)}', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontFamily: 'Siemreap', fontSize: 10, fontWeight: FontWeight.bold, color: quantity == 0 ? Colors.red : Colors.black87))),
+                  Flexible(
+                    child: Text(
+                      '${appText(context, km: 'ស្តុក', en: 'Stock')}: ${NumberFormat('#,###').format(quantity)}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontFamily: 'Siemreap',
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: quantity == 0 ? Colors.red : Colors.black87,
+                      ),
+                    ),
+                  ),
                   const SizedBox(width: 3),
                   const Icon(Icons.edit_outlined, size: 12, color: Colors.grey),
                 ],
@@ -1677,7 +1859,10 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
             ),
           ),
         ),
-        stockButton(Icons.add, isUpdating ? null : () => _changeProductStock(productId, data, 1)),
+        stockButton(
+          Icons.add,
+          isUpdating ? null : () => _changeProductStock(productId, data, 1),
+        ),
       ],
     );
   }
@@ -1687,16 +1872,13 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
     final data = doc.data() as Map<String, dynamic>;
     final String docId = doc.id;
 
-
     final String postType = _managePostType(doc);
     final bool isWanted = postType == 'wanted';
     final bool isPreOrder = postType == 'preorder';
 
-
     // 🎯 កំណត់តម្លៃចាក់សោដំបូង
     bool currentLockStatus = data['is_locked'] ?? false;
     final bool? shippingIncluded = data['shipping_included'];
-
 
     final String name = isWanted
         ? (data['productName'] ?? 'គ្មានឈ្មោះ')
@@ -1706,7 +1888,6 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
     final dynamic timestamp =
         data['created_at'] ?? data['savedAt'] ?? data['createdAt'];
 
-
     String imageUrl = "";
     final urls = data['imageUrls'] ?? data['image_urls'];
     if (urls is List && urls.isNotEmpty) {
@@ -1715,14 +1896,13 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
       imageUrl = data['imageUrl'].toString();
     }
 
-
     return LayoutBuilder(
       builder: (context, constraints) {
         final bool isSmallCard = constraints.maxWidth < 200;
 
-
         return GestureDetector(
-          onTap: () => _onProductTap(docId, data, isWanted, isPreOrder: isPreOrder),
+          onTap: () =>
+              _onProductTap(docId, data, isWanted, isPreOrder: isPreOrder),
           child: Container(
             decoration: BoxDecoration(
               color: Colors.white,
@@ -1746,23 +1926,31 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
                       child: Stack(
                         children: [
                           ClipRRect(
-                            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                            borderRadius: const BorderRadius.vertical(
+                              top: Radius.circular(12),
+                            ),
                             child: imageUrl.isNotEmpty
                                 ? CachedNetworkImage(
-                              imageUrl: imageUrl,
-                              width: double.infinity,
-                              fit: BoxFit.cover,
-                              memCacheHeight: 350,
-                              maxWidthDiskCache: 500,
-                              placeholder: (context, url) => Container(color: Colors.grey[100]),
-                              errorWidget: (context, url, error) => const Icon(
-                                Icons.broken_image, color: Colors.grey,
-                              ),
-                            )
+                                    imageUrl: imageUrl,
+                                    width: double.infinity,
+                                    fit: BoxFit.cover,
+                                    memCacheHeight: 350,
+                                    maxWidthDiskCache: 500,
+                                    placeholder: (context, url) =>
+                                        Container(color: Colors.grey[100]),
+                                    errorWidget: (context, url, error) =>
+                                        const Icon(
+                                          Icons.broken_image,
+                                          color: Colors.grey,
+                                        ),
+                                  )
                                 : Container(
-                              color: Colors.grey[100],
-                              child: const Icon(Icons.image_not_supported, color: Colors.grey),
-                            ),
+                                    color: Colors.grey[100],
+                                    child: const Icon(
+                                      Icons.image_not_supported,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
                           ),
                           // ✅ បង្ហាញ Play Icon បើមាន video_url
                           if (data['video_url'] != null &&
@@ -1785,7 +1973,8 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
                             ),
                           // ✅ បង្ហាញ Verified Badge បើ shop_tier មាន basic ឬ premium
                           if (data['shop_tier'] != null &&
-                              (data['shop_tier'] == 'basic' || data['shop_tier'] == 'premium'))
+                              (data['shop_tier'] == 'basic' ||
+                                  data['shop_tier'] == 'premium'))
                             Positioned(
                               bottom: 4,
                               left: 4,
@@ -1890,17 +2079,17 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
                                 ),
                             ],
                           ),
+
+                          if (widget.category == 'ទំនិញរបស់ខ្ញុំ' &&
+                              postType == 'sale') ...[
+                            const SizedBox(height: 6),
+                            _buildInlineStockControl(docId, data),
+                          ],
                         ],
                       ),
-                      if (widget.category == 'ទំនិញរបស់ខ្ញុំ' && postType == 'sale') ...[
-                        const SizedBox(height: 6),
-                        _buildInlineStockControl(docId, data),
-                      ],
                     ),
-
                   ],
                 ),
-
 
                 // 🔘 ផ្នែក Switch ស្ទីល iOS (បៃតង=បើក, ប្រផេះ=បិទ) + Snackbars
                 if (widget.category == "ទំនិញរបស់ខ្ញុំ" && postType == 'sale')
@@ -1937,22 +2126,20 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
                                 onChanged: (bool newValue) async {
                                   // ១. Update UI ភ្លាមៗ
                                   setLocalState(
-                                        () => currentLockStatus = newValue,
+                                    () => currentLockStatus = newValue,
                                   );
                                   data['is_locked'] = newValue;
-
 
                                   try {
                                     // ២. Update ទៅ Firebase
                                     await FirebaseFirestore.instance
                                         .collection(
-                                      isWanted
-                                          ? 'wanted_products'
-                                          : 'products',
-                                    )
+                                          isWanted
+                                              ? 'wanted_products'
+                                              : 'products',
+                                        )
                                         .doc(docId)
                                         .update({'is_locked': newValue});
-
 
                                     // ៣. បង្ហាញ Snackbar តាមមេចង់បាន
                                     ScaffoldMessenger.of(context).showSnackBar(
@@ -1973,7 +2160,7 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
                                     );
                                   } catch (e) {
                                     setLocalState(
-                                          () => currentLockStatus = !newValue,
+                                      () => currentLockStatus = !newValue,
                                     );
                                     data['is_locked'] = !newValue;
                                   }
@@ -2029,10 +2216,13 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
                           ),
                         const SizedBox(width: 8),
 
-
                         // ២. ប៊ូតុង Delete (ពណ៌ក្រហម)
                         GestureDetector(
-                          onTap: () => _showDeleteConfirm(docId, isWanted, isPreOrder: isPreOrder),
+                          onTap: () => _showDeleteConfirm(
+                            docId,
+                            isWanted,
+                            isPreOrder: isPreOrder,
+                          ),
                           child: Container(
                             padding: const EdgeInsets.all(6),
                             decoration: BoxDecoration(
@@ -2060,7 +2250,6 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
     );
   }
 
-
   // ── CART BUTTON ─────────────────────────────────────────
   Widget _buildCartButton(
     Map<String, dynamic> data,
@@ -2068,17 +2257,18 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
     bool isLocked,
     bool? shippingIncluded,
   ) {
-    final disabled = isLocked || data['shop_closed'] == true || shippingIncluded == false;
+    final disabled =
+        isLocked || data['shop_closed'] == true || shippingIncluded == false;
     final alreadyInCart = _cartProductIds.contains(docId);
     final isAdding = _cartAddingIds.contains(docId);
     return GestureDetector(
       onTap: isAdding
           ? null
           : alreadyInCart
-              ? () => _removeFromCart(docId)
-              : disabled
-                  ? null
-                  : () => _fastAddToCart(data, docId),
+          ? () => _removeFromCart(docId)
+          : disabled
+          ? null
+          : () => _fastAddToCart(data, docId),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.all(4),
@@ -2086,8 +2276,8 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
           color: alreadyInCart
               ? Colors.green.shade100
               : disabled
-                  ? Colors.grey[200]
-                  : Colors.green[50],
+              ? Colors.grey[200]
+              : Colors.green[50],
           borderRadius: BorderRadius.circular(8),
         ),
         child: isAdding
@@ -2104,22 +2294,21 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
                 color: alreadyInCart
                     ? Colors.green.shade700
                     : disabled
-                        ? Colors.grey
-                        : Colors.green,
+                    ? Colors.grey
+                    : Colors.green,
                 size: 22,
               ),
       ),
     );
   }
 
-
   // ── LOCK SWITCH ─────────────────────────────────────────
   Widget _buildLockSwitch(
-      String docId,
-      Map<String, dynamic> data,
-      bool isWanted,
-      bool isLocked,
-      ) {
+    String docId,
+    Map<String, dynamic> data,
+    bool isWanted,
+    bool isLocked,
+  ) {
     return Positioned(
       top: 8,
       left: 8,
@@ -2158,17 +2347,15 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
     );
   }
 
-
   Future<void> _toggleLock(
-      String docId,
-      Map<String, dynamic> data,
-      bool isWanted,
-      bool currentStatus,
-      ) async {
+    String docId,
+    Map<String, dynamic> data,
+    bool isWanted,
+    bool currentStatus,
+  ) async {
     setState(() {
       data['is_locked'] = !currentStatus;
     });
-
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -2179,7 +2366,6 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
         duration: const Duration(milliseconds: 800),
       ),
     );
-
 
     try {
       await FirebaseFirestore.instance
@@ -2194,14 +2380,13 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
     }
   }
 
-
   // ── OWNER TOOLS ─────────────────────────────────────────
   Widget _buildOwnerTools(
-      String docId,
-      Map<String, dynamic> data,
-      bool isWanted, {
-      bool isPreOrder = false,
-      }) {
+    String docId,
+    Map<String, dynamic> data,
+    bool isWanted, {
+    bool isPreOrder = false,
+  }) {
     return Positioned(
       top: 8,
       right: 8,
@@ -2233,7 +2418,8 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
             ),
           const SizedBox(width: 6),
           GestureDetector(
-            onTap: () => _showDeleteConfirm(docId, isWanted, isPreOrder: isPreOrder),
+            onTap: () =>
+                _showDeleteConfirm(docId, isWanted, isPreOrder: isPreOrder),
             child: Container(
               padding: const EdgeInsets.all(5),
               decoration: const BoxDecoration(
@@ -2248,7 +2434,6 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
     );
   }
 
-
   void _onProductTap(
     String docId,
     Map<String, dynamic> data,
@@ -2259,21 +2444,23 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
     productWithId['id'] = docId;
     productWithId['isWanted'] = isWanted;
 
-
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => isPreOrder
             ? PreOrderDetailScreen(documentId: docId, data: productWithId)
             : isWanted
-                ? WantedDetailScreen(data: productWithId)
-                : ProductDetailScreen(product: productWithId),
+            ? WantedDetailScreen(data: productWithId)
+            : ProductDetailScreen(product: productWithId),
       ),
     );
   }
 
-
-  void _showDeleteConfirm(String docId, bool isWanted, {bool isPreOrder = false}) {
+  void _showDeleteConfirm(
+    String docId,
+    bool isWanted, {
+    bool isPreOrder = false,
+  }) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -2287,7 +2474,13 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
           TextButton(
             onPressed: () async {
               await FirebaseFirestore.instance
-                  .collection(isPreOrder ? 'pre_orders' : isWanted ? 'wanted_products' : 'products')
+                  .collection(
+                    isPreOrder
+                        ? 'pre_orders'
+                        : isWanted
+                        ? 'wanted_products'
+                        : 'products',
+                  )
                   .doc(docId)
                   .delete();
               Navigator.pop(context);
@@ -2302,18 +2495,20 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
     );
   }
 
-
   // ── ADD TO CART ─────────────────────────────────────────
   Future<void> _fastAddToCart(
     Map<String, dynamic> product,
     String productId,
   ) async {
     if (_currentUserId == null || productId.isEmpty) return;
-    if (_cartProductIds.contains(productId) || _cartAddingIds.contains(productId)) return;
+    if (_cartProductIds.contains(productId) ||
+        _cartAddingIds.contains(productId))
+      return;
     if (mounted) setState(() => _cartAddingIds.add(productId));
 
     final urls = product['image_urls'] ?? product['imageUrls'];
-    final String finalImageUrl = product['image_url']?.toString() ??
+    final String finalImageUrl =
+        product['image_url']?.toString() ??
         (urls is List && urls.isNotEmpty ? urls.first.toString() : '');
     try {
       final existing = await FirebaseFirestore.instance
@@ -2363,7 +2558,13 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(appText(context, km: '✅ បន្ថែមទៅកន្ត្រករួចរាល់!', en: '✅ Added to cart!')),
+            content: Text(
+              appText(
+                context,
+                km: '✅ បន្ថែមទៅកន្ត្រករួចរាល់!',
+                en: '✅ Added to cart!',
+              ),
+            ),
             backgroundColor: Colors.green,
           ),
         );
@@ -2373,7 +2574,11 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
       debugPrint('Add to Cart Error: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${appText(context, km: '❌ បរាជ័យ', en: '❌ Failed')}: $e')),
+          SnackBar(
+            content: Text(
+              '${appText(context, km: '❌ បរាជ័យ', en: '❌ Failed')}: $e',
+            ),
+          ),
         );
       }
     }
@@ -2381,7 +2586,11 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
 
   Future<void> _removeFromCart(String productId) async {
     final uid = _currentUserId;
-    if (uid == null || uid.isEmpty || productId.isEmpty || _cartAddingIds.contains(productId)) return;
+    if (uid == null ||
+        uid.isEmpty ||
+        productId.isEmpty ||
+        _cartAddingIds.contains(productId))
+      return;
     if (mounted) setState(() => _cartAddingIds.add(productId));
     try {
       final snapshot = await FirebaseFirestore.instance
@@ -2404,7 +2613,13 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(appText(context, km: '↩️ បានដកចេញពីកន្ត្រក', en: '↩️ Removed from cart')),
+            content: Text(
+              appText(
+                context,
+                km: '↩️ បានដកចេញពីកន្ត្រក',
+                en: '↩️ Removed from cart',
+              ),
+            ),
             duration: const Duration(seconds: 1),
           ),
         );
@@ -2415,11 +2630,9 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
     }
   }
 
-
   // ── FORMAT TIME AGO (នៅក្នុង class ឥឡូវ) ─────────────────
   String _formatTimeAgo(dynamic timestamp) {
     if (timestamp == null) return "មុននេះបន្តិច";
-
 
     DateTime date;
     if (timestamp is Timestamp) {
@@ -2430,9 +2643,7 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
       return "មុននេះបន្តិច";
     }
 
-
     final Duration diff = DateTime.now().difference(date);
-
 
     if (diff.inMinutes < 1) return "មុននេះបន្តិច";
     if (diff.inMinutes < 60) return "${diff.inMinutes} នាទីមុន";
@@ -2441,7 +2652,6 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
     return "${date.day}/${date.month}/${date.year}";
   }
 
-
   @override
   void dispose() {
     _cartSubscription?.cancel();
@@ -2449,6 +2659,3 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
     super.dispose();
   }
 }
-
-
-

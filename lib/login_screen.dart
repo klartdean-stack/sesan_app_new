@@ -191,7 +191,8 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   String _accountText({required String km, required String en}) {
-    final code = Get.locale?.languageCode ??
+    final code =
+        Get.locale?.languageCode ??
         Localizations.maybeLocaleOf(context)?.languageCode ??
         'km';
     return code == 'en' ? en : km;
@@ -226,7 +227,9 @@ class _LoginScreenState extends State<LoginScreen> {
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) => AlertDialog(
-        title: Text(_accountText(km: 'ស្ដារគណនីវិញ?', en: 'Restore your account?')),
+        title: Text(
+          _accountText(km: 'ស្ដារគណនីវិញ?', en: 'Restore your account?'),
+        ),
         content: Text(
           _accountText(
             km: 'គណនីនេះកំពុងរង់ចាំការលុប។ នៅសល់ប្រហែល $remaining ថ្ងៃសម្រាប់ស្ដារគណនី និង Content ទាំងអស់វិញ។',
@@ -296,7 +299,7 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Align(
+                  Align(
                     alignment: Alignment.centerRight,
                     child: LanguageSwitcher(),
                   ),
@@ -367,8 +370,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     isPassword: true,
                     validator: (v) {
                       if (v == null || v.isEmpty) return 'password_required'.tr;
-                      if (v.length < 6)
-                        return 'password_min_6'.tr;
+                      if (v.length < 6) return 'password_min_6'.tr;
                       return null;
                     },
                   ),
@@ -381,17 +383,15 @@ class _LoginScreenState extends State<LoginScreen> {
                       Expanded(
                         flex: 3,
                         child: InkWell(
-                          onTap: () => setState(
-                            () => _rememberPhone = !_rememberPhone,
-                          ),
+                          onTap: () =>
+                              setState(() => _rememberPhone = !_rememberPhone),
                           borderRadius: BorderRadius.circular(10),
                           child: Row(
                             children: [
                               Checkbox(
                                 value: _rememberPhone,
-                                onChanged: (v) => setState(
-                                  () => _rememberPhone = v ?? false,
-                                ),
+                                onChanged: (v) =>
+                                    setState(() => _rememberPhone = v ?? false),
                                 activeColor: Colors.green,
                                 visualDensity: VisualDensity.compact,
                               ),

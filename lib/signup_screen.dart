@@ -204,7 +204,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
             key: _formKey,
             child: Column(
               children: [
-                const Align(
+                Align(
                   alignment: Alignment.centerRight,
                   child: LanguageSwitcher(),
                 ),
@@ -269,8 +269,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   validator: (value) {
                     if (value == null || value.isEmpty)
                       return 'password_required'.tr;
-                    if (value.length != 6)
-                      return 'password_exact_6'.tr;
+                    if (value.length != 6) return 'password_exact_6'.tr;
                     return null;
                   },
                   decoration: _inputDecoration(
@@ -346,8 +345,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           ),
                         ),
                         InkWell(
-                          onTap: () =>
-                              _openLegalPage('https://about.sesanshop.com/terms'),
+                          onTap: () => _openLegalPage(
+                            'https://about.sesanshop.com/terms',
+                          ),
                           child: const Padding(
                             padding: EdgeInsets.symmetric(vertical: 4),
                             child: Text(

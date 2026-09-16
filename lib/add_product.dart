@@ -24,19 +24,15 @@ import 'package:image_cropper/image_cropper.dart';
 import 'package:video_player/video_player.dart';
 import 'category_localization.dart';
 
-
 class AddProductPage extends StatefulWidget {
   final String? productId;
   final Map<String, dynamic>? initialData;
 
-
   const AddProductPage({super.key, this.productId, this.initialData});
-
 
   @override
   State<AddProductPage> createState() => _AddProductPageState();
 }
-
 
 class _AddProductPageState extends State<AddProductPage> {
   String _t(String km, String en) =>
@@ -52,7 +48,6 @@ class _AddProductPageState extends State<AddProductPage> {
   final TextEditingController phone1Controller = TextEditingController();
   final TextEditingController phone2Controller = TextEditingController();
   final TextEditingController locationController = TextEditingController();
-  final Geocoding _geocoding = Geocoding();
   bool _locationChosenManually = false;
   double? selectedLat;
   double? selectedLng;
@@ -71,7 +66,6 @@ class _AddProductPageState extends State<AddProductPage> {
   final UploadController uploadController = Get.put(UploadController());
   VideoPlayerController? _videoPreviewController;
   bool _isVideoPreviewReady = false;
-
 
   String? selectedCategory;
   String? selectedSubCategory; // ✅ បន្ថែមបន្ទាត់នេះ
@@ -92,7 +86,6 @@ class _AddProductPageState extends State<AddProductPage> {
   Map<String, dynamic> subCategories = {
     'គ្រឿងចក្រ': ['ទាំងអស់', 'ថ្មី', 'មួយទឹក', 'កាប់សាច់', 'គ្រឿងបន្លាស់'],
 
-
     'សម្ភារៈកសិកម្ម': {
       'ទាំងអស់': [],
       'ម៉ាស៊ីន': ['ទាំងអស់', 'ថ្មី', 'មួយទឹក', 'កាប់សាច់'],
@@ -100,9 +93,7 @@ class _AddProductPageState extends State<AddProductPage> {
       'គ្រឿងបន្លាស់': ['ទាំងអស់', 'ថ្មី', 'មួយទឹក', 'កាប់សាច់'],
     },
 
-
     'ពូជដំណាំ': ['ទាំងអស់', 'ឈើហូបផ្លែ', 'បន្លែ', 'ផ្ការ', 'ឈើព្រៃ', 'ផ្សេងៗ'],
-
 
     'ពូជសត្វចិញ្ចឹម': [
       'ទាំងអស់',
@@ -123,9 +114,7 @@ class _AddProductPageState extends State<AddProductPage> {
       'ផ្សេងៗ',
     ],
 
-
     'ជីនិងថ្នាំ': ['ទាំងអស់', 'ជី', 'ថ្នាំ', 'វីតាមីន', 'ចំណីសត្វ', 'ផ្សេងៗ'],
-
 
     'បន្លែផ្លែឈើ': [
       'ទាំងអស់',
@@ -137,7 +126,6 @@ class _AddProductPageState extends State<AddProductPage> {
       'ផ្សេងៗ',
     ],
 
-
     'ត្រីសាច់': [
       'ទាំងអស់',
       'ត្រី',
@@ -148,7 +136,6 @@ class _AddProductPageState extends State<AddProductPage> {
       'ក្ដាម',
       'ផ្សេងៗ',
     ],
-
 
     'សេវាកម្ម': [
       'ទាំងអស់',
@@ -172,10 +159,11 @@ class _AddProductPageState extends State<AddProductPage> {
     ],
   };
 
-
   String _imageMimeType(XFile image) {
     final mimeType = image.mimeType?.toLowerCase();
-    if (mimeType == 'image/png' || mimeType == 'image/webp' || mimeType == 'image/jpeg') {
+    if (mimeType == 'image/png' ||
+        mimeType == 'image/webp' ||
+        mimeType == 'image/jpeg') {
       return mimeType!;
     }
     final name = image.name.toLowerCase();
@@ -195,7 +183,9 @@ class _AddProductPageState extends State<AddProductPage> {
       if (bytes.isEmpty || bytes.length > maxImageBytes) continue;
       if (totalBytes + bytes.length > maxTotalBytes) break;
       totalBytes += bytes.length;
-      imageInputs.add('data:${_imageMimeType(image)};base64,${base64Encode(bytes)}');
+      imageInputs.add(
+        'data:${_imageMimeType(image)};base64,${base64Encode(bytes)}',
+      );
     }
     return imageInputs;
   }
@@ -206,8 +196,10 @@ class _AddProductPageState extends State<AddProductPage> {
     if (selectedImages.isEmpty) {
       Get.snackbar(
         _t('សូមជ្រើសរូបទំនិញជាមុន', 'Add a product photo first'),
-        _t('Sesan AI ត្រូវវិភាគរូបទំនិញជាមុន ហើយការប្រើម្តងកាត់ 3 Credits។',
-            'Sesan AI must inspect a product photo first. Each use costs 3 Credits.'),
+        _t(
+          'Sesan AI ត្រូវវិភាគរូបទំនិញជាមុន ហើយការប្រើម្តងកាត់ 3 Credits។',
+          'Sesan AI must inspect a product photo first. Each use costs 3 Credits.',
+        ),
         backgroundColor: Colors.orange.shade700,
         colorText: Colors.white,
       );
@@ -217,11 +209,16 @@ class _AddProductPageState extends State<AddProductPage> {
     try {
       final imageInputs = await _buildAiImageInputs();
       if (imageInputs.isEmpty) {
-        throw Exception(_t('រូបធំពេកសម្រាប់ Sesan AI។ សូមជ្រើសរូបតូចជាងនេះ។',
-            'The photos are too large for Sesan AI. Choose smaller photos.'));
+        throw Exception(
+          _t(
+            'រូបធំពេកសម្រាប់ Sesan AI។ សូមជ្រើសរូបតូចជាងនេះ។',
+            'The photos are too large for Sesan AI. Choose smaller photos.',
+          ),
+        );
       }
-      final callable = FirebaseFunctions.instanceFor(region: 'asia-southeast1')
-          .httpsCallable('generateProductAiContent');
+      final callable = FirebaseFunctions.instanceFor(
+        region: 'asia-southeast1',
+      ).httpsCallable('generateProductAiContent');
       final response = await callable.call(<String, dynamic>{
         'productName': productName,
         'notes': notes,
@@ -239,35 +236,52 @@ class _AddProductPageState extends State<AddProductPage> {
       final isEnglish = Localizations.localeOf(context).languageCode == 'en';
       setState(() {
         nameController.text = isEnglish ? _aiTitleEn! : _aiTitleKm!;
-        descriptionController.text = isEnglish ? _aiDescriptionEn! : _aiDescriptionKm!;
+        descriptionController.text = isEnglish
+            ? _aiDescriptionEn!
+            : _aiDescriptionKm!;
         if (categories.contains(suggestedCategory)) {
           selectedCategory = suggestedCategory;
           selectedSubCategory = null;
           selectedSubSubCategory = null;
         }
-        if (suggestedStockUnit.isNotEmpty) stockUnitController.text = suggestedStockUnit;
+        if (suggestedStockUnit.isNotEmpty)
+          stockUnitController.text = suggestedStockUnit;
       });
-      final remainingCredits = int.tryParse((data['remainingCredits'] ?? '').toString());
+      final remainingCredits = int.tryParse(
+        (data['remainingCredits'] ?? '').toString(),
+      );
       Get.snackbar(
         notes.isNotEmpty
             ? _t('Sesan AI បានកែសម្រួលរួច', 'Sesan AI improvement is ready')
             : _t('Sesan AI បានរៀបចំរួច', 'Sesan AI draft is ready'),
         remainingCredits == null
-            ? _t('បានប្រើ 3 Credits។ សូមពិនិត្យមុនផុស។', '3 Credits used. Review before publishing.')
-            : _t('បានប្រើ 3 Credits · នៅសល់ $remainingCredits Credits។ សូមពិនិត្យមុនផុស។',
-                '3 Credits used · $remainingCredits Credits left. Review before publishing.'),
+            ? _t(
+                'បានប្រើ 3 Credits។ សូមពិនិត្យមុនផុស។',
+                '3 Credits used. Review before publishing.',
+              )
+            : _t(
+                'បានប្រើ 3 Credits · នៅសល់ $remainingCredits Credits។ សូមពិនិត្យមុនផុស។',
+                '3 Credits used · $remainingCredits Credits left. Review before publishing.',
+              ),
         backgroundColor: Colors.green,
         colorText: Colors.white,
       );
     } on FirebaseFunctionsException catch (error) {
       if (!mounted) return;
-      Get.snackbar(_t('មិនអាចប្រើ Sesan AI បាន', 'Could not use Sesan AI'),
-          error.message ?? _t('សូមព្យាយាមម្ដងទៀត។', 'Please try again.'),
-          backgroundColor: Colors.redAccent, colorText: Colors.white);
+      Get.snackbar(
+        _t('មិនអាចប្រើ Sesan AI បាន', 'Could not use Sesan AI'),
+        error.message ?? _t('សូមព្យាយាមម្ដងទៀត។', 'Please try again.'),
+        backgroundColor: Colors.redAccent,
+        colorText: Colors.white,
+      );
     } catch (error) {
       if (!mounted) return;
-      Get.snackbar(_t('មានបញ្ហា', 'Something went wrong'), error.toString(),
-          backgroundColor: Colors.redAccent, colorText: Colors.white);
+      Get.snackbar(
+        _t('មានបញ្ហា', 'Something went wrong'),
+        error.toString(),
+        backgroundColor: Colors.redAccent,
+        colorText: Colors.white,
+      );
     } finally {
       if (mounted) setState(() => _isAiGenerating = false);
     }
@@ -278,8 +292,8 @@ class _AddProductPageState extends State<AddProductPage> {
 
     try {
       final prefs = await SharedPreferences.getInstance();
-      final uid = FirebaseAuth.instance.currentUser?.uid ??
-          prefs.getString('user_uid');
+      final uid =
+          FirebaseAuth.instance.currentUser?.uid ?? prefs.getString('user_uid');
       if (uid == null || uid.isEmpty) return;
 
       Map<String, dynamic>? latestProduct;
@@ -290,7 +304,8 @@ class _AddProductPageState extends State<AddProductPage> {
             .orderBy('created_at', descending: true)
             .limit(1)
             .get();
-        if (snapshot.docs.isNotEmpty) latestProduct = snapshot.docs.first.data();
+        if (snapshot.docs.isNotEmpty)
+          latestProduct = snapshot.docs.first.data();
       } catch (_) {
         final snapshot = await FirebaseFirestore.instance
             .collection('products')
@@ -365,8 +380,10 @@ class _AddProductPageState extends State<AddProductPage> {
         if (locationController.text.trim().isEmpty && location.isNotEmpty) {
           locationController.text = location;
         }
-        if (selectedLat == null && latValue is num) selectedLat = latValue.toDouble();
-        if (selectedLng == null && lngValue is num) selectedLng = lngValue.toDouble();
+        if (selectedLat == null && latValue is num)
+          selectedLat = latValue.toDouble();
+        if (selectedLng == null && lngValue is num)
+          selectedLng = lngValue.toDouble();
       });
     } catch (error) {
       debugPrint('Seller contact prefill failed: $error');
@@ -384,8 +401,10 @@ class _AddProductPageState extends State<AddProductPage> {
       nameController.text = widget.initialData!['product_name'] ?? '';
       descriptionController.text = widget.initialData!['description'] ?? '';
       priceController.text = widget.initialData!['price']?.toString() ?? '';
-      stockQuantityController.text = widget.initialData!['stock_quantity']?.toString() ?? '';
-      stockUnitController.text = widget.initialData!['stock_unit']?.toString() ?? '';
+      stockQuantityController.text =
+          widget.initialData!['stock_quantity']?.toString() ?? '';
+      stockUnitController.text =
+          widget.initialData!['stock_unit']?.toString() ?? '';
       phone1Controller.text = widget.initialData!['phone1'] ?? '';
       phone2Controller.text = widget.initialData!['phone2'] ?? '';
       locationController.text = widget.initialData!['location'] ?? '';
@@ -458,9 +477,7 @@ class _AddProductPageState extends State<AddProductPage> {
     try {
       await _videoPreviewController?.dispose();
 
-      final controller = VideoPlayerController.file(
-        File(selectedVideo!.path),
-      );
+      final controller = VideoPlayerController.file(File(selectedVideo!.path));
 
       _videoPreviewController = controller;
       _isVideoPreviewReady = false;
@@ -501,9 +518,7 @@ class _AddProductPageState extends State<AddProductPage> {
                           ),
                         )
                       else
-                        const CircularProgressIndicator(
-                          color: Colors.white,
-                        ),
+                        const CircularProgressIndicator(color: Colors.white),
 
                       Positioned(
                         bottom: 16,
@@ -563,17 +578,29 @@ class _AddProductPageState extends State<AddProductPage> {
   Future<void> _fillLocationFromMap(LatLng point) async {
     if (_locationChosenManually || !mounted) return;
     try {
-      final placemarks = await placemarkFromCoordinates(point.latitude, point.longitude);
+      final placemarks = await placemarkFromCoordinates(
+        point.latitude,
+        point.longitude,
+      );
       if (!mounted || _locationChosenManually) return;
       final parts = <String>[];
       if (placemarks.isNotEmpty) {
         final place = placemarks.first;
-        for (final value in [place.administrativeArea, place.subAdministrativeArea, place.locality, place.subLocality]) {
+        for (final value in [
+          place.administrativeArea,
+          place.subAdministrativeArea,
+          place.locality,
+          place.subLocality,
+        ]) {
           final clean = value?.trim() ?? '';
           if (clean.isNotEmpty && !parts.contains(clean)) parts.add(clean);
         }
       }
-      setState(() => locationController.text = parts.isNotEmpty ? parts.join(', ') : '${point.latitude.toStringAsFixed(6)}, ${point.longitude.toStringAsFixed(6)}');
+      setState(
+        () => locationController.text = parts.isNotEmpty
+            ? parts.join(', ')
+            : '${point.latitude.toStringAsFixed(6)}, ${point.longitude.toStringAsFixed(6)}',
+      );
     } catch (_) {}
   }
 
@@ -585,18 +612,15 @@ class _AddProductPageState extends State<AddProductPage> {
       imageQuality: 85, // បន្ថយគុណភាពបន្តិច ដើម្បីឱ្យវារុញមកលឿន
     );
 
-
     if (images.isNotEmpty) {
       // ... កូដផ្សេងៗទៀតរបស់មេ ទុកដដែល ...
       List<XFile> allPicked = [...selectedImages, ...images];
-
 
       if (allPicked.length > 10) {
         // 🎯 កាត់យកត្រឹមតែ ១០ សន្លឹកដំបូងគត់
         setState(() {
           selectedImages = allPicked.sublist(0, 10);
         });
-
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('យើងកាត់យកត្រឹម ១០ សន្លឹកដំបូងជូនមេ!')),
@@ -609,14 +633,12 @@ class _AddProductPageState extends State<AddProductPage> {
     }
   }
 
-
   Future<void> pickVideo() async {
     // 🎯 ប្រើឈ្មោះ pickVideo ឱ្យដូចកូដចាស់មេ
     final XFile? video = await _picker.pickVideo(
       source: ImageSource.gallery,
       maxDuration: const Duration(seconds: 60), // កែជា ៦០ វិនាទីតាមមេចង់បាន
     );
-
 
     if (video != null) {
       // 🎯 ឆែកឱ្យច្បាស់ ១០០% បើលើស ៦០ វិនាទី គឺមិនយកដាច់ខាត
@@ -631,20 +653,16 @@ class _AddProductPageState extends State<AddProductPage> {
     }
   }
 
-
   // --- មុខងារបង្រួមរូបភាព (កែសម្រួលឱ្យកាន់តែសុវត្ថិភាព និងច្បាស់ល្អ) ---
   Future<File?> _compressImage(File file) async {
     try {
       final filePath = file.absolute.path;
 
-
       // 🎯 រកចំណុច (.) ចុងក្រោយគេបង្អស់ ដើម្បីកាត់ឈ្មោះ File ឱ្យត្រូវគ្រប់ប្រភេទ (png, jpg, heic)
       final lastIndex = filePath.lastIndexOf('.');
 
-
       // បង្កើត Path ថ្មីសម្រាប់រក្សាទុក File ដែលបង្រួមរួច
       final outPath = "${filePath.substring(0, lastIndex)}_compressed.jpg";
-
 
       // ចាប់ផ្ដើមបង្រួមរូបភាព
       var result = await FlutterImageCompress.compressAndGetFile(
@@ -657,9 +675,7 @@ class _AddProductPageState extends State<AddProductPage> {
             .jpeg, // 🎯 បង្ខំឱ្យទៅជា JPEG ដើម្បីឱ្យ Firebase ងាយអាន
       );
 
-
       if (result == null) return null;
-
 
       return File(result.path);
     } catch (e) {
@@ -668,20 +684,17 @@ class _AddProductPageState extends State<AddProductPage> {
     }
   }
 
-
   Future<File?> _compressVideo(File file) async {
     try {
       print("--- ចាប់ផ្ដើមបង្រួមវីដេអូ ---");
       print("ទំហំដើម៖ ${file.lengthSync() / (1024 * 1024)} MB");
 
-
       final info = await VideoCompress.compressVideo(
         file.path,
-        quality: VideoQuality.MediumQuality,  // ប្ដូរពី LowQuality
+        quality: VideoQuality.MediumQuality, // ប្ដូរពី LowQuality
         deleteOrigin: false,
         includeAudio: true,
       );
-
 
       if (info != null && info.file != null) {
         print(
@@ -696,11 +709,9 @@ class _AddProductPageState extends State<AddProductPage> {
     return null;
   }
 
-
   // --- នេះជាមុខងារ _uploadToStorage ដែលកែសម្រួលរួច (ផាសជួសកន្លែងចាស់) ---
   Future<String> _uploadToStorage(File file, String folder) async {
     File fileToUpload = file;
-
 
     // បើជារូបភាព ឱ្យវាបង្រួមសិន
     if (folder.contains('images')) {
@@ -710,7 +721,6 @@ class _AddProductPageState extends State<AddProductPage> {
       }
     } else if (folder.contains('videos')) {
       File? compressed = await _compressVideo(file);
-
 
       if (compressed != null) {
         // 🎯 ឆែកមើល៖ បើ File ដែលបង្រួមហើយ បែរជាធំជាង File ដើម ឱ្យយក File ដើមវិញ
@@ -722,7 +732,6 @@ class _AddProductPageState extends State<AddProductPage> {
           print("យក File ដែលបង្រួមរួចទៅ Upload");
         }
 
-
         // ឆែកប្រវែងវីដេអូក្រោម ៦០ វិនាទី
         final info = await VideoCompress.getMediaInfo(fileToUpload.path);
         if (info.duration != null && info.duration! > 60000) {
@@ -730,7 +739,6 @@ class _AddProductPageState extends State<AddProductPage> {
         }
       }
     }
-
 
     String fileExtension = fileToUpload.path.split('.').last;
     String fileName =
@@ -740,27 +748,21 @@ class _AddProductPageState extends State<AddProductPage> {
         .child(folder)
         .child(fileName);
 
-
     SettableMetadata metadata = SettableMetadata(
       contentType: folder.contains('videos')
           ? 'video/$fileExtension'
           : 'image/$fileExtension',
     );
 
-
     UploadTask uploadTask = ref.putFile(fileToUpload, metadata);
     TaskSnapshot snapshot = await uploadTask;
 
-
     if (folder.contains('videos')) await VideoCompress.deleteAllCache();
-
 
     return await snapshot.ref.getDownloadURL();
   }
 
-
   // --- ផាសជំនួសមុខងារ _uploadProduct ចាស់ដោយកូដខាងក្រោមនេះ ---
-
 
   // បន្ថែមមុខងារនេះនៅខាងក្រោម _uploadProduct (ក្រៅសញ្ញាដង្កៀប)
   void _showErrorDialog(String message) {
@@ -778,7 +780,6 @@ class _AddProductPageState extends State<AddProductPage> {
       ),
     );
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -839,320 +840,128 @@ class _AddProductPageState extends State<AddProductPage> {
           ),
         ],
       ),
-        body: GestureDetector(
-          onTap: () => FocusScope.of(context).unfocus(),
-          behavior: HitTestBehavior.translucent, // ឲ្យកូន Widget នៅតែដំណើរការ
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              children: [
-            _buildMediaButton(
-              onTap: () {
-                if (selectedImages.length < 10) {
-                  pickManyImages();
-                }
-              },
-              icon: Icons.collections,
-              label: selectedImages.length >= 10
-                  ? "រូបភាពគ្រប់ចំនួនហើយ (១០/១០)"
-                  : "រើសរូបភាព (${selectedImages.length}/10)",
-              // 🎯 កែពណ៌ឱ្យទៅជាប្រផេះ បើគ្រប់ ១០ សន្លឹក
-              color: selectedImages.length >= 10
-                  ? Colors.grey.shade300
-                  : Colors.blue.shade50,
-              textColor: selectedImages.length >= 10
-                  ? Colors.grey
-                  : Colors.blue,
-            ),
-            const SizedBox(height: 10),
-            // 🎯 បង្ហាញរូបភាព Preview ជាមួយនឹងប៊ូតុងលុប (Cancel)
-            if (selectedImages.isNotEmpty)
-              SizedBox(
-                height: 110, // ថែមទំហំបន្តិចដើម្បីកុំឱ្យដាច់ប៊ូតុងលុប
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: selectedImages.length,
-                  itemBuilder: (context, index) => Padding(
-                    padding: const EdgeInsets.only(right: 12, top: 10),
-                    child: Stack(
-                      clipBehavior: Clip.none, // ឱ្យប៊ូតុងលុបអាចលយចេញក្រៅបាន
-                      children: [
-                        // ១. បង្ហាញរូបថត
-                        GestureDetector(
-                          onTap: () => _cropImage(index),
-                          child: Stack(
-                            children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(12),
-                                child: Image.file(
-                                  File(selectedImages[index].path),
-                                  width: 90,
-                                  height: 90,
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-
-                              Positioned(
-                                bottom: 0,
-                                left: 0,
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 6,
-                                    vertical: 3,
+      body: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        behavior: HitTestBehavior.translucent, // ឲ្យកូន Widget នៅតែដំណើរការ
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              _buildMediaButton(
+                onTap: () {
+                  if (selectedImages.length < 10) {
+                    pickManyImages();
+                  }
+                },
+                icon: Icons.collections,
+                label: selectedImages.length >= 10
+                    ? "រូបភាពគ្រប់ចំនួនហើយ (១០/១០)"
+                    : "រើសរូបភាព (${selectedImages.length}/10)",
+                // 🎯 កែពណ៌ឱ្យទៅជាប្រផេះ បើគ្រប់ ១០ សន្លឹក
+                color: selectedImages.length >= 10
+                    ? Colors.grey.shade300
+                    : Colors.blue.shade50,
+                textColor: selectedImages.length >= 10
+                    ? Colors.grey
+                    : Colors.blue,
+              ),
+              const SizedBox(height: 10),
+              // 🎯 បង្ហាញរូបភាព Preview ជាមួយនឹងប៊ូតុងលុប (Cancel)
+              if (selectedImages.isNotEmpty)
+                SizedBox(
+                  height: 110, // ថែមទំហំបន្តិចដើម្បីកុំឱ្យដាច់ប៊ូតុងលុប
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: selectedImages.length,
+                    itemBuilder: (context, index) => Padding(
+                      padding: const EdgeInsets.only(right: 12, top: 10),
+                      child: Stack(
+                        clipBehavior: Clip.none, // ឱ្យប៊ូតុងលុបអាចលយចេញក្រៅបាន
+                        children: [
+                          // ១. បង្ហាញរូបថត
+                          GestureDetector(
+                            onTap: () => _cropImage(index),
+                            child: Stack(
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Image.file(
+                                    File(selectedImages[index].path),
+                                    width: 90,
+                                    height: 90,
+                                    fit: BoxFit.cover,
                                   ),
-                                  decoration: const BoxDecoration(
-                                    color: Colors.black54,
-                                    borderRadius: BorderRadius.only(
-                                      topRight: Radius.circular(8),
-                                      bottomLeft: Radius.circular(12),
+                                ),
+
+                                Positioned(
+                                  bottom: 0,
+                                  left: 0,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 3,
+                                    ),
+                                    decoration: const BoxDecoration(
+                                      color: Colors.black54,
+                                      borderRadius: BorderRadius.only(
+                                        topRight: Radius.circular(8),
+                                        bottomLeft: Radius.circular(12),
+                                      ),
+                                    ),
+                                    child: const Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          Icons.crop,
+                                          color: Colors.white,
+                                          size: 13,
+                                        ),
+                                        SizedBox(width: 2),
+                                        Text(
+                                          'Crop',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 9,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
-                                  child: const Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(
-                                        Icons.crop,
-                                        color: Colors.white,
-                                        size: 13,
-                                      ),
-                                      SizedBox(width: 2),
-                                      Text(
-                                        'Crop',
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 9,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
-                        ),
-
-
-                        // ២. ប៊ូតុង Cancel (លុបរូប) - ដាក់នៅខាងស្តាំដៃលើរូប
-                        Positioned(
-                          top: -8,
-                          right: -8,
-                          child: GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                selectedImages.removeAt(
-                                  index,
-                                ); // 🎯 លុបរូបចេញពី List ភ្លាម
-                              });
-                            },
-                            child: Container(
-                              decoration: const BoxDecoration(
-                                color: Colors.red,
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black26,
-                                    blurRadius: 4,
-                                  ),
-                                ],
-                              ),
-                              padding: const EdgeInsets.all(4),
-                              child: const Icon(
-                                Icons.close,
-                                color: Colors.white,
-                                size: 16,
-                              ),
+                              ],
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
 
-
-            const SizedBox(height: 15),
-
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildMediaButton(
-                        onTap: pickVideo,
-                        icon: Icons.video_library,
-                        label: selectedVideo == null
-                            ? 'រើសវីដេអូបង្ហាញទំនិញ'
-                            : 'រើសវីដេអូរួចរាល់ ✅',
-                        color: Colors.orange.shade50,
-                        textColor: Colors.orange,
-                      ),
-                    ),
-
-                    if (selectedVideo != null) ...[
-                      const SizedBox(width: 8),
-
-                      IconButton(
-                        onPressed: _previewVideo,
-                        tooltip: 'មើលវីដេអូ',
-                        icon: const Icon(
-                          Icons.play_circle_fill,
-                          color: Colors.green,
-                          size: 40,
-                        ),
-                      ),
-
-                      IconButton(
-                        tooltip: 'លុបវីដេអូ',
-                        onPressed: () async {
-                          await _videoPreviewController?.pause();
-                          await _videoPreviewController?.dispose();
-
-                          if (!mounted) return;
-
-                          setState(() {
-                            selectedVideo = null;
-                            _videoPreviewController = null;
-                            _isVideoPreviewReady = false;
-                          });
-                        },
-                        icon: const Icon(
-                          Icons.close,
-                          color: Colors.red,
-                          size: 30,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-
-
-            const SizedBox(height: 14),
-            Align(
-              alignment: Alignment.centerRight,
-              child: OutlinedButton.icon(
-                onPressed: _isAiGenerating ? null : _generateWithSesanAi,
-                icon: _isAiGenerating
-                    ? const SizedBox(width: 15, height: 15, child: CircularProgressIndicator(strokeWidth: 1.8))
-                    : const Icon(Icons.auto_awesome, size: 15),
-                label: ValueListenableBuilder<TextEditingValue>(
-                  valueListenable: descriptionController,
-                  builder: (context, value, _) => Text(
-                    _isAiGenerating
-                        ? _t('AI កំពុងរៀបចំ...', 'AI is working...')
-                        : value.text.trim().isNotEmpty
-                            ? _t('AI កែសម្រួល', 'AI Improve')
-                            : _t('AI ជួយសរសេរ', 'AI Write'),
-                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
-                  ),
-                ),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.deepPurple,
-                  side: BorderSide(color: Colors.deepPurple.withOpacity(0.75)),
-                  minimumSize: const Size(0, 32),
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  visualDensity: VisualDensity.compact,
-                ),
-              ),
-            ),
-            const SizedBox(height: 10),
-            _buildTextField(_t('ឈ្មោះទំនិញ *', 'Product name *'), Icons.shopping_bag, nameController),
-            const SizedBox(height: 10),
-            _buildCategoryDropdown(),
-            const SizedBox(height: 10),
-            _buildPriceSection(),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildTextField(
-                    _t('ចំនួនស្តុក *', 'Stock quantity *'),
-                    Icons.inventory_2_outlined,
-                    stockQuantityController,
-                    isNumber: true,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(child: _buildStockUnitField()),
-              ],
-            ),
-            const SizedBox(height: 10),
-            _buildTextField(
-              _t('បរិយាយទំនិញ', 'Product description'),
-              Icons.description,
-              descriptionController,
-              maxLines: 3,
-            ),
-            const SizedBox(height: 10),
-            _buildPhoneSection(),
-            const SizedBox(height: 10),
-
-
-            /// ROW ទីតាំង និង MAP
-            Row(
-              children: [
-                /// =========================
-                /// LOCATION PICKER (រើសខេត្ត/ស្រុក/ឃុំ)
-                /// =========================
-                /// LOCATION PICKER (រៀបឱ្យស៊ីជាមួយ TextField ផ្សេងៗ)
-                /// =========================
-                Expanded(
-                  flex: 3,
-                  child: InkWell(
-                    onTap: () {
-                      showLocationPicker(
-                        context,
-                        onSelected: (location) {
-                          setState(() {
-                            _locationChosenManually = true;
-                            locationController.text = location.toString();
-                          });
-                        },
-                      );
-                    },
-                    borderRadius: BorderRadius.circular(
-                      10,
-                    ), // កែមក ១០ ឱ្យស្មើ TextField លើៗ
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal:
-                        12, // សារ៉េឱ្យស្មើ PrefixIcon របស់ TextField
-                        vertical: 15,
-                      ),
-                      decoration: BoxDecoration(
-                        // ✅ ១. លុប color: Colors.white ចោល (ឱ្យវាយកពណ៌តាម Theme App)
-                        borderRadius: BorderRadius.circular(10),
-
-
-                        // ✅ ២. សារ៉េពណ៌ Border ឱ្យស្រាលបំផុត (ដូច TextField ដើម)
-                        border: Border.all(color: Colors.grey.shade400),
-
-
-                        // ✅ ៣. បន្ថែមស្រមោលស្រាលៗ ដើម្បីឱ្យវាមាន "រង្វង់" និង "ជម្រៅ" ដូចគេ
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.location_city,
-                            color: Colors
-                                .green, // ប្រើពណ៌បៃតងឱ្យស៊ីជាមួយ Icon ក្នុង TextField ផ្សេងទៀត
-                            size: 24,
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              locationController.text.isEmpty
-                                  ? "ជ្រើសទីតាំង *"
-                                  : locationController.text,
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: locationController.text.isEmpty
-                                    ? Colors
-                                    .grey
-                                    .shade600 // ពណ៌អក្សរ Hint
-                                    : Colors.black87,
-                                fontFamily: 'Siemreap',
+                          // ២. ប៊ូតុង Cancel (លុបរូប) - ដាក់នៅខាងស្តាំដៃលើរូប
+                          Positioned(
+                            top: -8,
+                            right: -8,
+                            child: GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  selectedImages.removeAt(
+                                    index,
+                                  ); // 🎯 លុបរូបចេញពី List ភ្លាម
+                                });
+                              },
+                              child: Container(
+                                decoration: const BoxDecoration(
+                                  color: Colors.red,
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black26,
+                                      blurRadius: 4,
+                                    ),
+                                  ],
+                                ),
+                                padding: const EdgeInsets.all(4),
+                                child: const Icon(
+                                  Icons.close,
+                                  color: Colors.white,
+                                  size: 16,
+                                ),
                               ),
-                              overflow: TextOverflow.ellipsis,
-                              maxLines: 1,
                             ),
                           ),
                         ],
@@ -1161,234 +970,439 @@ class _AddProductPageState extends State<AddProductPage> {
                   ),
                 ),
 
+              const SizedBox(height: 15),
 
-                const SizedBox(width: 10),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildMediaButton(
+                      onTap: pickVideo,
+                      icon: Icons.video_library,
+                      label: selectedVideo == null
+                          ? 'រើសវីដេអូបង្ហាញទំនិញ'
+                          : 'រើសវីដេអូរួចរាល់ ✅',
+                      color: Colors.orange.shade50,
+                      textColor: Colors.orange,
+                    ),
+                  ),
 
+                  if (selectedVideo != null) ...[
+                    const SizedBox(width: 8),
 
-                /// =========================
-                /// MAP PICKER BUTTON (Coming Soon)
-                /// =========================
-                Expanded(
-                  flex: 1,
-                  child: Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      InkWell(
-                        onTap: () async {
-                          final result = await Navigator.push<LatLng>(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => MapPickerScreen(
-                                initialLat: selectedLat,
-                                initialLng: selectedLng,
-                              ),
-                            ),
-                          );
-                          if (result == null || !mounted) return;
-                          setState(() {
-                            selectedLat = result.latitude;
-                            selectedLng = result.longitude;
-                          });
-                          await _fillLocationFromMap(result);
-                        },
-                        borderRadius: BorderRadius.circular(14),
-                        child: Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          decoration: BoxDecoration(
-                            color: selectedLat != null && selectedLng != null
-                                ? Colors.green.withValues(alpha: 0.12)
-                                : Colors.green.withValues(alpha: 0.06),
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(
-                              color: selectedLat != null && selectedLng != null
-                                  ? Colors.green
-                                  : Colors.green.shade300,
-                            ),
-                          ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                selectedLat != null && selectedLng != null
-                                    ? Icons.location_on
-                                    : Icons.map_outlined,
-                                color: Colors.green.shade700,
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                selectedLat != null && selectedLng != null
-                                    ? _t('បាន Pin', 'Pinned')
-                                    : 'Maps',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  color: Colors.green.shade800,
-                                  fontWeight: FontWeight.bold,
-                                  fontFamily: 'Siemreap',
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+                    IconButton(
+                      onPressed: _previewVideo,
+                      tooltip: 'មើលវីដេអូ',
+                      icon: const Icon(
+                        Icons.play_circle_fill,
+                        color: Colors.green,
+                        size: 40,
                       ),
-                      if (selectedLat != null && selectedLng != null)
-                        Positioned(
-                          top: -9,
-                          right: -9,
-                          child: Material(
-                            color: Colors.red,
-                            shape: const CircleBorder(),
-                            elevation: 2,
-                            child: InkWell(
-                              customBorder: const CircleBorder(),
-                              onTap: () {
-                                setState(() {
-                                  selectedLat = null;
-                                  selectedLng = null;
-                                });
-                              },
-                              child: const Padding(
-                                padding: EdgeInsets.all(5),
-                                child: Icon(
-                                  Icons.close,
-                                  size: 16,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
+                    ),
+
+                    IconButton(
+                      tooltip: 'លុបវីដេអូ',
+                      onPressed: () async {
+                        await _videoPreviewController?.pause();
+                        await _videoPreviewController?.dispose();
+
+                        if (!mounted) return;
+
+                        setState(() {
+                          selectedVideo = null;
+                          _videoPreviewController = null;
+                          _isVideoPreviewReady = false;
+                        });
+                      },
+                      icon: const Icon(
+                        Icons.close,
+                        color: Colors.red,
+                        size: 30,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+
+              const SizedBox(height: 14),
+              Align(
+                alignment: Alignment.centerRight,
+                child: OutlinedButton.icon(
+                  onPressed: _isAiGenerating ? null : _generateWithSesanAi,
+                  icon: _isAiGenerating
+                      ? const SizedBox(
+                          width: 15,
+                          height: 15,
+                          child: CircularProgressIndicator(strokeWidth: 1.8),
+                        )
+                      : const Icon(Icons.auto_awesome, size: 15),
+                  label: ValueListenableBuilder<TextEditingValue>(
+                    valueListenable: descriptionController,
+                    builder: (context, value, _) => Text(
+                      _isAiGenerating
+                          ? _t('AI កំពុងរៀបចំ...', 'AI is working...')
+                          : value.text.trim().isNotEmpty
+                          ? _t('AI កែសម្រួល', 'AI Improve')
+                          : _t('AI ជួយសរសេរ', 'AI Write'),
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.deepPurple,
+                    side: BorderSide(
+                      color: Colors.deepPurple.withOpacity(0.75),
+                    ),
+                    minimumSize: const Size(0, 32),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 5,
+                    ),
+                    visualDensity: VisualDensity.compact,
                   ),
                 ),
-              ],
-            ),
-            // ចប់ផ្នែករើសទីតាំង
-            const SizedBox(height: 25),
-            const SizedBox(height: 25),
-            ElevatedButton(
-              onPressed: () async {
-                // 🎯 ថែម async នៅត្រង់នេះ
-                // ១. ឆែកលក្ខខណ្ឌចាំបាច់ (Validation)
-                if (selectedImages.isEmpty ||
-                    selectedCategory == null ||
-                    nameController.text.isEmpty ||
-                    priceController.text.isEmpty ||
-                    stockQuantityController.text.isEmpty ||
-                    stockUnitController.text.trim().isEmpty ||
-                    int.tryParse(stockQuantityController.text.trim()) == null ||
-                    int.parse(stockQuantityController.text.trim()) < 0 ||
-                    phone1Controller.text.isEmpty ||
-                    locationController.text.isEmpty) {
+              ),
+              const SizedBox(height: 10),
+              _buildTextField(
+                _t('ឈ្មោះទំនិញ *', 'Product name *'),
+                Icons.shopping_bag,
+                nameController,
+              ),
+              const SizedBox(height: 10),
+              _buildCategoryDropdown(),
+              const SizedBox(height: 10),
+              _buildPriceSection(),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildTextField(
+                      _t('ចំនួនស្តុក *', 'Stock quantity *'),
+                      Icons.inventory_2_outlined,
+                      stockQuantityController,
+                      isNumber: true,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(child: _buildStockUnitField()),
+                ],
+              ),
+              const SizedBox(height: 10),
+              _buildTextField(
+                _t('បរិយាយទំនិញ', 'Product description'),
+                Icons.description,
+                descriptionController,
+                maxLines: 3,
+              ),
+              const SizedBox(height: 10),
+              _buildPhoneSection(),
+              const SizedBox(height: 10),
+
+              /// ROW ទីតាំង និង MAP
+              Row(
+                children: [
+                  /// =========================
+                  /// LOCATION PICKER (រើសខេត្ត/ស្រុក/ឃុំ)
+                  /// =========================
+                  /// LOCATION PICKER (រៀបឱ្យស៊ីជាមួយ TextField ផ្សេងៗ)
+                  /// =========================
+                  Expanded(
+                    flex: 3,
+                    child: InkWell(
+                      onTap: () {
+                        showLocationPicker(
+                          context,
+                          onSelected: (location) {
+                            setState(() {
+                              _locationChosenManually = true;
+                              locationController.text = location.toString();
+                            });
+                          },
+                        );
+                      },
+                      borderRadius: BorderRadius.circular(
+                        10,
+                      ), // កែមក ១០ ឱ្យស្មើ TextField លើៗ
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal:
+                              12, // សារ៉េឱ្យស្មើ PrefixIcon របស់ TextField
+                          vertical: 15,
+                        ),
+                        decoration: BoxDecoration(
+                          // ✅ ១. លុប color: Colors.white ចោល (ឱ្យវាយកពណ៌តាម Theme App)
+                          borderRadius: BorderRadius.circular(10),
+
+                          // ✅ ២. សារ៉េពណ៌ Border ឱ្យស្រាលបំផុត (ដូច TextField ដើម)
+                          border: Border.all(color: Colors.grey.shade400),
+
+                          // ✅ ៣. បន្ថែមស្រមោលស្រាលៗ ដើម្បីឱ្យវាមាន "រង្វង់" និង "ជម្រៅ" ដូចគេ
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.location_city,
+                              color: Colors
+                                  .green, // ប្រើពណ៌បៃតងឱ្យស៊ីជាមួយ Icon ក្នុង TextField ផ្សេងទៀត
+                              size: 24,
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                locationController.text.isEmpty
+                                    ? "ជ្រើសទីតាំង *"
+                                    : locationController.text,
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: locationController.text.isEmpty
+                                      ? Colors
+                                            .grey
+                                            .shade600 // ពណ៌អក្សរ Hint
+                                      : Colors.black87,
+                                  fontFamily: 'Siemreap',
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(width: 10),
+
+                  /// =========================
+                  /// MAP PICKER BUTTON (Coming Soon)
+                  /// =========================
+                  Expanded(
+                    flex: 1,
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        InkWell(
+                          onTap: () async {
+                            final result = await Navigator.push<LatLng>(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => MapPickerScreen(
+                                  initialLat: selectedLat,
+                                  initialLng: selectedLng,
+                                ),
+                              ),
+                            );
+                            if (result == null || !mounted) return;
+                            setState(() {
+                              selectedLat = result.latitude;
+                              selectedLng = result.longitude;
+                            });
+                            await _fillLocationFromMap(result);
+                          },
+                          borderRadius: BorderRadius.circular(14),
+                          child: Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            decoration: BoxDecoration(
+                              color: selectedLat != null && selectedLng != null
+                                  ? Colors.green.withValues(alpha: 0.12)
+                                  : Colors.green.withValues(alpha: 0.06),
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(
+                                color:
+                                    selectedLat != null && selectedLng != null
+                                    ? Colors.green
+                                    : Colors.green.shade300,
+                              ),
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  selectedLat != null && selectedLng != null
+                                      ? Icons.location_on
+                                      : Icons.map_outlined,
+                                  color: Colors.green.shade700,
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  selectedLat != null && selectedLng != null
+                                      ? _t('បាន Pin', 'Pinned')
+                                      : 'Maps',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: Colors.green.shade800,
+                                    fontWeight: FontWeight.bold,
+                                    fontFamily: 'Siemreap',
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        if (selectedLat != null && selectedLng != null)
+                          Positioned(
+                            top: -9,
+                            right: -9,
+                            child: Material(
+                              color: Colors.red,
+                              shape: const CircleBorder(),
+                              elevation: 2,
+                              child: InkWell(
+                                customBorder: const CircleBorder(),
+                                onTap: () {
+                                  setState(() {
+                                    selectedLat = null;
+                                    selectedLng = null;
+                                  });
+                                },
+                                child: const Padding(
+                                  padding: EdgeInsets.all(5),
+                                  child: Icon(
+                                    Icons.close,
+                                    size: 16,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              // ចប់ផ្នែករើសទីតាំង
+              const SizedBox(height: 25),
+              const SizedBox(height: 25),
+              ElevatedButton(
+                onPressed: () async {
+                  // 🎯 ថែម async នៅត្រង់នេះ
+                  // ១. ឆែកលក្ខខណ្ឌចាំបាច់ (Validation)
+                  if (selectedImages.isEmpty ||
+                      selectedCategory == null ||
+                      nameController.text.isEmpty ||
+                      priceController.text.isEmpty ||
+                      stockQuantityController.text.isEmpty ||
+                      stockUnitController.text.trim().isEmpty ||
+                      int.tryParse(stockQuantityController.text.trim()) ==
+                          null ||
+                      int.parse(stockQuantityController.text.trim()) < 0 ||
+                      phone1Controller.text.isEmpty ||
+                      locationController.text.isEmpty) {
+                    Get.snackbar(
+                      'ខ្វះព័ត៌មាន',
+                      'សូមមេមេ ជួយបំពេញព័ត៌មាន និងដាក់រូបថតឱ្យគ្រប់សិន!',
+                      backgroundColor: Colors.redAccent,
+                      colorText: Colors.white,
+                    );
+                    return;
+                  }
+                  if (_shippingIncluded == null) {
+                    Get.snackbar(
+                      'ខ្វះព័ត៌មាន',
+                      'សូមជ្រើសរើសថាតើតម្លៃនេះបូកថ្លៃផ្ញើរួចឬនៅ?',
+                      backgroundColor: Colors.redAccent,
+                      colorText: Colors.white,
+                    );
+                    return;
+                  }
+
+                  // 🎯 ២. ទាញព័ត៌មាន User (នេះជាកន្លែងដែលបាត់!)
+                  final prefs = await SharedPreferences.getInstance();
+                  final currentUser = FirebaseAuth.instance.currentUser;
+
+                  // ព្យាយាមយកពី Firebase បើអត់មានទើបយកពី SharedPreferences
+                  String uId =
+                      currentUser?.uid ??
+                      prefs.getString('user_uid') ??
+                      "UNKNOWN";
+                  String uName =
+                      currentUser?.displayName ??
+                      prefs.getString('user_name') ??
+                      "អ្នកប្រើប្រាស់ Sesan";
+                  String uPhoto =
+                      currentUser?.photoURL ??
+                      prefs.getString('user_photo') ??
+                      "";
+
+                  // ៣. រៀបចំទិន្នន័យ (បន្ថែម seller_id, name, photo ចូល)
+                  Map<String, dynamic> dataFromForm = {
+                    'product_name': nameController.text.trim(),
+                    'description': descriptionController.text.trim(),
+                    if (_aiTitleKm?.isNotEmpty == true)
+                      'product_name_km': _aiTitleKm,
+                    if (_aiTitleEn?.isNotEmpty == true)
+                      'product_name_en': _aiTitleEn,
+                    if (_aiDescriptionKm?.isNotEmpty == true)
+                      'description_km': _aiDescriptionKm,
+                    if (_aiDescriptionEn?.isNotEmpty == true)
+                      'description_en': _aiDescriptionEn,
+                    'price': priceController.text.trim().replaceAll(',', ''),
+                    'track_stock': true,
+                    'stock_quantity': int.parse(
+                      stockQuantityController.text.trim(),
+                    ),
+                    'stock_unit': stockUnitController.text.trim(),
+                    'sold_quantity': 0,
+                    'is_available':
+                        int.parse(stockQuantityController.text.trim()) > 0,
+                    'phone1': phone1Controller.text.trim(),
+                    'phone2': phone2Controller.text.trim(),
+                    'location': locationController.text.trim(),
+                    'category': selectedCategory,
+                    'sub_category':
+                        selectedSubCategory ?? '', // ✅ បន្ថែមបន្ទាត់នេះ
+                    'sub_sub_category':
+                        selectedSubSubCategory ??
+                        'ទាំងអស់', // ✅ បន្ថែមបន្ទាត់នេះ
+                    'currency': selectedCurrency,
+                    'lat': selectedLat,
+                    'lng': selectedLng,
+                    // 🎯 បន្ថែម ៣ ជួរនេះដើម្បីបាត់ UNKNOWN
+                    'seller_id': uId,
+                    'seller_name': uName,
+                    'seller_photo': uPhoto,
+                    'shipping_included':
+                        _shippingIncluded, // true = បូករួច, false = មិនទាន់បូក
+                    'created_at':
+                        FieldValue.serverTimestamp(), // ថែមថ្ងៃខែផុសផងមេ
+                  };
+
+                  // ៤. បញ្ជាឱ្យបង្ហោះក្រោយខ្នង (Background Upload)
+                  uploadController.startBackgroundUpload(
+                    productId: widget.productId,
+                    formData: dataFromForm,
+                    selectedImages: List.from(selectedImages),
+                    selectedVideo: selectedVideo,
+                  );
+
+                  // ៥. នាំផ្លូវទៅ Home និងបង្ហាញសារ
+                  Get.offAllNamed('/home');
                   Get.snackbar(
-                    'ខ្វះព័ត៌មាន',
-                    'សូមមេមេ ជួយបំពេញព័ត៌មាន និងដាក់រូបថតឱ្យគ្រប់សិន!',
-                    backgroundColor: Colors.redAccent,
+                    '🚀 កំពុងបង្ហោះ...',
+                    'ទំនិញរបស់មេកំពុងបង្ហោះហើយ!',
+                    snackPosition: SnackPosition.BOTTOM,
+                    backgroundColor: Colors.black54,
                     colorText: Colors.white,
                   );
-                  return;
-                }
-                if (_shippingIncluded == null) {
-                  Get.snackbar(
-                    'ខ្វះព័ត៌មាន',
-                    'សូមជ្រើសរើសថាតើតម្លៃនេះបូកថ្លៃផ្ញើរួចឬនៅ?',
-                    backgroundColor: Colors.redAccent,
-                    colorText: Colors.white,
-                  );
-                  return;
-                }
-
-                // 🎯 ២. ទាញព័ត៌មាន User (នេះជាកន្លែងដែលបាត់!)
-                final prefs = await SharedPreferences.getInstance();
-                final currentUser = FirebaseAuth.instance.currentUser;
-
-
-                // ព្យាយាមយកពី Firebase បើអត់មានទើបយកពី SharedPreferences
-                String uId =
-                    currentUser?.uid ??
-                        prefs.getString('user_uid') ??
-                        "UNKNOWN";
-                String uName =
-                    currentUser?.displayName ??
-                        prefs.getString('user_name') ??
-                        "អ្នកប្រើប្រាស់ Sesan";
-                String uPhoto =
-                    currentUser?.photoURL ??
-                        prefs.getString('user_photo') ??
-                        "";
-
-
-                // ៣. រៀបចំទិន្នន័យ (បន្ថែម seller_id, name, photo ចូល)
-                Map<String, dynamic> dataFromForm = {
-                  'product_name': nameController.text.trim(),
-                  'description': descriptionController.text.trim(),
-                  if (_aiTitleKm?.isNotEmpty == true) 'product_name_km': _aiTitleKm,
-                  if (_aiTitleEn?.isNotEmpty == true) 'product_name_en': _aiTitleEn,
-                  if (_aiDescriptionKm?.isNotEmpty == true) 'description_km': _aiDescriptionKm,
-                  if (_aiDescriptionEn?.isNotEmpty == true) 'description_en': _aiDescriptionEn,
-                  'price': priceController.text.trim().replaceAll(',', ''),
-                  'track_stock': true,
-                  'stock_quantity': int.parse(stockQuantityController.text.trim()),
-                  'stock_unit': stockUnitController.text.trim(),
-                  'sold_quantity': 0,
-                  'is_available': int.parse(stockQuantityController.text.trim()) > 0,
-                  'phone1': phone1Controller.text.trim(),
-                  'phone2': phone2Controller.text.trim(),
-                  'location': locationController.text.trim(),
-                  'category': selectedCategory,
-                  'sub_category':
-                  selectedSubCategory ?? '', // ✅ បន្ថែមបន្ទាត់នេះ
-                  'sub_sub_category':
-                  selectedSubSubCategory ?? 'ទាំងអស់', // ✅ បន្ថែមបន្ទាត់នេះ
-                  'currency': selectedCurrency,
-                  'lat': selectedLat,
-                  'lng': selectedLng,
-                  // 🎯 បន្ថែម ៣ ជួរនេះដើម្បីបាត់ UNKNOWN
-                  'seller_id': uId,
-                  'seller_name': uName,
-                  'seller_photo': uPhoto,
-                  'shipping_included':
-                  _shippingIncluded, // true = បូករួច, false = មិនទាន់បូក
-                  'created_at':
-                  FieldValue.serverTimestamp(), // ថែមថ្ងៃខែផុសផងមេ
-                };
-
-
-                // ៤. បញ្ជាឱ្យបង្ហោះក្រោយខ្នង (Background Upload)
-                uploadController.startBackgroundUpload(
-                  productId: widget.productId,
-                  formData: dataFromForm,
-                  selectedImages: List.from(selectedImages),
-                  selectedVideo: selectedVideo,
-                );
-
-
-                // ៥. នាំផ្លូវទៅ Home និងបង្ហាញសារ
-                Get.offAllNamed('/home');
-                Get.snackbar(
-                  '🚀 កំពុងបង្ហោះ...',
-                  'ទំនិញរបស់មេកំពុងបង្ហោះហើយ!',
-                  snackPosition: SnackPosition.BOTTOM,
-                  backgroundColor: Colors.black54,
-                  colorText: Colors.white,
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size(double.infinity, 50),
-                backgroundColor: Colors.green,
+                },
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 50),
+                  backgroundColor: Colors.green,
+                ),
+                child: const Text(
+                  'រក្សាទុកការផុស',
+                  style: TextStyle(color: Colors.white, fontSize: 16),
+                ),
               ),
-              child: const Text(
-                'រក្សាទុកការផុស',
-                style: TextStyle(color: Colors.white, fontSize: 16),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
-        ),
     );
   }
-
 
   // --- Widgets ជំនួយសម្រាប់ UI ---
   Widget _buildMediaButton({
@@ -1411,18 +1425,67 @@ class _AddProductPageState extends State<AddProductPage> {
     );
   }
 
-
   List<String> _stockUnitsForCategory() {
     switch (selectedCategory) {
-      case 'ពូជដំណាំ': return ['ដើម', 'គ្រាប់', 'គីឡូក្រាម', 'បាច់', 'កញ្ចប់', 'បាវ'];
-      case 'ពូជសត្វចិញ្ចឹម': return ['ក្បាល', 'កូន', 'គូ', 'ហ្វូង', 'គីឡូក្រាម'];
-      case 'បន្លែផ្លែឈើ': return ['គីឡូក្រាម', 'តោន', 'បាវ', 'កេស', 'កញ្ចប់', 'បាច់'];
-      case 'ត្រីសាច់': return ['គីឡូក្រាម', 'ក្បាល', 'កូន', 'គូ', 'ខាំ', 'ស្រះ', 'អាង', 'កញ្ចប់', 'កេស'];
-      case 'ជីនិងថ្នាំ': return ['គីឡូក្រាម', 'លីត្រ', 'ដប', 'ប៊ីដុង', 'កាន', 'កញ្ចប់', 'បាវ', 'កេស'];
-      case 'គ្រឿងចក្រ': return ['គ្រឿង', 'ឈុត', 'ដើម', 'ម៉ាស៊ីន', 'ដុំ', 'ទូកុងតឺន័រ'];
-      case 'សម្ភារៈកសិកម្ម': return ['គ្រឿង', 'ដើម', 'គ្រាប់', 'ដុំ', 'កេស', 'ឡូ', 'ឈុត', 'ម៉ែត្រ', 'គីឡូក្រាម'];
-      case 'សេវាកម្ម': return ['លើក', 'ថ្ងៃ', 'ម៉ោង', 'គម្រោង'];
-      default: return ['ដុំ', 'គ្រឿង', 'ដើម', 'គ្រាប់', 'គីឡូក្រាម', 'លីត្រ', 'កញ្ចប់', 'បាវ', 'កេស', 'ឡូ', 'ឈុត'];
+      case 'ពូជដំណាំ':
+        return ['ដើម', 'គ្រាប់', 'គីឡូក្រាម', 'បាច់', 'កញ្ចប់', 'បាវ'];
+      case 'ពូជសត្វចិញ្ចឹម':
+        return ['ក្បាល', 'កូន', 'គូ', 'ហ្វូង', 'គីឡូក្រាម'];
+      case 'បន្លែផ្លែឈើ':
+        return ['គីឡូក្រាម', 'តោន', 'បាវ', 'កេស', 'កញ្ចប់', 'បាច់'];
+      case 'ត្រីសាច់':
+        return [
+          'គីឡូក្រាម',
+          'ក្បាល',
+          'កូន',
+          'គូ',
+          'ខាំ',
+          'ស្រះ',
+          'អាង',
+          'កញ្ចប់',
+          'កេស',
+        ];
+      case 'ជីនិងថ្នាំ':
+        return [
+          'គីឡូក្រាម',
+          'លីត្រ',
+          'ដប',
+          'ប៊ីដុង',
+          'កាន',
+          'កញ្ចប់',
+          'បាវ',
+          'កេស',
+        ];
+      case 'គ្រឿងចក្រ':
+        return ['គ្រឿង', 'ឈុត', 'ដើម', 'ម៉ាស៊ីន', 'ដុំ', 'ទូកុងតឺន័រ'];
+      case 'សម្ភារៈកសិកម្ម':
+        return [
+          'គ្រឿង',
+          'ដើម',
+          'គ្រាប់',
+          'ដុំ',
+          'កេស',
+          'ឡូ',
+          'ឈុត',
+          'ម៉ែត្រ',
+          'គីឡូក្រាម',
+        ];
+      case 'សេវាកម្ម':
+        return ['លើក', 'ថ្ងៃ', 'ម៉ោង', 'គម្រោង'];
+      default:
+        return [
+          'ដុំ',
+          'គ្រឿង',
+          'ដើម',
+          'គ្រាប់',
+          'គីឡូក្រាម',
+          'លីត្រ',
+          'កញ្ចប់',
+          'បាវ',
+          'កេស',
+          'ឡូ',
+          'ឈុត',
+        ];
     }
   }
 
@@ -1438,10 +1501,17 @@ class _AddProductPageState extends State<AddProductPage> {
           tooltip: _t('ជ្រើសរើសឯកតា', 'Choose unit'),
           icon: const Icon(Icons.arrow_drop_down),
           onSelected: (unit) => setState(() => stockUnitController.text = unit),
-          itemBuilder: (context) => units.map((unit) => PopupMenuItem<String>(
-            value: unit,
-            child: Text(unit, style: const TextStyle(fontFamily: 'Siemreap')),
-          )).toList(),
+          itemBuilder: (context) => units
+              .map(
+                (unit) => PopupMenuItem<String>(
+                  value: unit,
+                  child: Text(
+                    unit,
+                    style: const TextStyle(fontFamily: 'Siemreap'),
+                  ),
+                ),
+              )
+              .toList(),
         ),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
       ),
@@ -1449,19 +1519,26 @@ class _AddProductPageState extends State<AddProductPage> {
   }
 
   Widget _buildTextField(
-      String label,
-      IconData icon,
-      TextEditingController controller, {
-        int minLines = 1,
-        int? maxLines = 1,
-        bool isNumber = false,
-      }) {
-    final isMultiline = !isNumber && (maxLines == null || maxLines > 1 || minLines > 1);
+    String label,
+    IconData icon,
+    TextEditingController controller, {
+    int minLines = 1,
+    int? maxLines = 1,
+    bool isNumber = false,
+  }) {
+    final isMultiline =
+        !isNumber && (maxLines == null || maxLines > 1 || minLines > 1);
     return TextField(
       controller: controller,
-      keyboardType: isNumber ? TextInputType.number : (isMultiline ? TextInputType.multiline : TextInputType.text),
-      textInputAction: isMultiline ? TextInputAction.newline : TextInputAction.next,
-      inputFormatters: isNumber ? [FilteringTextInputFormatter.digitsOnly] : null,
+      keyboardType: isNumber
+          ? TextInputType.number
+          : (isMultiline ? TextInputType.multiline : TextInputType.text),
+      textInputAction: isMultiline
+          ? TextInputAction.newline
+          : TextInputAction.next,
+      inputFormatters: isNumber
+          ? [FilteringTextInputFormatter.digitsOnly]
+          : null,
       minLines: minLines,
       maxLines: maxLines,
       decoration: InputDecoration(
@@ -1471,7 +1548,6 @@ class _AddProductPageState extends State<AddProductPage> {
       ),
     );
   }
-
 
   Widget _buildCategoryDropdown() {
     return Column(
@@ -1485,7 +1561,9 @@ class _AddProductPageState extends State<AddProductPage> {
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
           ),
           items: categories
-              .map((c) => DropdownMenuItem(value: c, child: Text(_optionLabel(c))))
+              .map(
+                (c) => DropdownMenuItem(value: c, child: Text(_optionLabel(c))),
+              )
               .toList(),
           onChanged: (val) {
             setState(() {
@@ -1496,12 +1574,10 @@ class _AddProductPageState extends State<AddProductPage> {
           },
         ),
 
-
         // ✅ Sub Category Dropdown
         if (selectedCategory != null &&
             subCategories.containsKey(selectedCategory))
           _buildSubCategoryDropdown(),
-
 
         // ✅ Sub-Sub Category Dropdown (សម្រាប់តែ "សម្ភារៈកសិកម្ម")
         if (selectedCategory == 'សម្ភារៈកសិកម្ម' &&
@@ -1512,12 +1588,10 @@ class _AddProductPageState extends State<AddProductPage> {
     );
   }
 
-
   // ✅ Sub Category Dropdown
   Widget _buildSubCategoryDropdown() {
     final subData = subCategories[selectedCategory];
     List<String> subList;
-
 
     if (subData is Map) {
       subList = subData.keys.cast<String>().toList();
@@ -1527,12 +1601,10 @@ class _AddProductPageState extends State<AddProductPage> {
       return const SizedBox.shrink();
     }
 
-
     if (subList.isEmpty ||
         (subList.length == 1 && subList.first == 'ទាំងអស់')) {
       return const SizedBox.shrink();
     }
-
 
     return Padding(
       padding: const EdgeInsets.only(top: 10),
@@ -1547,7 +1619,10 @@ class _AddProductPageState extends State<AddProductPage> {
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
         ),
         items: subList
-            .map((sub) => DropdownMenuItem(value: sub, child: Text(_optionLabel(sub))))
+            .map(
+              (sub) =>
+                  DropdownMenuItem(value: sub, child: Text(_optionLabel(sub))),
+            )
             .toList(),
         onChanged: (val) {
           setState(() {
@@ -1559,12 +1634,10 @@ class _AddProductPageState extends State<AddProductPage> {
     );
   }
 
-
   // ✅ Sub-Sub Category Dropdown (សម្រាប់តែ "សម្ភារៈកសិកម្ម")
   Widget _buildSubSubCategoryDropdown() {
     final subData = subCategories[selectedCategory];
     if (subData is! Map) return const SizedBox.shrink();
-
 
     final subSubList = subData[selectedSubCategory] as List<String>?;
     if (subSubList == null ||
@@ -1572,7 +1645,6 @@ class _AddProductPageState extends State<AddProductPage> {
         (subSubList.length == 1 && subSubList.first == 'ទាំងអស់')) {
       return const SizedBox.shrink();
     }
-
 
     return Padding(
       padding: const EdgeInsets.only(top: 10),
@@ -1587,7 +1659,10 @@ class _AddProductPageState extends State<AddProductPage> {
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
         ),
         items: subSubList
-            .map((sub) => DropdownMenuItem(value: sub, child: Text(_optionLabel(sub))))
+            .map(
+              (sub) =>
+                  DropdownMenuItem(value: sub, child: Text(_optionLabel(sub))),
+            )
             .toList(),
         onChanged: (val) {
           setState(() => selectedSubSubCategory = val);
@@ -1595,7 +1670,6 @@ class _AddProductPageState extends State<AddProductPage> {
       ),
     );
   }
-
 
   // ក្នុង _buildPriceSection បងដក Dropdown ចេញ ហើយប្រើតែសញ្ញារៀល
   Widget _buildPriceSection() {
@@ -1691,6 +1765,3 @@ class _AddProductPageState extends State<AddProductPage> {
     );
   }
 }
-
-
-
