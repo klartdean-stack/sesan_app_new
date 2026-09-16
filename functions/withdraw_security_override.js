@@ -87,6 +87,8 @@ exports.secureWithdraw = onCall(
         const candidate = hashPin(pin, storedSalt);
         pinVerified = timingSafeEqualHex(storedHash, candidate);
       } else {
+        // Compatibility migration: verify the legacy 6-digit account password once,
+        // then store a salted scrypt hash for future withdrawal verification.
         const legacyPin = String(user.password ?? "");
         pinVerified = legacyPin.length > 0 && legacyPin === pin;
         if (pinVerified) {
