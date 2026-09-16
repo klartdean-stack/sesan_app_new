@@ -11,40 +11,36 @@ permissions:
   contents: write
 
 jobs:
-  port-product-list:
+  patch-product-list:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout iOS parity branch
         uses: actions/checkout@v4
         with:
           ref: ios-sync-android46
-          path: ios
 
-      - name: Checkout authoritative Android V51 branch
-        uses: actions/checkout@v4
-        with:
-          ref: english-local-android
-          path: android
+      - name: Patch Android V51 AI image voice location parity
+        run: python3 tool/patch_ios_product_list_ai.py
 
-      - name: Port Product List from Android V51
+      - name: Verify Product List parity tokens
         run: |
           set -euo pipefail
-          cp android/lib/product_list.dart ios/lib/product_list.dart
-          test -s ios/lib/product_list.dart
-          grep -q "firebase_functions" ios/lib/product_list.dart
-          grep -q "speech_to_text\|package:record/record.dart" ios/lib/product_list.dart
-          grep -q "location_picker.dart" ios/lib/product_list.dart
+          grep -q "analyzeProductSearch" lib/product_list.dart
+          grep -q "image_search_rounded" lib/product_list.dart
+          grep -q "AudioRecorder" lib/product_list.dart
+          grep -q "filterProvince" lib/product_list.dart
+          grep -q "_matchesSmartSearch" lib/product_list.dart
+          grep -q "_matchesLocationFilter" lib/product_list.dart
 
-      - name: Commit parity update
-        working-directory: ios
+      - name: Commit Product List patch
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add lib/product_list.dart
           if git diff --cached --quiet; then
-            echo "Product List already matches Android V51."
+            echo "No Product List changes required."
             exit 0
           fi
-          git commit -m "Port Android V51 Product List to iOS"
+          git commit -m "Port Android V51 Product List AI image voice location"
           git push origin ios-sync-android46
