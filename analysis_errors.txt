@@ -448,29 +448,26 @@ warning • Unused import: 'package:path_provider/path_provider.dart' • lib/ch
    info • Unnecessary 'const' keyword • lib/chat_video_player.dart:83:13 • unnecessary_const
    info • Unnecessary 'const' keyword • lib/chat_video_player.dart:84:13 • unnecessary_const
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/chat_video_player.dart:105:39 • deprecated_member_use
-   info • The private field _isExpanded could be 'final' • lib/comment_section.dart:50:8 • prefer_final_fields
-warning • The value of the field '_isExpanded' isn't used • lib/comment_section.dart:50:8 • unused_field
-   info • The private field _displayLimit could be 'final' • lib/comment_section.dart:51:7 • prefer_final_fields
-warning • The value of the field '_displayLimit' isn't used • lib/comment_section.dart:51:7 • unused_field
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/comment_section.dart:430:32 • deprecated_member_use
-   info • Statements in an if should be enclosed in a block • lib/comment_section.dart:501:11 • curly_braces_in_flow_control_structures
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/comment_section.dart:549:40 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/comment_section.dart:551:59 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/comment_section.dart:593:26 • deprecated_member_use
-warning • The value of the local variable 'avatarSize' isn't used • lib/comment_section.dart:649:18 • unused_local_variable
-warning • The value of the local variable 'fontSize' isn't used • lib/comment_section.dart:650:18 • unused_local_variable
-warning • The value of the local variable 'maxLinesCollapsed' isn't used • lib/comment_section.dart:831:15 • unused_local_variable
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/comment_section.dart:906:28 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/comment_section.dart:908:47 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/comment_section.dart:943:45 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/comment_section.dart:1100:41 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/comment_section.dart:1185:30 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/comment_section.dart:1214:27 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/comment_section.dart:1244:36 • deprecated_member_use
-warning • The declaration '_buildRecordingWave' isn't referenced • lib/comment_section.dart:1268:10 • unused_element
-   info • Don't use 'BuildContext's across async gaps • lib/comment_section.dart:1314:29 • use_build_context_synchronously
-warning • The declaration '_showDeleteReplyDialog' isn't referenced • lib/comment_section.dart:1325:8 • unused_element
-   info • Don't use 'BuildContext's across async gaps • lib/comment_section.dart:1351:29 • use_build_context_synchronously
+   info • The private field _isExpanded could be 'final' • lib/comment_section.dart:45:8 • prefer_final_fields
+warning • The value of the field '_isExpanded' isn't used • lib/comment_section.dart:45:8 • unused_field
+   info • The private field _displayLimit could be 'final' • lib/comment_section.dart:46:7 • prefer_final_fields
+warning • The value of the field '_displayLimit' isn't used • lib/comment_section.dart:46:7 • unused_field
+   info • Don't use 'BuildContext's across async gaps • lib/comment_section.dart:114:11 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/comment_section.dart:167:17 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/comment_section.dart:239:21 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/comment_section.dart:300:17 • use_build_context_synchronously
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/comment_section.dart:404:32 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/comment_section.dart:509:40 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/comment_section.dart:511:59 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/comment_section.dart:551:26 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/comment_section.dart:821:28 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/comment_section.dart:823:47 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/comment_section.dart:858:51 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/comment_section.dart:999:41 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/comment_section.dart:1086:30 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/comment_section.dart:1115:27 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/comment_section.dart:1137:60 • deprecated_member_use
+warning • The declaration '_showDeleteReplyDialog' isn't referenced • lib/comment_section.dart:1192:8 • unused_element
    info • Statements in an if should be enclosed in a block • lib/company_report_screen.dart:28:13 • curly_braces_in_flow_control_structures
    info • Statements in an if should be enclosed in a block • lib/company_report_screen.dart:32:13 • curly_braces_in_flow_control_structures
    info • Statements in an if should be enclosed in a block • lib/compost_calc.dart:60:9 • curly_braces_in_flow_control_structures
@@ -1167,4 +1164,4 @@ warning • The value of the local variable 'permission' isn't used • lib/weat
    info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/weight_calc.dart:115:15 • deprecated_member_use
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/weight_calc.dart:272:22 • deprecated_member_use
 
-1027 issues found. (ran in 24.3s)
+1024 issues found. (ran in 21.9s)
