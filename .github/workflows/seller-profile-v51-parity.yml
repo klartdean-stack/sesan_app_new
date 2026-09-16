@@ -1,0 +1,251 @@
+name: Seller Profile V51 parity repair
+
+on:
+  push:
+    branches: [ios-sync-android46]
+    paths:
+      - '.github/workflows/seller-profile-v51-parity.yml'
+      - '.github/triggers/seller-profile-v51-parity.txt'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ios-sync-android46
+          fetch-depth: 0
+
+      - name: Restore Android V51 seller chat and map behavior
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          path = Path('lib/seller_profile_screen.dart')
+          text = path.read_text(encoding='utf-8')
+
+          add_chat = r'''  Future<void> _addToChat(Map<String, dynamic> product) async {
+    if (_currentUserId == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(appText(
+              context,
+              km: 'សូមចូលប្រើប្រាស់មុននឹងបន្ថែមទៅឆាត',
+              en: 'Please sign in before adding this to chat.',
+            )),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return;
+    }
+
+    final images = product['image_urls'];
+    final String finalImageUrl =
+        product['image_url'] ??
+        (images is List && images.isNotEmpty ? images.first.toString() : '');
+
+    final String roomId = _currentUserId!.compareTo(widget.sellerId) <= 0
+        ? '${_currentUserId}_${widget.sellerId}'
+        : '${widget.sellerId}_$_currentUserId';
+
+    String customerName = appText(context, km: 'អ្នកទិញ', en: 'Buyer');
+    try {
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(_currentUserId)
+          .get();
+      if (userDoc.exists) {
+        customerName = (userDoc.data()?['name'] ?? customerName).toString();
+      }
+    } catch (e) {
+      debugPrint('Seller chat customer lookup error: $e');
+    }
+
+    try {
+      await FirebaseFirestore.instance.collection('chat_items').add({
+        'product_id': product['id'] ?? '',
+        'product_name': product['product_name'] ??
+            appText(context, km: 'គ្មានឈ្មោះ', en: 'Unnamed product'),
+        'price': product['price'] ?? 0,
+        'currency': product['currency'] ?? '៛',
+        'image_url': finalImageUrl,
+        'customer_id': _currentUserId,
+        'customer_name': customerName,
+        'seller_id': widget.sellerId,
+        'chat_room_id': roomId,
+        'created_at': FieldValue.serverTimestamp(),
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(appText(
+              context,
+              km: '✅ បានបន្ថែម "${product['product_name'] ?? 'ទំនិញ'}" ចូលការជជែក!',
+              en: '✅ "${product['product_name'] ?? 'Product'}" added to chat!',
+            )),
+            backgroundColor: Colors.orange,
+            duration: const Duration(seconds: 1),
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('Add to Chat Error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${appText(context, km: '❌ បរាជ័យ', en: '❌ Failed')}: $e'),
+          ),
+        );
+      }
+    }
+  }
+
+  Stream<QuerySnapshot> _getFilteredStream'''
+
+          text, n1 = re.subn(
+              r'  Future<void> _addToChat\(Map<String,dynamic> p\)async\{.*?\n  Stream<QuerySnapshot> _getFilteredStream',
+              add_chat,
+              text,
+              count=1,
+              flags=re.S,
+          )
+          if n1 != 1:
+              raise SystemExit(f'Expected one compact _addToChat block, found {n1}')
+
+          map_block = r'''  Future<void> _openShopDirections(double latitude, double longitude) async {
+    final url = Uri.parse(
+      'https://www.google.com/maps/dir/?api=1&destination=$latitude,$longitude',
+    );
+    final opened = await launchUrl(url, mode: LaunchMode.externalApplication);
+    if (!opened && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(appText(
+            context,
+            km: 'មិនអាចបើក Google Maps បានទេ',
+            en: 'Could not open Google Maps.',
+          )),
+        ),
+      );
+    }
+  }
+
+  Widget _buildShopMapPreview(double latitude, double longitude) {
+    final location = LatLng(latitude, longitude);
+    return Padding(
+      padding: const EdgeInsets.only(top: 4, bottom: 10),
+      child: GestureDetector(
+        onTap: () => _openShopDirections(latitude, longitude),
+        child: AspectRatio(
+          aspectRatio: 4,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                AbsorbPointer(
+                  child: GoogleMap(
+                    initialCameraPosition: CameraPosition(
+                      target: location,
+                      zoom: 15.5,
+                    ),
+                    markers: {
+                      Marker(
+                        markerId: const MarkerId('shop_location'),
+                        position: location,
+                      ),
+                    },
+                    zoomControlsEnabled: false,
+                    myLocationButtonEnabled: false,
+                    mapToolbarEnabled: false,
+                    compassEnabled: false,
+                    scrollGesturesEnabled: false,
+                    zoomGesturesEnabled: false,
+                    rotateGesturesEnabled: false,
+                    tiltGesturesEnabled: false,
+                    liteModeEnabled: true,
+                  ),
+                ),
+                Container(color: Colors.black.withOpacity(0.05)),
+                Center(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 7,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.94),
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: const [
+                        BoxShadow(color: Colors.black26, blurRadius: 5),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.directions,
+                          color: Colors.green,
+                          size: 18,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          appText(
+                            context,
+                            km: 'ទៅកាន់ហាង',
+                            en: 'Directions to shop',
+                          ),
+                          style: const TextStyle(
+                            fontFamily: 'Siemreap',
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSellerInfoCard'''
+
+          text, n2 = re.subn(
+              r'  Future<void> _openShopDirections\(double lat,double lng\)async\{.*?\n  Widget _buildSellerInfoCard',
+              map_block,
+              text,
+              count=1,
+              flags=re.S,
+          )
+          if n2 != 1:
+              raise SystemExit(f'Expected one compact shop map block, found {n2}')
+
+          path.write_text(text, encoding='utf-8')
+          PY
+
+      - name: Commit repair
+        shell: bash
+        run: |
+          if git diff --quiet -- lib/seller_profile_screen.dart; then
+            echo 'No changes needed.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add lib/seller_profile_screen.dart
+          git commit -m 'Restore Android V51 seller chat and map behavior'
+          git push origin HEAD:ios-sync-android46
