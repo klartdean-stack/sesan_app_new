@@ -4,6 +4,7 @@ on:
     branches: [ios-sync-android46]
     paths:
       - '.github/workflows/ios-parity-compile-check.yml'
+      - 'analysis_options.yaml'
       - 'lib/**'
       - 'pubspec.yaml'
       - 'ios/**'
@@ -28,6 +29,6 @@ jobs:
           cd ios
           pod install --repo-update
           cd ..
-      # Final no-signing compile validation for published Android Build 50 parity.
+      # Final no-signing compile validation for the current iOS parity branch.
       - name: Compile iOS release without signing
         run: flutter build ios --release --no-codesign
