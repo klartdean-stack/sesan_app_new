@@ -6,112 +6,42 @@ on:
 permissions:
   contents: write
 jobs:
-  patch:
+  analyze:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ios-sync-android46
           fetch-depth: 0
-      - name: Compact Product Detail seller information card
-        shell: python
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.38.8'
+          channel: stable
+      - name: Get dependencies
+        run: flutter pub get
+      - name: Targeted analyzer only
+        shell: bash
         run: |
-          from pathlib import Path
-          p=Path('lib/product_detail.dart')
-          s=p.read_text(encoding='utf-8')
-          reps=[
-            ('padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),','padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),'),
-            ('Icons.storefront,\n                                              color: Colors.green,\n                                              size: 19,','Icons.storefront,\n                                              color: Colors.green,\n                                              size: 17,'),
-            ('fontSize: 15,\n                                                fontWeight: FontWeight.bold,\n                                                color: Colors.green.shade800,','fontSize: 11,\n                                                fontWeight: FontWeight.bold,\n                                                color: Colors.green.shade800,'),
-            ('Icons.arrow_forward,\n                                            size: 14,','Icons.arrow_forward,\n                                            size: 12,'),
-            ('''                                          label: Text(
-                                            appText(
-                                              context,
-                                              km: 'មើលហាង',
-                                              en: 'View shop',
-                                            ),
-                                          ),
-                                          style: TextButton.styleFrom(
-                                            foregroundColor: Colors.blue,
-                                          ),''','''                                          label: Text(
-                                            appText(
-                                              context,
-                                              km: 'មើលហាង',
-                                              en: 'View shop',
-                                            ),
-                                            maxLines: 1,
-                                            style: const TextStyle(fontSize: 11),
-                                          ),
-                                          style: TextButton.styleFrom(
-                                            foregroundColor: Colors.blue,
-                                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 3),
-                                            minimumSize: Size.zero,
-                                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                          ),'''),
-            ('                                    const Divider(height: 12),','                                    const Divider(height: 14),'),
-            ('                                      child: ListTile(\n                                        contentPadding: EdgeInsets.zero,','                                      child: ListTile(\n                                        dense: true,\n                                        visualDensity: const VisualDensity(vertical: -3),\n                                        minVerticalPadding: 2,\n                                        contentPadding: EdgeInsets.zero,'),
-            ('                                                  size: 24,','                                                  size: 22,'),
-            ('                                                  left: 8,','                                                  left: 5,'),
-            ('fontSize: 12,\n                                            color: Colors.grey.shade600,','fontSize: 10,\n                                            color: Colors.grey.shade600,'),
-          ]
-          for a,b in reps:
-            if a in s: s=s.replace(a,b,1)
-          a='''                                        trailing: const Icon(
-                                          Icons.chevron_right,
-                                          color: Colors.grey,
-                                        ),'''
-          b='''                                        trailing: const Icon(
-                                          Icons.chevron_right,
-                                          color: Colors.grey,
-                                          size: 20,
-                                        ),'''
-          if a in s: s=s.replace(a,b,1)
-          a='''                                    ListTile(
-                                      contentPadding: EdgeInsets.zero,
-                                      leading: const Icon(
-                                        Icons.location_on,
-                                        color: Colors.red,
-                                      ),
-                                      title: Text(
-                                        widget.product['location'] ??
-                                            appText(
-                                              context,
-                                              km: 'មិនមានទីតាំង',
-                                              en: 'Location not provided',
-                                            ),
-                                      ),
-                                    ),'''
-          b='''                                    ListTile(
-                                      dense: true,
-                                      visualDensity: const VisualDensity(vertical: -4),
-                                      minVerticalPadding: 0,
-                                      minLeadingWidth: 26,
-                                      horizontalTitleGap: 8,
-                                      contentPadding: EdgeInsets.zero,
-                                      leading: const Icon(
-                                        Icons.location_on,
-                                        color: Colors.red,
-                                        size: 19,
-                                      ),
-                                      title: Text(
-                                        widget.product['location'] ??
-                                            appText(
-                                              context,
-                                              km: 'មិនមានទីតាំង',
-                                              en: 'Location not provided',
-                                            ),
-                                        style: const TextStyle(fontSize: 13, fontFamily: 'Siemreap'),
-                                      ),
-                                    ),'''
-          if a in s: s=s.replace(a,b,1)
-          p.write_text(s,encoding='utf-8')
-      - name: Check patch
-        run: git diff --check
-      - name: Commit seller card parity
+          set +e
+          flutter analyze --no-fatal-infos --no-fatal-warnings \
+            lib/product_detail.dart \
+            lib/comment_section.dart \
+            lib/auction_detail_screen.dart \
+            lib/add_product.dart \
+            lib/auction_add_screen.dart \
+            lib/upload_controller.dart \
+            lib/shop_upgrade_screen.dart \
+            lib/investment_pitch_screen.dart \
+            > ios_parity_analyzer_report.txt 2>&1
+          CODE=$?
+          echo "ANALYZER_EXIT_CODE=$CODE" >> ios_parity_analyzer_report.txt
+          cat ios_parity_analyzer_report.txt
+          exit 0
+      - name: Commit analyzer report
         run: |
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add lib/product_detail.dart
+          git add ios_parity_analyzer_report.txt
           git diff --cached --quiet && exit 0
-          git commit -m 'Compact iOS Product Detail seller information card'
+          git commit -m 'Record targeted iOS parity analyzer report'
           git push origin HEAD:ios-sync-android46
