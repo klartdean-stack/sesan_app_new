@@ -23,6 +23,8 @@ jobs:
         run: |
           python3 tool/cleanup_ios_product_list_location_fields.py
           python3 tool/patch_ios_product_list_manage_posts_v2.py
+          python3 tool/fix_ios_product_list_preorder_signatures.py
+          python3 tool/patch_ios_product_list_stock_cart.py
 
       - name: Verify Product List parity tokens
         run: |
@@ -37,6 +39,11 @@ jobs:
           grep -q "collection('pre_orders')" lib/product_list.dart
           grep -q "PreOrderDetailScreen" lib/product_list.dart
           grep -q "isPreOrder ? 'pre_orders'" lib/product_list.dart
+          grep -q "bool isPreOrder = false" lib/product_list.dart
+          grep -q "_buildInlineStockControl" lib/product_list.dart
+          grep -q "_listenToCart" lib/product_list.dart
+          grep -q "_removeFromCart" lib/product_list.dart
+          grep -q "MarketplaceAnalyticsService.logEvent" lib/product_list.dart
           ! grep -q "name.contains(query)" lib/product_list.dart
 
       - name: Commit Product List patch
@@ -49,5 +56,5 @@ jobs:
             echo "No Product List changes required."
             exit 0
           fi
-          git commit -m "Clean Product List location fields and retain V51 parity"
+          git commit -m "Port Android V51 Product List stock and live cart parity"
           git push origin ios-sync-android46
