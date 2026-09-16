@@ -1,0 +1,69 @@
+name: Patch iOS shop closed bookmark parity
+
+on:
+  push:
+    branches:
+      - ios-sync-android46
+    paths:
+      - '.github/workflows/patch-ios-shop-closed-bookmark.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout iOS parity branch
+        uses: actions/checkout@v4
+        with:
+          ref: ios-sync-android46
+          fetch-depth: 0
+
+      - name: Preserve closed-shop state in saved products
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('lib/product_detail.dart')
+          text = path.read_text(encoding='utf-8')
+
+          old = """        'image_url': widget.product['image_url'] ?? '',
+        'is_locked': widget.product['is_locked'] ?? false,
+        'is_available': widget.product['is_available'] ?? true,
+"""
+          new = """        'image_url': widget.product['image_url'] ?? '',
+        'is_locked': widget.product['is_locked'] ?? false,
+        'shop_closed': widget.product['shop_closed'] ?? false,
+        'is_available': widget.product['is_available'] ?? true,
+"""
+
+          if "'shop_closed': widget.product['shop_closed'] ?? false" in text:
+              print('shop_closed is already preserved; nothing to change.')
+          elif old not in text:
+              raise SystemExit('Expected saved-product block not found in product_detail.dart')
+          else:
+              path.write_text(text.replace(old, new, 1), encoding='utf-8')
+          PY
+
+      - name: Format product detail
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.38.8'
+          channel: stable
+      - run: dart format lib/product_detail.dart
+
+      - name: Commit parity fix
+        shell: bash
+        run: |
+          if git diff --quiet -- lib/product_detail.dart; then
+            echo 'No changes to commit.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add lib/product_detail.dart
+          git commit -m 'Preserve closed shop state in saved products on iOS'
+          git push origin HEAD:ios-sync-android46
