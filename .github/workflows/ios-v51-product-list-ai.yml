@@ -23,7 +23,7 @@ jobs:
         run: |
           python3 tool/patch_ios_product_list_ai.py
           python3 tool/fix_ios_product_list_search_filter.py
-          python3 tool/patch_ios_product_list_manage_posts.py
+          python3 tool/patch_ios_product_list_manage_posts_v2.py
 
       - name: Verify Product List parity tokens
         run: |
@@ -37,6 +37,7 @@ jobs:
           grep -q "_buildManageTabs" lib/product_list.dart
           grep -q "collection('pre_orders')" lib/product_list.dart
           grep -q "PreOrderDetailScreen" lib/product_list.dart
+          grep -q "isPreOrder ? 'pre_orders'" lib/product_list.dart
           ! grep -q "name.contains(query)" lib/product_list.dart
 
       - name: Commit Product List patch
