@@ -1,1 +1,1 @@
-sync Product Detail web layout and video with Android V51
+run safe Product Detail web layout parity patch
