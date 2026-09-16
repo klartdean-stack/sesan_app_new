@@ -230,16 +230,57 @@ class _AdminAiDashboardScreenState extends State<AdminAiDashboardScreen> {
           const SizedBox(height: 8),
           Text('Phone: ${(item['phone'] ?? '').toString()}   Sesan ID: ${(item['sesanId'] ?? '').toString()}', style: const TextStyle(fontSize: 11, color: Colors.black54)),
           const SizedBox(height: 10),
-          SizedBox(width: double.infinity, child: OutlinedButton.icon(
-            onPressed: () => _openReceipt((item['receiptUrl'] ?? '').toString()),
-            icon: const Icon(Icons.receipt_long_outlined, size: 17),
-            label: Text(_t('មើលវិក្កយបត្រ', 'View receipt')),
-          )),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () => _openReceipt((item['receiptUrl'] ?? '').toString()),
+              icon: const Icon(Icons.receipt_long_outlined, size: 17),
+              label: Text(
+                _t('មើលវិក្កយបត្រ', 'View receipt'),
+                style: const TextStyle(fontFamily: 'Siemreap', fontSize: 11),
+              ),
+            ),
+          ),
           const SizedBox(height: 8),
           Row(children: [
-            Expanded(child: OutlinedButton.icon(onPressed: () => _reviewSubscription(item, 'rejected'), icon: const Icon(Icons.close_rounded), label: Text(_t('បដិសេធ', 'Reject')))),
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: () => _reviewSubscription(item, 'rejected'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.red,
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                ),
+                icon: const Icon(Icons.close_rounded, size: 17),
+                label: Text(
+                  _t('បដិសេធ', 'Reject'),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontFamily: 'Siemreap',
+                    fontSize: 10.5,
+                  ),
+                ),
+              ),
+            ),
             const SizedBox(width: 8),
-            Expanded(child: FilledButton.icon(onPressed: () => _reviewSubscription(item, 'approved'), icon: const Icon(Icons.check_rounded), label: Text(_t('អនុម័ត', 'Approve')))),
+            Expanded(
+              child: FilledButton.icon(
+                onPressed: () => _reviewSubscription(item, 'approved'),
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                ),
+                icon: const Icon(Icons.check_rounded, size: 17),
+                label: Text(
+                  _t('អនុម័ត', 'Approve'),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontFamily: 'Siemreap',
+                    fontSize: 10.5,
+                  ),
+                ),
+              ),
+            ),
           ]),
         ]),
       ),
