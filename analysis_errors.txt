@@ -1068,7 +1068,7 @@ warning • Unused import: 'package:firebase_auth/firebase_auth.dart' • lib/st
 warning • Unused import: 'package:firebase_auth/firebase_auth.dart' • lib/transactionconfirm_history.dart:2:8 • unused_import
 warning • The declaration '_viewImage' isn't referenced • lib/transactionconfirm_history.dart:121:8 • unused_element
    info • The import of 'package:image_picker/image_picker.dart' is unnecessary because all of the used elements are also provided by the import of 'package:flutter_image_compress/flutter_image_compress.dart' • lib/upload_controller.dart:8:8 • unnecessary_import
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/upload_controller.dart:206:39 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/upload_controller.dart:212:39 • deprecated_member_use
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/use_detail_screen.dart:39:35 • deprecated_member_use
    info • Unnecessary override • lib/user_notification_list.dart:72:8 • unnecessary_overrides
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/user_notification_list.dart:478:38 • deprecated_member_use
@@ -1174,4 +1174,4 @@ warning • The value of the local variable 'permission' isn't used • lib/weat
    info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/weight_calc.dart:115:15 • deprecated_member_use
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/weight_calc.dart:272:22 • deprecated_member_use
 
-1034 issues found. (ran in 16.7s)
+1034 issues found. (ran in 21.6s)
