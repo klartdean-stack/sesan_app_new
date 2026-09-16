@@ -15,55 +15,81 @@ jobs:
   patch:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout iOS parity branch
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           ref: ios-sync-android46
           fetch-depth: 0
 
-      - name: Preserve closed-shop state in saved products
+      - name: Compact Product Detail and Add Product AI button
         shell: bash
         run: |
           python3 - <<'PY'
           from pathlib import Path
 
-          path = Path('lib/product_detail.dart')
-          text = path.read_text(encoding='utf-8')
+          p = Path('lib/product_detail.dart')
+          s = p.read_text(encoding='utf-8')
 
-          old = """        'image_url': widget.product['image_url'] ?? '',
-        'is_locked': widget.product['is_locked'] ?? false,
-        'is_available': widget.product['is_available'] ?? true,
-"""
-          new = """        'image_url': widget.product['image_url'] ?? '',
-        'is_locked': widget.product['is_locked'] ?? false,
-        'shop_closed': widget.product['shop_closed'] ?? false,
-        'is_available': widget.product['is_available'] ?? true,
-"""
+          pairs = [
+            ('fontSize: 22,\n                                  fontWeight: FontWeight.bold,', 'fontSize: 18,\n                                  height: 1.25,\n                                  fontWeight: FontWeight.bold,'),
+            ('''                                            RatingBarIndicator(\n                                              rating: avgRating,\n                                              itemBuilder: (context, _) =>\n                                                  const Icon(\n                                                    Icons.star,\n                                                    color: Colors.amber,\n                                                  ),\n                                              itemCount: 5,\n                                              itemSize: 22,\n                                            ),\n                                            const SizedBox(width: 8),''', '''                                            const Icon(\n                                              Icons.star_rounded,\n                                              color: Colors.amber,\n                                              size: 17,\n                                            ),\n                                            const SizedBox(width: 4),'''),
+            ('fontSize: 13,\n                                                fontWeight: FontWeight.bold,', 'fontSize: 11,\n                                                fontWeight: FontWeight.bold,'),
+            ('const SizedBox(height: 8),\n                                        Text(\n                                          myRating > 0', 'const SizedBox(height: 4),\n                                        Text(\n                                          myRating > 0'),
+            ('fontSize: 12,\n                                            color: myRating > 0', 'fontSize: 11,\n                                            color: myRating > 0'),
+            ('itemSize: 30,', 'itemSize: 22,'),
+            ('horizontal: 3,', 'horizontal: 2,'),
+            ('padding: EdgeInsets.only(top: 6),', 'padding: EdgeInsets.only(top: 4),'),
+            ('width: 18,\n                                              height: 18,', 'width: 14,\n                                              height: 14,'),
+            ('height: 30,\n                              ), // ៤. ចំនួនកម្ម៉ង់', 'height: 18,\n                              ), // ៤. ចំនួនកម្ម៉ង់'),
+            ('fontSize: 16,\n                                  fontWeight: FontWeight.bold,', 'fontSize: 14,\n                                  fontWeight: FontWeight.bold,'),
+            ('const SizedBox(height: 10),\n                              // --- ផ្នែកជ្រើសរើសចំនួន', 'const SizedBox(height: 6),\n                              // --- ផ្នែកជ្រើសរើសចំនួន'),
+            ('width: 80, // កែទំហំឱ្យល្មម', 'width: 60, // Compact quantity field'),
+            ('horizontal: 10,\n                                            ),\n                                            child: TextField(', 'horizontal: 6,\n                                            ),\n                                            child: TextField('),
+            ('style: const TextStyle(\n                                                fontWeight: FontWeight.bold,', 'style: const TextStyle(\n                                                fontSize: 14,\n                                                fontWeight: FontWeight.bold,'),
+            ('vertical: 8,\n                                                    ),', 'vertical: 4,\n                                                    ),'),
+            ('const SizedBox(width: 10),\n                                          const Text(\n                                            "ចំនួន",', 'const SizedBox(width: 6),\n                                          const Text(\n                                            "ចំនួន",'),
+            ('color: Colors.grey,\n                                              fontFamily: \'Siemreap\',', 'color: Colors.grey,\n                                              fontSize: 12,\n                                              fontFamily: \'Siemreap\','),
+            ('const SizedBox(height: 15),\n                                      Container(\n                                        padding: const EdgeInsets.all(12),', 'const SizedBox(height: 7),\n                                      Container(\n                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),'),
+            ('fontSize: 16,\n                                                fontWeight: FontWeight.w500,', 'fontSize: 13,\n                                                fontWeight: FontWeight.w500,'),
+            ('fontSize: 20,\n                                            color: Colors.blue,', 'fontSize: 17,\n                                            color: Colors.blue,'),
+            ('padding: const EdgeInsets.all(8),\n        decoration: BoxDecoration(\n          color: Colors.blue.withOpacity(0.1),\n          borderRadius: BorderRadius.circular(8),\n        ),\n        child: Icon(icon, color: Colors.blue, size: 20),', 'padding: const EdgeInsets.all(6),\n        decoration: BoxDecoration(\n          color: Colors.blue.withOpacity(0.1),\n          borderRadius: BorderRadius.circular(7),\n        ),\n        child: Icon(icon, color: Colors.blue, size: 18),'),
+          ]
+          for old, new in pairs:
+              if old in s:
+                  s = s.replace(old, new, 1)
 
-          if "'shop_closed': widget.product['shop_closed'] ?? false" in text:
-              print('shop_closed is already preserved; nothing to change.')
-          elif old not in text:
-              raise SystemExit('Expected saved-product block not found in product_detail.dart')
-          else:
-              path.write_text(text.replace(old, new, 1), encoding='utf-8')
+          old = '  Widget _qtyActionBtn(IconData icon, VoidCallback onTap) {\n    return InkWell(\n      onTap: onTap,\n      child: Container('
+          new = '  Widget _qtyActionBtn(IconData icon, VoidCallback onTap) {\n    return InkWell(\n      onTap: onTap,\n      borderRadius: BorderRadius.circular(7),\n      child: Container('
+          if old in s:
+              s = s.replace(old, new, 1)
+
+          p.write_text(s, encoding='utf-8')
+
+          p = Path('lib/add_product.dart')
+          s = p.read_text(encoding='utf-8')
+          old = '                  side: BorderSide(color: Colors.deepPurple.withOpacity(0.75)),\n                  visualDensity: VisualDensity.compact,\n'
+          new = '                  side: BorderSide(color: Colors.deepPurple.withOpacity(0.75)),\n                  minimumSize: const Size(0, 32),\n                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),\n                  visualDensity: VisualDensity.compact,\n'
+          if old in s:
+              s = s.replace(old, new, 1)
+          p.write_text(s, encoding='utf-8')
           PY
 
-      - name: Format product detail
+      - name: Format
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.38.8'
           channel: stable
-      - run: dart format lib/product_detail.dart
+      - run: dart format lib/product_detail.dart lib/add_product.dart
 
-      - name: Commit parity fix
+      - name: Verify and commit
         shell: bash
         run: |
-          if git diff --quiet -- lib/product_detail.dart; then
-            echo 'No changes to commit.'
-            exit 0
-          fi
+          grep -Fq 'Icons.star_rounded' lib/product_detail.dart
+          grep -Fq 'width: 60, // Compact quantity field' lib/product_detail.dart
+          grep -Fq 'minimumSize: const Size(0, 32)' lib/add_product.dart
+          git diff --check
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add lib/product_detail.dart
-          git commit -m 'Preserve closed shop state in saved products on iOS'
+          git add lib/product_detail.dart lib/add_product.dart
+          git diff --cached --quiet && exit 0
+          git commit -m 'Compact iOS Product Detail and Add Product AI controls'
           git push origin HEAD:ios-sync-android46
