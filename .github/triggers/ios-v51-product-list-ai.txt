@@ -4,3 +4,4 @@ Trigger after workflow repair commit 11fcc2a.
 Trigger after correcting checkout source to sesan_app_new/english-local-android.
 Trigger local self-contained patch after commit 4403266.
 Trigger smart search filter blocker fix after commit 012bf1d.
+Trigger Manage Posts + Pre-order parity after commit f5a92a8.
