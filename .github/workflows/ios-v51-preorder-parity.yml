@@ -13,110 +13,68 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ios-sync-android46
-      - name: Patch pre-order V51 gaps
+          fetch-depth: 0
+      - name: Patch Product Detail and Add Product parity
         run: |
           python3 - <<'PY'
           from pathlib import Path
 
-          p=Path('lib/add_pre_order_screen.dart')
-          s=p.read_text()
-          if "package:get/get.dart" not in s:
-              s=s.replace("import 'package:intl/intl.dart';", "import 'package:intl/intl.dart';\nimport 'package:get/get.dart' show Trans;")
-          marker="  @override\n  void initState()"
-          if "String _unitLabel(String unit)" not in s:
-              helper="""  String _unitLabel(String unit) {
-    const keys = {
-      'គីឡូក្រាម (Kg)': 'unit_kg', 'តោន (Ton)': 'unit_ton',
-      'ហិកតា (Ha)': 'unit_hectare', 'គ្រឿង': 'unit_item',
-      'ផ្លែ': 'unit_fruit', 'កាន': 'unit_can', 'ធុង': 'unit_drum',
-      'ដើម': 'unit_tree', 'បាច់': 'unit_bunch', 'បាវ': 'unit_sack',
-      'ស្រះ': 'unit_pond', 'កញ្ចប់': 'unit_package', 'ឡូ': 'unit_lot',
-      'ដុំ': 'unit_piece', 'ម៉ែត្រ': 'unit_meter', 'លីត្រ': 'unit_liter',
-      'ផ្សេងៗ': 'unit_other',
-    };
-    return (keys[unit] ?? unit).tr;
-  }
+          p = Path('lib/product_detail.dart')
+          s = p.read_text(encoding='utf-8')
 
-"""
-              s=s.replace(marker,helper+marker)
-          replacements={
-            "const SnackBar(\n            content: Text('អាចដាក់រូបភាពបានច្រើនបំផុតត្រឹម ៧ សន្លឹក'),\n          )":"SnackBar(content: Text('pre_max_images'.tr))",
-            "title: const Text(\n          'ចុះឈ្មោះលក់មុន',":"title: Text(\n          'pre_add_title'.tr,",
-            "_buildSectionTitle('រូបភាពផលិតផល (យ៉ាងតិច ១ សន្លឹក)')":"_buildSectionTitle('pre_images_title'.tr)",
-            "_buildSectionTitle('ព័ត៌មានលម្អិត')":"_buildSectionTitle('pre_details'.tr)",
-            "'ឈ្មោះផលិតផល',\n                'ឧ. ស្វាយកែវរមៀត...'":"'pre_product_name'.tr,\n                'pre_product_hint'.tr",
-            "'តម្លៃជាលុយរៀល'":"'pre_price_khr'.tr",
-            "'ថ្ងៃប្រមូលផល',\n                    'ជ្រើសរើសថ្ងៃ'":"'pre_harvest_date'.tr,\n                    'pre_select_date'.tr",
-            "? 'ជ្រើសរើសទីតាំង'":"? 'pre_select_location'.tr",
-          }
-          for a,b in replacements.items(): s=s.replace(a,b)
-          # Unit dropdown labels: preserve stored Khmer values, localize only display.
-          s=s.replace("Text(unit)", "Text(_unitLabel(unit))")
-          p.write_text(s)
+          replacements = [
+            ('fontSize: 22,\n                                  fontWeight: FontWeight.bold,', 'fontSize: 18,\n                                  height: 1.25,\n                                  fontWeight: FontWeight.bold,'),
+            ('''                                            RatingBarIndicator(\n                                              rating: avgRating,\n                                              itemBuilder: (context, _) =>\n                                                  const Icon(\n                                                    Icons.star,\n                                                    color: Colors.amber,\n                                                  ),\n                                              itemCount: 5,\n                                              itemSize: 22,\n                                            ),\n                                            const SizedBox(width: 8),''', '''                                            const Icon(\n                                              Icons.star_rounded,\n                                              color: Colors.amber,\n                                              size: 17,\n                                            ),\n                                            const SizedBox(width: 4),'''),
+            ('fontSize: 13,\n                                                fontWeight: FontWeight.bold,', 'fontSize: 11,\n                                                fontWeight: FontWeight.bold,'),
+            ('const SizedBox(height: 8),\n                                        Text(\n                                          myRating > 0', 'const SizedBox(height: 4),\n                                        Text(\n                                          myRating > 0'),
+            ('fontSize: 12,\n                                            color: myRating > 0', 'fontSize: 11,\n                                            color: myRating > 0'),
+            ('itemSize: 30,', 'itemSize: 22,'),
+            ('horizontal: 3,', 'horizontal: 2,'),
+            ('padding: EdgeInsets.only(top: 6),', 'padding: EdgeInsets.only(top: 4),'),
+            ('width: 18,\n                                              height: 18,', 'width: 14,\n                                              height: 14,'),
+            ('height: 30,\n                              ), // ៤. ចំនួនកម្ម៉ង់', 'height: 18,\n                              ), // ៤. ចំនួនកម្ម៉ង់'),
+            ('fontSize: 16,\n                                  fontWeight: FontWeight.bold,', 'fontSize: 14,\n                                  fontWeight: FontWeight.bold,'),
+            ('const SizedBox(height: 10),\n                              // --- ផ្នែកជ្រើសរើសចំនួន', 'const SizedBox(height: 6),\n                              // --- ផ្នែកជ្រើសរើសចំនួន'),
+            ('width: 80, // កែទំហំឱ្យល្មម', 'width: 60, // Compact quantity field'),
+            ('horizontal: 10,\n                                            ),\n                                            child: TextField(', 'horizontal: 6,\n                                            ),\n                                            child: TextField('),
+            ('style: const TextStyle(\n                                                fontWeight: FontWeight.bold,', 'style: const TextStyle(\n                                                fontSize: 14,\n                                                fontWeight: FontWeight.bold,'),
+            ('vertical: 8,\n                                                    ),', 'vertical: 4,\n                                                    ),'),
+            ('const SizedBox(width: 10),\n                                          const Text(\n                                            "ចំនួន",', 'const SizedBox(width: 6),\n                                          const Text(\n                                            "ចំនួន",'),
+            ('color: Colors.grey,\n                                              fontFamily: \'Siemreap\',', 'color: Colors.grey,\n                                              fontSize: 12,\n                                              fontFamily: \'Siemreap\','),
+            ('const SizedBox(height: 15),\n                                      Container(\n                                        padding: const EdgeInsets.all(12),', 'const SizedBox(height: 7),\n                                      Container(\n                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),'),
+            ('fontSize: 16,\n                                                fontWeight: FontWeight.w500,', 'fontSize: 13,\n                                                fontWeight: FontWeight.w500,'),
+            ('fontSize: 20,\n                                            color: Colors.blue,', 'fontSize: 17,\n                                            color: Colors.blue,'),
+            ('padding: const EdgeInsets.all(8),\n        decoration: BoxDecoration(\n          color: Colors.blue.withOpacity(0.1),\n          borderRadius: BorderRadius.circular(8),\n        ),\n        child: Icon(icon, color: Colors.blue, size: 20),', 'padding: const EdgeInsets.all(6),\n        decoration: BoxDecoration(\n          color: Colors.blue.withOpacity(0.1),\n          borderRadius: BorderRadius.circular(7),\n        ),\n        child: Icon(icon, color: Colors.blue, size: 18),'),
+          ]
+          for old, new in replacements:
+              if old in s:
+                  s = s.replace(old, new, 1)
 
-          p=Path('lib/pre_order_detail_screen.dart')
-          s=p.read_text()
-          if "import 'dart:async';" not in s:
-              s="import 'dart:async';\n\n"+s
-          needle="  int _currentImageIndex = 0;"
-          if "_showPhoneNotifier" not in s:
-              s=s.replace(needle, needle+"\n  bool _isDescriptionExpanded = false;\n  final ValueNotifier<bool> _showPhoneNotifier = ValueNotifier<bool>(false);\n  Timer? _phoneHideTimer;")
-          init_anchor="  Future<void> _loadUser() async {"
-          if "String _maskedPhone" not in s:
-              helper="""  @override
-  void dispose() {
-    _phoneHideTimer?.cancel();
-    _showPhoneNotifier.dispose();
-    super.dispose();
-  }
+          old_qty = '  Widget _qtyActionBtn(IconData icon, VoidCallback onTap) {\n    return InkWell(\n      onTap: onTap,\n      child: Container('
+          new_qty = '  Widget _qtyActionBtn(IconData icon, VoidCallback onTap) {\n    return InkWell(\n      onTap: onTap,\n      borderRadius: BorderRadius.circular(7),\n      child: Container('
+          if old_qty in s:
+              s = s.replace(old_qty, new_qty, 1)
 
-  String _maskedPhone(dynamic value) {
-    final phone = (value ?? '').toString().trim().replaceAll(RegExp(r'\\s+'), '');
-    if (phone.isEmpty) return '';
-    final prefixLength = phone.startsWith('+') ? (phone.length < 4 ? phone.length : 4) : (phone.length < 3 ? phone.length : 3);
-    if (phone.length <= prefixLength) return phone;
-    return '${phone.substring(0, prefixLength)}${List.filled(phone.length-prefixLength, 'X').join()}';
-  }
+          p.write_text(s, encoding='utf-8')
 
-  void _revealPhoneTemporarily() {
-    _phoneHideTimer?.cancel();
-    _showPhoneNotifier.value = true;
-    _phoneHideTimer = Timer(const Duration(seconds: 5), () { if (mounted) _showPhoneNotifier.value = false; });
-  }
-
-  void _hidePhone() {
-    _phoneHideTimer?.cancel();
-    _showPhoneNotifier.value = false;
-  }
-
-"""
-              s=s.replace(init_anchor,helper+init_anchor)
-          # Protect phone row: mask by default and reveal briefly when tapped.
-          old="""        _row(
-          Icons.phone_android,
-          \"លេខទូរស័ព្ទ\",
-          widget.data['phone'] ?? 'មិនមានលេខទូរស័ព្ទ',
-        ),"""
-          new="""        ValueListenableBuilder<bool>(
-          valueListenable: _showPhoneNotifier,
-          builder: (context, showPhone, _) => InkWell(
-            onTap: showPhone ? _hidePhone : _revealPhoneTemporarily,
-            child: _row(
-              Icons.phone_android,
-              \"លេខទូរស័ព្ទ\",
-              showPhone ? (widget.data['phone'] ?? 'មិនមានលេខទូរស័ព្ទ') : _maskedPhone(widget.data['phone']),
-            ),
-          ),
-        ),"""
-          s=s.replace(old,new)
-          p.write_text(s)
+          p = Path('lib/add_product.dart')
+          s = p.read_text(encoding='utf-8')
+          old = '                  side: BorderSide(color: Colors.deepPurple.withOpacity(0.75)),\n                  visualDensity: VisualDensity.compact,\n'
+          new = '                  side: BorderSide(color: Colors.deepPurple.withOpacity(0.75)),\n                  minimumSize: const Size(0, 32),\n                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),\n                  visualDensity: VisualDensity.compact,\n'
+          if old in s:
+              s = s.replace(old, new, 1)
+          p.write_text(s, encoding='utf-8')
           PY
-          dart format lib/add_pre_order_screen.dart lib/pre_order_detail_screen.dart
-      - name: Commit
+          dart format lib/product_detail.dart lib/add_product.dart
+      - name: Verify and commit
         run: |
+          grep -Fq 'Icons.star_rounded' lib/product_detail.dart
+          grep -Fq 'width: 60, // Compact quantity field' lib/product_detail.dart
+          grep -Fq 'minimumSize: const Size(0, 32)' lib/add_product.dart
+          git diff --check
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add lib/add_pre_order_screen.dart lib/pre_order_detail_screen.dart
+          git add lib/product_detail.dart lib/add_product.dart
           git diff --cached --quiet && exit 0
-          git commit -m "Port Android 51 pre-order parity to iOS"
+          git commit -m 'Compact iOS Product Detail and Add Product AI controls'
           git push origin HEAD:ios-sync-android46
