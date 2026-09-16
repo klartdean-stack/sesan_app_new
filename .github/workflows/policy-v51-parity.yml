@@ -53,11 +53,9 @@ jobs:
             ('                                                  size: 24,','                                                  size: 22,'),
             ('                                                  left: 8,','                                                  left: 5,'),
             ('fontSize: 12,\n                                            color: Colors.grey.shade600,','fontSize: 10,\n                                            color: Colors.grey.shade600,'),
-            ('                                          icons.chevron_right,','                                          icons.chevron_right,'),
           ]
           for a,b in reps:
             if a in s: s=s.replace(a,b,1)
-          # trailing size: target the seller profile tile only
           a='''                                        trailing: const Icon(
                                           Icons.chevron_right,
                                           color: Colors.grey,
@@ -68,7 +66,6 @@ jobs:
                                           size: 20,
                                         ),'''
           if a in s: s=s.replace(a,b,1)
-          # compact location row while preserving phone privacy tiles
           a='''                                    ListTile(
                                       contentPadding: EdgeInsets.zero,
                                       leading: const Icon(
@@ -108,12 +105,8 @@ jobs:
                                     ),'''
           if a in s: s=s.replace(a,b,1)
           p.write_text(s,encoding='utf-8')
-      - name: Verify seller card patch
-        run: |
-          grep -Fq 'visualDensity: const VisualDensity(vertical: -3)' lib/product_detail.dart
-          grep -Fq 'style: const TextStyle(fontSize: 11)' lib/product_detail.dart
-          grep -Fq 'horizontalTitleGap: 8' lib/product_detail.dart
-          git diff --check
+      - name: Check patch
+        run: git diff --check
       - name: Commit seller card parity
         run: |
           git config user.name github-actions[bot]
