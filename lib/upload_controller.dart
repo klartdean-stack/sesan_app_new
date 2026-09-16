@@ -179,10 +179,16 @@ class UploadController extends GetxController {
         formData['shipping_included'], // ✅ បញ្ចូលថាតើបូកថ្លៃផ្ញើឬអត់
         'lat': formData['lat'],
         'lng': formData['lng'],
-        'image_urls': imageUrls,
-        'video_url': videoUrl,
         'updated_at': FieldValue.serverTimestamp(),
       };
+
+      // Preserve existing media when the user edits only text or location.
+      if (productId == null || selectedImages.isNotEmpty) {
+        finalData['image_urls'] = imageUrls;
+      }
+      if (productId == null || selectedVideo != null) {
+        finalData['video_url'] = videoUrl;
+      }
 
 
       if (productId == null) {
@@ -240,6 +246,5 @@ class UploadController extends GetxController {
     }
   }
 }
-
 
 
