@@ -1,0 +1,51 @@
+name: iOS V51 Product Detail Video Parity
+
+on:
+  push:
+    branches: [ios-sync-android46]
+    paths:
+      - '.github/triggers/ios-v51-product-detail-video.txt'
+
+permissions:
+  contents: write
+
+jobs:
+  patch-product-detail-video:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ios-sync-android46
+          fetch-depth: 0
+      - name: Patch Product Detail video parity
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('lib/product_detail.dart')
+          s = p.read_text()
+
+          old = '''  void _initVideo() {\n    final videoUrl = widget.product['video_url'];\n    if (videoUrl != null && videoUrl.toString().isNotEmpty) {\n      _videoController = VideoPlayerController.networkUrl(Uri.parse(videoUrl))\n        ..initialize().then((_) {\n          if (mounted) setState(() => _isVideoInitialized = true);\n        });\n    }\n  }\n'''
+          new = '''  void _initVideo() {\n    final videoUrl = widget.product['video_url'];\n    if (videoUrl != null && videoUrl.toString().isNotEmpty) {\n      _videoController = VideoPlayerController.networkUrl(Uri.parse(videoUrl))\n        ..initialize().then((_) {\n          if (mounted) setState(() => _isVideoInitialized = true);\n        }).catchError((error) {\n          debugPrint('Product video initialization error: $error');\n        });\n    }\n  }\n\n  Future<void> _toggleVideoPlayback() async {\n    final controller = _videoController;\n    if (controller == null || !_isVideoInitialized) return;\n\n    try {\n      if (controller.value.isPlaying) {\n        await controller.pause();\n      } else {\n        final duration = controller.value.duration;\n        final position = controller.value.position;\n        if (duration > Duration.zero && position >= duration) {\n          await controller.seekTo(Duration.zero);\n        }\n        await controller.play();\n      }\n      if (mounted) setState(() {});\n    } catch (error) {\n      debugPrint('Product video playback error: $error');\n    }\n  }\n'''
+          if old not in s:
+              raise SystemExit('Expected _initVideo block not found; refusing unsafe patch')
+          s = s.replace(old, new, 1)
+
+          old_tap = '''                                onTap: () {\n                                  if (_videoController == null || !_isVideoInitialized) return;\n                                  setState(() {\n                                    if (_videoController!.value.isPlaying) {\n                                      _videoController!.pause();\n                                    } else {\n                                      _videoController!.play();\n                                    }\n                                  });\n                                },'''
+          new_tap = '''                                onTap: _toggleVideoPlayback,'''
+          if old_tap not in s:
+              raise SystemExit('Expected video tap block not found; refusing unsafe patch')
+          s = s.replace(old_tap, new_tap, 1)
+
+          p.write_text(s)
+          PY
+      - name: Commit changes
+        run: |
+          if git diff --quiet -- lib/product_detail.dart; then
+            echo 'No changes needed'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add lib/product_detail.dart
+          git commit -m 'Align Product Detail video handling with Android V51'
+          git push origin ios-sync-android46
