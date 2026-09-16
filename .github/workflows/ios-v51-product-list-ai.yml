@@ -19,10 +19,11 @@ jobs:
         with:
           ref: ios-sync-android46
 
-      - name: Patch Android V51 AI image voice location parity
+      - name: Patch Android V51 Product List parity
         run: |
           python3 tool/patch_ios_product_list_ai.py
           python3 tool/fix_ios_product_list_search_filter.py
+          python3 tool/patch_ios_product_list_manage_posts.py
 
       - name: Verify Product List parity tokens
         run: |
@@ -33,6 +34,9 @@ jobs:
           grep -q "filterProvince" lib/product_list.dart
           grep -q "_matchesSmartSearch" lib/product_list.dart
           grep -q "_matchesLocationFilter" lib/product_list.dart
+          grep -q "_buildManageTabs" lib/product_list.dart
+          grep -q "collection('pre_orders')" lib/product_list.dart
+          grep -q "PreOrderDetailScreen" lib/product_list.dart
           ! grep -q "name.contains(query)" lib/product_list.dart
 
       - name: Commit Product List patch
@@ -45,5 +49,5 @@ jobs:
             echo "No Product List changes required."
             exit 0
           fi
-          git commit -m "Fix Product List smart search and location filter"
+          git commit -m "Port Android V51 Product List Manage Posts parity"
           git push origin ios-sync-android46
