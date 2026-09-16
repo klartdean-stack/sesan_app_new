@@ -600,12 +600,6 @@ class ProductGridView extends StatefulWidget {
   final String? filterProvince;
   final String? filterDistrict;
   final String? filterCommune;
-  final String? filterProvince;
-  final String? filterDistrict;
-  final String? filterCommune;
-  final String? filterProvince;
-  final String? filterDistrict;
-  final String? filterCommune;
 
 
   const ProductGridView({
@@ -614,12 +608,6 @@ class ProductGridView extends StatefulWidget {
     this.searchQuery = "",
     this.isHome = false,
     this.isAuction = false, // 🎯 ២. និងដាក់វាចូលក្នុង Constructor ទីនេះ!
-    this.filterProvince,
-    this.filterDistrict,
-    this.filterCommune,
-    this.filterProvince,
-    this.filterDistrict,
-    this.filterCommune,
     this.filterProvince,
     this.filterDistrict,
     this.filterCommune,
@@ -1619,7 +1607,7 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
                     ),
                   ),
                 // 🛠 ផ្នែកប៊ូតុង កែប្រែ/លុប (បង្ហាញរហូតក្នុង Screen នេះ មិនបាច់ឆែកលក្ខខណ្ឌនាំភ្លាត់)
-                if (widget.category == "ទំនិញរបស់ខ្ញុំ")
+                if (widget.category == "ទំនិញរបស់ខ្ញុំ" && postType == 'sale')
                   Positioned(
                     top: 10,
                     right: 10,
@@ -1839,7 +1827,7 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
             ),
           const SizedBox(width: 6),
           GestureDetector(
-            onTap: () => _showDeleteConfirm(docId, isWanted),
+            onTap: () => _showDeleteConfirm(docId, isWanted, isPreOrder: isPreOrder),
             child: Container(
               padding: const EdgeInsets.all(5),
               decoration: const BoxDecoration(
