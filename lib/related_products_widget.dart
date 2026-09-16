@@ -180,7 +180,8 @@ class _RelatedProductsWidgetState extends State<RelatedProductsWidget> {
                 final String location = (item['location'] ?? 'ភ្នំពេញ')
                     .toString();
                 final dynamic timestamp = item['created_at'];
-                final bool isLocked = item['is_locked'] ?? false;
+                final bool isLocked =
+                    (item['is_locked'] ?? false) || item['shop_closed'] == true;
 
 
                 String imageUrl = "";
@@ -410,6 +411,5 @@ class _RelatedProductsWidgetState extends State<RelatedProductsWidget> {
     );
   }
 }
-
 
 
