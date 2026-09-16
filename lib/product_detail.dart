@@ -6,6 +6,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'category_localization.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:gal/gal.dart';
 import 'package:get/get.dart'
@@ -14,6 +15,7 @@ import 'package:intl/intl.dart';
 import 'package:my_app/comment_section.dart';
 import 'package:my_app/seller_profile_screen.dart';
 import 'package:my_app/share_service.dart';
+import 'localized_text.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
@@ -1334,7 +1336,7 @@ Android: $androidPlayStoreLink
                                 ),
                               ),
                               child: Text(
-                                widget.product['category'] ?? 'ផ្សេងៗ',
+                                localizedCategoryLabel(context, (widget.product['category'] ?? 'ផ្សេងៗ').toString()),
                                 style: const TextStyle(
                                   fontSize: 12,
                                   color: Colors.green,
@@ -1371,7 +1373,7 @@ Android: $androidPlayStoreLink
                                   ),
                                 ),
                                 child: Text(
-                                  widget.product['sub_category'] ?? '',
+                                  localizedCategoryLabel(context, (widget.product['sub_category'] ?? '').toString()),
                                   style: const TextStyle(
                                     fontSize: 12,
                                     color: Colors.orange,
@@ -1410,7 +1412,7 @@ Android: $androidPlayStoreLink
                                   ),
                                 ),
                                 child: Text(
-                                  widget.product['sub_sub_category'] ?? '',
+                                  localizedCategoryLabel(context, (widget.product['sub_sub_category'] ?? '').toString()),
                                   style: const TextStyle(
                                     fontSize: 12,
                                     color: Colors.red,
@@ -1801,7 +1803,7 @@ Android: $androidPlayStoreLink
                                       ),
                                       const SizedBox(width: 8),
                                       Text(
-                                        "ព័ត៌មានអ្នកលក់",
+                                        appText(context, km: 'ព័ត៌មានអ្នកលក់', en: 'Seller information'),
                                         style: TextStyle(
                                           fontSize: 18,
                                           fontWeight: FontWeight.bold,
@@ -1834,7 +1836,7 @@ Android: $androidPlayStoreLink
                                       Icons.arrow_forward,
                                       size: 16,
                                     ),
-                                    label: const Text("មើលហាង"),
+                                    label: Text(appText(context, km: 'មើលហាង', en: 'View shop')),
                                     style: TextButton.styleFrom(
                                       foregroundColor: Colors.blue,
                                     ),
@@ -1885,7 +1887,7 @@ Android: $androidPlayStoreLink
                                     children: [
                                       Flexible(
                                         child: Text(
-                                          widget.product['seller_name'] ?? 'មិនមានឈ្មោះ',
+                                          widget.product['seller_name'] ?? appText(context, km: 'មិនមានឈ្មោះ', en: 'Unnamed seller'),
                                           style: const TextStyle(
                                             fontWeight: FontWeight.bold,
                                             fontSize: 16,
@@ -1959,7 +1961,7 @@ Android: $androidPlayStoreLink
                                   color: Colors.red,
                                 ),
                                 title: Text(
-                                  widget.product['location'] ?? 'មិនមានទីតាំង',
+                                  widget.product['location'] ?? appText(context, km: 'មិនមានទីតាំង', en: 'Location not provided'),
                                 ),
                               ),
                               _buildSellerMapPreview(),
@@ -2054,8 +2056,8 @@ Android: $androidPlayStoreLink
                 onPressed: isAddToCartDisabled
                     ? null
                     : () => _addToCart(widget.product),
-                child: const Text(
-                  "ដាក់កន្ត្រក់",
+                child: Text(
+                  appText(context, km: 'ដាក់កន្ត្រក់', en: 'Add to cart'),
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
               ),
@@ -2083,8 +2085,8 @@ Android: $androidPlayStoreLink
                     );
                   }
                 },
-                child: const Text(
-                  "ទិញឥឡូវ",
+                child: Text(
+                  appText(context, km: 'ទិញឥឡូវ', en: 'Buy now'),
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
               ),
@@ -2133,8 +2135,8 @@ Android: $androidPlayStoreLink
         'location': widget.product['location'] ?? '',
         'description': widget.product['description'] ?? '',
         'category': widget.product['category'] ?? '',
-        'sub_category': widget.product['sub_category'] ?? '',
-        'sub_sub_category': widget.product['sub_sub_category'] ?? '',
+        'sub_category': localizedCategoryLabel(context, (widget.product['sub_category'] ?? '').toString()),
+        'sub_sub_category': localizedCategoryLabel(context, (widget.product['sub_sub_category'] ?? '').toString()),
         'seller_id': widget.product['seller_id'] ?? '',
         'seller_name': widget.product['seller_name'] ?? 'មិនស្គាល់',
         'seller_photo': widget.product['seller_photo'] ?? '',
