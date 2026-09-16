@@ -578,7 +578,7 @@ Product ID៖ $productId
 
     // 4. Link ទាញយក App
     final String iosAppStoreLink =
-        "https://apps.apple.com/app/sesan-agri/idYOUR_APP_STORE_ID";
+        "https://apps.apple.com/kh/app/sesan-app/id6789862316";
     final String androidPlayStoreLink =
         "https://play.google.com/store/apps/details?id=com.sesan.app";
 
