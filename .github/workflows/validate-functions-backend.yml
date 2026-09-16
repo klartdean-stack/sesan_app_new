@@ -1,0 +1,36 @@
+name: Validate Firebase Functions Backend
+
+on:
+  push:
+    branches: [ios-sync-android46]
+    paths:
+      - 'functions/**'
+      - 'firebase.json'
+      - '.github/workflows/validate-functions-backend.yml'
+
+jobs:
+  validate-functions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: functions/package.json
+      - name: Install Functions dependencies
+        working-directory: functions
+        run: npm install --no-audit --no-fund
+      - name: Validate Functions entry loads
+        working-directory: functions
+        run: |
+          node - <<'NODE'
+          const exported = require('./entry.js');
+          const required = ['secureAdminPreviewRefund', 'secureAdminProcessRefund'];
+          for (const name of required) {
+            if (!exported[name]) {
+              throw new Error(`Missing export: ${name}`);
+            }
+          }
+          console.log('Functions entry OK:', required.join(', '));
+          NODE
