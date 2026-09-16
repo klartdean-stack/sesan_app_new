@@ -6,54 +6,42 @@ permissions:
   contents: write
 
 jobs:
-  patch:
+  analyze:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ios-sync-android46
           fetch-depth: 0
-      - name: Compact Product Detail seller card
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.38.8'
+          channel: stable
+      - name: Get dependencies
+        run: flutter pub get
+      - name: Targeted analyzer only
+        shell: bash
         run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          p = Path('lib/product_detail.dart')
-          s = p.read_text(encoding='utf-8')
-
-          replacements = [
-            ('// --- ផ្នែកព័ត៌មានអ្នកលក់ (Update ថ្មី អាចចុចចូលមើល Profile បាន) ---\n                              Container(\n                                padding: const EdgeInsets.all(15),',
-             '// --- ផ្នែកព័ត៌មានអ្នកលក់ (Update ថ្មី អាចចុចចូលមើល Profile បាន) ---\n                              Container(\n                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),'),
-            ('borderRadius: BorderRadius.circular(15),\n                                  border: Border.all(\n                                    color: Colors.green.withOpacity(0.2),',
-             'borderRadius: BorderRadius.circular(12),\n                                  border: Border.all(\n                                    color: Colors.green.withOpacity(0.2),'),
-            ('const Icon(\n                                              Icons.storefront,\n                                              color: Colors.green,\n                                            ),',
-             'const Icon(\n                                              Icons.storefront,\n                                              color: Colors.green,\n                                              size: 19,\n                                            ),'),
-            ('const SizedBox(width: 8),\n                                            Text(\n                                              appText(\n                                                context,\n                                                km: \'ព័ត៌មានអ្នកលក់\',\n                                                en: \'Seller information\',\n                                              ),\n                                              style: TextStyle(\n                                                fontSize: 18,',
-             'const SizedBox(width: 6),\n                                            Text(\n                                              appText(\n                                                context,\n                                                km: \'ព័ត៌មានអ្នកលក់\',\n                                                en: \'Seller information\',\n                                              ),\n                                              style: TextStyle(\n                                                fontSize: 15,'),
-            ('icon: const Icon(\n                                            Icons.arrow_forward,\n                                            size: 16,\n                                          ),',
-             'icon: const Icon(\n                                            Icons.arrow_forward,\n                                            size: 14,\n                                          ),'),
-            ('const Divider(height: 20),', 'const Divider(height: 12),'),
-            ('radius: 25,', 'radius: 20,'),
-            ('Icons.person,\n                                                  color: Colors.green,\n                                                  size: 30,',
-             'Icons.person,\n                                                  color: Colors.green,\n                                                  size: 24,'),
-            ('fontWeight: FontWeight.bold,\n                                                  fontSize: 16,',
-             'fontWeight: FontWeight.bold,\n                                                  fontSize: 14,'),
-          ]
-          for old, new in replacements:
-              if old in s:
-                  s = s.replace(old, new, 1)
-              else:
-                  print('Anchor already changed or not found:', old[:70])
-          p.write_text(s, encoding='utf-8')
-          PY
-          git diff --check
-          grep -Fq 'padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9)' lib/product_detail.dart
-          grep -Fq 'fontSize: 15' lib/product_detail.dart
-          grep -Fq 'radius: 20' lib/product_detail.dart
-      - name: Commit
+          set +e
+          flutter analyze --no-fatal-infos --no-fatal-warnings \
+            lib/product_detail.dart \
+            lib/comment_section.dart \
+            lib/auction_detail_screen.dart \
+            lib/add_product.dart \
+            lib/auction_add_screen.dart \
+            lib/upload_controller.dart \
+            lib/shop_upgrade_screen.dart \
+            lib/investment_pitch_screen.dart \
+            > ios_parity_analyzer_report.txt 2>&1
+          CODE=$?
+          echo "ANALYZER_EXIT_CODE=$CODE" >> ios_parity_analyzer_report.txt
+          cat ios_parity_analyzer_report.txt
+          exit 0
+      - name: Commit analyzer report
         run: |
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add lib/product_detail.dart
-          if git diff --cached --quiet; then exit 0; fi
-          git commit -m 'Compact iOS Product Detail seller card'
+          git add ios_parity_analyzer_report.txt
+          git diff --cached --quiet && exit 0
+          git commit -m 'Record targeted iOS parity analyzer report'
           git push origin HEAD:ios-sync-android46
