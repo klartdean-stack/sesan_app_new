@@ -1,1 +1,1 @@
-sync complete Firebase Functions backend from Android english-local-android
+retry full Firebase Functions backend sync from Android english-local-android after public clone fix
