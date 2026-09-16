@@ -81,6 +81,11 @@ class _SellerPhonePrivacyTileState extends State<SellerPhonePrivacyTile> {
     });
   }
 
+  void _hide() {
+    _hideTimer?.cancel();
+    if (mounted) setState(() => _revealed = false);
+  }
+
   @override
   void dispose() {
     _hideTimer?.cancel();
@@ -101,7 +106,15 @@ class _SellerPhonePrivacyTileState extends State<SellerPhonePrivacyTile> {
         widget.secondary ? Icons.phone_android : Icons.phone,
         color: Colors.orange,
       ),
-      title: Text(shown),
+      title: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 220),
+        child: Text(
+          shown,
+          key: ValueKey<String>(shown),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ),
       subtitle: phone.isEmpty
           ? null
           : Text(
@@ -116,18 +129,16 @@ class _SellerPhonePrivacyTileState extends State<SellerPhonePrivacyTile> {
             ),
       trailing: phone.isEmpty
           ? null
-          : TextButton.icon(
-              onPressed: _revealed ? null : _reveal,
+          : IconButton(
+              onPressed: _revealed ? _hide : _reveal,
               icon: Icon(
-                _revealed ? Icons.visibility_off_outlined : Icons.visibility,
-                size: 17,
+                _revealed ? Icons.visibility_off : Icons.visibility,
+                size: 18,
               ),
-              label: Text(
-                _revealed
-                    ? (isEnglish ? 'Shown' : 'បានបង្ហាញ')
-                    : (isEnglish ? 'Show number' : 'បង្ហាញលេខ'),
-                style: const TextStyle(fontSize: 11, fontFamily: 'Siemreap'),
-              ),
+              tooltip: _revealed
+                  ? (isEnglish ? 'Hide' : 'លាក់លេខ')
+                  : (isEnglish ? 'Show number' : 'បង្ហាញលេខ'),
+              visualDensity: VisualDensity.compact,
             ),
     );
   }
