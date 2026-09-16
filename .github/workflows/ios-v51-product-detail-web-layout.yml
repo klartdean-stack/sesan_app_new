@@ -1,0 +1,407 @@
+name: iOS V51 Product Detail Web Layout Parity
+
+on:
+  push:
+    branches: [ios-sync-android46]
+    paths:
+      - '.github/triggers/ios-v51-product-detail-web-layout.txt'
+
+permissions:
+  contents: write
+
+jobs:
+  patch-product-detail-web-layout:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ios-sync-android46
+          fetch-depth: 0
+      - name: Patch Product Detail web/layout parity
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('lib/product_detail.dart')
+          s = p.read_text()
+
+          def require(old, label):
+              if old not in s:
+                  raise SystemExit(f'{label} not found; refusing unsafe patch')
+
+          # Web detection + controllers.
+          if "import 'package:flutter/foundation.dart';" not in s:
+              s = s.replace("import 'package:flutter/material.dart';\n", "import 'package:flutter/material.dart';\nimport 'package:flutter/foundation.dart';\n", 1)
+
+          old = "  String? _translatedDescription;\n"
+          require(old, 'translatedDescription anchor')
+          if '_webGalleryController' not in s:
+              s = s.replace(old, old + "  final PageController _webGalleryController = PageController();\n  final ScrollController _webCommentsController = ScrollController();\n", 1)
+
+          old = "    _linkSubscription?.cancel();\n    super.dispose();\n"
+          require(old, 'dispose anchor')
+          if '_webGalleryController.dispose();' not in s:
+              s = s.replace(old, "    _linkSubscription?.cancel();\n    _webGalleryController.dispose();\n    _webCommentsController.dispose();\n    super.dispose();\n", 1)
+
+          # Web-safe map preview.
+          old = "markers: {Marker(markerId: const MarkerId('product_preview'), position: location)}, myLocationButtonEnabled: false"
+          require(old, 'product preview map anchor')
+          s = s.replace(old, "markers: {Marker(markerId: const MarkerId('product_preview'), position: location)}, liteModeEnabled: !kIsWeb, myLocationButtonEnabled: false", 1)
+
+          # Replace watermark action with Web-safe sharing/downloading path.
+          start = s.index('  Future<void> _processWatermarkAction(')
+          end = s.index('  // ── Save Product with Watermark', start)
+          replacement = r'''  Future<void> _processWatermarkAction(
+    String imageUrl, {
+    bool isShare = false,
+    String? shareText,
+  }) async {
+    try {
+      Get.dialog(
+        const Center(child: CircularProgressIndicator(color: Colors.white)),
+        barrierDismissible: false,
+      );
+
+      final image = await _screenshotController.captureFromWidget(
+        _buildWatermarkImage(
+          imageUrl,
+          widget.product['seller_name'] ?? 'អាជីវករ សេសាន',
+          widget.product['phone1'] ?? '088XXXXXXX',
+          widget.product['id'] ?? '',
+        ),
+        delay: const Duration(milliseconds: 1500),
+        targetSize: const Size(500, 694),
+        pixelRatio: kIsWeb ? 3.0 : 6.0,
+      );
+
+      Get.back();
+      final fileName = 'sesan_${DateTime.now().millisecondsSinceEpoch}.png';
+
+      if (kIsWeb) {
+        final webFile = XFile.fromData(
+          image,
+          mimeType: 'image/png',
+          name: fileName,
+        );
+        await Share.shareXFiles(
+          [webFile],
+          text: isShare ? (shareText ?? 'Sesan App') : null,
+        );
+        if (!isShare) {
+          Get.snackbar(
+            appText(context, km: 'ជោគជ័យ!', en: 'Success'),
+            appText(context, km: 'បានរៀបចំរូបភាពសម្រាប់រក្សាទុករួចរាល់ ✅', en: 'Image is ready to save ✅'),
+            snackPosition: SnackPosition.TOP,
+            backgroundColor: Colors.green,
+            colorText: Colors.white,
+          );
+        }
+        return;
+      }
+
+      final tempDir = await getTemporaryDirectory();
+      final pngFile = File('${tempDir.path}/$fileName');
+      await pngFile.writeAsBytes(image);
+
+      final jpgFile = File(
+        '${tempDir.path}/sesan_${DateTime.now().millisecondsSinceEpoch}.jpg',
+      );
+      final compressed = await FlutterImageCompress.compressAndGetFile(
+        pngFile.path,
+        jpgFile.path,
+        quality: 100,
+        format: CompressFormat.jpeg,
+      );
+      final shareFile = compressed == null ? pngFile : File(compressed.path);
+
+      if (isShare) {
+        await Share.shareXFiles(
+          [XFile(shareFile.path)],
+          text: shareText ?? 'Sesan App',
+        );
+      } else {
+        await Gal.putImage(shareFile.path);
+        Get.snackbar(
+          appText(context, km: 'ជោគជ័យ!', en: 'Success'),
+          appText(context, km: 'បានរក្សាទុកក្នុង Gallery រួចរាល់! ✅', en: 'Saved to Gallery ✅'),
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+          margin: const EdgeInsets.all(15),
+          icon: const Icon(Icons.check_circle, color: Colors.white),
+        );
+      }
+    } catch (e) {
+      if (Get.isDialogOpen == true) Get.back();
+      debugPrint('Product watermark error: $e');
+      Get.snackbar(
+        appText(context, km: 'កំហុស', en: 'Error'),
+        appText(context, km: 'មិនអាចរៀបចំរូបភាពបាន', en: 'Could not prepare the image'),
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
+  }
+
+'''
+          s = s[:start] + replacement + s[end:]
+
+          # Avoid dart:io path usage from the legacy save flow on Web.
+          old = "      if (images.isEmpty) return;\n\n\n      // ២. បង្ហាញ Loading"
+          if old not in s:
+              old = "      if (images.isEmpty) return;\n\n      // ២. បង្ហាញ Loading"
+          require(old, 'save watermark images anchor')
+          s = s.replace(old, old.replace("\n\n      // ២.", "\n      if (kIsWeb) {\n        await _processWatermarkAction(images[0], isShare: false);\n        return;\n      }\n\n      // ២."), 1)
+
+          # Page controller supports arrows/thumbnails on desktop and mobile.
+          old = "                        child: PageView.builder(\n                          itemCount: totalSlides,"
+          require(old, 'PageView builder anchor')
+          s = s.replace(old, "                        child: PageView.builder(\n                          controller: _webGalleryController,\n                          itemCount: totalSlides,", 1)
+
+          # Better Web video hit testing: Flutter tap layer stays above HTML video element.
+          old = '''                                      if (_isVideoInitialized)\n                                        IgnorePointer(\n                                          // ឲ្យការចុចឆ្លងទៅ GestureDetector ខាងលើ\n                                          ignoring: true,\n                                          child: AnimatedOpacity(\n                                            duration: const Duration(milliseconds: 300),\n                                            opacity: isPlaying ? 0.0 : 1.0,\n                                            child: Container(\n                                              width: 64,\n                                              height: 64,\n                                              decoration: BoxDecoration(\n                                                shape: BoxShape.circle,\n                                                color: Colors.black.withOpacity(0.5),\n                                              ),\n                                              child: Icon(\n                                                isPlaying ? Icons.pause : Icons.play_arrow_rounded,\n                                                color: Colors.white,\n                                                size: 48,\n                                              ),\n                                            ),\n                                          ),\n                                        ),'''
+          new = '''                                      if (_isVideoInitialized)\n                                        Positioned.fill(\n                                          child: GestureDetector(\n                                            behavior: HitTestBehavior.opaque,\n                                            onTap: _toggleVideoPlayback,\n                                            child: Center(\n                                              child: AnimatedOpacity(\n                                                duration: const Duration(milliseconds: 250),\n                                                opacity: isPlaying ? 0.0 : 1.0,\n                                                child: Container(\n                                                  width: 64,\n                                                  height: 64,\n                                                  decoration: BoxDecoration(\n                                                    shape: BoxShape.circle,\n                                                    color: Colors.black.withOpacity(0.55),\n                                                  ),\n                                                  child: const Icon(\n                                                    Icons.play_arrow_rounded,\n                                                    color: Colors.white,\n                                                    size: 48,\n                                                  ),\n                                                ),\n                                              ),\n                                            ),\n                                          ),\n                                        ),'''
+          require(old, 'video overlay anchor')
+          s = s.replace(old, new, 1)
+
+          # Add compact gallery extras used by wide layouts.
+          map_anchor = '  double? _mapCoordinate(dynamic value) {'
+          require(map_anchor, 'map helper anchor')
+          if 'Widget _buildWebGalleryExtras' not in s:
+              helpers = r'''  Widget _buildGalleryThumbnails({
+    required List<String> images,
+    required bool hasVideo,
+  }) {
+    final total = images.length + (hasVideo ? 1 : 0);
+    if (total <= 1) return const SizedBox.shrink();
+    return SizedBox(
+      height: 62,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
+        itemCount: total,
+        separatorBuilder: (_, __) => const SizedBox(width: 7),
+        itemBuilder: (context, index) {
+          final selected = _currentPage == index;
+          final isVideo = hasVideo && index == images.length;
+          return InkWell(
+            borderRadius: BorderRadius.circular(8),
+            onTap: () => _webGalleryController.animateToPage(
+              index,
+              duration: const Duration(milliseconds: 250),
+              curve: Curves.easeOut,
+            ),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              width: 48,
+              height: 48,
+              clipBehavior: Clip.antiAlias,
+              decoration: BoxDecoration(
+                color: isVideo ? Colors.black : Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: selected ? Colors.blue : Colors.grey.shade300,
+                  width: selected ? 2.5 : 1,
+                ),
+              ),
+              child: isVideo
+                  ? const Icon(Icons.play_arrow_rounded, color: Colors.white, size: 28)
+                  : CachedNetworkImage(
+                      imageUrl: images[index],
+                      fit: BoxFit.cover,
+                      memCacheWidth: 144,
+                      errorWidget: (_, __, ___) =>
+                          const Icon(Icons.broken_image_outlined, size: 20),
+                    ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildWebGalleryExtras({
+    required List<String> images,
+    required bool hasVideo,
+  }) {
+    final sellerId = (widget.product['seller_id'] ?? '').toString();
+    final sellerName = (widget.product['seller_name'] ??
+            appText(context, km: 'អ្នកលក់', en: 'Seller'))
+        .toString();
+    final sellerPhoto = (widget.product['seller_photo'] ?? '').toString();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _buildGalleryThumbnails(images: images, hasVideo: hasVideo),
+        const SizedBox(height: 10),
+        Card(
+          elevation: 0,
+          color: const Color(0xFFF4FAF1),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+            side: BorderSide(color: Colors.green.shade200),
+          ),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(14),
+            onTap: sellerId.isEmpty
+                ? null
+                : () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => SellerProfileScreen(
+                          sellerId: sellerId,
+                          sellerName: sellerName,
+                        ),
+                      ),
+                    ),
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 25,
+                    backgroundColor: Colors.green.shade100,
+                    backgroundImage:
+                        sellerPhoto.isNotEmpty ? NetworkImage(sellerPhoto) : null,
+                    child: sellerPhoto.isEmpty
+                        ? const Icon(Icons.storefront, color: Colors.green)
+                        : null,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          appText(context, km: 'ព័ត៌មានអ្នកលក់', en: 'Seller information'),
+                          style: TextStyle(
+                            color: Colors.green.shade700,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          sellerName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Text(
+                    appText(context, km: 'មើលហាង', en: 'View shop'),
+                    style: const TextStyle(color: Colors.blue, fontSize: 12),
+                  ),
+                  const Icon(Icons.chevron_right, color: Colors.grey),
+                ],
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
+        Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF7F9FC),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: const Color(0xFFE1E6ED)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.verified_user_outlined, color: Colors.blue, size: 22),
+                  const SizedBox(width: 8),
+                  Text(
+                    appText(context, km: 'សុវត្ថិភាពអ្នកទិញ', en: 'Buyer protection'),
+                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Text(appText(context, km: '✓ ពិនិត្យព័ត៌មានអ្នកលក់មុនទិញ', en: '✓ Check seller information before buying')),
+              const SizedBox(height: 6),
+              Text(appText(context, km: '✓ អាចដាក់បណ្ដឹងតាម Sesan', en: '✓ Report an issue through Sesan')),
+            ],
+          ),
+        ),
+        if (widget.product['id'] != null &&
+            widget.product['id'].toString().isNotEmpty) ...[
+          const SizedBox(height: 14),
+          Container(
+            height: 420,
+            clipBehavior: Clip.antiAlias,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: const Color(0xFFE1E6ED)),
+            ),
+            child: Scrollbar(
+              controller: _webCommentsController,
+              thumbVisibility: true,
+              child: SingleChildScrollView(
+                controller: _webCommentsController,
+                padding: const EdgeInsets.only(bottom: 12),
+                child: CommentSection(
+                  productId: widget.product['id'],
+                  sellerId: widget.product['seller_id'] ?? '',
+                  currentUserId: _currentUserId,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+'''
+              s = s.replace(map_anchor, helpers + map_anchor, 1)
+
+          # Desktop two-column layout (gallery left, product detail right).
+          old = '''            constraints: const BoxConstraints(maxWidth: 1000),\n            child: SingleChildScrollView(\n              child: Column(\n                crossAxisAlignment: CrossAxisAlignment.start,\n                children: [\n                  // ១. រូបភាពស្លាយ\n                  // ១. រូបភាពស្លាយ (Square 1:1)\n                  Stack('''
+          new = '''            constraints: const BoxConstraints(maxWidth: 1200),\n            child: SingleChildScrollView(\n              child: LayoutBuilder(\n                builder: (context, constraints) {\n                  final isDesktop = constraints.maxWidth >= 900;\n                  final galleryWidth = isDesktop ? 520.0 : constraints.maxWidth;\n                  final detailsWidth = isDesktop\n                      ? constraints.maxWidth - galleryWidth - 20\n                      : constraints.maxWidth;\n                  return Wrap(\n                    alignment: WrapAlignment.center,\n                    crossAxisAlignment: WrapCrossAlignment.start,\n                    spacing: 20,\n                    runSpacing: isDesktop ? 20 : 0,\n                    children: [\n                      SizedBox(\n                        width: galleryWidth,\n                        child: Column(\n                          children: [\n                            Stack('''
+          require(old, 'desktop layout opening anchor')
+          s = s.replace(old, new, 1)
+
+          old = '''                  ),\n                  // ... កូដផ្នែកខាងក្រោមរបស់មេ\n                  Padding(\n                    padding: const EdgeInsets.all(15.0),'''
+          new = '''                  ),\n                            if (!isDesktop)\n                              _buildGalleryThumbnails(images: displayImages, hasVideo: hasVideo),\n                            if (isDesktop)\n                              _buildWebGalleryExtras(images: displayImages, hasVideo: hasVideo),\n                          ],\n                        ),\n                      ),\n                      SizedBox(\n                        width: detailsWidth,\n                        child: Padding(\n                    padding: EdgeInsets.fromLTRB(15, isDesktop ? 15 : 4, 15, 15),'''
+          require(old, 'desktop layout gallery/details anchor')
+          s = s.replace(old, new, 1)
+
+          # Desktop gallery arrows.
+          counter_anchor = '''                      // លេខរាប់រូបភាព និងវីដេអូ\n                      if (totalSlides > 1)'''
+          require(counter_anchor, 'gallery counter anchor')
+          arrows = '''                      if (isDesktop && totalSlides > 1)\n                        Positioned(\n                          left: 14, top: 0, bottom: 0,\n                          child: Center(\n                            child: Material(\n                              color: Colors.black.withOpacity(0.48),\n                              shape: const CircleBorder(),\n                              child: IconButton(\n                                tooltip: appText(context, km: 'រូបមុន', en: 'Previous'),\n                                icon: const Icon(Icons.chevron_left_rounded, color: Colors.white, size: 34),\n                                onPressed: () {\n                                  final previous = (_currentPage - 1 + totalSlides) % totalSlides;\n                                  _webGalleryController.animateToPage(previous, duration: const Duration(milliseconds: 260), curve: Curves.easeOut);\n                                },\n                              ),\n                            ),\n                          ),\n                        ),\n                      if (isDesktop && totalSlides > 1)\n                        Positioned(\n                          right: 14, top: 0, bottom: 0,\n                          child: Center(\n                            child: Material(\n                              color: Colors.black.withOpacity(0.48),\n                              shape: const CircleBorder(),\n                              child: IconButton(\n                                tooltip: appText(context, km: 'រូបបន្ទាប់', en: 'Next'),\n                                icon: const Icon(Icons.chevron_right_rounded, color: Colors.white, size: 34),\n                                onPressed: () {\n                                  final next = (_currentPage + 1) % totalSlides;\n                                  _webGalleryController.animateToPage(next, duration: const Duration(milliseconds: 260), curve: Curves.easeOut);\n                                },\n                              ),\n                            ),\n                          ),\n                        ),\n'''
+          s = s.replace(counter_anchor, arrows + counter_anchor, 1)
+
+          # Comments stay under detail on mobile; desktop comments are in left column.
+          comments_old = '''                        // 🎯 ដាក់ចូលក្នុងជួរ 598 (ចន្លោះ ListTile ទីតាំង និង RelatedProducts)\n                        const SizedBox(height: 20),\n                        const Padding(\n                          padding: EdgeInsets.symmetric(horizontal: 16),\n                          child: Text(\n                            "មតិយោបល់",\n                            style: TextStyle(\n                              fontSize: 18,\n                              fontWeight: FontWeight.bold,\n                            ),\n                          ),\n                        ),\n\n\n                        // ហៅ Widget Comment មកបង្ហាញតែ ១ ដូចដែលមេចង់បាន\n                        // កុំឱ្យវាហៅ CommentSection បើអត់មាន ID ពិតប្រាកដ\n                        if (widget.product['id'] != null &&\n                            widget.product['id'].toString().isNotEmpty)\n                          CommentSection(\n                            productId: widget.product['id'],\n                            sellerId: widget.product['seller_id'] ?? '',\n                            currentUserId: _currentUserId, // ✅ បន្ថែមអង្គនេះ\n                          )\n                        else\n                          const Center(child: Text("មិនមានទិន្នន័យផលិតផល")),\n                        const SizedBox(height: 30),'''
+          comments_new = '''                        if (!isDesktop) ...[\n                          const SizedBox(height: 20),\n                          Padding(\n                            padding: const EdgeInsets.symmetric(horizontal: 16),\n                            child: Text(\n                              appText(context, km: 'មតិយោបល់', en: 'Comments'),\n                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),\n                            ),\n                          ),\n                          if (widget.product['id'] != null &&\n                              widget.product['id'].toString().isNotEmpty)\n                            CommentSection(\n                              productId: widget.product['id'],\n                              sellerId: widget.product['seller_id'] ?? '',\n                              currentUserId: _currentUserId,\n                            )\n                          else\n                            Center(child: Text(appText(context, km: 'មិនមានទិន្នន័យផលិតផល', en: 'No product data'))),\n                          const SizedBox(height: 30),\n                        ],'''
+          require(comments_old, 'comments layout anchor')
+          s = s.replace(comments_old, comments_new, 1)
+
+          tail_old = '''                        const SizedBox(height: 100),\n                      ],\n                    ),\n                  ),\n                ],\n              ),\n            ),\n          ),\n        ),\n      ),'''
+          tail_new = '''                        const SizedBox(height: 100),\n                      ],\n                    ),\n                  ),\n                ),\n              ],\n            );\n          },\n        ),\n      ),\n    ),\n  ),\n),'''
+          require(tail_old, 'desktop layout closing anchor')
+          s = s.replace(tail_old, tail_new, 1)
+
+          p.write_text(s)
+          PY
+      - name: Format Product Detail
+        run: dart format lib/product_detail.dart
+      - name: Commit changes
+        run: |
+          if git diff --quiet -- lib/product_detail.dart; then
+            echo 'No changes needed'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add lib/product_detail.dart
+          git commit -m 'Align Product Detail web layout with Android V51'
+          git push origin ios-sync-android46
