@@ -23,7 +23,6 @@ jobs:
       - name: Checkout authoritative Android V51 branch
         uses: actions/checkout@v4
         with:
-          repository: klartdean-stack/sesan_app_android
           ref: english-local-android
           path: android
 
@@ -33,8 +32,8 @@ jobs:
           cp android/lib/product_list.dart ios/lib/product_list.dart
           test -s ios/lib/product_list.dart
           grep -q "firebase_functions" ios/lib/product_list.dart
-          grep -q "speech_to_text" ios/lib/product_list.dart
-          grep -q "google_maps_flutter" ios/lib/product_list.dart
+          grep -q "speech_to_text\|package:record/record.dart" ios/lib/product_list.dart
+          grep -q "location_picker.dart" ios/lib/product_list.dart
 
       - name: Commit parity update
         working-directory: ios
