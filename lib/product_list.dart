@@ -1326,9 +1326,9 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
     final String docId = doc.id;
 
 
-    final bool isWanted =
-        doc.reference.path.contains('wanted_products') ||
-            data.containsKey('savedAt');
+    final String postType = _managePostType(doc);
+    final bool isWanted = postType == 'wanted';
+    final bool isPreOrder = postType == 'preorder';
 
 
     // 🎯 កំណត់តម្លៃចាក់សោដំបូង
@@ -1536,7 +1536,7 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
 
 
                 // 🔘 ផ្នែក Switch ស្ទីល iOS (បៃតង=បើក, ប្រផេះ=បិទ) + Snackbars
-                if (widget.category == "ទំនិញរបស់ខ្ញុំ")
+                if (widget.category == "ទំនិញរបស់ខ្ញុំ" && postType == 'sale')
                   Positioned(
                     top: 8,
                     left: 8,
@@ -1627,7 +1627,7 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         // ១. ប៊ូតុង Edit (ពណ៌ខៀវ)
-                        if (!isWanted) // បើទំនិញធម្មតា ទើបឱ្យកែ
+                        if (!isWanted && !isPreOrder) // normal sale only
                           GestureDetector(
                             onTap: () {
                               Navigator.push(
@@ -1665,7 +1665,7 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
 
                         // ២. ប៊ូតុង Delete (ពណ៌ក្រហម)
                         GestureDetector(
-                          onTap: () => _showDeleteConfirm(docId, isWanted),
+                          onTap: () => _showDeleteConfirm(docId, isWanted, isPreOrder: isPreOrder),
                           child: Container(
                             padding: const EdgeInsets.all(6),
                             decoration: BoxDecoration(
@@ -1874,7 +1874,7 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
   }
 
 
-  void _showDeleteConfirm(String docId, bool isWanted) {
+  void _showDeleteConfirm(String docId, bool isWanted, {bool isPreOrder = false}) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -1888,7 +1888,7 @@ class _ProductGridViewState extends State<ProductGridView> with AutomaticKeepAli
           TextButton(
             onPressed: () async {
               await FirebaseFirestore.instance
-                  .collection(isWanted ? 'wanted_products' : 'products')
+                  .collection(isPreOrder ? 'pre_orders' : isWanted ? 'wanted_products' : 'products')
                   .doc(docId)
                   .delete();
               Navigator.pop(context);
