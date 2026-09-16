@@ -2,7 +2,7 @@ name: my_app
 description: "A new Flutter project."
 publish_to: 'none'
 
-version: 1.0.0+11
+version: 1.0.0+51
 environment:
   sdk: '>=3.6.0 <4.0.0'
 
@@ -33,56 +33,58 @@ dependencies:
   audio_video_progress_bar: ^2.0.3
   flutter_staggered_animations: ^1.0.0
   photo_view: ^0.15.0
-  cached_network_image: 3.3.1
-  flutter_image_compress: ^2.3.0
-  video_compress: ^3.1.4
-  rxdart: ^0.28.0
-  shared_preferences: ^2.2.3
-  flutter_secure_storage: ^10.3.3
-  package_info_plus: ^8.0.2
+  record: ^6.0.0
+  flutter_image_compress: ^2.4.0
+  audioplayers: ^6.5.1
+  firebase_app_check: ^0.4.1+1
+  badges: ^3.1.2
+  connectivity_plus: ^6.1.4
+  font_awesome_flutter: ^10.8.0
+  flutter_rating_bar: ^4.0.1
+  geolocator: ^14.0.2
+  google_maps_flutter: ^2.12.3
+  geocoding: ^3.0.0
   flutter_localizations:
     sdk: flutter
-  flutter_local_notifications: ^18.0.1
-  cloud_functions: 6.3.5
-  file_picker: ^8.0.5
+  shared_preferences: ^2.3.2
+  cached_network_image: ^3.4.1
+  flutter_cache_manager: ^3.4.1
   get: ^4.6.6
-  permission_handler: ^11.3.1
-  screenshot: ^3.0.0
-  geolocator: ^12.0.0
-  geocoding: ^3.0.0
-  google_maps_flutter: ^2.16.0
-  math_expressions: ^2.6.0
-  mobile_scanner: ^7.4.0
-  audioplayers: 6.3.0
-  image_cropper: ^12.2.1
-  record: ^6.2.1
-  flutter_rating_bar: ^4.0.1
+  cloud_functions: 6.1.8
+  firebase_database: ^12.1.0
+  uuid: ^4.5.1
   shimmer: ^3.0.0
-  fl_chart: 0.68.0
-  video_thumbnail: ^0.5.6
-  app_links: ^6.4.1
-  google_mlkit_barcode_scanning: ^0.15.0
+  fl_chart: ^0.69.0
+  video_compress: ^3.1.4
+
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^6.0.0
+  flutter_lints: ^5.0.0
 
 flutter:
   uses-material-design: true
+
   assets:
-    - assets/sesan_logo.png.png
-    - assets/sesan_banner.png.jpg
-    - assets/ic_machinery.png.jpg
-    - assets/ic_tools.png.jpg
-    - assets/ic_seeds.png.jpg
-    - assets/ic_livestock.png.jpg
-    - assets/ic_fertilizer.png.jpg
-    - assets/ic_vegetables.jpg
-    - assets/ic_meat.png.jpg
+    - assets/images/phone_icon.png
+    - assets/images/google_icon.png
+    - assets/images/lock_icon.png
+    - assets/images/person_icon.png
+    - assets/images/email_icon.png
+    - assets/locations.json
+    - assets/logo.png
     - assets/aba_qr.png
-    - assets/ic_service.jpg
-    - assets/sesan_appbar.png
-    - assets/measure_guide.png
-    - assets/sesan_icon.jpg
+    - assets/khqr_new.png
+    - assets/banner/
+    - assets/flags/
+    - assets/icons/
     - assets/json/cambodia_locations.json
+
+  fonts:
+    - family: Siemreap
+      fonts:
+        - asset: assets/fonts/Siemreap-Regular.ttf
+    - family: KHMEROS
+      fonts:
+        - asset: assets/fonts/KHMEROS.ttf
