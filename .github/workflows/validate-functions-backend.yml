@@ -59,7 +59,7 @@ jobs:
           NODE
       - name: Commit dependency lock when generated
         run: |
-          if git diff --quiet -- functions/package-lock.json; then
+          if [ -z "$(git status --porcelain -- functions/package-lock.json)" ]; then
             echo 'package-lock.json unchanged'
             exit 0
           fi
