@@ -3,6 +3,7 @@ import 'package:my_app/login_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthController extends GetxController {
+  // ✅ ប្រើ bool ធម្មតា — មិន reactive
   bool isLoggedIn = false;
   bool isGuest = false;
   String userId = '';
@@ -16,10 +17,9 @@ class AuthController extends GetxController {
   Future<void> checkLoginStatus() async {
     final prefs = await SharedPreferences.getInstance();
     final uid = prefs.getString('user_uid');
-    final savedLoggedIn = prefs.getBool('is_logged_in') ?? false;
     final guest = prefs.getBool('is_guest') ?? false;
 
-    if (savedLoggedIn && uid != null && uid.isNotEmpty) {
+    if (uid != null && uid.isNotEmpty) {
       isLoggedIn = true;
       userId = uid;
       isGuest = false;
@@ -41,7 +41,6 @@ class AuthController extends GetxController {
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('is_guest', true);
-    await prefs.setBool('is_logged_in', false);
     await prefs.remove('user_uid');
   }
 
@@ -52,7 +51,6 @@ class AuthController extends GetxController {
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('user_uid', uid);
-    await prefs.setBool('is_logged_in', true);
     await prefs.setBool('is_guest', false);
   }
 
@@ -64,7 +62,6 @@ class AuthController extends GetxController {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('user_uid');
     await prefs.remove('is_guest');
-    await prefs.remove('is_logged_in');
 
     Get.offAll(() => const LoginScreen());
   }
