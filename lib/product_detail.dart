@@ -109,7 +109,30 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       _videoController = VideoPlayerController.networkUrl(Uri.parse(videoUrl))
         ..initialize().then((_) {
           if (mounted) setState(() => _isVideoInitialized = true);
+        }).catchError((error) {
+          debugPrint('Product video initialization error: $error');
         });
+    }
+  }
+
+  Future<void> _toggleVideoPlayback() async {
+    final controller = _videoController;
+    if (controller == null || !_isVideoInitialized) return;
+
+    try {
+      if (controller.value.isPlaying) {
+        await controller.pause();
+      } else {
+        final duration = controller.value.duration;
+        final position = controller.value.position;
+        if (duration > Duration.zero && position >= duration) {
+          await controller.seekTo(Duration.zero);
+        }
+        await controller.play();
+      }
+      if (mounted) setState(() {});
+    } catch (error) {
+      debugPrint('Product video playback error: $error');
     }
   }
 
@@ -1123,16 +1146,7 @@ Android: $androidPlayStoreLink
                             if (hasVideo && index == imageCount) {
                               final isPlaying = _videoController?.value.isPlaying ?? false;
                               return GestureDetector(
-                                onTap: () {
-                                  if (_videoController == null || !_isVideoInitialized) return;
-                                  setState(() {
-                                    if (_videoController!.value.isPlaying) {
-                                      _videoController!.pause();
-                                    } else {
-                                      _videoController!.play();
-                                    }
-                                  });
-                                },
+                                onTap: _toggleVideoPlayback,
                                 child: Container(
                                   color: Colors.black,
                                   child: Stack(
