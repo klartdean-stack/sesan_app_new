@@ -1,0 +1,66 @@
+name: Sync Android V51 Functions
+
+on:
+  push:
+    branches: [ios-sync-android46]
+    paths:
+      - '.github/triggers/sync-android-v51-functions.txt'
+
+permissions:
+  contents: write
+
+jobs:
+  sync-functions:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout iOS parity branch
+        uses: actions/checkout@v4
+        with:
+          ref: ios-sync-android46
+          fetch-depth: 0
+
+      - name: Clone authoritative Android V51 branch
+        run: |
+          git clone --depth 1 --branch english-local-android \
+            https://github.com/klartdean-stack/sesan_app_android.git /tmp/sesan_android
+
+      - name: Sync complete Functions source
+        run: |
+          mkdir -p functions
+          rsync -av --delete \
+            --exclude 'node_modules/' \
+            --exclude '.git/' \
+            /tmp/sesan_android/functions/ functions/
+
+      - name: Verify exact Functions file parity
+        run: |
+          diff -qr \
+            --exclude=node_modules \
+            /tmp/sesan_android/functions functions
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: functions/package-lock.json
+
+      - name: Install Functions dependencies
+        working-directory: functions
+        run: npm ci
+
+      - name: Validate Android V51 Functions entry loads
+        working-directory: functions
+        run: node -e "const f=require('./entry.js'); console.log('exports', Object.keys(f).length); if(!f.secureAdminPreviewRefund||!f.secureAdminProcessRefund) process.exit(2);"
+
+      - name: Commit synced backend
+        run: |
+          if git diff --quiet -- functions; then
+            echo 'Functions already match Android V51.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add functions
+          git commit -m 'Sync complete Firebase Functions backend from Android V51'
+          git push origin ios-sync-android46
