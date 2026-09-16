@@ -52,6 +52,7 @@ class _AddProductPageState extends State<AddProductPage> {
   final TextEditingController phone1Controller = TextEditingController();
   final TextEditingController phone2Controller = TextEditingController();
   final TextEditingController locationController = TextEditingController();
+  final Geocoding _geocoding = Geocoding();
   bool _locationChosenManually = false;
   double? selectedLat;
   double? selectedLng;
