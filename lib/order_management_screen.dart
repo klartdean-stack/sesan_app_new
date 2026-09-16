@@ -1,26 +1,23 @@
-import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_functions/cloud_functions.dart';
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:my_app/order_scanner_service.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:flutter/material.dart';
-
 
 class OrderManagementScreen extends StatefulWidget {
   final String sellerId;
   const OrderManagementScreen({super.key, required this.sellerId});
 
-
   @override
   _OrderManagementScreenState createState() => _OrderManagementScreenState();
 }
 
-
 class _OrderManagementScreenState extends State<OrderManagementScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-
+  final Set<String> _updatingOrders = <String>{};
 
   @override
   void initState() {
@@ -28,46 +25,55 @@ class _OrderManagementScreenState extends State<OrderManagementScreen>
     _tabController = TabController(length: 2, vsync: this);
   }
 
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
 
   Future<void> _makePhoneCall(String phoneNumber) async {
     final Uri launchUri = Uri(scheme: 'tel', path: phoneNumber);
     if (await canLaunchUrl(launchUri)) await launchUrl(launchUri);
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0E21),
+      backgroundColor: const Color(0xFFF4F8F3),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1A1A2E),
-        title: const Text(
-          'ការងារលក់ដូរ',
-          style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold),
+        backgroundColor: const Color(0xFF388E3C),
+        foregroundColor: Colors.white,
+        elevation: 0,
+        title: Text(
+          'sales_management'.tr,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         bottom: TabBar(
           controller: _tabController,
-          indicatorColor: Colors.amber,
-          labelColor: Colors.amber,
-          unselectedLabelColor: Colors.white54,
-          tabs: const [
-            Tab(text: 'កម្មង់ថ្មី'),
-            Tab(text: 'បញ្ជីដឹកជញ្ជូន'),
+          indicatorColor: Colors.white,
+          indicatorWeight: 3,
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white70,
+          tabs: [
+            Tab(text: 'sales_new_orders'.tr),
+            Tab(text: 'sales_delivery_list'.tr),
           ],
         ),
         actions: [
           IconButton(
             icon: const Icon(
               Icons.qr_code_scanner,
-              color: Colors.amber,
+              color: Colors.white,
               size: 28,
             ),
             onPressed: () {
-              // ហៅ Service ដែលយើងបានបំបែក File មិញមកប្រើ
               OrderScannerService.startScan(context, widget.sellerId);
             },
           ),
-          const SizedBox(width: 10), // ថែមឃ្លាតបន្តិចឱ្យស្អាត
+          const SizedBox(width: 10),
         ],
       ),
       body: TabBarView(
@@ -80,7 +86,6 @@ class _OrderManagementScreenState extends State<OrderManagementScreen>
     );
   }
 
-
   Widget _buildOrderList(List<String> statuses) {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
@@ -90,19 +95,21 @@ class _OrderManagementScreenState extends State<OrderManagementScreen>
           .orderBy('created_at', descending: true)
           .snapshots(),
       builder: (context, snapshot) {
-        if (!snapshot.hasData)
+        if (!snapshot.hasData) {
           return const Center(
-            child: CircularProgressIndicator(color: Colors.amber),
+            child: CircularProgressIndicator(color: Color(0xFF388E3C)),
           );
+        }
+
         final docs = snapshot.data!.docs;
-        if (docs.isEmpty)
-          return const Center(
+        if (docs.isEmpty) {
+          return Center(
             child: Text(
-              'មិនទាន់មានទិន្នន័យនៅឡើយ',
-              style: TextStyle(color: Colors.white54),
+              'sales_no_data'.tr,
+              style: const TextStyle(color: Color(0xFF6B746B)),
             ),
           );
-
+        }
 
         return ListView.builder(
           itemCount: docs.length,
@@ -115,68 +122,60 @@ class _OrderManagementScreenState extends State<OrderManagementScreen>
     );
   }
 
-
   Widget _buildOrderCard(Map<String, dynamic> data, String docId) {
-    DateTime orderDate =
+    final DateTime orderDate =
         (data['created_at'] as Timestamp?)?.toDate() ?? DateTime.now();
-    int daysDifference = DateTime.now().difference(orderDate).inDays;
-    bool isExpired = daysDifference >= 7;
+    final int daysDifference = DateTime.now().difference(orderDate).inDays;
+    final bool isExpired = daysDifference >= 7;
     final List items = data['items'] ?? [];
-    // --- ទាញទិន្នន័យពី Firebase (ផ្ទៀងផ្ទាត់ Key ឱ្យត្រូវ ១០០%) ---
     final String customerName =
-        data['customer_name'] ?? 'ភ្ញៀវមិនស្គាល់ឈ្មោះ'; // បន្ថែមឈ្មោះភ្ញៀវ
-    final String customerPhone = data['phone_number'] ?? 'គ្មានលេខទូរស័ព្ទ'; //
-    final String address = data['shipping_address'] ?? 'គ្មានអាសយដ្ឋាន'; //
+        data['customer_name'] ?? 'sales_unknown_customer'.tr;
+    final String customerPhone = data['phone_number'] ?? 'sales_no_phone'.tr;
+    final String address = data['shipping_address'] ?? 'sales_no_address'.tr;
     final String status = data['status'] ?? 'pending';
 
-
-    // មុខងារគណនាតម្លៃសរុបក្នុងបុង
     double totalPrice = 0;
     for (var item in items) {
-      double price = double.tryParse(item['price']?.toString() ?? '0') ?? 0;
-      int qty = int.tryParse(item['quantity']?.toString() ?? '1') ?? 1;
-      totalPrice += (price * qty);
+      final double price =
+          double.tryParse(item['price']?.toString() ?? '0') ?? 0;
+      final int qty = int.tryParse(item['quantity']?.toString() ?? '1') ?? 1;
+      totalPrice += price * qty;
     }
-
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A2E),
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: Colors.amber.withOpacity(0.15)),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFDCE7DC)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
+            color: const Color(0xFF2E7D32).withOpacity(0.08),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // --- ផ្នែកព័ត៌មានអតិថិជន (ឈ្មោះ, ទីតាំង, លេខទូរស័ព្ទ) ---
           Row(
-            crossAxisAlignment:
-            CrossAxisAlignment.start, // ឱ្យវាផ្ដើមពីលើស្មើគ្នា
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // ១. បង្ហាញឈ្មោះអតិថិជន
                     Row(
                       children: [
-                        const Icon(Icons.person, color: Colors.amber, size: 18),
+                        const Icon(Icons.person, color: Color(0xFF388E3C), size: 18),
                         const SizedBox(width: 5),
                         Expanded(
-                          // 🎯 ថែម Expanded ទីនេះការពារឈ្មោះភ្ញៀវវែងពេក
                           child: Text(
                             customerName,
                             style: const TextStyle(
-                              color: Colors.white,
+                              color: Color(0xFF202520),
                               fontSize: 15,
                               fontWeight: FontWeight.bold,
                             ),
@@ -186,7 +185,6 @@ class _OrderManagementScreenState extends State<OrderManagementScreen>
                       ],
                     ),
                     const SizedBox(height: 6),
-                    // ២. បង្ហាញអាសយដ្ឋាន (មាន Expanded រួចហើយ ល្អណាស់)
                     Row(
                       children: [
                         const Icon(
@@ -199,7 +197,7 @@ class _OrderManagementScreenState extends State<OrderManagementScreen>
                           child: Text(
                             address,
                             style: const TextStyle(
-                              color: Colors.white70,
+                              color: Color(0xFF5F685F),
                               fontSize: 13,
                             ),
                             maxLines: 2,
@@ -209,21 +207,20 @@ class _OrderManagementScreenState extends State<OrderManagementScreen>
                       ],
                     ),
                     const SizedBox(height: 6),
-                    // ៣. បង្ហាញលេខទូរស័ព្ទ
                     InkWell(
                       onTap: () => _makePhoneCall(customerPhone),
                       child: Row(
                         children: [
                           const Icon(
                             Icons.phone,
-                            color: Colors.greenAccent,
+                            color: Color(0xFF388E3C),
                             size: 16,
                           ),
                           const SizedBox(width: 5),
                           Text(
                             customerPhone,
                             style: const TextStyle(
-                              color: Colors.greenAccent,
+                              color: Color(0xFF2E7D32),
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
                               decoration: TextDecoration.underline,
@@ -233,12 +230,11 @@ class _OrderManagementScreenState extends State<OrderManagementScreen>
                       ),
                     ),
                     const SizedBox(height: 6),
-                    // ៤. កាលបរិច្ឆេទ
                     Row(
                       children: [
                         const Icon(
                           Icons.calendar_month,
-                          color: Colors.white54,
+                          color: Color(0xFF7A837A),
                           size: 14,
                         ),
                         const SizedBox(width: 5),
@@ -247,15 +243,12 @@ class _OrderManagementScreenState extends State<OrderManagementScreen>
                           style: TextStyle(
                             color: isExpired
                                 ? Colors.redAccent
-                                : Colors.white54,
+                                : const Color(0xFF7A837A),
                             fontSize: 11,
                           ),
                         ),
                       ],
                     ),
-
-
-                    // 🎯 ៥. អក្សរព្រមាន (រុញមកដាក់ក្រោមនេះវិញ ទើបលែង Overflow)
                     if (isExpired)
                       Padding(
                         padding: const EdgeInsets.only(top: 8),
@@ -268,9 +261,9 @@ class _OrderManagementScreenState extends State<OrderManagementScreen>
                             color: Colors.redAccent.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(5),
                           ),
-                          child: const Text(
-                            "⚠️ ហួសសុពលភាព ៧ ថ្ងៃ",
-                            style: TextStyle(
+                          child: Text(
+                            'sales_expired'.tr,
+                            style: const TextStyle(
                               color: Colors.redAccent,
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
@@ -281,21 +274,21 @@ class _OrderManagementScreenState extends State<OrderManagementScreen>
                   ],
                 ),
               ),
-
-
-              const SizedBox(width: 10), // ឃ្លាតពី Column ឆ្វេងបន្តិច
-              // --- ផ្នែកតម្លៃសរុប (នៅខាងស្ដាំដដែល តែលែងមានអីបុកវាហើយ) ---
+              const SizedBox(width: 10),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  const Text(
-                    'សរុបក្នុងបុង',
-                    style: TextStyle(color: Colors.white54, fontSize: 10),
+                  Text(
+                    'sales_receipt_total'.tr,
+                    style: const TextStyle(
+                      color: Color(0xFF7A837A),
+                      fontSize: 10,
+                    ),
                   ),
                   Text(
                     '${totalPrice.toStringAsFixed(0)} ៛',
                     style: const TextStyle(
-                      color: Colors.amber,
+                      color: Color(0xFF2E7D32),
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
@@ -306,53 +299,48 @@ class _OrderManagementScreenState extends State<OrderManagementScreen>
           ),
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 12),
-            child: Divider(color: Colors.white10, thickness: 1),
+            child: Divider(color: Color(0xFFE3E9E3), thickness: 1),
           ),
-
-
-          // --- បង្ហាញបញ្ជីទំនិញ (Unlimited Items) ---
           ListView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: items.length,
             itemBuilder: (context, i) {
               final item = items[i] as Map<String, dynamic>;
-              final String imgUrl = item['image_url'] ?? ''; //
-
+              final String imgUrl = item['image_url'] ?? '';
 
               return Padding(
                 padding: const EdgeInsets.only(bottom: 12),
                 child: Row(
                   children: [
-                    // រូបភាពទំនិញ
                     ClipRRect(
                       borderRadius: BorderRadius.circular(10),
                       child: imgUrl.isNotEmpty
                           ? Image.network(
-                        imgUrl,
-                        width: 60,
-                        height: 60,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) =>
-                            Container(
+                              imgUrl,
                               width: 60,
                               height: 60,
-                              color: Colors.white10,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  Container(
+                                    width: 60,
+                                    height: 60,
+                                    color: Color(0xFFF0F4F0),
+                                    child: const Icon(
+                                      Icons.broken_image,
+                                      color: Color(0xFF9AA39A),
+                                    ),
+                                  ),
+                            )
+                          : Container(
+                              width: 60,
+                              height: 60,
+                              color: Color(0xFFF0F4F0),
                               child: const Icon(
-                                Icons.broken_image,
-                                color: Colors.white24,
+                                Icons.image,
+                                color: Color(0xFF9AA39A),
                               ),
                             ),
-                      )
-                          : Container(
-                        width: 60,
-                        height: 60,
-                        color: Colors.white10,
-                        child: const Icon(
-                          Icons.image,
-                          color: Colors.white24,
-                        ),
-                      ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -360,9 +348,9 @@ class _OrderManagementScreenState extends State<OrderManagementScreen>
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            item['product_name'] ?? 'មិនស្គាល់ឈ្មោះ',
+                            item['product_name'] ?? 'sales_unknown_product'.tr,
                             style: const TextStyle(
-                              color: Colors.white,
+                              color: Color(0xFF202520),
                               fontSize: 14,
                               fontWeight: FontWeight.w400,
                             ),
@@ -371,15 +359,11 @@ class _OrderManagementScreenState extends State<OrderManagementScreen>
                           Text(
                             '${item['price'] ?? 0} ៛  x  ${item['quantity'] ?? 1}',
                             style: const TextStyle(
-                              color: Colors.white54,
+                              color: Color(0xFF697269),
                               fontSize: 12,
                             ),
                           ),
-
-
-                          // --- កែមកដាក់ក្នុង Row បែបនេះវិញមេ ទើបនាឡិកានិងម៉ោងនៅជួរជាមួយគ្នា ---
-                          if (data['order_date'] !=
-                              null) // ថែម if ការពារ App គាំង
+                          if (data['order_date'] != null)
                             Padding(
                               padding: const EdgeInsets.only(top: 8),
                               child: Row(
@@ -411,216 +395,418 @@ class _OrderManagementScreenState extends State<OrderManagementScreen>
               );
             },
           ),
-
-
           const SizedBox(height: 10),
-          // ប៊ូតុងបញ្ជាស្ថានភាព
           _buildActionButtons(docId, status, isExpired),
         ],
       ),
     );
   }
 
-
   Widget _buildActionButtons(String docId, String status, bool isExpired) {
+    final bool busy = _updatingOrders.contains(docId);
+
     if (status == 'confirmed') {
       return Row(
         children: [
           Expanded(
-            child: ElevatedButton(
+            child: ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
-                // 🎯 បើហួស ៧ ថ្ងៃ ឱ្យចេញពណ៌ប្រផេះ
                 backgroundColor: isExpired ? Colors.grey : Colors.green,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
-              // 🎯 បើហួស ៧ ថ្ងៃ ឱ្យ onPressed = null (ចុចលែងកើត)
-              onPressed: isExpired
+              onPressed: isExpired || busy
                   ? null
                   : () => _updateStatus(docId, 'packing'),
-              child: const Text(
-                'យល់ព្រមកម្មង់',
-                style: TextStyle(color: Colors.white),
-              ),
+              icon: busy
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.inventory_2_outlined, size: 18),
+              label: Text('sales_accept_order'.tr),
             ),
           ),
           const SizedBox(width: 10),
           Expanded(
-            child: ElevatedButton(
+            child: ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
-                backgroundColor: isExpired
-                    ? Colors.grey[800]
-                    : Colors.redAccent,
+                backgroundColor:
+                    isExpired ? Colors.grey[800] : Colors.redAccent,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
-              onPressed: isExpired
+              onPressed: isExpired || busy
                   ? null
                   : () => _updateStatus(docId, 'rejected'),
-              child: const Text(
-                'បដិសេធ',
-                style: TextStyle(color: Colors.white),
-              ),
+              icon: const Icon(Icons.close_rounded, size: 18),
+              label: Text('sales_reject'.tr),
             ),
           ),
         ],
       );
     }
 
-
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: [
-          // 🎯 បញ្ជូន isExpired ទៅឱ្យ _statusChip ដែរ
-          _statusChip(
-            docId,
-            'packing',
-            '📦 រៀបចំខ្ចប់',
-            status == 'packing',
-            isExpired,
-          ),
-          _statusChip(
-            docId,
-            'on_delivery',
-            '🚚 កំពុងដឹក',
-            status == 'on_delivery',
-            isExpired,
-          ),
-          _statusChip(
-            docId,
-            'delivered',
-            '✅ បានដល់',
-            status == 'delivered',
-            isExpired,
-          ),
-        ],
-      ),
-    );
-  }
-
-
-  Widget _statusChip(
-      String docId,
-      String val,
-      String label,
-      bool active,
-      bool isExpired,
-      ) {
-    return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: ActionChip(
-        // 🎯 បើ active ពណ៌ amber, បើ expired ពណ៌ខ្មៅស្រអាប់, បើធម្មតាពណ៌សស្រអាប់
-        backgroundColor: active
-            ? Colors.amber
-            : (isExpired ? Colors.black26 : Colors.white10),
-        side: BorderSide.none,
-        label: Text(
-          label,
-          style: TextStyle(
-            color: active
-                ? Colors.black
-                : (isExpired ? Colors.white24 : Colors.white),
-            fontSize: 11,
-            fontWeight: active ? FontWeight.bold : FontWeight.normal,
-          ),
-        ),
-        // 🎯 បើហួស ៧ ថ្ងៃ ឱ្យចុចលែងចេញ
-        onPressed: isExpired ? null : () => _updateStatus(docId, val),
-      ),
-    );
-  }
-
-
-  void _updateStatus(String docId, String newStatus) async {
-    final orderDoc = await FirebaseFirestore.instance
-        .collection('orders')
-        .doc(docId)
-        .get();
-
-
-    if (!orderDoc.exists) return;
-
-
-    final orderData = orderDoc.data() as Map<String, dynamic>;
-    final String sellerId = orderData['seller_id'] ?? '';
-
-
-    // ទាញយកលុយដែលត្រូវឱ្យអ្នកលក់ (៩៣%) ដែលមេបានគណនាទុកតាំងពីពេលបង្កើតបុង
-    double sellerEarnings =
-        double.tryParse(orderData['seller_earnings']?.toString() ?? '0') ?? 0;
-
-
-    WriteBatch batch = FirebaseFirestore.instance.batch();
-
-
-    // ១. រៀបចំទិន្នន័យសម្រាប់ Update
-    Map<String, dynamic> updateData = {
-      'status': newStatus,
-      'last_update':
-      FieldValue.serverTimestamp(), // ថែមនេះដើម្បីឱ្យ Cloud ដឹងថាមានការប្រែប្រួលថ្មី
+    final int currentStep = switch (status) {
+      'packing' => 0,
+      'on_delivery' => 1,
+      'delivered' => 2,
+      _ => 0,
     };
 
+    final String currentLabel = switch (status) {
+      'packing' => 'sales_prepare'.tr,
+      'on_delivery' => 'sales_shipping'.tr,
+      'delivered' => 'sales_delivered'.tr,
+      _ => status,
+    };
 
-    // 🎯 បន្ថែមលក្ខខណ្ឌពិសេសសម្រាប់ Status នីមួយៗ
-    if (newStatus == 'packing') {
-      updateData['packing_date'] = FieldValue.serverTimestamp();
-      updateData['is_settled'] = false;
-    } else if (newStatus == 'on_delivery') {
-      updateData['delivery_started_at'] = FieldValue.serverTimestamp();
-    } else if (newStatus == 'delivered') {
-      updateData['delivered_at'] = FieldValue.serverTimestamp();
-    }
+    final IconData currentIcon = switch (status) {
+      'packing' => Icons.inventory_2_rounded,
+      'on_delivery' => Icons.local_shipping_rounded,
+      'delivered' => Icons.check_circle_rounded,
+      _ => Icons.info_outline_rounded,
+    };
 
+    final Color currentColor = switch (status) {
+      'packing' => Colors.amber,
+      'on_delivery' => Colors.blueAccent,
+      'delivered' => const Color(0xFF388E3C),
+      _ => Colors.amber,
+    };
 
-    // 🚀 Update ចូល Firestore
-    batch.update(
-      FirebaseFirestore.instance.collection('orders').doc(docId),
-      updateData,
-    );
-
-
-    // ២. Logic បាញ់លុយចូលកាបូប (Wallet) ពេលដូរទៅ Packing
-    // 🎯 នេះជាកន្លែងដែលធ្វើឱ្យលុយមេដើរត្រូវតាម UI កាបូបលុយថ្មី
-    if (newStatus == 'packing' && orderData['status'] == 'confirmed') {
-      DocumentReference userRef = FirebaseFirestore.instance
-          .collection('users')
-          .doc(sellerId);
-
-
-      batch.update(userRef, {
-        'balance': FieldValue.increment(sellerEarnings), // បូកចូលកញ្ចប់សរុប
-        'wallet_balance': FieldValue.increment(
-          sellerEarnings,
-        ), // បូកចូលកញ្ចប់រង់ចាំ
-      });
-
-
-      // បើមានបូកលុយចូល System Settings (របាយការណ៍ Admin) មេអាចទុកកូដចាស់មេនៅទីនេះបាន
-      var appWalletRef = FirebaseFirestore.instance
-          .collection('system_settings')
-          .doc('wallet');
-      batch.update(appWalletRef, {
-        'total_seller_payout': FieldValue.increment(sellerEarnings),
-      });
-    }
-
-
-    await batch.commit();
-
-
-    // បង្ហាញដំណឹងប្រាប់អ្នកលក់
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("បានប្តូរទៅជា $newStatus និងរៀបចំប្រព័ន្ធលុយរួចរាល់"),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: currentColor.withOpacity(0.12),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: currentColor.withOpacity(0.55)),
+          ),
+          child: Row(
+            children: [
+              Icon(currentIcon, color: currentColor, size: 20),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  currentLabel,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: currentColor,
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              if (busy)
+                SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: currentColor,
+                  ),
+                )
+              else
+                Icon(
+                  status == 'delivered'
+                      ? Icons.verified_rounded
+                      : Icons.radio_button_checked_rounded,
+                  color: currentColor,
+                  size: 19,
+                ),
+            ],
+          ),
         ),
-      );
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(
+              child: _buildStatusStep(
+                icon: Icons.inventory_2_outlined,
+                label: 'sales_prepare'.tr,
+                stepIndex: 0,
+                currentStep: currentStep,
+              ),
+            ),
+            _buildStepConnector(currentStep >= 1),
+            Expanded(
+              child: _buildStatusStep(
+                icon: Icons.local_shipping_outlined,
+                label: 'sales_shipping'.tr,
+                stepIndex: 1,
+                currentStep: currentStep,
+              ),
+            ),
+            _buildStepConnector(currentStep >= 2),
+            Expanded(
+              child: _buildStatusStep(
+                icon: Icons.check_circle_outline_rounded,
+                label: 'sales_delivered'.tr,
+                stepIndex: 2,
+                currentStep: currentStep,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        if (status == 'packing')
+          ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blueAccent,
+              foregroundColor: Colors.white,
+              disabledBackgroundColor: const Color(0xFFE0E5E0),
+              disabledForegroundColor: const Color(0xFF9AA19A),
+              padding: const EdgeInsets.symmetric(vertical: 13),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            onPressed: isExpired || busy
+                ? null
+                : () => _updateStatus(docId, 'on_delivery'),
+            icon: busy
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                : const Icon(Icons.local_shipping_rounded),
+            label: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Flexible(
+                  child: Text(
+                    'sales_shipping'.tr,
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                const Icon(Icons.arrow_forward_rounded, size: 18),
+              ],
+            ),
+          )
+        else if (status == 'on_delivery')
+          ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
+              foregroundColor: Colors.white,
+              disabledBackgroundColor: const Color(0xFFE0E5E0),
+              disabledForegroundColor: const Color(0xFF9AA19A),
+              padding: const EdgeInsets.symmetric(vertical: 13),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            onPressed: isExpired || busy
+                ? null
+                : () => _updateStatus(docId, 'delivered'),
+            icon: busy
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                : const Icon(Icons.check_circle_outline_rounded),
+            label: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Flexible(
+                  child: Text(
+                    'sales_delivered'.tr,
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                const Icon(Icons.arrow_forward_rounded, size: 18),
+              ],
+            ),
+          )
+        else if (status == 'delivered')
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
+            decoration: BoxDecoration(
+              color: Colors.green.withOpacity(0.12),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFF388E3C).withOpacity(0.35)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.verified_rounded,
+                  color: Color(0xFF388E3C),
+                  size: 19,
+                ),
+                const SizedBox(width: 7),
+                Flexible(
+                  child: Text(
+                    'sales_delivered'.tr,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Color(0xFF388E3C),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildStatusStep({
+    required IconData icon,
+    required String label,
+    required int stepIndex,
+    required int currentStep,
+  }) {
+    final bool completed = stepIndex < currentStep;
+    final bool current = stepIndex == currentStep;
+    final Color color = completed
+        ? const Color(0xFF388E3C)
+        : current
+            ? const Color(0xFFF9A825)
+            : const Color(0xFFB0B8B0);
+
+    return Column(
+      children: [
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 220),
+          width: current ? 36 : 32,
+          height: current ? 36 : 32,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: current
+                ? const Color(0xFFFFF3CD)
+                : completed
+                    ? const Color(0xFFE8F5E9)
+                    : const Color(0xFFF1F4F1),
+            border: Border.all(
+              color: color,
+              width: current ? 2.2 : 1.4,
+            ),
+          ),
+          child: Icon(
+            completed ? Icons.check_rounded : icon,
+            color: color,
+            size: current ? 19 : 17,
+          ),
+        ),
+        const SizedBox(height: 5),
+        Text(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: color,
+            fontSize: 9.5,
+            fontWeight: current || completed
+                ? FontWeight.bold
+                : FontWeight.normal,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStepConnector(bool completed) {
+    return Expanded(
+      child: Container(
+        height: 2,
+        margin: const EdgeInsets.only(left: 3, right: 3, bottom: 23),
+        decoration: BoxDecoration(
+          color: completed
+              ? const Color(0xFF388E3C)
+              : const Color(0xFFD5DCD5),
+          borderRadius: BorderRadius.circular(2),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _updateStatus(String docId, String newStatus) async {
+    if (_updatingOrders.contains(docId)) return;
+    setState(() => _updatingOrders.add(docId));
+
+    try {
+      final callable = FirebaseFunctions.instanceFor(
+        region: 'asia-southeast1',
+      ).httpsCallable('secureSellerOrderStatus');
+
+      await callable.call({
+        'orderId': docId,
+        'status': newStatus,
+      });
+
+      final translatedStatus = {
+            'packing': 'order_status_packing'.tr,
+            'on_delivery': 'order_status_shipping'.tr,
+            'delivered': 'order_status_delivered'.tr,
+            'rejected': 'sales_reject'.tr,
+          }[newStatus] ??
+          newStatus;
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'sales_status_updated'.trParams({'status': translatedStatus}),
+            ),
+          ),
+        );
+      }
+    } on FirebaseFunctionsException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: Colors.redAccent,
+            content: Text(
+              e.message ?? 'មិនអាចកែស្ថានភាពការកម្ម៉ង់បានទេ',
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: Colors.redAccent,
+            content: Text('មានបញ្ហា៖ $e'),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _updatingOrders.remove(docId));
+      }
     }
   }
 }
-
-
-
