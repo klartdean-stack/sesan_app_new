@@ -322,58 +322,50 @@ warning • The value of the local variable 'firstImg' isn't used • lib/auctio
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/auction_admin_screen.dart:685:41 • deprecated_member_use
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/auction_admin_screen.dart:695:28 • deprecated_member_use
 warning • Unused import: 'package:firebase_auth/firebase_auth.dart' • lib/auction_detail_screen.dart:4:8 • unused_import
-warning • The value of the field '_currentUserPhone' isn't used • lib/auction_detail_screen.dart:45:11 • unused_field
-warning • The value of the field '_currentUserPhoto' isn't used • lib/auction_detail_screen.dart:46:11 • unused_field
-warning • The value of the field '_currentUserRole' isn't used • lib/auction_detail_screen.dart:47:11 • unused_field
-warning • The value of the field '_isVideoPlaying' isn't used • lib/auction_detail_screen.dart:65:8 • unused_field
-   info • Don't invoke 'print' in production code • lib/auction_detail_screen.dart:138:7 • avoid_print
-   info • Don't invoke 'print' in production code • lib/auction_detail_screen.dart:139:7 • avoid_print
-   info • Don't invoke 'print' in production code • lib/auction_detail_screen.dart:140:7 • avoid_print
-   info • Don't invoke 'print' in production code • lib/auction_detail_screen.dart:160:7 • avoid_print
-   info • Don't invoke 'print' in production code • lib/auction_detail_screen.dart:187:7 • avoid_print
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/auction_detail_screen.dart:206:31 • deprecated_member_use
-   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/auction_detail_screen.dart:274:52 • use_build_context_synchronously
-   info • Don't invoke 'print' in production code • lib/auction_detail_screen.dart:339:5 • avoid_print
-   info • Don't invoke 'print' in production code • lib/auction_detail_screen.dart:340:5 • avoid_print
-   info • Don't invoke 'print' in production code • lib/auction_detail_screen.dart:341:5 • avoid_print
-   info • Don't invoke 'print' in production code • lib/auction_detail_screen.dart:342:5 • avoid_print
-warning • Two keys in a map literal shouldn't be equal • lib/auction_detail_screen.dart:390:9 • equal_keys_in_map
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/auction_detail_screen.dart:424:34 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/auction_detail_screen.dart:540:23 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/auction_detail_screen.dart:542:42 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/auction_detail_screen.dart:572:22 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/auction_detail_screen.dart:574:41 • deprecated_member_use
-warning • The value of the local variable 'ownerName' isn't used • lib/auction_detail_screen.dart:617:15 • unused_local_variable
-warning • The value of the local variable 'images' isn't used • lib/auction_detail_screen.dart:621:15 • unused_local_variable
-   info • Statements in an if should be enclosed in a block • lib/auction_detail_screen.dart:683:27 • curly_braces_in_flow_control_structures
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/auction_detail_screen.dart:852:47 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/auction_detail_screen.dart:855:49 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/auction_detail_screen.dart:878:41 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/auction_detail_screen.dart:879:45 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/auction_detail_screen.dart:883:63 • deprecated_member_use
-warning • The '!' will have no effect because the receiver can't be null • lib/auction_detail_screen.dart:993:55 • unnecessary_non_null_assertion
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/auction_detail_screen.dart:1007:49 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/auction_detail_screen.dart:1008:49 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/auction_detail_screen.dart:1094:62 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/auction_detail_screen.dart:1099:64 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/auction_detail_screen.dart:1139:43 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/auction_detail_screen.dart:1140:45 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/auction_detail_screen.dart:1145:48 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/auction_detail_screen.dart:1157:56 • deprecated_member_use
-warning • The '!' will have no effect because the receiver can't be null • lib/auction_detail_screen.dart:1347:65 • unnecessary_non_null_assertion
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/auction_detail_screen.dart:1525:47 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/auction_detail_screen.dart:1530:49 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/auction_detail_screen.dart:1610:33 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/auction_detail_screen.dart:1666:43 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/auction_detail_screen.dart:1681:32 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/auction_detail_screen.dart:1704:32 • deprecated_member_use
-warning • The declaration '_buildRankIcon' isn't referenced • lib/auction_detail_screen.dart:1727:10 • unused_element
-warning • The value of the field '_bg' isn't used • lib/auction_detail_screen.dart:1754:16 • unused_field
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/auction_detail_screen.dart:1779:38 • deprecated_member_use
-warning • The value of the field '_isLoading' isn't used • lib/auction_detail_screen.dart:1890:8 • unused_field
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/auction_detail_screen.dart:1930:41 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/auction_detail_screen.dart:1933:43 • deprecated_member_use
-   info • 'VideoPlayerController.network' is deprecated and shouldn't be used. Use VideoPlayerController.networkUrl instead • lib/auction_detail_screen.dart:1989:19 • deprecated_member_use
+warning • The value of the field '_currentUserPhone' isn't used • lib/auction_detail_screen.dart:44:11 • unused_field
+warning • The value of the field '_currentUserPhoto' isn't used • lib/auction_detail_screen.dart:45:11 • unused_field
+warning • The value of the field '_currentUserRole' isn't used • lib/auction_detail_screen.dart:46:11 • unused_field
+warning • The value of the field '_isVideoPlaying' isn't used • lib/auction_detail_screen.dart:63:8 • unused_field
+   info • Don't invoke 'print' in production code • lib/auction_detail_screen.dart:132:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/auction_detail_screen.dart:133:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/auction_detail_screen.dart:134:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/auction_detail_screen.dart:151:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/auction_detail_screen.dart:173:7 • avoid_print
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/auction_detail_screen.dart:191:31 • deprecated_member_use
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/auction_detail_screen.dart:242:52 • use_build_context_synchronously
+   info • Don't invoke 'print' in production code • lib/auction_detail_screen.dart:295:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/auction_detail_screen.dart:296:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/auction_detail_screen.dart:297:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/auction_detail_screen.dart:298:5 • avoid_print
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/auction_detail_screen.dart:354:62 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/auction_detail_screen.dart:430:23 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/auction_detail_screen.dart:432:42 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/auction_detail_screen.dart:455:22 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/auction_detail_screen.dart:457:41 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/auction_detail_screen.dart:658:47 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/auction_detail_screen.dart:660:66 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/auction_detail_screen.dart:674:71 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/auction_detail_screen.dart:674:102 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/auction_detail_screen.dart:676:63 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/auction_detail_screen.dart:745:77 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/auction_detail_screen.dart:745:102 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/auction_detail_screen.dart:789:62 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/auction_detail_screen.dart:791:81 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/auction_detail_screen.dart:821:73 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/auction_detail_screen.dart:821:100 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/auction_detail_screen.dart:823:65 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/auction_detail_screen.dart:832:80 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/auction_detail_screen.dart:1054:56 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/auction_detail_screen.dart:1056:75 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/auction_detail_screen.dart:1112:33 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/auction_detail_screen.dart:1148:58 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/auction_detail_screen.dart:1155:56 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/auction_detail_screen.dart:1174:32 • deprecated_member_use
+warning • The declaration '_buildRankIcon' isn't referenced • lib/auction_detail_screen.dart:1190:10 • unused_element
+warning • The value of the field '_isLoading' isn't used • lib/auction_detail_screen.dart:1294:8 • unused_field
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/auction_detail_screen.dart:1335:41 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/auction_detail_screen.dart:1337:60 • deprecated_member_use
+   info • 'VideoPlayerController.network' is deprecated and shouldn't be used. Use VideoPlayerController.networkUrl instead • lib/auction_detail_screen.dart:1386:19 • deprecated_member_use
    info • The import of 'dart:ui' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' • lib/auction_main_screen.dart:2:8 • unnecessary_import
    info • The import of 'package:flutter/services.dart' is unnecessary because all of the used elements are also provided by the import of 'dart:ui' • lib/auction_main_screen.dart:7:8 • unnecessary_import
 warning • The value of the field '_adminId' isn't used • lib/auction_main_screen.dart:27:16 • unused_field
@@ -1175,4 +1167,4 @@ warning • The value of the local variable 'permission' isn't used • lib/weat
    info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/weight_calc.dart:115:15 • deprecated_member_use
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/weight_calc.dart:272:22 • deprecated_member_use
 
-1035 issues found. (ran in 20.4s)
+1027 issues found. (ran in 24.3s)
