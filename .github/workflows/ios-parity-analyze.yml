@@ -4,6 +4,7 @@ on:
     branches: [ios-sync-android46]
     paths:
       - '.github/workflows/ios-parity-analyze.yml'
+      - 'analysis_options.yaml'
       - 'lib/**'
       - 'pubspec.yaml'
 permissions:
