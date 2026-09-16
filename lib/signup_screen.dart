@@ -55,6 +55,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     }
   }
 
+  // OTP សម្រាប់ verify phone ប៉ុណ្ណោះ
   Future<void> _sendOTP() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -74,6 +75,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       await FirebaseAuth.instance.verifyPhoneNumber(
         phoneNumber: formattedPhone,
         verificationCompleted: (PhoneAuthCredential credential) async {
+          // Auto-verification (Android) - បង្កើត user + link password
           await _handleAutoVerification(
             credential,
             name,
@@ -113,6 +115,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     }
   }
 
+  // Auto verification សម្រាប់ Android
   Future<void> _handleAutoVerification(
     PhoneAuthCredential phoneCredential,
     String name,
@@ -120,10 +123,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
     String password,
   ) async {
     try {
+      // 1. Login ដោយ OTP
       final userCredential = await FirebaseAuth.instance.signInWithCredential(
         phoneCredential,
       );
 
+      // 2. Link ជាមួយ Email/Password
       final email = "${phone.replaceAll('+', '')}@sesan.app";
       final emailCredential = EmailAuthProvider.credential(
         email: email,
@@ -131,6 +136,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
       );
 
       await userCredential.user!.linkWithCredential(emailCredential);
+
+      // 3. Save ទៅ Firestore
       await _saveUserToFirestore(
         userCredential.user!.uid,
         name,
@@ -186,7 +193,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         ),
         title: Text(
           'create_account'.tr,
-          style: const TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
       ),
@@ -197,22 +204,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
             key: _formKey,
             child: Column(
               children: [
-                Align(
+                const Align(
                   alignment: Alignment.centerRight,
-                  child: TextButton.icon(
-                    onPressed: () {
-                      final controller = Get.find<LanguageController>();
-                      final isEnglish =
-                          Localizations.localeOf(context).languageCode == 'en';
-                      controller.changeLanguage(isEnglish ? 'km' : 'en');
-                    },
-                    icon: const Icon(Icons.language, size: 18),
-                    label: Text(
-                      Localizations.localeOf(context).languageCode == 'en'
-                          ? 'ខ្មែរ'
-                          : 'English',
-                    ),
-                  ),
+                  child: LanguageSwitcher(),
                 ),
                 const SizedBox(height: 16),
                 const Icon(
@@ -223,15 +217,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 const SizedBox(height: 10),
                 Text(
                   'fill_information'.tr,
-                  style: const TextStyle(color: Colors.grey, fontSize: 16),
+                  style: TextStyle(color: Colors.grey, fontSize: 16),
                 ),
                 const SizedBox(height: 40),
+
+                // ឈ្មោះ
                 TextFormField(
                   controller: _nameController,
                   validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
+                    if (value == null || value.trim().isEmpty)
                       return 'name_required'.tr;
-                    }
                     return null;
                   },
                   decoration: _inputDecoration(
@@ -240,6 +235,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   ),
                 ),
                 const SizedBox(height: 20),
+
+                // លេខទូរស័ព្ទ
                 TextFormField(
                   controller: _phoneController,
                   keyboardType: TextInputType.phone,
@@ -248,9 +245,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     LengthLimitingTextInputFormatter(10),
                   ],
                   validator: (value) {
-                    if (value == null || value.isEmpty) {
+                    if (value == null || value.isEmpty)
                       return 'phone_required'.tr;
-                    }
                     if (value.length < 9) return 'phone_invalid'.tr;
                     return null;
                   },
@@ -260,6 +256,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   ),
                 ),
                 const SizedBox(height: 20),
+
+                // លេខសម្ងាត់ ៦ ខ្ទង់
                 TextFormField(
                   controller: _passwordController,
                   obscureText: !_isPasswordVisible,
@@ -269,10 +267,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     LengthLimitingTextInputFormatter(6),
                   ],
                   validator: (value) {
-                    if (value == null || value.isEmpty) {
+                    if (value == null || value.isEmpty)
                       return 'password_required'.tr;
-                    }
-                    if (value.length != 6) return 'password_exact_6'.tr;
+                    if (value.length != 6)
+                      return 'password_exact_6'.tr;
                     return null;
                   },
                   decoration: _inputDecoration(
@@ -292,6 +290,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   ),
                 ),
                 const SizedBox(height: 20),
+
+                // បញ្ជាក់លេខសម្ងាត់
                 TextFormField(
                   controller: _confirmPasswordController,
                   obscureText: !_isConfirmVisible,
@@ -301,12 +301,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     LengthLimitingTextInputFormatter(6),
                   ],
                   validator: (value) {
-                    if (value == null || value.isEmpty) {
+                    if (value == null || value.isEmpty)
                       return 'confirm_password_required'.tr;
-                    }
-                    if (value != _passwordController.text) {
+                    if (value != _passwordController.text)
                       return 'password_mismatch'.tr;
-                    }
                     return null;
                   },
                   decoration: _inputDecoration(
@@ -325,6 +323,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     ),
                   ),
                 ),
+
                 const SizedBox(height: 14),
                 Builder(
                   builder: (context) {
@@ -347,9 +346,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           ),
                         ),
                         InkWell(
-                          onTap: () => _openLegalPage(
-                            'https://about.sesanshop.com/terms',
-                          ),
+                          onTap: () =>
+                              _openLegalPage('https://about.sesanshop.com/terms'),
                           child: const Padding(
                             padding: EdgeInsets.symmetric(vertical: 4),
                             child: Text(
@@ -392,7 +390,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     );
                   },
                 ),
+
                 const SizedBox(height: 16),
+
                 SizedBox(
                   width: double.infinity,
                   height: 55,
@@ -408,7 +408,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         ? const CircularProgressIndicator(color: Colors.white)
                         : Text(
                             'send_otp'.tr,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 18,
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
