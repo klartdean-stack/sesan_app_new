@@ -15,82 +15,98 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ios-sync-android46
-      - name: Localize Product List and Product Detail
+      - name: Localize Cart and Order History
         run: |
           python3 - <<'PY'
           from pathlib import Path
 
-          # Product List already has appText/_searchLabel in the search/filter UI.
-          # Patch remaining common visible labels while preserving category/filter database keys.
-          p=Path('lib/product_list.dart')
+          # Cart: use a local helper so visible fallbacks never depend on missing Get keys.
+          p=Path('lib/cart_screen.dart')
           s=p.read_text(encoding='utf-8')
-          reps={
-            "Text('គ្មានទំនិញ')":"Text(appText(context, km: 'គ្មានទំនិញ', en: 'No products'))",
-            "Text('កំពុងផ្ទុក...')":"Text(appText(context, km: 'កំពុងផ្ទុក...', en: 'Loading...'))",
-            "'គ្មានឈ្មោះ'":"appText(context, km: 'គ្មានឈ្មោះ', en: 'Unnamed product')",
-            "'មិនស្គាល់'":"appText(context, km: 'មិនស្គាល់', en: 'Unknown')",
-          }
-          n=0
-          for a,b in reps.items():
-              if a in s:
-                  s=s.replace(a,b); n+=1
-          p.write_text(s,encoding='utf-8')
-          print('Product List replacements', n)
-
-          # Product Detail: add a single low-risk helper and localize visible hard-coded UI.
-          p=Path('lib/product_detail.dart')
-          s=p.read_text(encoding='utf-8')
-          marker="class _ProductDetailScreenState extends State<ProductDetailScreen> {\n"
+          marker="class _CartScreenState extends State<CartScreen>\n    with AutomaticKeepAliveClientMixin, WidgetsBindingObserver {\n"
           helper="  String _t(String km, String en) =>\n      Localizations.localeOf(context).languageCode == 'en' ? en : km;\n\n"
           if helper not in s:
               s=s.replace(marker, marker+helper, 1)
           reps={
-            "widget.product['product_name'] ?? 'ទំនិញថ្មី'":"widget.product['product_name'] ?? _t('ទំនិញថ្មី', 'New product')",
-            "widget.product['location'] ?? 'ភ្នំពេញ'":"widget.product['location'] ?? _t('ភ្នំពេញ', 'Phnom Penh')",
-            "💰 តម្លៃ៖ $price $currency":"💰 ${_t('តម្លៃ', 'Price')}: $price $currency",
-            "🔗 មើលទំនិញ៖":"🔗 ${_t('មើលទំនិញ', 'View product')}:",
-            "📲 ទាញយក App Sesan៖":"📲 ${_t('ទាញយក Sesan App', 'Download Sesan App')}:",
-            "const Text(\n                  \"ចែករំលែកទំនិញ\",":"Text(\n                  _t('ចែករំលែកទំនិញ', 'Share product'),",
-            "title: \"ចែករំលែក Link ទំនិញ\",":"title: _t('ចែករំលែក Link ទំនិញ', 'Share product link'),",
-            "subtitle: \"ផ្ញើរូបភាពមាន QR Code និង Link\",":"subtitle: _t('ផ្ញើរូបភាពមាន QR Code និង Link', 'Send an image with QR code and link'),",
-            "title: \"រក្សាទុករូបភាព (Watermark)\",":"title: _t('រក្សាទុករូបភាព (Watermark)', 'Save image (watermark)'),",
-            "subtitle: \"រក្សាទុកក្នុង Gallery\",":"subtitle: _t('រក្សាទុកក្នុង Gallery', 'Save to Gallery'),",
-            "_showSnack('❌ កំហុស: $e', Colors.red);":"_showSnack(_t('❌ កំហុស: $e', '❌ Error: $e'), Colors.red);",
-            "_showSnack('សូមជ្រើសរើសពិន្ទុពី 1 ដល់ 5', Colors.orange);":"_showSnack(_t('សូមជ្រើសរើសពិន្ទុពី 1 ដល់ 5', 'Please choose a rating from 1 to 5'), Colors.orange);",
-            "_showSnack('សូម Login មុនពេលផ្ដល់ពិន្ទុ', Colors.orange);":"_showSnack(_t('សូមចូលគណនីមុនពេលផ្ដល់ពិន្ទុ', 'Please sign in before rating'), Colors.orange);",
-            "_showSnack('រកមិនឃើញ Product ID', Colors.red);":"_showSnack(_t('រកមិនឃើញ Product ID', 'Product ID not found'), Colors.red);",
-            "throw Exception('Product មិនមានក្នុង Firestore');":"throw Exception(_t('មិនមានទំនិញនេះក្នុងប្រព័ន្ធ', 'Product not found'));",
-            "? 'បូកថ្លៃដឹកជញ្ជូនរួចរាល់'\n                                              : 'មិនទាន់បូកថ្លៃដឹកជញ្ជូន'":"? _t('បូកថ្លៃដឹកជញ្ជូនរួចរាល់', 'Shipping included')\n                                              : _t('មិនទាន់បូកថ្លៃដឹកជញ្ជូន', 'Shipping not included')",
-            "_shownProductName('គ្មានឈ្មោះ')":"_shownProductName(_t('គ្មានឈ្មោះ', 'Unnamed product'))",
-            "'($totalReviews នាក់)'":"Localizations.localeOf(context).languageCode == 'en' ? '($totalReviews reviews)' : '($totalReviews នាក់)'",
-            "? 'ពិន្ទុរបស់អ្នក៖ ${myRating.toStringAsFixed(1)}'":"? _t('ពិន្ទុរបស់អ្នក៖ ${myRating.toStringAsFixed(1)}', 'Your rating: ${myRating.toStringAsFixed(1)}')",
+            "title: Text('កន្ត្រករបស់ខ្ញុំ'.tr,":"title: Text(_t('កន្ត្រករបស់ខ្ញុំ', 'My cart'),",
+            "? Center(child: Text('មិនអាចទាញព័ត៌មានអ្នកប្រើបាន'.tr))":"? Center(child: Text(_t('មិនអាចទាញព័ត៌មានអ្នកប្រើបាន', 'Unable to load user information'))) ",
+            "Text(item['product_name'] ?? 'គ្មានឈ្មោះ',":"Text(item['product_name'] ?? _t('គ្មានឈ្មោះ', 'Unnamed product'),",
+            "? 'អស់ពីស្តុក'.tr":"? _t('អស់ពីស្តុក', 'Out of stock')",
+            ": '${'នៅសល់'.tr}: $stockQuantity${stockUnit.isEmpty ? '' : ' $stockUnit'}'":": '${_t('នៅសល់', 'In stock')}: $stockQuantity${stockUnit.isEmpty ? '' : ' $stockUnit'}'",
+            "'${'បន្តទៅការទូទាត់'.tr} (${currencyFormat.format(total)} ៛)'":"'${_t('បន្តទៅការទូទាត់', 'Continue to checkout')} (${currencyFormat.format(total)} ៛)'",
           }
           n=0
           for a,b in reps.items():
               if a in s:
                   s=s.replace(a,b); n+=1
           p.write_text(s,encoding='utf-8')
-          print('Product Detail replacements', n)
-          if n < 10:
-              raise SystemExit('Product Detail localization patch unexpectedly small')
+          print('Cart replacements', n)
+
+          # Order History: currently hard-coded Khmer. Localize visible labels/statuses only.
+          p=Path('lib/order_history_screen.dart')
+          s=p.read_text(encoding='utf-8')
+          marker="class _OrderHistoryScreenState extends State<OrderHistoryScreen> {\n"
+          helper="  String _t(String km, String en) =>\n      Localizations.localeOf(context).languageCode == 'en' ? en : km;\n\n"
+          if helper not in s:
+              s=s.replace(marker, marker+helper, 1)
+          reps={
+            "data?['seller_name'] ?? data?['name'] ?? 'អ្នកលក់'":"data?['seller_name'] ?? data?['name'] ?? _t('អ្នកលក់', 'Seller')",
+            "data?['name'] ?? data?['seller_name'] ?? 'អ្នកលក់'":"data?['name'] ?? data?['seller_name'] ?? _t('អ្នកលក់', 'Seller')",
+            "return 'អ្នកលក់';":"return _t('អ្នកលក់', 'Seller');",
+            "return '⏳ រង់ចាំ';":"return _t('⏳ រង់ចាំ', '⏳ Pending');",
+            "return '✅ បញ្ជាក់ហើយ';":"return _t('✅ បញ្ជាក់ហើយ', '✅ Confirmed');",
+            "return '📦 កំពុងខ្ចប់';":"return _t('📦 កំពុងខ្ចប់', '📦 Packing');",
+            "return '🚚 កំពុងដឹក';":"return _t('🚚 កំពុងដឹក', '🚚 On delivery');",
+            "return '✅ ដល់ទីតាំង';":"return _t('✅ ដល់ទីតាំង', '✅ Delivered');",
+            "title: const Text(\n          'ប្រវត្តិកម្មង់របស់ខ្ញុំ',":"title: Text(\n          _t('ប្រវត្តិកម្មង់របស់ខ្ញុំ', 'My order history'),",
+            "\"មិនអាចផ្ទុកប្រវត្តិបាន\"":"_t('មិនអាចផ្ទុកប្រវត្តិបាន', 'Unable to load order history')",
+            "\"បុងលេខ: $orderId\"":"_t('បុងលេខ: $orderId', 'Order: $orderId')",
+            "item['product_name'] ?? \"គ្មានឈ្មោះ\"":"item['product_name'] ?? _t('គ្មានឈ្មោះ', 'Unnamed product')",
+            "const Text(\n                      \"តម្លៃសរុប\",":"Text(\n                      _t('តម្លៃសរុប', 'Total'),",
+            "label: const Text(\n                    \"ទិញម្ដងទៀត\",":"label: Text(\n                    _t('ទិញម្ដងទៀត', 'Buy again'),",
+            "return const Text(\n        \"អ្នកលក់៖ មិនស្គាល់\",":"return Text(\n        _t('អ្នកលក់៖ មិនស្គាល់', 'Seller: Unknown'),",
+            "\"កំពុងទាញយក...\"":"_t('កំពុងទាញយក...', 'Loading...')",
+            "snapshot.data ?? 'អ្នកលក់'":"snapshot.data ?? _t('អ្នកលក់', 'Seller')",
+            "\"អ្នកលក់៖ $sellerName\"":"_t('អ្នកលក់៖ $sellerName', 'Seller: $sellerName')",
+          }
+          n=0
+          for a,b in reps.items():
+              if a in s:
+                  s=s.replace(a,b); n+=1
+          p.write_text(s,encoding='utf-8')
+          print('Order History replacements', n)
+          if n < 12:
+              raise SystemExit('Order History localization patch unexpectedly small')
+
+          # Sales Detail / Order Detail was already localized in cd575e0; do not rewrite its logic.
+          # Order Tracking already uses translation keys; only localize exception fallbacks.
+          p=Path('lib/order_tracking_screen.dart')
+          s=p.read_text(encoding='utf-8')
+          marker="class _OrderTrackingScreenState extends State<OrderTrackingScreen> {\n"
+          helper="  String _t(String km, String en) =>\n      Localizations.localeOf(context).languageCode == 'en' ? en : km;\n\n"
+          if helper not in s:
+              s=s.replace(marker, marker+helper, 1)
+          s=s.replace("e.message ?? 'Unable to confirm receipt'", "e.message ?? _t('មិនអាចបញ្ជាក់ការទទួលបានទេ', 'Unable to confirm receipt')")
+          s=s.replace("content: Text('Error: $e'),", "content: Text(_t('កំហុស: $e', 'Error: $e')),")
+          p.write_text(s,encoding='utf-8')
           PY
-      - name: Verify localization patch
+      - name: Verify order localization
         run: |
-          grep -q "Search products in this category" lib/product_list.dart
-          grep -q "String _t(String km, String en)" lib/product_detail.dart
-          grep -q "Shipping included" lib/product_detail.dart
-          grep -q "Share product" lib/product_detail.dart
-          grep -q "Unnamed product" lib/product_detail.dart
+          grep -q "My cart" lib/cart_screen.dart
+          grep -q "My order history" lib/order_history_screen.dart
+          grep -q "Buy again" lib/order_history_screen.dart
+          grep -q "Unable to confirm receipt" lib/order_tracking_screen.dart
+          grep -q "Sales Details" lib/order_detail_screen.dart
           git diff --check
       - name: Commit localization changes
         run: |
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add lib/product_list.dart lib/product_detail.dart
+          git add lib/cart_screen.dart lib/order_history_screen.dart lib/order_tracking_screen.dart
           git diff --cached --check
           if git diff --cached --quiet; then
-            echo "No Product localization changes needed"
+            echo "No Cart/Order localization changes needed"
             exit 0
           fi
-          git commit -m "Localize Product List and Product Detail screens"
+          git commit -m "Localize Cart and Order screens"
           git push origin HEAD:ios-sync-android46
