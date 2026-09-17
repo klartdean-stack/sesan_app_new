@@ -49,14 +49,14 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
   late AnimationController _fadeCtrl;
   late Animation<double> _fadeAnim;
 
-  static const _bg = Color(0xFF0D1117);
-  static const _card = Color(0xFF161B22);
-  static const _border = Color(0xFF30363D);
-  static const _accent = Color(0xFF238636);
-  static const _accentBlue = Color(0xFF1F6FEB);
-  static const _text = Color(0xFFE6EDF3);
-  static const _textMuted = Color(0xFF8B949E);
-  static const _red = Color(0xFFDA3633);
+  static const _bg = Color(0xFFF7FAF7);
+  static const _card = Colors.white;
+  static const _border = Color(0xFFDDE8DF);
+  static const _accent = Color(0xFF2E7D32);
+  static const _accentBlue = Color(0xFFF57C00);
+  static const _text = Color(0xFF1F2933);
+  static const _textMuted = Color(0xFF6B7280);
+  static const _red = Color(0xFFD32F2F);
 
   final List<Map<String, dynamic>> _packages = [
     {
@@ -65,7 +65,7 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
       'price': 10000,
       'duration': '24 ម៉ោង',
       'icon': Icons.local_offer_outlined,
-      'color': const Color(0xFF42A5F5),
+      'color': _accent,
       'features': ['បង្ហាញក្នុង Feed', 'រូបភាព ៤ សន្លឹក', 'Support ជាមូលដ្ឋាន'],
     },
   ];
@@ -660,7 +660,7 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
                 height: 2,
                 decoration: BoxDecoration(
                   gradient: done
-                      ? const LinearGradient(colors: [_accentBlue, _accent])
+                      ? const LinearGradient(colors: [_accent, _accent])
                       : null,
                   color: done ? null : _border,
                 ),
@@ -681,13 +681,13 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
                   color: isDone
                       ? _accent
                       : isActive
-                          ? _accentBlue
+                          ? _accent
                           : _card,
                   border: Border.all(
                     color: isDone
                         ? _accent
                         : isActive
-                            ? _accentBlue
+                            ? _accent
                             : _border,
                     width: 2,
                   ),
@@ -1516,7 +1516,7 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
         width: double.infinity,
         child: ElevatedButton(
           style: ElevatedButton.styleFrom(
-            backgroundColor: _accentBlue,
+            backgroundColor: _accent,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(14),
             ),
