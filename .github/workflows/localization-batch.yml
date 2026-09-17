@@ -15,94 +15,67 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ios-sync-android46
-      - name: Localize Pre-order and Wanted
+      - name: Localize Payment Receipt and Withdraw
         run: |
           python3 - <<'PY'
           from pathlib import Path
 
-          def helper(path, marker):
-              p=Path(path); s=p.read_text(encoding='utf-8')
-              h="  String _t(BuildContext context, String km, String en) =>\n      Localizations.localeOf(context).languageCode == 'en' ? en : km;\n\n"
-              if h not in s: s=s.replace(marker, marker+h, 1)
-              return p,s
+          # Receipt checkout already uses appText for nearly all visible UI.
+          # Localize persisted fallback names without changing payment/ABA/QR logic.
+          p=Path('lib/receipt_screen.dart'); s=p.read_text(encoding='utf-8')
+          s=s.replace("data['product_name'] ?? 'គ្មានឈ្មោះ'", "data['product_name'] ?? _t('គ្មានឈ្មោះ', 'Unnamed product')")
+          s=s.replace("data['seller_name'] ?? 'អាជីវករ សេសាន'", "data['seller_name'] ?? _t('អាជីវករ សេសាន', 'Sesan seller')")
+          p.write_text(s,encoding='utf-8')
 
-          # Pre-order grid: the old Learn card is not rendered; localize remaining visible card/empty labels.
-          p,s=helper('lib/pre_order_grid_view.dart', 'class PreOrderGridView extends StatelessWidget {\n')
+          # Auto KHQR payment: localize the three visible labels only.
+          p=Path('lib/paymentauto_screen.dart'); s=p.read_text(encoding='utf-8')
+          marker='class PaymentScreen extends StatelessWidget {\n'
+          h="  String _t(BuildContext context, String km, String en) =>\n      Localizations.localeOf(context).languageCode == 'en' ? en : km;\n\n"
+          if h not in s: s=s.replace(marker,marker+h,1)
+          s=s.replace('appBar: AppBar(title: const Text("ទូទាត់ប្រាក់"))', 'appBar: AppBar(title: Text(_t(context, "ទូទាត់ប្រាក់", "Payment")))')
+          s=s.replace('Text("ទឹកប្រាក់៖ $totalAmount ៛",', 'Text("${_t(context, \'ទឹកប្រាក់\', \'Amount\')}: $totalAmount ៛",')
+          s=s.replace('ElevatedButton(onPressed: _launchABA, child: const Text("បើក App ABA បង់លុយអូតូ"))', 'ElevatedButton(onPressed: _launchABA, child: Text(_t(context, "បើក App ABA បង់លុយអូតូ", "Open ABA app to pay")))')
+          p.write_text(s,encoding='utf-8')
+
+          # Withdraw main screen is already bilingual via appText; keep secureWithdraw and wallet logic untouched.
+
+          # Withdrawal detail was fully hard-coded Khmer. Localize display chrome/status only.
+          p=Path('lib/seller_withdrawal_detail.dart'); s=p.read_text(encoding='utf-8')
+          marker='class SellerWithdrawalDetail extends StatelessWidget {\n'
+          h="  String _t(BuildContext context, String km, String en) =>\n      Localizations.localeOf(context).languageCode == 'en' ? en : km;\n\n"
+          if h not in s: s=s.replace(marker,marker+h,1)
+          s=s.replace(': "កំពុងរង់ចាំ";', ': _t(context, "កំពុងរង់ចាំ", "Pending");')
+          s=s.replace('title: const Text(\n          "លម្អិតប្រតិបត្តិការ",', 'title: Text(\n          _t(context, "លម្អិតប្រតិបត្តិការ", "Transaction details"),')
+          s=s.replace('const Text(\n                    "ដកប្រាក់ជោគជ័យ",', 'Text(\n                    _t(context, "ដកប្រាក់ជោគជ័យ", "Withdrawal successful"),')
           reps={
-            "data['product_name'] ?? 'មិនមានឈ្មោះ'":"data['product_name'] ?? _t(context, 'មិនមានឈ្មោះ', 'Unnamed product')",
-            "\"/ ${data['unit'] ?? 'ឯកតា'}\"":"\"/ ${data['unit'] ?? _t(context, 'ឯកតា', 'unit')}\"",
-            "\"ផុសថ្ងៃ: ${_formatDate(data['created_at'])}\"":"\"${_t(context, 'ផុសថ្ងៃ', 'Posted')}: ${_formatDate(data['created_at'])}\"",
-            "const Text(\n              \"មិនទាន់មានទំនិញលក់មុនទេ\"":"Text(\n              _t(context, 'មិនទាន់មានទំនិញលក់មុនទេ', 'No pre-order products yet')",
+            '_buildDetailRow("ឈ្មោះគណនី", data[\'account_name\'] ?? "N/A")':'_buildDetailRow(_t(context, "ឈ្មោះគណនី", "Account name"), data[\'account_name\'] ?? "N/A")',
+            '_buildDetailRow("លេខគណនី", data[\'account_number\'] ?? "N/A")':'_buildDetailRow(_t(context, "លេខគណនី", "Account number"), data[\'account_number\'] ?? "N/A")',
+            '_buildDetailRow("អត្តសញ្ញាណប័ណ្ណ", data[\'id_card\'] ?? "N/A")':'_buildDetailRow(_t(context, "អត្តសញ្ញាណប័ណ្ណ", "ID card"), data[\'id_card\'] ?? "N/A")',
+            '_buildDetailRow("កាលបរិច្ឆេទអនុម័ត", approvedAt)':'_buildDetailRow(_t(context, "កាលបរិច្ឆេទអនុម័ត", "Approved at"), approvedAt)',
+            '_buildDetailRow("ស្ថានភាព", "ជោគជ័យ", isStatus: true)':'_buildDetailRow(_t(context, "ស្ថានភាព", "Status"), _t(context, "ជោគជ័យ", "Successful"), isStatus: true)',
+            '"សន្លឹកបញ្ជាក់ការផ្ទេរប្រាក់ (Receipt)",':'_t(context, "សន្លឹកបញ្ជាក់ការផ្ទេរប្រាក់ (Receipt)", "Transfer receipt"),',
+            '_buildImageSection("កូដ QR សម្រាប់ទទួលលុយ", data[\'khqr_url\'])':'_buildImageSection(_t(context, "កូដ QR សម្រាប់ទទួលលុយ", "QR code for receiving money"), data[\'khqr_url\'])',
           }
           for a,b in reps.items(): s=s.replace(a,b)
-          p.write_text(s,encoding='utf-8')
-
-          # Add Pre-order is already translation-key based. Only remove the remaining visible hard-coded Map label.
-          p=Path('lib/add_pre_order_screen.dart'); s=p.read_text(encoding='utf-8')
-          marker='class _AddPreOrderScreenState extends State<AddPreOrderScreen> {\n'
-          h="  String _t(String km, String en) =>\n      Localizations.localeOf(context).languageCode == 'en' ? en : km;\n\n"
-          if h not in s: s=s.replace(marker,marker+h,1)
-          s=s.replace("const Text('Map',style:TextStyle(fontSize:10,color:Colors.grey))", "Text(_t('ផែនទី', 'Map'),style:const TextStyle(fontSize:10,color:Colors.grey))")
-          p.write_text(s,encoding='utf-8')
-
-          # Wanted grid: fully hard-coded visible labels.
-          p,s=helper('lib/wanted_grid_view.dart', 'class WantedGridView extends StatelessWidget {\n')
-          reps={
-            'return const Center(child: Text("មានបញ្ហាភ្ជាប់ទិន្នន័យ"));':'return Center(child: Text(_t(context, "មានបញ្ហាភ្ជាប់ទិន្នន័យ", "Unable to connect to data")));',
-            '? "រកមិនឃើញការប្រកាសទិញដែលត្រូវនឹង \'$searchQuery\'"':"? _t(context, \"រកមិនឃើញការប្រកាសទិញដែលត្រូវនឹង '$searchQuery'\", \"No wanted posts match '$searchQuery'\")",
-            ': "មិនទាន់មានការប្រកាសទិញទេ",':': _t(context, "មិនទាន់មានការប្រកាសទិញទេ", "No wanted posts yet"),',
-            '? "នៅសល់ $daysLeft ថ្ងៃ"':'? _t(context, "នៅសល់ $daysLeft ថ្ងៃ", "$daysLeft days left")',
-            ': "ជិតផុតកំណត់";':': _t(context, "ជិតផុតកំណត់", "Expiring soon");',
-            '"ត្រូវការ៖ ${data[\'quantity\']} ${data[\'unit\']}"':'"${_t(context, \'ត្រូវការ\', \'Wanted\')}: ${data[\'quantity\']} ${data[\'unit\']}"',
-            '"តម្លៃ៖ ${data[\'price\']} ${data[\'currency\']}"':'"${_t(context, \'តម្លៃ\', \'Price\')}: ${data[\'price\']} ${data[\'currency\']}"',
-          }
-          for a,b in reps.items(): s=s.replace(a,b)
-          p.write_text(s,encoding='utf-8')
-
-          # Add Wanted: localize common visible form text without changing Firestore enum/storage values.
-          p=Path('lib/add_wanted_screen.dart'); s=p.read_text(encoding='utf-8')
-          marker='class _AddWantedScreenState extends State<AddWantedScreen> {\n'
-          h="  String _t(String km, String en) =>\n      Localizations.localeOf(context).languageCode == 'en' ? en : km;\n\n"
-          if h not in s: s=s.replace(marker,marker+h,1)
-          reps={
-            'const SnackBar(\n            content: Text("ជ្រើសរើសបានអតិបរមាត្រឹមតែ ៣ សន្លឹកប៉ុណ្ណោះ!"),':'SnackBar(\n            content: Text(_t("ជ្រើសរើសបានអតិបរមាត្រឹមតែ ៣ សន្លឹកប៉ុណ្ណោះ!", "You can select up to 3 images only")),',
-            'const SnackBar(\n          content: Text("សូម Login មុននឹងប្រកាស"),':'SnackBar(\n          content: Text(_t("សូម Login មុននឹងប្រកាស", "Please sign in before posting")),',
-            'const SnackBar(content: Text("សូមជ្រើសរើសរូបិយប័ណ្ណ (ដុល្លារ ឬ រៀល)"))':'SnackBar(content: Text(_t("សូមជ្រើសរើសរូបិយប័ណ្ណ (ដុល្លារ ឬ រៀល)", "Please select a currency (USD or KHR)")))',
-            'const SnackBar(\n          content: Text("សូមបំពេញព័ត៌មាន និងដាក់រូបភាពយ៉ាងហោច ១ សន្លឹក"),':'SnackBar(\n          content: Text(_t("សូមបំពេញព័ត៌មាន និងដាក់រូបភាពយ៉ាងហោច ១ សន្លឹក", "Please complete the information and add at least 1 image")),',
-            'const SnackBar(content: Text("ប្រកាសទិញត្រូវបានចុះផ្សាយ"))':'SnackBar(content: Text(_t("ប្រកាសទិញត្រូវបានចុះផ្សាយ", "Wanted post published")))',
-            'Text("កំហុស៖ $e")':'Text(_t("កំហុស៖ $e", "Error: $e"))',
-            'title: const Text(\n          "បង្កើតការប្រកាសទិញ",':'title: Text(\n          _t("បង្កើតការប្រកាសទិញ", "Create wanted post"),',
-            'decoration: const InputDecoration(\n                  labelText: "ឈ្មោះទំនិញ",':'decoration: InputDecoration(\n                  labelText: _t("ឈ្មោះទំនិញ", "Product name"),',
-            'validator: (v) => v!.isEmpty ? "សូមបញ្ចូលឈ្មោះ" : null':'validator: (v) => v!.isEmpty ? _t("សូមបញ្ចូលឈ្មោះ", "Please enter a name") : null',
-            'decoration: const InputDecoration(\n                        labelText: "ចំនួនត្រូវការ",':'decoration: InputDecoration(\n                        labelText: _t("ចំនួនត្រូវការ", "Quantity wanted"),',
-            'decoration: const InputDecoration(\n                  labelText: "លេខទូរស័ព្ទ",':'decoration: InputDecoration(\n                  labelText: _t("លេខទូរស័ព្ទ", "Phone number"),',
-            '? "សូមបញ្ចូលលេខទូរស័ព្ទ"': '? _t("សូមបញ្ចូលលេខទូរស័ព្ទ", "Please enter a phone number")',
-            'const Text(\n                "រៀបរាប់បន្ថែម *",':'Text(\n                _t("រៀបរាប់បន្ថែម *", "Additional details *"),',
-            'hintText:\n                  "ឧទាហរណ៍៖ ត្រូវការទិញយកទៅប្រើប្រាស់ផ្ទាល់ខ្លួន...",':'hintText: _t("ឧទាហរណ៍៖ ត្រូវការទិញយកទៅប្រើប្រាស់ផ្ទាល់ខ្លួន...", "Example: I want to buy this for personal use..."),',
-            'child: const Text(\n                    "ចុះផ្សាយប្រកាសទិញ",':'child: Text(\n                    _t("ចុះផ្សាយប្រកាសទិញ", "Publish wanted post"),',
-            'const Text(\n          "រូបភាពទំនិញត្រូវការទិញ (អតិបរមា ៣ សន្លឹក) *",':'Text(\n          _t("រូបភាពទំនិញត្រូវការទិញ (អតិបរមា ៣ សន្លឹក) *", "Product images (maximum 3) *"),',
-            '"ចុចដើម្បីដាក់រូបភាព (0/3)"':'_t("ចុចដើម្បីដាក់រូបភាព (0/3)", "Tap to add images (0/3)")',
-          }
-          n=0
-          for a,b in reps.items():
-              if a in s: s=s.replace(a,b); n+=1
-          print('Add Wanted replacements', n)
-          if n < 12: raise SystemExit('Add Wanted localization patch unexpectedly small')
           p.write_text(s,encoding='utf-8')
           PY
-      - name: Verify localization
+      - name: Verify localization and payment invariants
         run: |
-          grep -q "No pre-order products yet" lib/pre_order_grid_view.dart
-          grep -q "Create wanted post" lib/add_wanted_screen.dart
-          grep -q "No wanted posts yet" lib/wanted_grid_view.dart
-          grep -q "Publish wanted post" lib/add_wanted_screen.dart
+          grep -q "Unnamed product" lib/receipt_screen.dart
+          grep -q "Pay with ABA app" lib/receipt_screen.dart
+          grep -q "assets/aba_qr.png" lib/receipt_screen.dart
+          grep -q "https://pay.ababank.com/oRF8/oizn40j9" lib/receipt_screen.dart
+          grep -q "Open ABA app to pay" lib/paymentauto_screen.dart
+          grep -q "Transaction details" lib/seller_withdrawal_detail.dart
+          grep -q "Withdrawal successful" lib/seller_withdrawal_detail.dart
+          grep -q "secureWithdraw" lib/seller_withdraw_screen.dart
           git diff --check
       - name: Commit localization changes
         run: |
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add lib/add_pre_order_screen.dart lib/pre_order_grid_view.dart lib/add_wanted_screen.dart lib/wanted_grid_view.dart
+          git add lib/receipt_screen.dart lib/paymentauto_screen.dart lib/seller_withdrawal_detail.dart
           git diff --cached --check
           if git diff --cached --quiet; then exit 0; fi
-          git commit -m "Localize Pre-order and Wanted screens"
+          git commit -m "Localize Payment Receipt and Withdraw screens"
           git push origin HEAD:ios-sync-android46
