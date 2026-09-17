@@ -169,7 +169,11 @@ class _OrderManagementScreenState extends State<OrderManagementScreen>
                   children: [
                     Row(
                       children: [
-                        const Icon(Icons.person, color: Color(0xFF388E3C), size: 18),
+                        const Icon(
+                          Icons.person,
+                          color: Color(0xFF388E3C),
+                          size: 18,
+                        ),
                         const SizedBox(width: 5),
                         Expanded(
                           child: Text(
@@ -438,8 +442,9 @@ class _OrderManagementScreenState extends State<OrderManagementScreen>
           Expanded(
             child: ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
-                backgroundColor:
-                    isExpired ? Colors.grey[800] : Colors.redAccent,
+                backgroundColor: isExpired
+                    ? Colors.grey[800]
+                    : Colors.redAccent,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(
@@ -651,7 +656,9 @@ class _OrderManagementScreenState extends State<OrderManagementScreen>
             decoration: BoxDecoration(
               color: Colors.green.withOpacity(0.12),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFF388E3C).withOpacity(0.35)),
+              border: Border.all(
+                color: const Color(0xFF388E3C).withOpacity(0.35),
+              ),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -692,8 +699,8 @@ class _OrderManagementScreenState extends State<OrderManagementScreen>
     final Color color = completed
         ? const Color(0xFF388E3C)
         : current
-            ? const Color(0xFFF9A825)
-            : const Color(0xFFB0B8B0);
+        ? const Color(0xFFF9A825)
+        : const Color(0xFFB0B8B0);
 
     return Column(
       children: [
@@ -706,12 +713,9 @@ class _OrderManagementScreenState extends State<OrderManagementScreen>
             color: current
                 ? const Color(0xFFFFF3CD)
                 : completed
-                    ? const Color(0xFFE8F5E9)
-                    : const Color(0xFFF1F4F1),
-            border: Border.all(
-              color: color,
-              width: current ? 2.2 : 1.4,
-            ),
+                ? const Color(0xFFE8F5E9)
+                : const Color(0xFFF1F4F1),
+            border: Border.all(color: color, width: current ? 2.2 : 1.4),
           ),
           child: Icon(
             completed ? Icons.check_rounded : icon,
@@ -743,9 +747,7 @@ class _OrderManagementScreenState extends State<OrderManagementScreen>
         height: 2,
         margin: const EdgeInsets.only(left: 3, right: 3, bottom: 23),
         decoration: BoxDecoration(
-          color: completed
-              ? const Color(0xFF388E3C)
-              : const Color(0xFFD5DCD5),
+          color: completed ? const Color(0xFF388E3C) : const Color(0xFFD5DCD5),
           borderRadius: BorderRadius.circular(2),
         ),
       ),
@@ -761,12 +763,10 @@ class _OrderManagementScreenState extends State<OrderManagementScreen>
         region: 'asia-southeast1',
       ).httpsCallable('secureSellerOrderStatus');
 
-      await callable.call({
-        'orderId': docId,
-        'status': newStatus,
-      });
+      await callable.call({'orderId': docId, 'status': newStatus});
 
-      final translatedStatus = {
+      final translatedStatus =
+          {
             'packing': 'order_status_packing'.tr,
             'on_delivery': 'order_status_shipping'.tr,
             'delivered': 'order_status_delivered'.tr,
@@ -788,9 +788,7 @@ class _OrderManagementScreenState extends State<OrderManagementScreen>
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             backgroundColor: Colors.redAccent,
-            content: Text(
-              e.message ?? 'មិនអាចកែស្ថានភាពការកម្ម៉ង់បានទេ',
-            ),
+            content: Text(e.message ?? 'sales_update_failed'.tr),
           ),
         );
       }
@@ -799,7 +797,7 @@ class _OrderManagementScreenState extends State<OrderManagementScreen>
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             backgroundColor: Colors.redAccent,
-            content: Text('មានបញ្ហា៖ $e'),
+            content: Text('sales_error'.trParams({'error': e.toString()})),
           ),
         );
       }
