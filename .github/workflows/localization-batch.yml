@@ -6,7 +6,7 @@ on:
 permissions:
   contents: write
 jobs:
-  finish-order-management:
+  chat-view-shop-dates:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -17,46 +17,126 @@ jobs:
           flutter-version: '3.38.8'
           channel: stable
           cache: true
-      - name: Localize Order Management error fallbacks
+      - name: Patch Chat View Shop and date localization
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          p = Path('lib/order_management_screen.dart')
+          p = Path('lib/chat_screen_legacy.dart')
           s = p.read_text(encoding='utf-8')
-          old1 = "e.message ?? 'មិនអាចកែស្ថានភាពការកម្ម៉ង់បានទេ',"
-          new1 = "e.message ?? 'sales_update_failed'.tr,"
-          old2 = "content: Text('មានបញ្ហា៖ $e'),"
-          new2 = "content: Text('sales_error'.trParams({'error': e.toString()})),"
-          if old1 not in s:
-              raise SystemExit('Missing FirebaseFunctions fallback target')
-          if old2 not in s:
-              raise SystemExit('Missing generic error fallback target')
-          s = s.replace(old1, new1, 1).replace(old2, new2, 1)
+
+          # Fix broken last-seen replacements first.
+          s = s.replace("return 'chat_last_seen_minutes'.trParams({'count': minutes.toString()})Params({'count': '${diff.inMinutes}'});", "return 'chat_last_seen_minutes'.trParams({'count': '${diff.inMinutes}'});")
+          s = s.replace("return 'chat_last_seen_hours'.trParams({'count': hours.toString()})Params({'count': '${diff.inHours}'});", "return 'chat_last_seen_hours'.trParams({'count': '${diff.inHours}'});")
+          s = s.replace("return 'chat_last_seen_days'.trParams({'count': days.toString()})Params({'count': '${diff.inDays}'});", "return 'chat_last_seen_days'.trParams({'count': '${diff.inDays}'});")
+
+          # Localize date headers including Today, Yesterday and full weekday/month date.
+          old_date = """  String _formatDateHeader(DateTime date) {
+    DateTime now = DateTime.now();
+    if (date.year == now.year &&
+        date.month == now.month &&
+        date.day == now.day) {
+      return 'ថ្ងៃនេះ';
+    }
+    DateTime yesterday = now.subtract(const Duration(days: 1));
+    if (date.year == yesterday.year &&
+        date.month == yesterday.month &&
+        date.day == yesterday.day) {
+      return 'ម្សិលមិញ';
+    }
+    return DateFormat('EEEE, dd MMMM yyyy', 'km').format(date);
+  }
+"""
+          new_date = """  String _formatDateHeader(DateTime date) {
+    final now = DateTime.now();
+    if (date.year == now.year &&
+        date.month == now.month &&
+        date.day == now.day) {
+      return 'chat_today'.tr;
+    }
+    final yesterday = now.subtract(const Duration(days: 1));
+    if (date.year == yesterday.year &&
+        date.month == yesterday.month &&
+        date.day == yesterday.day) {
+      return 'chat_yesterday'.tr;
+    }
+    final localeCode = Localizations.localeOf(context).languageCode == 'en'
+        ? 'en'
+        : 'km';
+    return DateFormat('EEEE, dd MMMM yyyy', localeCode).format(date);
+  }
+"""
+          if old_date not in s:
+              raise SystemExit('Date header target not found')
+          s = s.replace(old_date, new_date, 1)
+
+          # Add an always-visible View Shop action beside the overflow menu.
+          old_actions = "      actions: [_buildPopupMenu()],"
+          new_actions = """      actions: [
+        TextButton.icon(
+          onPressed: _openSellerShop,
+          icon: const Icon(Icons.storefront_outlined, color: Colors.white, size: 18),
+          label: Text(
+            'chat_view_shop'.tr,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          style: TextButton.styleFrom(
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 6),
+            visualDensity: VisualDensity.compact,
+          ),
+        ),
+        _buildPopupMenu(),
+      ],"""
+          if old_actions not in s:
+              raise SystemExit('AppBar actions target not found')
+          s = s.replace(old_actions, new_actions, 1)
           p.write_text(s, encoding='utf-8')
+
+          # Add translation keys to both locales.
+          p = Path('lib/localization/app_translations.dart')
+          t = p.read_text(encoding='utf-8')
+          km_anchor = "          'chat_last_seen_days': 'អនឡាញមុន @count ថ្ងៃ',"
+          en_anchor = "          'chat_last_seen_days': 'Last seen @count days ago',"
+          km_add = km_anchor + "\n          'chat_today': 'ថ្ងៃនេះ',\n          'chat_yesterday': 'ម្សិលមិញ',\n          'chat_view_shop': 'មើលហាង',"
+          en_add = en_anchor + "\n          'chat_today': 'Today',\n          'chat_yesterday': 'Yesterday',\n          'chat_view_shop': 'View Shop',"
+          if "'chat_view_shop':" not in t:
+              if km_anchor not in t or en_anchor not in t:
+                  raise SystemExit('Translation anchors not found')
+              t = t.replace(km_anchor, km_add, 1).replace(en_anchor, en_add, 1)
+          p.write_text(t, encoding='utf-8')
           PY
-          dart format lib/order_management_screen.dart
+          dart format lib/chat_screen_legacy.dart lib/localization/app_translations.dart
           git diff --check
-      - name: Verify translations and preserved order logic
+      - name: Verify Chat fixes and preserved behavior
         run: |
-          grep -q "e.message ?? 'sales_update_failed'.tr" lib/order_management_screen.dart
-          grep -q "'sales_error'.trParams({'error': e.toString()})" lib/order_management_screen.dart
-          grep -q "'sales_update_failed':" lib/localization/app_translations.dart
-          grep -q "'sales_error':" lib/localization/app_translations.dart
-          grep -q "secureSellerOrderStatus" lib/order_management_screen.dart
-          grep -q "asia-southeast1" lib/order_management_screen.dart
-          grep -q "OrderScannerService.startScan" lib/order_management_screen.dart
-          grep -q "seller_id" lib/order_management_screen.dart
-          grep -q "on_delivery" lib/order_management_screen.dart
-          grep -q "delivered" lib/order_management_screen.dart
-      - name: Analyze Order Management
+          grep -q "'chat_view_shop'.tr" lib/chat_screen_legacy.dart
+          grep -q "onPressed: _openSellerShop" lib/chat_screen_legacy.dart
+          grep -q "SellerProfileScreen" lib/chat_screen_legacy.dart
+          grep -q "'chat_today'.tr" lib/chat_screen_legacy.dart
+          grep -q "'chat_yesterday'.tr" lib/chat_screen_legacy.dart
+          grep -q "DateFormat('EEEE, dd MMMM yyyy', localeCode)" lib/chat_screen_legacy.dart
+          grep -q "chat_last_seen_minutes'.trParams({'count': '\${diff.inMinutes}'})" lib/chat_screen_legacy.dart
+          grep -q "chat_last_seen_hours'.trParams({'count': '\${diff.inHours}'})" lib/chat_screen_legacy.dart
+          grep -q "chat_last_seen_days'.trParams({'count': '\${diff.inDays}'})" lib/chat_screen_legacy.dart
+          grep -q "'chat_view_shop': 'View Shop'" lib/localization/app_translations.dart
+          grep -q "'chat_today': 'Today'" lib/localization/app_translations.dart
+          grep -q "'chat_yesterday': 'Yesterday'" lib/localization/app_translations.dart
+          grep -q "_buildQuickReplies" lib/chat_screen_legacy.dart
+          grep -q "_showBlockConfirmDialog" lib/chat_screen_legacy.dart
+          grep -q "_sendLocationMessage" lib/chat_screen_legacy.dart
+      - name: Analyze Chat
         run: |
           flutter pub get
-          flutter analyze lib/order_management_screen.dart --no-fatal-infos --no-fatal-warnings
-      - name: Commit Order Management fix
+          flutter analyze lib/chat_screen_legacy.dart lib/localization/app_translations.dart --no-fatal-infos --no-fatal-warnings
+      - name: Commit Chat fixes
         run: |
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add lib/order_management_screen.dart
+          git add lib/chat_screen_legacy.dart lib/localization/app_translations.dart
           git diff --cached --check
-          git commit -m "Localize Order Management error fallbacks"
+          git commit -m "Restore Chat View Shop and localize chat dates"
           git push origin HEAD:ios-sync-android46
