@@ -37,6 +37,8 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  String _t(String km, String en) => Localizations.localeOf(context).languageCode == 'en' ? en : km;
+
   int _currentIndex = 0;
   String _selectedCategory = "ទាំងអស់";
   String _searchQuery = "";
@@ -207,6 +209,22 @@ class _HomeScreenState extends State<HomeScreen> {
       await FirebaseMessaging.instance.subscribeToTopic('admin_orders');
     }
   }
+
+  String _categoryLabel(String name) {
+  switch (name) {
+    case 'ទាំងអស់': return _t('ទាំងអស់', 'All');
+    case 'គ្រឿងចក្រ': return _t('គ្រឿងចក្រ', 'Machinery');
+    case 'សម្ភារៈកសិកម្ម': return _t('សម្ភារៈកសិកម្ម', 'Farm supplies');
+    case 'ពូជដំណាំ': return _t('ពូជដំណាំ', 'Crop seeds');
+    case 'ពូជសត្វចិញ្ចឹម': return _t('ពូជសត្វចិញ្ចឹម', 'Livestock');
+    case 'ជីនិងថ្នាំ': return _t('ជីនិងថ្នាំ', 'Fertilizer & chemicals');
+    case 'បន្លែផ្លែឈើ': return _t('បន្លែផ្លែឈើ', 'Fruit & vegetables');
+    case 'ត្រីសាច់': return _t('ត្រីសាច់', 'Fish & meat');
+    case 'សេវាកម្ម': return _t('សេវាកម្ម', 'Services');
+    case 'ផ្សេងៗ': return _t('ផ្សេងៗ', 'Other');
+    default: return name;
+  }
+}
 
   final List<Map<String, dynamic>> categories = [
     {'name': 'ទាំងអស់', 'icon': Icons.apps, 'isIcon': true},
@@ -471,7 +489,7 @@ void dispose() {
                               ),
                               const SizedBox(width: 10),
                               Text(
-                                "កំពុងបង្ហោះទំនិញ... ${(uploadController.uploadProgress.value * 100).toInt()}%",
+                                '${_t('កំពុងបង្ហោះទំនិញ...', 'Uploading product...')} ${(uploadController.uploadProgress.value * 100).toInt()}%',
                               ),
                             ],
                           ),
@@ -524,12 +542,12 @@ void dispose() {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text("សូមចូលប្រើប្រាស់"),
+        title: Text(_t('សូមចូលប្រើប្រាស់', 'Sign in required')),
         content: Text("$actionText មេត្រូវចូលប្រើប្រាស់គណនីជាមុនសិន។"),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text("មើលសិន", style: TextStyle(color: Colors.grey)),
+            child: Text(_t('មើលសិន', 'Not now'), style: const TextStyle(color: Colors.grey)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
@@ -554,16 +572,16 @@ void dispose() {
     String label = "";
     switch (index) {
       case 0:
-        label = "ទំព័រដើម";
+        label = _t('ទំព័រដើម', 'Home');
         break;
       case 1:
-        label = "កន្ត្រក";
+        label = _t('កន្ត្រក', 'Cart');
         break;
       case 3:
-        label = "ឆាត";
+        label = _t('ឆាត', 'Chat');
         break;
       case 4:
-        label = "គណនី";
+        label = _t('គណនី', 'Account');
         break;
     }
 
@@ -693,8 +711,8 @@ void dispose() {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               // រុញអក្សរទៅឆ្វេង ប៊ូតុងទៅស្តាំ
                               children: [
-                                const Text(
-                                  "ប្រភេទផលិតផល",
+                                Text(
+                                  _t('ប្រភេទផលិតផល', 'Product categories'),
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
@@ -741,8 +759,8 @@ void dispose() {
                                           color: Colors.white,
                                         ),
                                         const SizedBox(width: 5),
-                                        const Text(
-                                          'ចូលដេញថ្លៃ',
+                                        Text(
+                                          _t('ចូលដេញថ្លៃ', 'Auctions'),
                                           style: TextStyle(
                                             color: Colors.white,
                                             fontWeight: FontWeight.w700,
@@ -767,10 +785,10 @@ void dispose() {
                             unselectedLabelColor: Colors.grey,
                             indicatorColor: Colors.green,
                             indicatorWeight: 3,
-                            tabs: const [
+                            tabs: [
                               Tab(
                                 child: Text(
-                                  "ទំនិញថ្មីៗ",
+                                  _t('ទំនិញថ្មីៗ', 'New products'),
                                   style: TextStyle(
                                     fontFamily: 'Siemreap',
                                     fontWeight: FontWeight.bold,
@@ -779,7 +797,7 @@ void dispose() {
                               ),
                               Tab(
                                 child: Text(
-                                  "លក់មុន",
+                                  _t('លក់មុន', 'Pre-order'),
                                   style: TextStyle(
                                     fontFamily: 'Siemreap',
                                     fontWeight: FontWeight.bold,
@@ -788,7 +806,7 @@ void dispose() {
                               ),
                               Tab(
                                 child: Text(
-                                  "ប្រកាសទិញ",
+                                  _t('ប្រកាសទិញ', 'Wanted'),
                                   style: TextStyle(
                                     fontFamily: 'Siemreap',
                                     fontWeight: FontWeight.bold,
@@ -851,7 +869,7 @@ void dispose() {
                               }
                             },
                             label: const Text(
-                              "ប្រកាសទិញ",
+                              _t('ប្រកាសទិញ', 'Wanted'),
                               style: TextStyle(fontFamily: 'Siemreap'),
                             ),
                             icon: const Icon(Icons.campaign),
@@ -867,7 +885,7 @@ void dispose() {
                 builder: (context, child) {
                   if (tabController.index == 2) {
                     return _buildFloatingBtn(
-                      "ប្រកាសទិញ",
+                      _t('ប្រកាសទិញ', 'Wanted'),
                       Icons.campaign,
                       Colors.blue[700]!,
                       const AddWantedScreen(),
@@ -973,7 +991,7 @@ void dispose() {
               ),
               const SizedBox(height: 8),
               Text(
-                item['name'],
+                _categoryLabel(item['name']),
                 style: TextStyle(
                   fontSize:
                       isDesktop ? 13 : 10, // លើ Web ឱ្យអក្សរធំជាងមុនបន្តិច
@@ -1006,7 +1024,7 @@ void dispose() {
           context: context,
           barrierDismissible: false,
           builder: (context) => AlertDialog(
-            title: Text("បើកការជូនដំណឹង"),
+            title: Text(_t('បើកការជូនដំណឹង', 'Enable notifications')),
             content: Text(
               "ដើម្បីទទួលបានសារកម្ម៉ង់ភ្លាមៗ សូមមេចុច 'បើក' រួច Switch លើពាក្យ 'Allow notifications' ផង!",
             ),
@@ -1016,7 +1034,7 @@ void dispose() {
                   Navigator.pop(context);
                   prefs.setBool('has_shown_notification_dialog', true);
                 },
-                child: Text("ក្រោយមក"),
+                child: Text(_t('ក្រោយមក', 'Later')),
               ),
               ElevatedButton(
                 onPressed: () async {
@@ -1024,7 +1042,7 @@ void dispose() {
                   prefs.setBool('has_shown_notification_dialog', true);
                   await openAppSettings();
                 },
-                child: Text("ទៅបើកឥឡូវនេះ"),
+                child: Text(_t('ទៅបើកឥឡូវនេះ', 'Open settings')),
               ),
             ],
           ),
