@@ -146,6 +146,23 @@ jobs:
             echo "BoringSSL flag is clean"
           fi
 
+      - name: Inject Google Maps iOS API key
+        env:
+          GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
+        run: |
+          set -e
+          if [ -z "$GOOGLE_MAPS_API_KEY" ]; then
+            echo "ERROR: GOOGLE_MAPS_API_KEY secret is missing or empty"
+            exit 1
+          fi
+          /usr/libexec/PlistBuddy -c "Set :GOOGLE_MAPS_API_KEY $GOOGLE_MAPS_API_KEY" ios/Runner/Info.plist
+          INJECTED_KEY=$(/usr/libexec/PlistBuddy -c "Print :GOOGLE_MAPS_API_KEY" ios/Runner/Info.plist)
+          if [ -z "$INJECTED_KEY" ]; then
+            echo "ERROR: Google Maps API key was not injected"
+            exit 1
+          fi
+          echo "Google Maps iOS API key injected successfully"
+
       - name: Create App Store export options
         run: |
           cat > "$RUNNER_TEMP/ExportOptions.plist" <<EOF
