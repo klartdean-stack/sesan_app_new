@@ -15,52 +15,69 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ios-sync-android46
-      - name: Localize Add Auction UI
+      - name: Localize VIP and Chat UI
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          p=Path('lib/auction_add_screen.dart')
+
+          # VIP
+          p=Path('lib/vip_membership_screen.dart')
           s=p.read_text(encoding='utf-8')
           marker="  final _formKey = GlobalKey<FormState>();\n"
           helper="  String _t(String km, String en) =>\n      Localizations.localeOf(context).languageCode == 'en' ? en : km;\n\n"
           if helper not in s:
-              if marker not in s: raise SystemExit('state marker missing')
               s=s.replace(marker, marker+helper, 1)
           reps={
-            "title: const Text(\n        'ដាក់ដេញថ្លៃទំនិញ',":"title: Text(\n        _t('ដាក់ដេញថ្លៃទំនិញ', 'Add auction'),",
-            "final steps = ['ទំនិញ', 'តម្លៃ និងសេវា'];":"final steps = [_t('ទំនិញ', 'Product'), _t('តម្លៃ និងសេវា', 'Price & service')];",
-            "_sectionHeader('📦', 'ព័ត៌មានទំនិញ', 'បំពេញព័ត៌មានអំពីទំនិញ')":"_sectionHeader('📦', _t('ព័ត៌មានទំនិញ', 'Product information'), _t('បំពេញព័ត៌មានអំពីទំនិញ', 'Add details about your product'))",
-            "_buildLabel('វីដេអូបង្ហាញទំនិញ (អតិបរមា ៩០វិនាទី) *')":"_buildLabel(_t('វីដេអូបង្ហាញទំនិញ (អតិបរមា ៩០វិនាទី) *', 'Product video (max 90 seconds) *'))",
-            "_buildLabel('រូបភាពទំនិញ (ដល់ ៨ សន្លឹក) *')":"_buildLabel(_t('រូបភាពទំនិញ (ដល់ ៨ សន្លឹក) *', 'Product photos (up to 8) *'))",
-            "_buildLabel('ឈ្មោះទំនិញ *')":"_buildLabel(_t('ឈ្មោះទំនិញ *', 'Product name *'))",
-            "_buildLabel('ការរៀបរាប់')":"_buildLabel(_t('ការរៀបរាប់', 'Description'))",
-            "hint: 'ពិព័រណ៍អំពីស្ថានភាព លក្ខណៈពិសេស...',":"hint: _t('ពិព័រណ៍អំពីស្ថានភាព លក្ខណៈពិសេស...', 'Describe the condition and key features...'),",
-            "_buildLabel('លេខទូរស័ព្ទ *')":"_buildLabel(_t('លេខទូរស័ព្ទ *', 'Phone number *'))",
-            "? const Row(\n                mainAxisAlignment: MainAxisAlignment.center,":"? Row(\n                mainAxisAlignment: MainAxisAlignment.center,",
-            "                  Text(\n                    'ចុចដើម្បីបន្ថែមវីដេអូ',":"                  Text(\n                    _t('ចុចដើម្បីបន្ថែមវីដេអូ', 'Tap to add video'),",
-            "                  const Text(\n                    'ចុចដើម្បីបន្ថែមរូបភាព',":"                  Text(\n                    _t('ចុចដើម្បីបន្ថែមរូបភាព', 'Tap to add photos'),",
-            "                  const Text(\n                    'រើសបានច្រើនបំផុត 8 សន្លឹក',":"                  Text(\n                    _t('រើសបានច្រើនបំផុត 8 សន្លឹក', 'Choose up to 8 photos'),",
-            "_sectionHeader('💰', 'តម្លៃ & ពេលវេលា', 'កំណត់តម្លៃ និងពេលបញ្ចប់')":"_sectionHeader('💰', _t('តម្លៃ & ពេលវេលា', 'Price & time'), _t('កំណត់តម្លៃ និងពេលបញ្ចប់', 'Set the starting price and end time'))",
-            "_buildLabel('តម្លៃចាប់ផ្តើម (រៀល) *')":"_buildLabel(_t('តម្លៃចាប់ផ្តើម (រៀល) *', 'Starting price (KHR) *'))",
-            "_buildLabel('ជំហានបង្កើនតម្លៃ (រៀល) *')":"_buildLabel(_t('ជំហានបង្កើនតម្លៃ (រៀល) *', 'Bid increment (KHR) *'))",
-            "_buildLabel('ថ្ងៃ & ម៉ោងបញ្ចប់ *')":"_buildLabel(_t('ថ្ងៃ & ម៉ោងបញ្ចប់ *', 'End date & time *'))",
-            "_miniStat('ដំបូង',":"_miniStat(_t('ដំបូង', 'Start'),",
-            "_miniStat('ដេញទី១',":"_miniStat(_t('ដេញទី១', 'First bid'),",
-            "'កំពុងបញ្ជូន... ${(_uploadController.uploadProgress.value * 100).toInt()}%'":"_t('កំពុងបញ្ជូន... ${(_uploadController.uploadProgress.value * 100).toInt()}%', 'Uploading... ${(_uploadController.uploadProgress.value * 100).toInt()}%')",
+            "_showTopMessage('✅ បានរក្សាទុកក្នុង Gallery!');":"_showTopMessage(_t('✅ បានរក្សាទុកក្នុង Gallery!', '✅ Saved to Gallery!'));",
+            "_showSnack('សូមបំពេញទិន្នន័យ និងភ្ជាប់រូបភាព', isError: true);":"_showSnack(_t('សូមបំពេញទិន្នន័យ និងភ្ជាប់រូបភាព', 'Please complete the information and attach a receipt image.'), isError: true);",
+            "_showSnack('✅ សំណើ VIP ត្រូវបានបញ្ជូន!', isError: false);":"_showSnack(_t('✅ សំណើ VIP ត្រូវបានបញ្ជូន!', '✅ VIP request submitted!'), isError: false);",
+            "_vipCardInfo(\"ចូលជាសមាជិកពី\", joinDate)":"_vipCardInfo(_t('ចូលជាសមាជិកពី', 'Member since'), joinDate)",
+            "_vipCardInfo(\"ថ្ងៃចេញកាត\", issuedDate)":"_vipCardInfo(_t('ថ្ងៃចេញកាត', 'Issued on'), issuedDate)",
+            "child: const Text(\"✓ ACTIVE\"":"child: Text(_t('✓ សកម្ម', '✓ ACTIVE')",
+            "'title': 'ផ្លាកសញ្ញា VIP', 'desc': 'Badge ពិសេសបង្ហាញលើប្រវត្តិរូប'":"'title': _t('ផ្លាកសញ្ញា VIP', 'VIP badge'), 'desc': _t('ផ្លាកពិសេសបង្ហាញលើប្រវត្តិរូប', 'Special badge shown on your profile')",
+            "'title': 'ស្ថិតិ Real-time', 'desc': 'មើលចំនួន User ទំនិញ និងការបញ្ជាទិញ'":"'title': _t('ស្ថិតិផ្ទាល់', 'Real-time stats'), 'desc': _t('មើលចំនួនអ្នកប្រើ ទំនិញ និងការបញ្ជាទិញ', 'View users, products and orders in real time')",
+            "'title': 'ក្រាបទិន្នន័យ', 'desc': 'ក្រាបសកម្មភាពប្រចាំឆ្នាំ ៤ ខ្សែ'":"'title': _t('ក្រាបទិន្នន័យ', 'Activity charts'), 'desc': _t('ក្រាបសកម្មភាពប្រចាំឆ្នាំ ៤ ខ្សែ', 'Four annual activity charts')",
+            "'title': 'ការជូនដំណឹងមុនគេ', 'desc': 'ទទួលព័ត៌មានពិសេសសម្រាប់ VIP'":"'title': _t('ការជូនដំណឹងមុនគេ', 'Priority notifications'), 'desc': _t('ទទួលព័ត៌មានពិសេសសម្រាប់ VIP', 'Receive special VIP updates')",
+            "'title': 'ជំនួយពិសេស', 'desc': 'ការគាំទ្រផ្ទាល់ពីក្រុមការងារ'":"'title': _t('ជំនួយពិសេស', 'Priority support'), 'desc': _t('ការគាំទ្រផ្ទាល់ពីក្រុមការងារ', 'Direct support from the Sesan team')",
+            "const Text(\"អត្ថប្រយោជន៍ VIP\"":"Text(_t('អត្ថប្រយោជន៍ VIP', 'VIP benefits')",
+            "const Text(\"សកម្មភាពប្រចាំឆ្នាំ\"":"Text(_t('សកម្មភាពប្រចាំឆ្នាំ', 'Annual activity')",
+            "const Text(\"ស្ថិតិថ្ងៃនេះ\"":"Text(_t('ស្ថិតិថ្ងៃនេះ', \"Today's stats\")",
+            "_statCard(\"អ្នកថ្មី\"":"_statCard(_t('អ្នកថ្មី', 'New users')",
+            "_statCard(\"ចូលថ្ងៃនេះ\"":"_statCard(_t('ចូលថ្ងៃនេះ', 'Logins today')",
+            "_statCard(\"ទំនិញថ្មី\"":"_statCard(_t('ទំនិញថ្មី', 'New products')",
+            "_statCard(\"ដេញថ្លៃថ្មី\"":"_statCard(_t('ដេញថ្លៃថ្មី', 'New auctions')",
           }
-          changed=0
+          n=0
           for a,b in reps.items():
               if a in s:
-                  s=s.replace(a,b); changed+=1
+                  s=s.replace(a,b); n+=1
           p.write_text(s,encoding='utf-8')
-          print('Add Auction replacements:',changed,'/',len(reps))
-          if changed < 15: raise SystemExit('Too few replacements; refusing unsafe partial patch')
+          print('VIP replacements', n)
+          if n < 12: raise SystemExit('VIP patch unexpectedly small')
+
+          # Chat: remove raw translation keys and localize visible fallback strings.
+          p=Path('lib/chat_screen_legacy.dart')
+          s=p.read_text(encoding='utf-8')
+          reps={
+            "_errorMessage = 'សូម Login មុននឹងប្រើឆាត';":"_errorMessage = appText(context, km: 'សូមចូលគណនីមុននឹងប្រើឆាត', en: 'Please sign in before using chat.');",
+            "_showSnack('❌ Block មិនបាន: $e', Colors.red);":"_showSnack(appText(context, km: '❌ មិនអាច Block បាន: $e', en: '❌ Unable to block user: $e'), Colors.red);",
+            "_showSnack('❌ Unblock មិនបាន: $e', Colors.red);":"_showSnack(appText(context, km: '❌ មិនអាចដោះ Block បាន: $e', en: '❌ Unable to unblock user: $e'), Colors.red);",
+            "'chat_last_seen_days'.tr":"'chat_last_seen_days'.trParams({'count': days.toString()})",
+            "'chat_last_seen_hours'.tr":"'chat_last_seen_hours'.trParams({'count': hours.toString()})",
+            "'chat_last_seen_minutes'.tr":"'chat_last_seen_minutes'.trParams({'count': minutes.toString()})",
+          }
+          n=0
+          for a,b in reps.items():
+              if a in s:
+                  s=s.replace(a,b); n+=1
+          p.write_text(s,encoding='utf-8')
+          print('Chat replacements', n)
           PY
       - name: Commit localization changes
         run: |
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add lib/auction_add_screen.dart
+          git add lib/vip_membership_screen.dart lib/chat_screen_legacy.dart
           git diff --cached --check
-          git commit -m "Localize Add Auction screen for Khmer and English"
+          git commit -m "Localize VIP and Chat screens for Khmer and English"
           git push origin HEAD:ios-sync-android46
