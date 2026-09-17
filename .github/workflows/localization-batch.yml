@@ -1,0 +1,64 @@
+name: One-time localization batch
+
+on:
+  push:
+    branches: [ios-sync-android46]
+    paths: ['.github/workflows/localization-batch.yml']
+
+permissions:
+  contents: write
+
+jobs:
+  localize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ios-sync-android46
+      - name: Localize remaining Add Product UI
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('lib/add_product.dart')
+          s=p.read_text(encoding='utf-8')
+          reps={
+          "widget.productId != null ? 'កែប្រែទំនិញ' : 'បន្ថែមទំនិញថ្មី'":"widget.productId != null ? _t('កែប្រែទំនិញ', 'Edit product') : _t('បន្ថែមទំនិញថ្មី', 'Add product')",
+          'children: const [\n                    Icon(Icons.stars_rounded, color: Colors.black, size: 18),\n                    SizedBox(width: 4),\n                    Text(\n                      "ដាក់ដេញថ្លៃ",':'children: [\n                    const Icon(Icons.stars_rounded, color: Colors.black, size: 18),\n                    const SizedBox(width: 4),\n                    Text(\n                      _t(\'ដាក់ដេញថ្លៃ\', \'Add auction\'),',
+          '? "រូបភាពគ្រប់ចំនួនហើយ (១០/១០)"\n                    : "រើសរូបភាព (${selectedImages.length}/10)"':'? _t("រូបភាពគ្រប់ចំនួនហើយ (១០/១០)", "Photo limit reached (10/10)")\n                    : _t("រើសរូបភាព (${selectedImages.length}/10)", "Choose photos (${selectedImages.length}/10)")',
+          "? 'រើសវីដេអូបង្ហាញទំនិញ'\n                          : 'រើសវីដេអូរួចរាល់ ✅'":"? _t('រើសវីដេអូបង្ហាញទំនិញ', 'Choose product video')\n                          : _t('រើសវីដេអូរួចរាល់ ✅', 'Video selected ✅')",
+          "tooltip: 'មើលវីដេអូ'":"tooltip: _t('មើលវីដេអូ', 'Preview video')",
+          "tooltip: 'លុបវីដេអូ'":"tooltip: _t('លុបវីដេអូ', 'Remove video')",
+          '? "ជ្រើសទីតាំង *"\n                                    : locationController.text':'? _t("ជ្រើសទីតាំង *", "Choose location *")\n                                    : locationController.text',
+          "labelText: 'ប្រភេទលក់ *'":"labelText: _t('ប្រភេទលក់ *', 'Category *')",
+          "labelText: 'ប្រភេទរង (ស្រេចចិត្ត)'":"labelText: _t('ប្រភេទរង (ស្រេចចិត្ត)', 'Subcategory (optional)')",
+          "labelText: 'លក្ខខណ្ឌ (ស្រេចចិត្ត)'":"labelText: _t('លក្ខខណ្ឌ (ស្រេចចិត្ត)', 'Condition (optional)')",
+          "labelText: 'តម្លៃ (៛) *'":"labelText: _t('តម្លៃ (៛) *', 'Price (KHR) *')",
+          "title: const Text(\n                  'បានបូកទាំងថ្លៃផ្ញើ',":"title: Text(\n                  _t('បានបូកទាំងថ្លៃផ្ញើ', 'Shipping included'),",
+          "title: const Text(\n                  'មិនទាន់បូកថ្លៃផ្ញើ',":"title: Text(\n                  _t('មិនទាន់បូកថ្លៃផ្ញើ', 'Shipping not included'),",
+          "_buildTextField('លេខទី១ *', Icons.phone, phone1Controller)":"_buildTextField(_t('លេខទី១ *', 'Phone 1 *'), Icons.phone, phone1Controller)",
+          "'លេខទី២',\n            Icons.phone_android":"_t('លេខទី២', 'Phone 2'),\n            Icons.phone_android",
+          "child: const Text(\n                  'រក្សាទុកការផុស',":"child: Text(\n                  _t('រក្សាទុកការផុស', 'Save product'),",
+          "'ខ្វះព័ត៌មាន',\n                      'សូមមេមេ ជួយបំពេញព័ត៌មាន និងដាក់រូបថតឱ្យគ្រប់សិន!'":"_t('ខ្វះព័ត៌មាន', 'Missing information'),\n                      _t('សូមបំពេញព័ត៌មាន និងដាក់រូបថតឱ្យគ្រប់សិន!', 'Please complete the required information and add a product photo.')",
+          "'ខ្វះព័ត៌មាន',\n                      'សូមជ្រើសរើសថាតើតម្លៃនេះបូកថ្លៃផ្ញើរួចឬនៅ?'":"_t('ខ្វះព័ត៌មាន', 'Missing information'),\n                      _t('សូមជ្រើសរើសថាតើតម្លៃនេះបូកថ្លៃផ្ញើរួចឬនៅ?', 'Please choose whether shipping is included in the price.')",
+          "'🚀 កំពុងបង្ហោះ...',\n                    'ទំនិញរបស់មេកំពុងបង្ហោះហើយ!'":"_t('🚀 កំពុងបង្ហោះ...', '🚀 Uploading...'),\n                    _t('ទំនិញរបស់អ្នកកំពុងបង្ហោះហើយ!', 'Your product is being uploaded!')",
+          "title: const Text('បញ្ហាបង្ហោះ')":"title: Text(_t('បញ្ហាបង្ហោះ', 'Upload problem'))",
+          "content: Text('មិនអាចបង្ហោះបានទេ ដោយសារ៖ $message')":"content: Text(_t('មិនអាចបង្ហោះបានទេ ដោយសារ៖ $message', 'Unable to upload: $message'))",
+          "child: const Text('យល់ព្រម')":"child: Text(_t('យល់ព្រម', 'OK'))",
+          }
+          changed=0
+          for a,b in reps.items():
+              if a in s:
+                  s=s.replace(a,b); changed+=1
+          p.write_text(s,encoding='utf-8')
+          print('Add Product replacements:',changed,'/',len(reps))
+          if changed < 15:
+              raise SystemExit('Too few expected replacements; stopping to avoid an unsafe partial patch')
+          PY
+      - name: Commit localization changes
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add lib/add_product.dart
+          git diff --cached --check
+          git commit -m "Localize Add Product screen for Khmer and English"
+          git push origin HEAD:ios-sync-android46
