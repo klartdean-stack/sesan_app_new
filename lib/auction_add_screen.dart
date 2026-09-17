@@ -26,6 +26,9 @@ class AuctionAddScreen extends StatefulWidget {
 class _AuctionAddScreenState extends State<AuctionAddScreen>
     with TickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
+  String _t(String km, String en) =>
+      Localizations.localeOf(context).languageCode == 'en' ? en : km;
+
   final _productNameCtrl = TextEditingController();
   final _startPriceCtrl = TextEditingController();
   final _bidStepCtrl = TextEditingController();
@@ -585,7 +588,7 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
-                              'កំពុងបញ្ជូន... ${(_uploadController.uploadProgress.value * 100).toInt()}%',
+                              _t('កំពុងបញ្ជូន... ${(_uploadController.uploadProgress.value * 100).toInt()}%', 'Uploading... ${(_uploadController.uploadProgress.value * 100).toInt()}%'),
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 12,
@@ -630,8 +633,8 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
         ),
         onPressed: () => Navigator.pop(context),
       ),
-      title: const Text(
-        'ដាក់ដេញថ្លៃទំនិញ',
+      title: Text(
+        _t('ដាក់ដេញថ្លៃទំនិញ', 'Add auction'),
         style: TextStyle(
           color: _text,
           fontSize: 18,
@@ -647,7 +650,7 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
   }
 
   Widget _buildStepIndicator() {
-    final steps = ['ទំនិញ', 'តម្លៃ និងសេវា'];
+    final steps = [_t('ទំនិញ', 'Product'), _t('តម្លៃ និងសេវា', 'Price & service')];
     return Container(
       color: _bg,
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
@@ -746,17 +749,17 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _sectionHeader('📦', 'ព័ត៌មានទំនិញ', 'បំពេញព័ត៌មានអំពីទំនិញ'),
+        _sectionHeader('📦', _t('ព័ត៌មានទំនិញ', 'Product information'), _t('បំពេញព័ត៌មានអំពីទំនិញ', 'Add details about your product')),
         const SizedBox(height: 20),
-        _buildLabel('វីដេអូបង្ហាញទំនិញ (អតិបរមា ៩០វិនាទី) *'),
+        _buildLabel(_t('វីដេអូបង្ហាញទំនិញ (អតិបរមា ៩០វិនាទី) *', 'Product video (max 90 seconds) *')),
         const SizedBox(height: 8),
         _buildVideoPicker(),
         const SizedBox(height: 20),
-        _buildLabel('រូបភាពទំនិញ (ដល់ ៨ សន្លឹក) *'),
+        _buildLabel(_t('រូបភាពទំនិញ (ដល់ ៨ សន្លឹក) *', 'Product photos (up to 8) *')),
         const SizedBox(height: 8),
         _buildImagePicker(),
         const SizedBox(height: 8),
-        _buildLabel('ឈ្មោះទំនិញ *'),
+        _buildLabel(_t('ឈ្មោះទំនិញ *', 'Product name *')),
         const SizedBox(height: 8),
         _buildTextField(
           controller: _productNameCtrl,
@@ -768,18 +771,18 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
           onChanged: (_) => setState(() {}),
         ),
         const SizedBox(height: 16),
-        _buildLabel('ការរៀបរាប់'),
+        _buildLabel(_t('ការរៀបរាប់', 'Description')),
         const SizedBox(height: 8),
         _buildTextField(
           controller: _descriptionCtrl,
-          hint: 'ពិព័រណ៍អំពីស្ថានភាព លក្ខណៈពិសេស...',
+          hint: _t('ពិព័រណ៍អំពីស្ថានភាព លក្ខណៈពិសេស...', 'Describe the condition and key features...'),
           icon: Icons.description_outlined,
           keyboard: TextInputType.multiline,
           textInputAction: TextInputAction.newline,
           maxLines: 4,
         ),
         const SizedBox(height: 16),
-        _buildLabel('លេខទូរស័ព្ទ *'),
+        _buildLabel(_t('លេខទូរស័ព្ទ *', 'Phone number *')),
         const SizedBox(height: 8),
         _buildTextField(
           controller: _phoneCtrl,
@@ -805,13 +808,13 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
           border: Border.all(color: _productVideo != null ? _accent : _border),
         ),
         child: _productVideo == null
-            ? const Row(
+            ? Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(Icons.video_call_rounded, color: _accentBlue),
                   SizedBox(width: 10),
                   Text(
-                    'ចុចដើម្បីបន្ថែមវីដេអូ',
+                    _t('ចុចដើម្បីបន្ថែមវីដេអូ', 'Tap to add video'),
                     style: TextStyle(
                       color: _accentBlue,
                       fontFamily: 'Siemreap',
@@ -929,8 +932,8 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
                     ),
                   ),
                   const SizedBox(height: 10),
-                  const Text(
-                    'ចុចដើម្បីបន្ថែមរូបភាព',
+                  Text(
+                    _t('ចុចដើម្បីបន្ថែមរូបភាព', 'Tap to add photos'),
                     style: TextStyle(
                       color: _accentBlue,
                       fontWeight: FontWeight.w600,
@@ -938,8 +941,8 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
                     ),
                   ),
                   const SizedBox(height: 4),
-                  const Text(
-                    'រើសបានច្រើនបំផុត 8 សន្លឹក',
+                  Text(
+                    _t('រើសបានច្រើនបំផុត 8 សន្លឹក', 'Choose up to 8 photos'),
                     style: TextStyle(color: _textMuted, fontSize: 12),
                   ),
                 ],
@@ -1006,9 +1009,9 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _sectionHeader('💰', 'តម្លៃ & ពេលវេលា', 'កំណត់តម្លៃ និងពេលបញ្ចប់'),
+        _sectionHeader('💰', _t('តម្លៃ & ពេលវេលា', 'Price & time'), _t('កំណត់តម្លៃ និងពេលបញ្ចប់', 'Set the starting price and end time')),
         const SizedBox(height: 20),
-        _buildLabel('តម្លៃចាប់ផ្តើម (រៀល) *'),
+        _buildLabel(_t('តម្លៃចាប់ផ្តើម (រៀល) *', 'Starting price (KHR) *')),
         const SizedBox(height: 8),
         _buildTextField(
           controller: _startPriceCtrl,
@@ -1024,7 +1027,7 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
           onChanged: (_) => setState(() {}),
         ),
         const SizedBox(height: 16),
-        _buildLabel('ជំហានបង្កើនតម្លៃ (រៀល) *'),
+        _buildLabel(_t('ជំហានបង្កើនតម្លៃ (រៀល) *', 'Bid increment (KHR) *')),
         const SizedBox(height: 8),
         _buildTextField(
           controller: _bidStepCtrl,
@@ -1038,7 +1041,7 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
         if (_startPriceCtrl.text.isNotEmpty && _bidStepCtrl.text.isNotEmpty)
           _buildPricePreview(),
         const SizedBox(height: 20),
-        _buildLabel('ថ្ងៃ & ម៉ោងបញ្ចប់ *'),
+        _buildLabel(_t('ថ្ងៃ & ម៉ោងបញ្ចប់ *', 'End date & time *')),
         const SizedBox(height: 8),
         _buildDateTile(),
         const SizedBox(height: 32),
@@ -1061,9 +1064,9 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _miniStat('ដំបូង', '${fmt.format(start)} ៛', _accentBlue),
+          _miniStat(_t('ដំបូង', 'Start'), '${fmt.format(start)} ៛', _accentBlue),
           Container(width: 1, height: 30, color: _border),
-          _miniStat('ដេញទី១', '${fmt.format(start + step)} ៛', _accent),
+          _miniStat(_t('ដេញទី១', 'First bid'), '${fmt.format(start + step)} ៛', _accent),
           Container(width: 1, height: 30, color: _border),
           _miniStat('Step', '+${fmt.format(step)} ៛', const Color(0xFFFFB300)),
         ],
