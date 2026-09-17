@@ -54,6 +54,9 @@ class ProductDetailScreen extends StatefulWidget {
 }
 
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
+  String _t(String km, String en) =>
+      Localizations.localeOf(context).languageCode == 'en' ? en : km;
+
   String _maskSellerPhone(dynamic value) {
     final phone = (value ?? '').toString().trim().replaceAll(
       RegExp(r'\s+'),
@@ -532,7 +535,7 @@ Product ID៖ $productId
       await Share.shareXFiles([XFile(file.path)], text: 'Sesan App');
     } catch (e) {
       debugPrint("Error: $e");
-      // _showSnack('❌ កំហុស: $e', Colors.red);
+      // _showSnack(_t('❌ កំហុស: $e', '❌ Error: $e'), Colors.red);
       // 🎯 កូដសម្រាប់បង្ហាញសារ "បានរក្សាទុក" ឱ្យលោតពីលើចុះមក
       Get.snackbar(
         "ជោគជ័យ!", // ចំណងជើង
@@ -562,7 +565,7 @@ Product ID៖ $productId
 
     // 2. ទាញទិន្នន័យផលិតផល
     final String productId = widget.product['id'] ?? '';
-    final String productName = widget.product['product_name'] ?? 'ទំនិញថ្មី';
+    final String productName = widget.product['product_name'] ?? _t('ទំនិញថ្មី', 'New product');
 
     String priceString = (widget.product['price'] ?? '0').toString().replaceAll(
       ',',
@@ -571,7 +574,7 @@ Product ID៖ $productId
     double priceValue = double.tryParse(priceString) ?? 0;
     String price = NumberFormat('#,###').format(priceValue);
     String currency = widget.product['currency']?.toString() ?? '៛';
-    String location = widget.product['location'] ?? 'ភ្នំពេញ';
+    String location = widget.product['location'] ?? _t('ភ្នំពេញ', 'Phnom Penh');
 
     // 3. Link សម្រាប់ចែករំលែក
     final String webLink = "https://sesanshop.com/product/$productId";
@@ -586,13 +589,13 @@ Product ID៖ $productId
     final String shareMessage =
         '''
 🛍️ $productName
-💰 តម្លៃ៖ $price $currency
+💰 ${_t('តម្លៃ', 'Price')}: $price $currency
 📍 $location
 
-🔗 មើលទំនិញ៖
+🔗 ${_t('មើលទំនិញ', 'View product')}:
 $webLink
 
-📲 ទាញយក App Sesan៖
+📲 ${_t('ទាញយក Sesan App', 'Download Sesan App')}:
 iOS: $iosAppStoreLink
 Android: $androidPlayStoreLink
 ''';
@@ -643,8 +646,8 @@ Android: $androidPlayStoreLink
                   ),
                 ),
                 const SizedBox(height: 20),
-                const Text(
-                  "ចែករំលែកទំនិញ",
+                Text(
+                  _t('ចែករំលែកទំនិញ', 'Share product'),
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 18,
@@ -657,8 +660,8 @@ Android: $androidPlayStoreLink
                 _buildOptionTile(
                   icon: Icons.link,
                   color: Colors.blue[700]!,
-                  title: "ចែករំលែក Link ទំនិញ",
-                  subtitle: "ផ្ញើរូបភាពមាន QR Code និង Link",
+                  title: _t('ចែករំលែក Link ទំនិញ', 'Share product link'),
+                  subtitle: _t('ផ្ញើរូបភាពមាន QR Code និង Link', 'Send an image with QR code and link'),
                   onTap: () {
                     Navigator.pop(context);
                     _shareProductWithWatermark(); // ✅ ហៅ method ថ្មី
@@ -670,8 +673,8 @@ Android: $androidPlayStoreLink
                 _buildOptionTile(
                   icon: Icons.download,
                   color: Colors.green,
-                  title: "រក្សាទុករូបភាព (Watermark)",
-                  subtitle: "រក្សាទុកក្នុង Gallery",
+                  title: _t('រក្សាទុករូបភាព (Watermark)', 'Save image (watermark)'),
+                  subtitle: _t('រក្សាទុកក្នុង Gallery', 'Save to Gallery'),
                   onTap: () {
                     Navigator.pop(context);
                     _processWatermarkAction(firstImage, isShare: false);
@@ -819,7 +822,7 @@ Android: $androidPlayStoreLink
       ], text: '${widget.product['product_name'] ?? 'Sesan Product'}');
     } catch (e) {
       Get.back();
-      _showSnack('❌ កំហុស: $e', Colors.red);
+      _showSnack(_t('❌ កំហុស: $e', '❌ Error: $e'), Colors.red);
     }
   }
 
@@ -867,19 +870,19 @@ Android: $androidPlayStoreLink
     if (_isSubmittingRating) return;
 
     if (rating < 1 || rating > 5) {
-      _showSnack('សូមជ្រើសរើសពិន្ទុពី 1 ដល់ 5', Colors.orange);
+      _showSnack(_t('សូមជ្រើសរើសពិន្ទុពី 1 ដល់ 5', 'Please choose a rating from 1 to 5'), Colors.orange);
       return;
     }
 
     final uid = _currentUserId ?? FirebaseAuth.instance.currentUser?.uid;
     if (uid == null || uid.isEmpty) {
-      _showSnack('សូម Login មុនពេលផ្ដល់ពិន្ទុ', Colors.orange);
+      _showSnack(_t('សូមចូលគណនីមុនពេលផ្ដល់ពិន្ទុ', 'Please sign in before rating'), Colors.orange);
       return;
     }
 
     final productId = widget.product['id']?.toString() ?? '';
     if (productId.isEmpty) {
-      _showSnack('រកមិនឃើញ Product ID', Colors.red);
+      _showSnack(_t('រកមិនឃើញ Product ID', 'Product ID not found'), Colors.red);
       return;
     }
 
@@ -895,7 +898,7 @@ Android: $androidPlayStoreLink
       await firestore.runTransaction((transaction) async {
         final productSnapshot = await transaction.get(productRef);
         if (!productSnapshot.exists) {
-          throw Exception('Product មិនមានក្នុង Firestore');
+          throw Exception(_t('មិនមានទំនិញនេះក្នុងប្រព័ន្ធ', 'Product not found'));
         }
 
         final ratingSnapshot = await transaction.get(ratingRef);
@@ -994,7 +997,7 @@ Android: $androidPlayStoreLink
       ], text: 'Sesan Store - មើលផលិតផលនេះក្នុង App');
     } catch (e) {
       Get.back();
-      _showSnack('❌ កំហុស: $e', Colors.red);
+      _showSnack(_t('❌ កំហុស: $e', '❌ Error: $e'), Colors.red);
     }
   }
 
@@ -1710,8 +1713,8 @@ Android: $androidPlayStoreLink
                                         child: Text(
                                           widget.product['shipping_included'] ==
                                                   true
-                                              ? 'បូកថ្លៃដឹកជញ្ជូនរួចរាល់'
-                                              : 'មិនទាន់បូកថ្លៃដឹកជញ្ជូន',
+                                              ? _t('បូកថ្លៃដឹកជញ្ជូនរួចរាល់', 'Shipping included')
+                                              : _t('មិនទាន់បូកថ្លៃដឹកជញ្ជូន', 'Shipping not included'),
                                           style: TextStyle(
                                             color:
                                                 widget.product['shipping_included'] ==
@@ -1729,7 +1732,7 @@ Android: $androidPlayStoreLink
                                 ),
                               ],
                               Text(
-                                _shownProductName('គ្មានឈ្មោះ'),
+                                _shownProductName(_t('គ្មានឈ្មោះ', 'Unnamed product')),
                                 style: const TextStyle(
                                   fontSize: 18,
                                   height: 1.25,
@@ -1989,7 +1992,7 @@ Android: $androidPlayStoreLink
                                             const SizedBox(width: 4),
                                             Text(
                                               '${avgRating.toStringAsFixed(1)} '
-                                              '($totalReviews នាក់)',
+                                              Localizations.localeOf(context).languageCode == 'en' ? '($totalReviews reviews)' : '($totalReviews នាក់)',
                                               style: const TextStyle(
                                                 fontSize: 11,
                                                 fontWeight: FontWeight.bold,
@@ -2001,7 +2004,7 @@ Android: $androidPlayStoreLink
                                         const SizedBox(height: 4),
                                         Text(
                                           myRating > 0
-                                              ? 'ពិន្ទុរបស់អ្នក៖ ${myRating.toStringAsFixed(1)}'
+                                              ? _t('ពិន្ទុរបស់អ្នក៖ ${myRating.toStringAsFixed(1)}', 'Your rating: ${myRating.toStringAsFixed(1)}')
                                               : 'ចុចផ្កាយដើម្បីផ្ដល់ពិន្ទុ',
                                           style: TextStyle(
                                             fontSize: 11,

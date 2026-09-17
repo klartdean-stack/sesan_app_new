@@ -1881,8 +1881,8 @@ class _ProductGridViewState extends State<ProductGridView>
     final bool? shippingIncluded = data['shipping_included'];
 
     final String name = isWanted
-        ? (data['productName'] ?? 'គ្មានឈ្មោះ')
-        : (data['product_name'] ?? 'គ្មានឈ្មោះ');
+        ? (data['productName'] ?? appText(context, km: 'គ្មានឈ្មោះ', en: 'Unnamed product'))
+        : (data['product_name'] ?? appText(context, km: 'គ្មានឈ្មោះ', en: 'Unnamed product'));
     final String price = (data['price'] ?? '0').toString();
     final String location = (data['location'] ?? 'ភ្នំពេញ').toString();
     final dynamic timestamp =
@@ -2530,7 +2530,7 @@ class _ProductGridViewState extends State<ProductGridView>
 
       await FirebaseFirestore.instance.collection('carts').add({
         'product_id': productId,
-        'product_name': product['product_name'] ?? 'គ្មានឈ្មោះ',
+        'product_name': product['product_name'] ?? appText(context, km: 'គ្មានឈ្មោះ', en: 'Unnamed product'),
         'price': product['price'] ?? 0,
         'currency': product['currency'] ?? '៛',
         'image_url': finalImageUrl,
