@@ -37,7 +37,8 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  String _t(String km, String en) => Localizations.localeOf(context).languageCode == 'en' ? en : km;
+  String _t(String km, String en) =>
+      Localizations.localeOf(context).languageCode == 'en' ? en : km;
 
   int _currentIndex = 0;
   String _selectedCategory = "ទាំងអស់";
@@ -54,8 +55,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
     final primary = value.split('|').first.trim();
     _homeSearchController.text = primary;
-    _homeSearchController.selection =
-        TextSelection.collapsed(offset: primary.length);
+    _homeSearchController.selection = TextSelection.collapsed(
+      offset: primary.length,
+    );
 
     setState(() => _searchQuery = value.toLowerCase());
   }
@@ -154,9 +156,10 @@ class _HomeScreenState extends State<HomeScreen> {
               .collection('users')
               .doc(userId)
               .update({
-            'fcmToken': token,
-            'lastUpdate': FieldValue.serverTimestamp(), // ថែមម៉ោងដែលវា Update
-          });
+                'fcmToken': token,
+                'lastUpdate':
+                    FieldValue.serverTimestamp(), // ថែមម៉ោងដែលវា Update
+              });
         }
       }
     } catch (e) {
@@ -211,20 +214,31 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   String _categoryLabel(String name) {
-  switch (name) {
-    case 'ទាំងអស់': return _t('ទាំងអស់', 'All');
-    case 'គ្រឿងចក្រ': return _t('គ្រឿងចក្រ', 'Machinery');
-    case 'សម្ភារៈកសិកម្ម': return _t('សម្ភារៈកសិកម្ម', 'Farm supplies');
-    case 'ពូជដំណាំ': return _t('ពូជដំណាំ', 'Crop seeds');
-    case 'ពូជសត្វចិញ្ចឹម': return _t('ពូជសត្វចិញ្ចឹម', 'Livestock');
-    case 'ជីនិងថ្នាំ': return _t('ជីនិងថ្នាំ', 'Fertilizer & chemicals');
-    case 'បន្លែផ្លែឈើ': return _t('បន្លែផ្លែឈើ', 'Fruit & vegetables');
-    case 'ត្រីសាច់': return _t('ត្រីសាច់', 'Fish & meat');
-    case 'សេវាកម្ម': return _t('សេវាកម្ម', 'Services');
-    case 'ផ្សេងៗ': return _t('ផ្សេងៗ', 'Other');
-    default: return name;
+    switch (name) {
+      case 'ទាំងអស់':
+        return _t('ទាំងអស់', 'All');
+      case 'គ្រឿងចក្រ':
+        return _t('គ្រឿងចក្រ', 'Machinery');
+      case 'សម្ភារៈកសិកម្ម':
+        return _t('សម្ភារៈកសិកម្ម', 'Farm supplies');
+      case 'ពូជដំណាំ':
+        return _t('ពូជដំណាំ', 'Crop seeds');
+      case 'ពូជសត្វចិញ្ចឹម':
+        return _t('ពូជសត្វចិញ្ចឹម', 'Livestock');
+      case 'ជីនិងថ្នាំ':
+        return _t('ជីនិងថ្នាំ', 'Fertilizer & chemicals');
+      case 'បន្លែផ្លែឈើ':
+        return _t('បន្លែផ្លែឈើ', 'Fruit & vegetables');
+      case 'ត្រីសាច់':
+        return _t('ត្រីសាច់', 'Fish & meat');
+      case 'សេវាកម្ម':
+        return _t('សេវាកម្ម', 'Services');
+      case 'ផ្សេងៗ':
+        return _t('ផ្សេងៗ', 'Other');
+      default:
+        return name;
+    }
   }
-}
 
   final List<Map<String, dynamic>> categories = [
     {'name': 'ទាំងអស់', 'icon': Icons.apps, 'isIcon': true},
@@ -260,11 +274,12 @@ class _HomeScreenState extends State<HomeScreen> {
   ];
 
   @override
-void dispose() {
-  _homeSearchController.dispose();
-  _searchAiController?.dispose();
-  super.dispose();
-}
+  void dispose() {
+    _homeSearchController.dispose();
+    _searchAiController?.dispose();
+    super.dispose();
+  }
+
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final UploadController uploadController = Get.find<UploadController>();
@@ -317,8 +332,9 @@ void dispose() {
                           ),
                           prefixIcon: const Icon(Icons.search, size: 20),
                           // ✅ ប៊ូតុងស្កែន QR
-                          suffixIconConstraints:
-                              const BoxConstraints.tightFor(width: 96),
+                          suffixIconConstraints: const BoxConstraints.tightFor(
+                            width: 96,
+                          ),
                           suffixIcon: Row(
                             children: [
                               SizedBox(
@@ -348,8 +364,8 @@ void dispose() {
                                         : Icons.mic,
                                     color:
                                         _searchAiController?.recording == true
-                                            ? Colors.red
-                                            : Colors.green,
+                                        ? Colors.red
+                                        : Colors.green,
                                     size: 21,
                                   ),
                                 ),
@@ -376,8 +392,9 @@ void dispose() {
                             ],
                           ),
                           border: InputBorder.none,
-                          contentPadding:
-                              const EdgeInsets.symmetric(vertical: 9),
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 9,
+                          ),
                         ),
                       ),
                     ),
@@ -525,7 +542,10 @@ void dispose() {
         onPressed: () {
           // ២. កែសម្រួលការឆែកត្រង់ប៊ូតុង (+) ផុសលក់
           if (isGuest) {
-            _showLoginRequiredDialog(context, "ដើម្បីផុសលក់ទំនិញបាន");
+            _showLoginRequiredDialog(
+              context,
+              _t('ដើម្បីផុសលក់ទំនិញបាន', 'to post a product'),
+            );
           } else {
             setState(() => _currentIndex = 2);
           }
@@ -543,11 +563,19 @@ void dispose() {
       context: context,
       builder: (context) => AlertDialog(
         title: Text(_t('សូមចូលប្រើប្រាស់', 'Sign in required')),
-        content: Text("$actionText មេត្រូវចូលប្រើប្រាស់គណនីជាមុនសិន។"),
+        content: Text(
+          _t(
+            '$actionText មេត្រូវចូលប្រើប្រាស់គណនីជាមុនសិន។',
+            'Please sign in $actionText.',
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(_t('មើលសិន', 'Not now'), style: const TextStyle(color: Colors.grey)),
+            child: Text(
+              _t('មើលសិន', 'Not now'),
+              style: const TextStyle(color: Colors.grey),
+            ),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
@@ -555,9 +583,9 @@ void dispose() {
               Navigator.pop(context);
               Navigator.pushNamed(context, '/login');
             },
-            child: const Text(
-              "ទៅ Login",
-              style: TextStyle(color: Colors.white),
+            child: Text(
+              _t('ទៅ Login', 'Go to sign in'),
+              style: const TextStyle(color: Colors.white),
             ),
           ),
         ],
@@ -589,7 +617,10 @@ void dispose() {
       onTap: () {
         // បើមិនទាន់ Login ហើយចុចប៊ូតុងផ្សេងក្រៅពីទំព័រដើម ឱ្យលោត Dialog
         if (index != 0 && isGuest) {
-          _showLoginRequiredDialog(context, "ដើម្បីប្រើប្រាស់មុខងារនេះ");
+          _showLoginRequiredDialog(
+            context,
+            _t('ដើម្បីប្រើប្រាស់មុខងារនេះ', 'to use this feature'),
+          );
         } else {
           setState(() => _currentIndex = index);
         }
@@ -738,7 +769,8 @@ void dispose() {
                                     ),
                                     decoration: BoxDecoration(
                                       color: Colors
-                                          .amber.shade600, // ប្ដូរពីបៃតងទៅមាស
+                                          .amber
+                                          .shade600, // ប្ដូរពីបៃតងទៅមាស
                                       borderRadius: BorderRadius.circular(20),
                                       boxShadow: [
                                         BoxShadow(
@@ -855,7 +887,10 @@ void dispose() {
                               if (uid.isEmpty) {
                                 _showLoginRequiredDialog(
                                   context,
-                                  "ដើម្បីប្រកាសទិញបាន",
+                                  _t(
+                                    'ដើម្បីប្រកាសទិញបាន',
+                                    'to post a wanted request',
+                                  ),
                                 );
                               } else {
                                 // ២. បើ Login ហើយ ឱ្យវាបាញ់ទៅ Screen ផុស
@@ -868,9 +903,9 @@ void dispose() {
                                 );
                               }
                             },
-                            label: const Text(
+                            label: Text(
                               _t('ប្រកាសទិញ', 'Wanted'),
-                              style: TextStyle(fontFamily: 'Siemreap'),
+                              style: const TextStyle(fontFamily: 'Siemreap'),
                             ),
                             icon: const Icon(Icons.campaign),
                             backgroundColor: Colors.blue[700],
@@ -893,7 +928,7 @@ void dispose() {
                   } else if (tabController.index == 1) {
                     // 🎯 បង្ហាញប៊ូតុង "ចុះឈ្មោះលក់មុន" ពេលនៅ Tab ទី ៣
                     return _buildFloatingBtn(
-                      "ចុះឈ្មោះលក់មុន",
+                      _t('ចុះឈ្មោះលក់មុន', 'Add pre-order'),
                       Icons.timer_outlined,
                       Colors.orange[800]!,
                       const AddPreOrderScreen(),
@@ -993,8 +1028,9 @@ void dispose() {
               Text(
                 _categoryLabel(item['name']),
                 style: TextStyle(
-                  fontSize:
-                      isDesktop ? 13 : 10, // លើ Web ឱ្យអក្សរធំជាងមុនបន្តិច
+                  fontSize: isDesktop
+                      ? 13
+                      : 10, // លើ Web ឱ្យអក្សរធំជាងមុនបន្តិច
                   fontWeight: isDesktop ? FontWeight.w500 : FontWeight.normal,
                   color: Colors.black,
                 ),
