@@ -1071,15 +1071,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                         ),
                         const SizedBox(width: 8),
-                        GestureDetector(
-                          onTap: () =>
-                              setState(() => _hideBalance = !_hideBalance),
-                          child: Icon(
+                        IconButton(
+                          onPressed: () {
+                            setState(() => _hideBalance = !_hideBalance);
+                          },
+                          tooltip:
+                              _hideBalance ? 'Show balance' : 'Hide balance',
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(
+                            minWidth: 48,
+                            minHeight: 48,
+                          ),
+                          icon: Icon(
                             _hideBalance
                                 ? Icons.visibility_off_outlined
                                 : Icons.visibility_outlined,
-                            color: Colors.grey[400],
-                            size: 18,
+                            color: Colors.grey[500],
+                            size: 22,
                           ),
                         ),
                       ],
