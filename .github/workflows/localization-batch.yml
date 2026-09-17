@@ -21,8 +21,6 @@ jobs:
           from pathlib import Path
           p=Path('lib/auction_detail_screen.dart')
           s=p.read_text(encoding='utf-8')
-
-          # Match Auction Main/Add Auction: light Sesan green/orange/white.
           theme={
             "static const _bg = Color(0xFF0D1117);":"static const _bg = Color(0xFFF7FAF7);",
             "static const _card = Color(0xFF161B22);":"static const _card = Colors.white;",
@@ -37,15 +35,10 @@ jobs:
           for a,b in theme.items():
             if a not in s: raise SystemExit(f'missing theme token: {a}')
             s=s.replace(a,b,1)
-
           marker="  static const _gold = Color(0xFFF57C00);\n"
           helper="\n  String _t(String km, String en) =>\n      Localizations.localeOf(context).languageCode == 'en' ? en : km;\n"
           if helper not in s: s=s.replace(marker, marker+helper, 1)
-
-          # Remove dark-page behavior while retaining readable overlay controls on media.
           s=s.replace('systemOverlayStyle: SystemUiOverlayStyle.light,','systemOverlayStyle: SystemUiOverlayStyle.dark,')
-
-          # Localize high-value visible strings without touching Firestore field values/business logic.
           reps={
             "data['name'] ?? data['displayName'] ?? 'គ្មានឈ្មោះ'":"data['name'] ?? data['displayName'] ?? _t('គ្មានឈ្មោះ', 'Unnamed')",
             "_showSnack('❌ សូម Login មុនសិន', _red);":"_showSnack(_t('❌ សូម Login មុនសិន', '❌ Please log in first'), _red);",
@@ -63,8 +56,6 @@ jobs:
             "'រកឈ្មោះ...'":"_t('រកឈ្មោះ...', 'Loading name...')",
           }
           for a,b in reps.items(): s=s.replace(a,b)
-
-          # Const widgets that now contain _t must become runtime widgets.
           s=s.replace("const Text(\n                'លុបការដេញថ្លៃ?',", "Text(\n                _t('លុបការដេញថ្លៃ?', 'Delete auction?'),")
           s=s.replace("child: const Text('បោះបង់', style:", "child: Text(_t('បោះបង់', 'Cancel'), style:")
           s=s.replace("child: const Text(\n                        'លុប',", "child: Text(\n                        _t('លុប', 'Delete'),")
@@ -72,17 +63,13 @@ jobs:
           s=s.replace("child: const Text(\n                            'យល់ព្រម',", "child: Text(\n                            _t('យល់ព្រម', 'Confirm'),")
           s=s.replace("child: const Row(\n          mainAxisSize: MainAxisSize.min,", "child: Row(\n          mainAxisSize: MainAxisSize.min,")
           s=s.replace("Text(\n              'ចប់ហើយ',", "Text(\n              _t('ចប់ហើយ', 'Ended'),")
-          s=s.replace("child: const Row(\n                        children: [\n                          Icon(Icons.history_rounded", "child: Row(\n                        children: [\n                          const Icon(Icons.history_rounded")
+          s=s.replace("const Row(\n                        children: [\n                          Icon(Icons.history_rounded", "Row(\n                        children: [\n                          const Icon(Icons.history_rounded")
           s=s.replace("Text(\n                            'ប្រវត្តិដេញថ្លៃ',", "Text(\n                            _t('ប្រវត្តិដេញថ្លៃ', 'Bid history'),")
           s=s.replace("child: const Center(\n                                child: Column(", "child: Center(\n                                child: Column(")
           s=s.replace("Icon(Icons.gavel_rounded, color: _textMuted, size: 32),\n                                    SizedBox(height: 8),\n                                    Text('មិនទាន់មានអ្នកដេញ'", "const Icon(Icons.gavel_rounded, color: _textMuted, size: 32),\n                                    const SizedBox(height: 8),\n                                    Text(_t('មិនទាន់មានអ្នកដេញ', 'No bids yet')")
-
-          # LIVE label bilingual.
           s=s.replace("child: const Row(\n                            mainAxisSize: MainAxisSize.min,\n                            children: [\n                              Icon(Icons.circle, size: 7, color: Colors.white),\n                              SizedBox(width: 4),\n                              Text('LIVE'", "child: Row(\n                            mainAxisSize: MainAxisSize.min,\n                            children: [\n                              const Icon(Icons.circle, size: 7, color: Colors.white),\n                              const SizedBox(width: 4),\n                              Text(_t('កំពុងដេញថ្លៃ', 'LIVE')")
-
           p.write_text(s,encoding='utf-8')
           PY
-          dart format lib/auction_detail_screen.dart
           git diff --check
       - name: Verify preserved auction logic
         run: |
