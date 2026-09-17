@@ -5,6 +5,9 @@ import 'package:intl/intl.dart';
 class AppAccountantScreen extends StatelessWidget {
   const AppAccountantScreen({super.key});
 
+  String _t(BuildContext context, String km, String en) =>
+      Localizations.localeOf(context).languageCode == 'en' ? en : km;
+
   @override
   Widget build(BuildContext context) {
     final currencyFormat = NumberFormat("#,###", "en_US");
@@ -14,9 +17,9 @@ class AppAccountantScreen extends StatelessWidget {
       appBar: AppBar(
         elevation: 0,
         backgroundColor: const Color(0xFF1A1A2E),
-        title: const Text(
-          'Accountant Pro ជំនួយការ Admin',
-          style: TextStyle(
+        title: Text(
+          _t(context, 'Accountant Pro ជំនួយការ Admin', 'Accountant Pro · Admin Assistant'),
+          style: const TextStyle(
             color: Colors.amber,
             fontWeight: FontWeight.bold,
             fontSize: 18,
@@ -29,78 +32,75 @@ class AppAccountantScreen extends StatelessWidget {
             .doc('wallet')
             .snapshots(),
         builder: (context, snapshot) {
-          if (snapshot.hasError)
-            return const Center(
+          if (snapshot.hasError) {
+            return Center(
               child: Text(
-                "មានបញ្ហាទិន្នន័យ",
-                style: TextStyle(color: Colors.white),
+                _t(context, 'មានបញ្ហាទិន្នន័យ', 'Unable to load financial data'),
+                style: const TextStyle(color: Colors.white),
               ),
             );
-          if (!snapshot.hasData)
+          }
+          if (!snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
+          }
 
           final data = snapshot.data!.data() as Map<String, dynamic>? ?? {};
 
           return ListView(
             padding: const EdgeInsets.all(15),
             children: [
-              // តារាងទី ១៖ ចំណូលសរុប (១០០%)
               _buildFinanceCard(
-                "ចំណូលសរុប (100%)",
+                _t(context, 'ចំណូលសរុប (100%)', 'Gross revenue (100%)'),
                 data['total_gross_revenue'] ?? 0,
                 Colors.blueAccent,
                 Icons.trending_up,
                 currencyFormat,
               ),
               const SizedBox(height: 12),
-
-              // តារាងទី ២៖ ចំណេញសុទ្ធក្រុមហ៊ុន (៧%)
               _buildFinanceCard(
-                "ប្រាក់ចំណេញសុទ្ធ (7%)",
+                _t(context, 'ប្រាក់ចំណេញសុទ្ធ (7%)', 'Company earnings (7%)'),
                 data['total_earnings'] ?? 0,
                 Colors.greenAccent,
                 Icons.account_balance_wallet,
                 currencyFormat,
               ),
               const SizedBox(height: 12),
-
-              // តារាងទី ៣៖ ទូទាត់ទៅអ្នកលក់ (៩៣%)
               _buildFinanceCard(
-                "បានទូទាត់ទៅ Seller (93%)",
+                _t(context, 'បានទូទាត់ទៅអ្នកលក់ (93%)', 'Paid to sellers (93%)'),
                 data['total_seller_payout'] ?? 0,
                 Colors.orangeAccent,
                 Icons.outbox,
                 currencyFormat,
               ),
-
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 20),
                 child: Divider(color: Colors.white24, thickness: 1),
               ),
-
-              // ផ្នែករង់ចាំ (Pending)
               _buildFinanceCard(
-                "លុយ 7% កំពុងរង់ចាំ (Pending)",
+                _t(context, 'លុយ 7% កំពុងរង់ចាំ', 'Pending commission (7%)'),
                 data['pending_commissions'] ?? 0,
                 Colors.grey,
                 Icons.hourglass_bottom,
                 currencyFormat,
               ),
-
               const SizedBox(height: 20),
-              const Text(
-                "របាយការណ៍សង្ខេប",
-                style: TextStyle(
+              Text(
+                _t(context, 'របាយការណ៍សង្ខេប', 'Summary'),
+                style: const TextStyle(
                   color: Colors.white70,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const ListTile(
-                leading: Icon(Icons.check_circle, color: Colors.blue),
+              ListTile(
+                leading: const Icon(Icons.check_circle, color: Colors.blue),
                 title: Text(
-                  "រាល់ទិន្នន័យត្រូវបានបូកសរុបស្វ័យប្រវត្តិពេលអ្នកលក់ Accept Order",
-                  style: TextStyle(color: Colors.white54, fontSize: 12),
+                  _t(
+                    context,
+                    'រាល់ទិន្នន័យត្រូវបានបូកសរុបស្វ័យប្រវត្តិពេលអ្នកលក់ទទួលយកការបញ្ជាទិញ',
+                    'Financial totals are updated automatically when a seller accepts an order.',
+                  ),
+                  style: const TextStyle(color: Colors.white54, fontSize: 12),
                 ),
               ),
             ],
@@ -117,7 +117,7 @@ class AppAccountantScreen extends StatelessWidget {
     IconData icon,
     NumberFormat format,
   ) {
-    double value = double.tryParse(amount.toString()) ?? 0;
+    final value = double.tryParse(amount.toString()) ?? 0;
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
@@ -146,7 +146,7 @@ class AppAccountantScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 5),
                 Text(
-                  "${format.format(value)} ៛",
+                  '${format.format(value)} ៛',
                   style: TextStyle(
                     color: color,
                     fontSize: 22,
