@@ -15,67 +15,87 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ios-sync-android46
-      - name: Localize Payment Receipt and Withdraw
+      - name: Localize account screens
         run: |
           python3 - <<'PY'
           from pathlib import Path
 
-          # Receipt checkout already uses appText for nearly all visible UI.
-          # Localize persisted fallback names without changing payment/ABA/QR logic.
-          p=Path('lib/receipt_screen.dart'); s=p.read_text(encoding='utf-8')
-          s=s.replace("data['product_name'] ?? 'គ្មានឈ្មោះ'", "data['product_name'] ?? _t('គ្មានឈ្មោះ', 'Unnamed product')")
-          s=s.replace("data['seller_name'] ?? 'អាជីវករ សេសាន'", "data['seller_name'] ?? _t('អាជីវករ សេសាន', 'Sesan seller')")
-          p.write_text(s,encoding='utf-8')
-
-          # Auto KHQR payment: localize the three visible labels only.
-          p=Path('lib/paymentauto_screen.dart'); s=p.read_text(encoding='utf-8')
-          marker='class PaymentScreen extends StatelessWidget {\n'
-          h="  String _t(BuildContext context, String km, String en) =>\n      Localizations.localeOf(context).languageCode == 'en' ? en : km;\n\n"
-          if h not in s: s=s.replace(marker,marker+h,1)
-          s=s.replace('appBar: AppBar(title: const Text("ទូទាត់ប្រាក់"))', 'appBar: AppBar(title: Text(_t(context, "ទូទាត់ប្រាក់", "Payment")))')
-          s=s.replace('Text("ទឹកប្រាក់៖ $totalAmount ៛",', 'Text("${_t(context, \'ទឹកប្រាក់\', \'Amount\')}: $totalAmount ៛",')
-          s=s.replace('ElevatedButton(onPressed: _launchABA, child: const Text("បើក App ABA បង់លុយអូតូ"))', 'ElevatedButton(onPressed: _launchABA, child: Text(_t(context, "បើក App ABA បង់លុយអូតូ", "Open ABA app to pay")))')
-          p.write_text(s,encoding='utf-8')
-
-          # Withdraw main screen is already bilingual via appText; keep secureWithdraw and wallet logic untouched.
-
-          # Withdrawal detail was fully hard-coded Khmer. Localize display chrome/status only.
-          p=Path('lib/seller_withdrawal_detail.dart'); s=p.read_text(encoding='utf-8')
-          marker='class SellerWithdrawalDetail extends StatelessWidget {\n'
-          h="  String _t(BuildContext context, String km, String en) =>\n      Localizations.localeOf(context).languageCode == 'en' ? en : km;\n\n"
-          if h not in s: s=s.replace(marker,marker+h,1)
-          s=s.replace(': "កំពុងរង់ចាំ";', ': _t(context, "កំពុងរង់ចាំ", "Pending");')
-          s=s.replace('title: const Text(\n          "លម្អិតប្រតិបត្តិការ",', 'title: Text(\n          _t(context, "លម្អិតប្រតិបត្តិការ", "Transaction details"),')
-          s=s.replace('const Text(\n                    "ដកប្រាក់ជោគជ័យ",', 'Text(\n                    _t(context, "ដកប្រាក់ជោគជ័យ", "Withdrawal successful"),')
+          p=Path('lib/forgot_password_screen.dart'); s=p.read_text(encoding='utf-8')
+          marker='class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {\n'
+          h="  String _t(String km, String en) =>\n      Localizations.localeOf(context).languageCode == 'en' ? en : km;\n\n"
+          if h not in s: s=s.replace(marker, marker+h, 1)
           reps={
-            '_buildDetailRow("ឈ្មោះគណនី", data[\'account_name\'] ?? "N/A")':'_buildDetailRow(_t(context, "ឈ្មោះគណនី", "Account name"), data[\'account_name\'] ?? "N/A")',
-            '_buildDetailRow("លេខគណនី", data[\'account_number\'] ?? "N/A")':'_buildDetailRow(_t(context, "លេខគណនី", "Account number"), data[\'account_number\'] ?? "N/A")',
-            '_buildDetailRow("អត្តសញ្ញាណប័ណ្ណ", data[\'id_card\'] ?? "N/A")':'_buildDetailRow(_t(context, "អត្តសញ្ញាណប័ណ្ណ", "ID card"), data[\'id_card\'] ?? "N/A")',
-            '_buildDetailRow("កាលបរិច្ឆេទអនុម័ត", approvedAt)':'_buildDetailRow(_t(context, "កាលបរិច្ឆេទអនុម័ត", "Approved at"), approvedAt)',
-            '_buildDetailRow("ស្ថានភាព", "ជោគជ័យ", isStatus: true)':'_buildDetailRow(_t(context, "ស្ថានភាព", "Status"), _t(context, "ជោគជ័យ", "Successful"), isStatus: true)',
-            '"សន្លឹកបញ្ជាក់ការផ្ទេរប្រាក់ (Receipt)",':'_t(context, "សន្លឹកបញ្ជាក់ការផ្ទេរប្រាក់ (Receipt)", "Transfer receipt"),',
-            '_buildImageSection("កូដ QR សម្រាប់ទទួលលុយ", data[\'khqr_url\'])':'_buildImageSection(_t(context, "កូដ QR សម្រាប់ទទួលលុយ", "QR code for receiving money"), data[\'khqr_url\'])',
+            "_showSnack('មិនមានគណនីចុះឈ្មោះជាមួយលេខនេះទេ', isError: true);":"_showSnack(_t('មិនមានគណនីចុះឈ្មោះជាមួយលេខនេះទេ', 'No account is registered with this phone number'), isError: true);",
+            "_showSnack('បរាជ័យ៖ ${e.message}', isError: true);":"_showSnack('${_t('បរាជ័យ', 'Failed')}: ${e.message}', isError: true);",
+            "_showSnack('បានផ្ញើ OTP ជោគជ័យ!', isError: false);":"_showSnack(_t('បានផ្ញើ OTP ជោគជ័យ!', 'OTP sent successfully!'), isError: false);",
+            "_showSnack('មានបញ្ហា៖ $e', isError: true);":"_showSnack('${_t('មានបញ្ហា', 'Error')}: $e', isError: true);",
+            "_showSnack('សូមបំពេញគ្រប់ចន្លោះ', isError: true);":"_showSnack(_t('សូមបំពេញគ្រប់ចន្លោះ', 'Please fill in all fields'), isError: true);",
+            "_showSnack('លេខសម្ងាត់ត្រូវមានយ៉ាងតិច ៦ តួ', isError: true);":"_showSnack(_t('លេខសម្ងាត់ត្រូវមានយ៉ាងតិច ៦ តួ', 'Password must be at least 6 characters'), isError: true);",
+            "_showSnack('លេខសម្ងាត់មិនត្រូវគ្នា', isError: true);":"_showSnack(_t('លេខសម្ងាត់មិនត្រូវគ្នា', 'Passwords do not match'), isError: true);",
+            "_showSnack('សូមផ្ញើ OTP ម្ដងទៀត', isError: true);":"_showSnack(_t('សូមផ្ញើ OTP ម្ដងទៀត', 'Please send OTP again'), isError: true);",
+            "title: const Text(\n          'ភ្លេចលេខសម្ងាត់',":"title: Text(\n          _t('ភ្លេចលេខសម្ងាត់', 'Forgot password'),",
+            "const Text(\n          'កំណត់លេខសម្ងាត់ឡើងវិញ',":"Text(\n          _t('កំណត់លេខសម្ងាត់ឡើងវិញ', 'Reset password'),",
+            "'បញ្ចូលលេខទូរស័ព្ទដែលបានចុះឈ្មោះ\\nប្រព័ន្ធនឹងផ្ញើ OTP ទៅលេខរបស់អ្នក',":"_t('បញ្ចូលលេខទូរស័ព្ទដែលបានចុះឈ្មោះ\\nប្រព័ន្ធនឹងផ្ញើ OTP ទៅលេខរបស់អ្នក', 'Enter your registered phone number\\nWe will send an OTP to your phone'),",
+            "_buildLabel('លេខទូរស័ព្ទ'),":"_buildLabel(_t('លេខទូរស័ព្ទ', 'Phone number')),
+",
+            "? 'សូមបញ្ចូលលេខទូរស័ព្ទ'":"? _t('សូមបញ្ចូលលេខទូរស័ព្ទ', 'Please enter your phone number')",
+            "label: 'ផ្ញើ OTP',":"label: _t('ផ្ញើ OTP', 'Send OTP'),",
+            "const Text(\n          'ផ្ទៀងផ្ទាត់ OTP',":"Text(\n          _t('ផ្ទៀងផ្ទាត់ OTP', 'Verify OTP'),",
+            "'លេខកូដ ៦ ខ្ទង់ត្រូវបានផ្ញើទៅ\\n${_phoneController.text.trim()}',":"'${_t('លេខកូដ ៦ ខ្ទង់ត្រូវបានផ្ញើទៅ', 'A 6-digit code was sent to')}\\n${_phoneController.text.trim()}',",
+            "_buildLabel('លេខកូដ OTP'),":"_buildLabel(_t('លេខកូដ OTP', 'OTP code')),
+",
           }
           for a,b in reps.items(): s=s.replace(a,b)
+          # Localize remaining password-screen literals conservatively.
+          pairs=[
+            ('លេខសម្ងាត់ថ្មី','New password'),('បញ្ជាក់លេខសម្ងាត់','Confirm password'),
+            ('ប្ដូរលេខសម្ងាត់','Change password'),('ត្រឡប់ទៅ Login','Back to login'),
+            ('បានប្ដូរលេខសម្ងាត់ជោគជ័យ','Password changed successfully'),
+          ]
+          for km,en in pairs:
+            s=s.replace("'"+km+"'", "_t('"+km+"', '"+en+"')")
+          p.write_text(s,encoding='utf-8')
+
+          p=Path('lib/edit_profile_screen.dart'); s=p.read_text(encoding='utf-8')
+          marker='class _EditProfileScreenState extends State<EditProfileScreen> {\n'
+          h="  String _t(String km, String en) =>\n      Localizations.localeOf(context).languageCode == 'en' ? en : km;\n\n"
+          if h not in s: s=s.replace(marker, marker+h, 1)
+          replacements={
+            'const SnackBar(content: Text("✅ រក្សាទុក Profile ជោគជ័យ"),':'SnackBar(content: Text(_t("✅ រក្សាទុក Profile ជោគជ័យ", "✅ Profile saved successfully")),',
+            'SnackBar(content: Text("❌ បញ្ហា: $e"))':'SnackBar(content: Text("❌ ${_t(\'បញ្ហា\', \'Error\')}: $e"))',
+            'title: const Text("កែប្រែព័ត៌មានផ្ទាល់ខ្លួន",':'title: Text(_t("កែប្រែព័ត៌មានផ្ទាល់ខ្លួន", "Edit profile"),',
+            '_buildInput(_nameController, "ឈ្មោះបង្ហាញ", Icons.person)':'_buildInput(_nameController, _t("ឈ្មោះបង្ហាញ", "Display name"), Icons.person)',
+            '_phoneController, "លេខទូរស័ព្ទ", Icons.phone':'_phoneController, _t("លេខទូរស័ព្ទ", "Phone number"), Icons.phone',
+            'child: const Text("រក្សាទុក Profile",':'child: Text(_t("រក្សាទុក Profile", "Save profile"),',
+            'const Text("ព័ត៌មានសម្រាប់ដកប្រាក់ (បំពេញម្តងគត់)",':'Text(_t("ព័ត៌មានសម្រាប់ដកប្រាក់ (បំពេញម្តងគត់)", "Withdrawal information (complete once)"),',
+            '_buildInput(_fullNameKhController, "ឈ្មោះពិត (អក្សរឡាតាំង/ខ្មែរ)",':'_buildInput(_fullNameKhController, _t("ឈ្មោះពិត (អក្សរឡាតាំង/ខ្មែរ)", "Full legal name (Latin/Khmer)"),',
+            'labelText: "រើសធនាគារ",':'labelText: _t("រើសធនាគារ", "Choose bank"),',
+            '_bankAccountNumberController, "លេខគណនីធនាគារ (តែ ៛)",':'_bankAccountNumberController, _t("លេខគណនីធនាគារ (តែ ៛)", "Bank account number (KHR only)"),',
+            'const Text("លេខអត្តសញ្ញាណ (សម្រាប់សុវត្ថិភាព)",':'Text(_t("លេខអត្តសញ្ញាណ (សម្រាប់សុវត្ថិភាព)", "National ID (for security)"),',
+            'labelText: "លេខអត្តសញ្ញាណ (9 ខ្ទង់)",':'labelText: _t("លេខអត្តសញ្ញាណ (9 ខ្ទង់)", "National ID (9 digits)"),',
+            'labelText: "បញ្ជាក់លេខអត្តសញ្ញាណ",':'labelText: _t("បញ្ជាក់លេខអត្តសញ្ញាណ", "Confirm National ID"),',
+            'const Text("រូបភាព KHQR សម្រាប់ទទួលលុយ")':'Text(_t("រូបភាព KHQR សម្រាប់ទទួលលុយ", "KHQR image for receiving money"))',
+            'child: const Text("រក្សាទុកព័ត៌មានដកប្រាក់",':'child: Text(_t("រក្សាទុកព័ត៌មានដកប្រាក់", "Save withdrawal information"),',
+            'label: const Text("ប្ដូរលេខសម្ងាត់ ៦ ខ្ទង់")':'label: Text(_t("ប្ដូរលេខសម្ងាត់ ៦ ខ្ទង់", "Change 6-digit password"))',
+            'child: const Text("ភ្លេចលេខសម្ងាត់? កំណត់ឡើងវិញតាម OTP",':'child: Text(_t("ភ្លេចលេខសម្ងាត់? កំណត់ឡើងវិញតាម OTP", "Forgot password? Reset with OTP"),',
+          }
+          for a,b in replacements.items(): s=s.replace(a,b)
           p.write_text(s,encoding='utf-8')
           PY
-      - name: Verify localization and payment invariants
+      - name: Verify localization
         run: |
-          grep -q "Unnamed product" lib/receipt_screen.dart
-          grep -q "Pay with ABA app" lib/receipt_screen.dart
-          grep -q "assets/aba_qr.png" lib/receipt_screen.dart
-          grep -q "https://pay.ababank.com/oRF8/oizn40j9" lib/receipt_screen.dart
-          grep -q "Open ABA app to pay" lib/paymentauto_screen.dart
-          grep -q "Transaction details" lib/seller_withdrawal_detail.dart
-          grep -q "Withdrawal successful" lib/seller_withdrawal_detail.dart
-          grep -q "secureWithdraw" lib/seller_withdraw_screen.dart
+          grep -q "Forgot password" lib/forgot_password_screen.dart
+          grep -q "Send OTP" lib/forgot_password_screen.dart
+          grep -q "Edit profile" lib/edit_profile_screen.dart
+          grep -q "Save withdrawal information" lib/edit_profile_screen.dart
+          grep -q "Account & privacy" lib/settings_screen.dart
           git diff --check
       - name: Commit localization changes
         run: |
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add lib/receipt_screen.dart lib/paymentauto_screen.dart lib/seller_withdrawal_detail.dart
+          git add lib/forgot_password_screen.dart lib/edit_profile_screen.dart
           git diff --cached --check
           if git diff --cached --quiet; then exit 0; fi
-          git commit -m "Localize Payment Receipt and Withdraw screens"
+          git commit -m "Localize account and profile screens"
           git push origin HEAD:ios-sync-android46
