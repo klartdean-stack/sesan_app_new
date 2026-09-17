@@ -157,12 +157,12 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
         exactTotal += (price * quantity);
         return {
           'product_id': data['product_id'] ?? doc.id,
-          'product_name': data['product_name'] ?? 'គ្មានឈ្មោះ',
+          'product_name': data['product_name'] ?? _t('គ្មានឈ្មោះ', 'Unnamed product'),
           'price': price,
           'quantity': quantity,
           'image_url': data['image_url'] ?? '',
           'seller_id': data['seller_id'] ?? 'UNKNOWN_ID',
-          'seller_name': data['seller_name'] ?? 'អាជីវករ សេសាន',
+          'seller_name': data['seller_name'] ?? _t('អាជីវករ សេសាន', 'Sesan seller'),
           'seller_photo': data['seller_photo'] ?? '',
           'seller_phone': data['seller_phone'] ?? '',
           'order_date': FieldValue.serverTimestamp(),

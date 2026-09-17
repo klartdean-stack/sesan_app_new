@@ -3,6 +3,9 @@ import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class SellerWithdrawalDetail extends StatelessWidget {
+  String _t(BuildContext context, String km, String en) =>
+      Localizations.localeOf(context).languageCode == 'en' ? en : km;
+
   final Map<String, dynamic> data;
 
   const SellerWithdrawalDetail({super.key, required this.data});
@@ -16,13 +19,13 @@ class SellerWithdrawalDetail extends StatelessWidget {
         ? DateFormat(
             'dd/MM/yyyy • HH:mm',
           ).format((data['approved_at'] as Timestamp).toDate())
-        : "កំពុងរង់ចាំ";
+        : _t(context, "កំពុងរង់ចាំ", "Pending");
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
       appBar: AppBar(
-        title: const Text(
-          "លម្អិតប្រតិបត្តិការ",
+        title: Text(
+          _t(context, "លម្អិតប្រតិបត្តិការ", "Transaction details"),
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
@@ -46,8 +49,8 @@ class SellerWithdrawalDetail extends StatelessWidget {
                 children: [
                   const Icon(Icons.check_circle, color: Colors.green, size: 60),
                   const SizedBox(height: 10),
-                  const Text(
-                    "ដកប្រាក់ជោគជ័យ",
+                  Text(
+                    _t(context, "ដកប្រាក់ជោគជ័យ", "Withdrawal successful"),
                     style: TextStyle(fontSize: 16, color: Colors.grey),
                   ),
                   const SizedBox(height: 5),
@@ -73,12 +76,12 @@ class SellerWithdrawalDetail extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  _buildDetailRow("ឈ្មោះគណនី", data['account_name'] ?? "N/A"),
-                  _buildDetailRow("លេខគណនី", data['account_number'] ?? "N/A"),
-                  _buildDetailRow("អត្តសញ្ញាណប័ណ្ណ", data['id_card'] ?? "N/A"),
+                  _buildDetailRow(_t(context, "ឈ្មោះគណនី", "Account name"), data['account_name'] ?? "N/A"),
+                  _buildDetailRow(_t(context, "លេខគណនី", "Account number"), data['account_number'] ?? "N/A"),
+                  _buildDetailRow(_t(context, "អត្តសញ្ញាណប័ណ្ណ", "ID card"), data['id_card'] ?? "N/A"),
                   const Divider(height: 30),
-                  _buildDetailRow("កាលបរិច្ឆេទអនុម័ត", approvedAt),
-                  _buildDetailRow("ស្ថានភាព", "ជោគជ័យ", isStatus: true),
+                  _buildDetailRow(_t(context, "កាលបរិច្ឆេទអនុម័ត", "Approved at"), approvedAt),
+                  _buildDetailRow(_t(context, "ស្ថានភាព", "Status"), _t(context, "ជោគជ័យ", "Successful"), isStatus: true),
                 ],
               ),
             ),
@@ -87,7 +90,7 @@ class SellerWithdrawalDetail extends StatelessWidget {
             // ៣. បង្ហាញសន្លឹកប្រតិបត្តិការដែល Admin បាញ់ឱ្យ (admin_receipt)
             if (data['admin_receipt'] != null)
               _buildImageSection(
-                "សន្លឹកបញ្ជាក់ការផ្ទេរប្រាក់ (Receipt)",
+                _t(context, "សន្លឹកបញ្ជាក់ការផ្ទេរប្រាក់ (Receipt)", "Transfer receipt"),
                 data['admin_receipt'],
               ),
 
@@ -95,7 +98,7 @@ class SellerWithdrawalDetail extends StatelessWidget {
 
             // ៤. បង្ហាញ QR របស់ Seller (khqr_url)
             if (data['khqr_url'] != null)
-              _buildImageSection("កូដ QR សម្រាប់ទទួលលុយ", data['khqr_url']),
+              _buildImageSection(_t(context, "កូដ QR សម្រាប់ទទួលលុយ", "QR code for receiving money"), data['khqr_url']),
           ],
         ),
       ),
