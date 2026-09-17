@@ -167,8 +167,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         String role = (_loggedUid == adminUID) ? "admin" : "seller";
         await userDoc.set({
           'uid': _loggedUid,
-          'name': "អ្នកលក់ថ្មី",
-          'phone': "មិនទាន់មានលេខ",
+          'name': _t('អ្នកលក់ថ្មី', 'New seller'),
+          'phone': _t('មិនទាន់មានលេខ', 'No phone number yet'),
           'photoUrl': "",
           'role': role,
           'balance': 0,
@@ -1076,7 +1076,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             setState(() => _hideBalance = !_hideBalance);
                           },
                           tooltip:
-                              _hideBalance ? 'Show balance' : 'Hide balance',
+                              _hideBalance ? _t('បង្ហាញសមតុល្យ', 'Show balance') : _t('លាក់សមតុល្យ', 'Hide balance'),
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(
                             minWidth: 48,

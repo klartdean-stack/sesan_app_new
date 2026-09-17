@@ -137,6 +137,9 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
   }
 
   String _formatJoinDateKhmer(DateTime date) {
+    if (Localizations.localeOf(context).languageCode == 'en') {
+      return DateFormat('dd MMM yyyy', 'en_US').format(date);
+    }
     final khmerMonths = ['មករា', 'កុម្ភៈ', 'មីនា', 'មេសា', 'ឧសភា', 'មិថុនា', 'កក្កដា', 'សីហា', 'កញ្ញា', 'តុលា', 'វិច្ឆិកា', 'ធ្នូ'];
     final khmerNumbers = ['០', '១', '២', '៣', '៤', '៥', '៦', '៧', '៨', '៩'];
     String day = date.day.toString().split('').map((d) => khmerNumbers[int.parse(d)]).join('');
@@ -666,7 +669,7 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
         const SizedBox(height: 40),
         Padding(padding: const EdgeInsets.symmetric(horizontal: 16), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(shopName, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87, fontFamily: 'Siemreap')),
-          if (sesanId.isNotEmpty) ...[const SizedBox(height: 4), Text('Sesan ID: $sesanId', style: TextStyle(fontSize: 13, color: Colors.blue[700], fontWeight: FontWeight.w600))],
+          if (sesanId.isNotEmpty) ...[const SizedBox(height: 4), Text(appText(context, km: 'Sesan ID: $sesanId', en: 'Sesan ID: $sesanId'), style: TextStyle(fontSize: 13, color: Colors.blue[700], fontWeight: FontWeight.w600))],
           if (phone.isNotEmpty) ...[const SizedBox(height: 4), Text('📞 ${_maskSellerPhone(phone)}', style: const TextStyle(fontSize: 13, color: Colors.black54))],
           const SizedBox(height: 4),
           Text(appText(context, km: '$productCount ទំនិញ • កំពុងលក់', en: '$productCount products • For sale'), style: const TextStyle(fontSize: 13, color: Colors.black54)),

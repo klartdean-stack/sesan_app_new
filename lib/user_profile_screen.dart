@@ -282,7 +282,10 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                             icon: Icons.calendar_month,
                             title: appText(context, km: 'ថ្ងៃចូលរួម', en: 'Joined'),
                             value: data['createdAt'] != null
-                                ? DateFormat('dd MMMM yyyy', 'km_KH').format(
+                                ? DateFormat(
+                                    'dd MMMM yyyy',
+                                    Localizations.localeOf(context).languageCode == 'en' ? 'en_US' : 'km_KH',
+                                  ).format(
                                     (data['createdAt'] as Timestamp).toDate(),
                                   )
                                 : appText(context, km: 'មិនស្គាល់', en: 'Unknown'),
