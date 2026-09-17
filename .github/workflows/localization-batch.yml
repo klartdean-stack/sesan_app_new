@@ -9,97 +9,83 @@ permissions:
   contents: write
 
 jobs:
-  localize-detail-screens:
+  localize-home:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ios-sync-android46
-      - name: Localize Pre-order Detail and Wanted Detail
+      - name: Localize Home Screen
         run: |
           python3 - <<'PY'
           from pathlib import Path
+          p=Path('lib/home_screen.dart')
+          s=p.read_text(encoding='utf-8')
+          marker="class _HomeScreenState extends State<HomeScreen> {\n"
+          helper="  String _t(String km, String en) =>\n      Localizations.localeOf(context).languageCode == 'en' ? en : km;\n\n"
+          if helper not in s:
+              s=s.replace(marker, marker+helper, 1)
 
-          def add_helper(s, marker):
-              helper = "\n  String _t(String km, String en) =>\n      Localizations.localeOf(context).languageCode == 'en' ? en : km;\n"
-              if helper not in s:
-                  s = s.replace(marker, marker + helper, 1)
-              return s
+          # Keep Khmer category values as stable filter keys; translate only display labels.
+          category_method="""  String _categoryLabel(String name) {\n    switch (name) {\n      case 'ទាំងអស់': return _t('ទាំងអស់', 'All');\n      case 'គ្រឿងចក្រ': return _t('គ្រឿងចក្រ', 'Machinery');\n      case 'សម្ភារៈកសិកម្ម': return _t('សម្ភារៈកសិកម្ម', 'Farm supplies');\n      case 'ពូជដំណាំ': return _t('ពូជដំណាំ', 'Crop seeds');\n      case 'ពូជសត្វចិញ្ចឹម': return _t('ពូជសត្វចិញ្ចឹម', 'Livestock');\n      case 'ជីនិងថ្នាំ': return _t('ជីនិងថ្នាំ', 'Fertilizer & chemicals');\n      case 'បន្លែផ្លែឈើ': return _t('បន្លែផ្លែឈើ', 'Fruit & vegetables');\n      case 'ត្រីសាច់': return _t('ត្រីសាច់', 'Fish & meat');\n      case 'សេវាកម្ម': return _t('សេវាកម្ម', 'Services');\n      case 'ផ្សេងៗ': return _t('ផ្សេងៗ', 'Other');\n      default: return name;\n    }\n  }\n\n"""
+          insert="  final List<Map<String, dynamic>> categories = [\n"
+          if category_method not in s:
+              s=s.replace(insert, category_method+insert, 1)
 
-          # Pre-order Detail
-          p = Path('lib/pre_order_detail_screen.dart')
-          s = p.read_text(encoding='utf-8')
-          s = add_helper(s, "class _PreOrderDetailScreenState extends State<PreOrderDetailScreen> {\n")
-          reps = {
-            "String _posterName = 'កំពុងផ្ទុក...';":"String _posterName = '';",
-            "_posterName = 'មិនស្គាល់អ្នកប្រកាស';":"_posterName = _t('មិនស្គាល់អ្នកប្រកាស', 'Unknown poster');",
-            "userData['name'] ?? userData['displayName'] ?? 'គ្មានឈ្មោះ'":"userData['name'] ?? userData['displayName'] ?? _t('គ្មានឈ្មោះ', 'Unnamed')",
-            "_posterName = 'មិនអាចរកឃើញអ្នកប្រកាស';":"_posterName = _t('មិនអាចរកឃើញអ្នកប្រកាស', 'Poster not found');",
-            "_posterName = 'មានបញ្ហាក្នុងការផ្ទុក';":"_posterName = _t('មានបញ្ហាក្នុងការផ្ទុក', 'Unable to load poster');",
-            "appBar: AppBar(title: const Text('ព័ត៌មានលម្អិត'":"appBar: AppBar(title: Text(_t('ព័ត៌មានលម្អិត', 'Pre-order details')",
-            "ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('បានចម្លង Link រូបភាព')));":"ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(_t('បានចម្លង Link រូបភាព', 'Image link copied'))));",
-            "Share.share('ត្រូវការទិញ: ${widget.data['product_name'] ?? ''}\\nតម្លៃ: ${widget.data['price'] ?? '0'} ៛\\nមើលរូបភាព: $firstImg');":"Share.share('${_t('ត្រូវការទិញ', 'Wanted')}: ${widget.data['product_name'] ?? ''}\\n${_t('តម្លៃ', 'Price')}: ${widget.data['price'] ?? '0'} ៛\\n${_t('មើលរូបភាព', 'View image')}: $firstImg');",
-            "const Text('ម្ចាស់ការប្រកាស'":"Text(_t('ម្ចាស់ការប្រកាស', 'Posted by')",
-            "label: const Text('ផ្ញើសារឥឡូវនេះ'":"label: Text(_t('ផ្ញើសារឥឡូវនេះ', 'Message now')",
-            "ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('សូមចូលប្រើប្រាស់កម្មវិធីជាមុនសិន')));":"ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(_t('សូមចូលប្រើប្រាស់កម្មវិធីជាមុនសិន', 'Please log in first'))));",
-            "widget.data['product_name'] ?? 'ផលិតផល'":"widget.data['product_name'] ?? _t('ផលិតផល', 'Product')",
-            "title: const Text('លុបការប្រកាស?'":"title: Text(_t('លុបការប្រកាស?', 'Delete post?')",
-            "content: const Text('តើអ្នកពិតជាចង់លុបការប្រកាសនេះមែនទេ?')":"content: Text(_t('តើអ្នកពិតជាចង់លុបការប្រកាសនេះមែនទេ?', 'Are you sure you want to delete this post?'))",
-            "child: const Text('ទេ')":"child: Text(_t('ទេ', 'Cancel'))",
-            "child: const Text('លុប', style:":"child: Text(_t('លុប', 'Delete'), style:",
-            "Text('ប្រកាសនៅ: ${_formatDate(widget.data['created_at'])}'":"Text('${_t('ប្រកាសនៅ', 'Posted')}: ${_formatDate(widget.data['created_at'])}'",
-            "_row(Icons.event_available, 'ថ្ងៃប្រមូលផល'":"_row(Icons.event_available, _t('ថ្ងៃប្រមូលផល', 'Harvest date')",
-            "_row(Icons.location_on_outlined, 'ទីតាំង', widget.data['location'] ?? 'មិនមានទីតាំង')":"_row(Icons.location_on_outlined, _t('ទីតាំង', 'Location'), widget.data['location'] ?? _t('មិនមានទីតាំង', 'No location'))",
-            "final displayedPhone = fullPhone.isEmpty ? 'មិនមានលេខទូរស័ព្ទ'":"final displayedPhone = fullPhone.isEmpty ? _t('មិនមានលេខទូរស័ព្ទ', 'No phone number')",
-            "const Text('លេខទូរស័ព្ទ'":"Text(_t('លេខទូរស័ព្ទ', 'Phone number')",
-            "tooltip: showFullPhone ? 'លាក់លេខ' : 'បង្ហាញលេខ 5 វិនាទី'":"tooltip: showFullPhone ? _t('លាក់លេខ', 'Hide number') : _t('បង្ហាញលេខ 5 វិនាទី', 'Show for 5 seconds')",
-            "final displayText = description.isEmpty ? 'មិនមានការពិពណ៌នា' : description;":"final displayText = description.isEmpty ? _t('មិនមានការពិពណ៌នា', 'No description') : description;",
+          reps={
+            '"កំពុងបង្ហោះទំនិញ... ${(uploadController.uploadProgress.value * 100).toInt()}%"':"'${_t('កំពុងបង្ហោះទំនិញ...', 'Uploading product...')} ${(uploadController.uploadProgress.value * 100).toInt()}%'",
+            '_showLoginRequiredDialog(context, "ដើម្បីផុសលក់ទំនិញបាន");':"_showLoginRequiredDialog(context, _t('ដើម្បីផុសលក់ទំនិញបាន', 'to post a product'));",
+            'title: const Text("សូមចូលប្រើប្រាស់"),':"title: Text(_t('សូមចូលប្រើប្រាស់', 'Sign in required')),
+",
+            'content: Text("$actionText មេត្រូវចូលប្រើប្រាស់គណនីជាមុនសិន។"),':"content: Text(_t('$actionText មេត្រូវចូលប្រើប្រាស់គណនីជាមុនសិន។', 'Please sign in $actionText.')),
+",
+            'child: const Text("មើលសិន", style: TextStyle(color: Colors.grey)),':"child: Text(_t('មើលសិន', 'Not now'), style: const TextStyle(color: Colors.grey)),",
+            'child: const Text(\n              "ទៅ Login",':"child: Text(\n              _t('ទៅ Login', 'Go to sign in'),",
+            'label = "ទំព័រដើម";':"label = _t('ទំព័រដើម', 'Home');",
+            'label = "កន្ត្រក";':"label = _t('កន្ត្រក', 'Cart');",
+            'label = "ឆាត";':"label = _t('ឆាត', 'Chat');",
+            'label = "គណនី";':"label = _t('គណនី', 'Account');",
+            '_showLoginRequiredDialog(context, "ដើម្បីប្រើប្រាស់មុខងារនេះ");':"_showLoginRequiredDialog(context, _t('ដើម្បីប្រើប្រាស់មុខងារនេះ', 'to use this feature'));",
+            'const Text(\n                                  "ប្រភេទផលិតផល",':"Text(\n                                  _t('ប្រភេទផលិតផល', 'Product categories'),",
+            'const Text(\n                                          \'ចូលដេញថ្លៃ\',':"Text(\n                                          _t('ចូលដេញថ្លៃ', 'Auctions'),",
+            'tabs: const [': 'tabs: [',
+            '"ទំនិញថ្មីៗ",':"_t('ទំនិញថ្មីៗ', 'New products'),",
+            '"លក់មុន",':"_t('លក់មុន', 'Pre-order'),",
+            '"ប្រកាសទិញ",':"_t('ប្រកាសទិញ', 'Wanted'),",
+            '"ដើម្បីប្រកាសទិញបាន",':"_t('ដើម្បីប្រកាសទិញបាន', 'to post a wanted request'),",
+            'label: const Text(\n                              "ប្រកាសទិញ",':"label: Text(\n                              _t('ប្រកាសទិញ', 'Post wanted'),",
+            '"ប្រកាសទិញ",\n                      Icons.campaign,':"_t('ប្រកាសទិញ', 'Post wanted'),\n                      Icons.campaign,",
+            '"ចុះឈ្មោះលក់មុន",\n                      Icons.timer_outlined,':"_t('ចុះឈ្មោះលក់មុន', 'Create pre-order'),\n                      Icons.timer_outlined,",
+            'item[\'name\'],\n                style: TextStyle(':"_categoryLabel(item['name']),\n                style: TextStyle(",
+            'title: Text("បើកការជូនដំណឹង"),':"title: Text(_t('បើកការជូនដំណឹង', 'Enable notifications')),
+",
+            '"ដើម្បីទទួលបានសារកម្ម៉ង់ភ្លាមៗ សូមមេចុច \'បើក\' រួច Switch លើពាក្យ \'Allow notifications\' ផង!",':"_t('ដើម្បីទទួលបានសារកម្ម៉ង់ភ្លាមៗ សូមមេចុច បើក រួច Switch លើពាក្យ Allow notifications ផង!', 'Enable notifications in Settings to receive new order alerts immediately.'),",
+            'child: Text("ក្រោយមក"),':"child: Text(_t('ក្រោយមក', 'Later')),",
+            'child: Text("ទៅបើកឥឡូវនេះ"),':"child: Text(_t('ទៅបើកឥឡូវនេះ', 'Open settings')),",
           }
-          for a,b in reps.items(): s=s.replace(a,b)
-          p.write_text(s, encoding='utf-8')
-
-          # Wanted Detail
-          p = Path('lib/wanted_detail_screen.dart')
-          s = p.read_text(encoding='utf-8')
-          s = add_helper(s, "class _WantedDetailScreenState extends State<WantedDetailScreen> {\n")
-          reps = {
-            "String _posterName = 'កំពុងផ្ទុក...';":"String _posterName = '';",
-            "_posterName = 'មិនស្គាល់អ្នកប្រកាស';":"_posterName = _t('មិនស្គាល់អ្នកប្រកាស', 'Unknown poster');",
-            "userData['name'] ?? userData['displayName'] ?? 'គ្មានឈ្មោះ'":"userData['name'] ?? userData['displayName'] ?? _t('គ្មានឈ្មោះ', 'Unnamed')",
-            "_posterName = 'មិនអាចរកឃើញអ្នកប្រកាស';":"_posterName = _t('មិនអាចរកឃើញអ្នកប្រកាស', 'Poster not found');",
-            "_posterName = 'មានបញ្ហាក្នុងការផ្ទុក';":"_posterName = _t('មានបញ្ហាក្នុងការផ្ទុក', 'Unable to load poster');",
-            "doc.data()['userName'] ?? 'អ្នកលក់'":"doc.data()['userName'] ?? _t('អ្នកលក់', 'Seller')",
-            "userDoc.data()?['name'] ?? 'អ្នកលក់'":"userDoc.data()?['name'] ?? _t('អ្នកលក់', 'Seller')",
-            "title: const Text(\n            'ខ្ញុំមានលក់'":"title: Text(\n            _t('ខ្ញុំមានលក់', 'I have this for sale')",
-            "decoration: const InputDecoration(\n                  labelText: 'តម្លៃ',":"decoration: InputDecoration(\n                  labelText: _t('តម្លៃ', 'Price'),",
-            "const Text('រូបិយប័ណ្ណ: ')":"Text('${_t('រូបិយប័ណ្ណ', 'Currency')}: ')",
-            "DropdownMenuItem(value: '៛', child: Text('៛ រៀល'))":"DropdownMenuItem(value: '៛', child: Text(_t('៛ រៀល', '៛ Riel')))",
-            "DropdownMenuItem(value: '\\$', child: Text('\\$ ដុល្លារ'))":"DropdownMenuItem(value: '\\$', child: Text(_t('\\$ ដុល្លារ', '\\$ USD')))",
-            "const Text('អាចចរចារបាន')":"Text(_t('អាចចរចារបាន', 'Negotiable'))",
-            "child: const Text('បោះបង់')":"child: Text(_t('បោះបង់', 'Cancel'))",
-            "child: const Text('បញ្ជាក់')":"child: Text(_t('បញ្ជាក់', 'Confirm'))",
-          }
-          for a,b in reps.items(): s=s.replace(a,b)
-          p.write_text(s, encoding='utf-8')
+          for a,b in reps.items():
+              s=s.replace(a,b)
+          p.write_text(s,encoding='utf-8')
           PY
-          dart format lib/pre_order_detail_screen.dart lib/wanted_detail_screen.dart
           git diff --check
-      - name: Verify preserved detail logic
+      - name: Verify Home localization and preserved logic
         run: |
-          grep -q "collection('pre_orders')" lib/pre_order_detail_screen.dart
-          grep -q "PreOrderRelatedProductsWidget" lib/pre_order_detail_screen.dart
-          grep -q "ChatScreen" lib/pre_order_detail_screen.dart
-          grep -q "collection('wanted_products')" lib/wanted_detail_screen.dart
-          grep -q "collection('sellers')" lib/wanted_detail_screen.dart
-          grep -q "WantedRelatedProductsWidget" lib/wanted_detail_screen.dart
-          grep -q "I have this for sale" lib/wanted_detail_screen.dart
-          grep -q "Pre-order details" lib/pre_order_detail_screen.dart
-      - name: Commit localized detail screens
+          grep -q "String _categoryLabel" lib/home_screen.dart
+          grep -q "Product categories" lib/home_screen.dart
+          grep -q "New products" lib/home_screen.dart
+          grep -q "Create pre-order" lib/home_screen.dart
+          grep -q "Enable notifications" lib/home_screen.dart
+          grep -q "ProductSearchV51Controller" lib/home_screen.dart
+          grep -q "QrScannerScreen" lib/home_screen.dart
+          grep -q "PreOrderGridView" lib/home_screen.dart
+          grep -q "WantedGridView" lib/home_screen.dart
+          grep -q "AuctionMainScreen" lib/home_screen.dart
+      - name: Commit Home localization
         run: |
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add lib/pre_order_detail_screen.dart lib/wanted_detail_screen.dart
+          git add lib/home_screen.dart
           git diff --cached --check
           if git diff --cached --quiet; then exit 0; fi
-          git commit -m "Localize Pre-order and Wanted detail screens"
+          git commit -m "Localize Home Screen Khmer and English"
           git push origin HEAD:ios-sync-android46
