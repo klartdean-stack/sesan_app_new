@@ -15,65 +15,82 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ios-sync-android46
-      - name: Localize Profile and Seller Profile
+      - name: Localize Product List and Product Detail
         run: |
           python3 - <<'PY'
           from pathlib import Path
 
-          # Main Profile: most UI already uses AppLocalizations/_t. Fix remaining visible hard-coded strings.
-          p=Path('lib/profile_screen_legacy.dart')
+          # Product List already has appText/_searchLabel in the search/filter UI.
+          # Patch remaining common visible labels while preserving category/filter database keys.
+          p=Path('lib/product_list.dart')
           s=p.read_text(encoding='utf-8')
           reps={
-            "'name': \"អ្នកលក់ថ្មី\",":"'name': _t('អ្នកលក់ថ្មី', 'New seller'),",
-            "'phone': \"មិនទាន់មានលេខ\",":"'phone': _t('មិនទាន់មានលេខ', 'No phone number yet'),",
-            "_hideBalance ? 'Show balance' : 'Hide balance'":"_hideBalance ? _t('បង្ហាញសមតុល្យ', 'Show balance') : _t('លាក់សមតុល្យ', 'Hide balance')",
+            "Text('គ្មានទំនិញ')":"Text(appText(context, km: 'គ្មានទំនិញ', en: 'No products'))",
+            "Text('កំពុងផ្ទុក...')":"Text(appText(context, km: 'កំពុងផ្ទុក...', en: 'Loading...'))",
+            "'គ្មានឈ្មោះ'":"appText(context, km: 'គ្មានឈ្មោះ', en: 'Unnamed product')",
+            "'មិនស្គាល់'":"appText(context, km: 'មិនស្គាល់', en: 'Unknown')",
           }
           n=0
           for a,b in reps.items():
               if a in s:
                   s=s.replace(a,b); n+=1
           p.write_text(s,encoding='utf-8')
-          print('Profile replacements',n)
+          print('Product List replacements', n)
 
-          # Seller Profile: preserve category database keys; localize user-visible text not already using appText.
-          p=Path('lib/seller_profile_screen.dart')
+          # Product Detail: add a single low-risk helper and localize visible hard-coded UI.
+          p=Path('lib/product_detail.dart')
           s=p.read_text(encoding='utf-8')
+          marker="class _ProductDetailScreenState extends State<ProductDetailScreen> {\n"
+          helper="  String _t(String km, String en) =>\n      Localizations.localeOf(context).languageCode == 'en' ? en : km;\n\n"
+          if helper not in s:
+              s=s.replace(marker, marker+helper, 1)
           reps={
-            "String _formatJoinDateKhmer(DateTime date) {":"String _formatJoinDateKhmer(DateTime date) {\n    if (Localizations.localeOf(context).languageCode == 'en') {\n      return DateFormat('dd MMM yyyy', 'en_US').format(date);\n    }",
-            "Text('Sesan ID: $sesanId'":"Text(appText(context, km: 'Sesan ID: $sesanId', en: 'Sesan ID: $sesanId')",
+            "widget.product['product_name'] ?? 'ទំនិញថ្មី'":"widget.product['product_name'] ?? _t('ទំនិញថ្មី', 'New product')",
+            "widget.product['location'] ?? 'ភ្នំពេញ'":"widget.product['location'] ?? _t('ភ្នំពេញ', 'Phnom Penh')",
+            "💰 តម្លៃ៖ $price $currency":"💰 ${_t('តម្លៃ', 'Price')}: $price $currency",
+            "🔗 មើលទំនិញ៖":"🔗 ${_t('មើលទំនិញ', 'View product')}:",
+            "📲 ទាញយក App Sesan៖":"📲 ${_t('ទាញយក Sesan App', 'Download Sesan App')}:",
+            "const Text(\n                  \"ចែករំលែកទំនិញ\",":"Text(\n                  _t('ចែករំលែកទំនិញ', 'Share product'),",
+            "title: \"ចែករំលែក Link ទំនិញ\",":"title: _t('ចែករំលែក Link ទំនិញ', 'Share product link'),",
+            "subtitle: \"ផ្ញើរូបភាពមាន QR Code និង Link\",":"subtitle: _t('ផ្ញើរូបភាពមាន QR Code និង Link', 'Send an image with QR code and link'),",
+            "title: \"រក្សាទុករូបភាព (Watermark)\",":"title: _t('រក្សាទុករូបភាព (Watermark)', 'Save image (watermark)'),",
+            "subtitle: \"រក្សាទុកក្នុង Gallery\",":"subtitle: _t('រក្សាទុកក្នុង Gallery', 'Save to Gallery'),",
+            "_showSnack('❌ កំហុស: $e', Colors.red);":"_showSnack(_t('❌ កំហុស: $e', '❌ Error: $e'), Colors.red);",
+            "_showSnack('សូមជ្រើសរើសពិន្ទុពី 1 ដល់ 5', Colors.orange);":"_showSnack(_t('សូមជ្រើសរើសពិន្ទុពី 1 ដល់ 5', 'Please choose a rating from 1 to 5'), Colors.orange);",
+            "_showSnack('សូម Login មុនពេលផ្ដល់ពិន្ទុ', Colors.orange);":"_showSnack(_t('សូមចូលគណនីមុនពេលផ្ដល់ពិន្ទុ', 'Please sign in before rating'), Colors.orange);",
+            "_showSnack('រកមិនឃើញ Product ID', Colors.red);":"_showSnack(_t('រកមិនឃើញ Product ID', 'Product ID not found'), Colors.red);",
+            "throw Exception('Product មិនមានក្នុង Firestore');":"throw Exception(_t('មិនមានទំនិញនេះក្នុងប្រព័ន្ធ', 'Product not found'));",
+            "? 'បូកថ្លៃដឹកជញ្ជូនរួចរាល់'\n                                              : 'មិនទាន់បូកថ្លៃដឹកជញ្ជូន'":"? _t('បូកថ្លៃដឹកជញ្ជូនរួចរាល់', 'Shipping included')\n                                              : _t('មិនទាន់បូកថ្លៃដឹកជញ្ជូន', 'Shipping not included')",
+            "_shownProductName('គ្មានឈ្មោះ')":"_shownProductName(_t('គ្មានឈ្មោះ', 'Unnamed product'))",
+            "'($totalReviews នាក់)'":"Localizations.localeOf(context).languageCode == 'en' ? '($totalReviews reviews)' : '($totalReviews នាក់)'",
+            "? 'ពិន្ទុរបស់អ្នក៖ ${myRating.toStringAsFixed(1)}'":"? _t('ពិន្ទុរបស់អ្នក៖ ${myRating.toStringAsFixed(1)}', 'Your rating: ${myRating.toStringAsFixed(1)}')",
           }
           n=0
           for a,b in reps.items():
               if a in s:
                   s=s.replace(a,b); n+=1
           p.write_text(s,encoding='utf-8')
-          print('Seller Profile replacements',n)
-
-          # User Profile: date formatting must follow selected language rather than always Khmer locale.
-          p=Path('lib/user_profile_screen.dart')
-          s=p.read_text(encoding='utf-8')
-          old="DateFormat('dd MMMM yyyy', 'km_KH').format(\n                                    (data['createdAt'] as Timestamp).toDate(),\n                                  )"
-          new="DateFormat(\n                                    'dd MMMM yyyy',\n                                    Localizations.localeOf(context).languageCode == 'en' ? 'en_US' : 'km_KH',\n                                  ).format(\n                                    (data['createdAt'] as Timestamp).toDate(),\n                                  )"
-          if old in s:
-              s=s.replace(old,new,1)
-              print('User Profile date localized')
-          p.write_text(s,encoding='utf-8')
+          print('Product Detail replacements', n)
+          if n < 10:
+              raise SystemExit('Product Detail localization patch unexpectedly small')
           PY
-      - name: Verify no accidental category-key changes
+      - name: Verify localization patch
         run: |
-          grep -q "'គ្រឿងចក្រ'" lib/seller_profile_screen.dart
-          grep -q "appText(context" lib/seller_profile_screen.dart
-          grep -q "_t('បង្ហាញសមតុល្យ', 'Show balance')" lib/profile_screen_legacy.dart
-          grep -q "Localizations.localeOf(context).languageCode == 'en' ? 'en_US' : 'km_KH'" lib/user_profile_screen.dart
+          grep -q "Search products in this category" lib/product_list.dart
+          grep -q "String _t(String km, String en)" lib/product_detail.dart
+          grep -q "Shipping included" lib/product_detail.dart
+          grep -q "Share product" lib/product_detail.dart
+          grep -q "Unnamed product" lib/product_detail.dart
+          git diff --check
       - name: Commit localization changes
         run: |
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add lib/profile_screen_legacy.dart lib/seller_profile_screen.dart lib/user_profile_screen.dart
+          git add lib/product_list.dart lib/product_detail.dart
           git diff --cached --check
           if git diff --cached --quiet; then
-            echo "No Profile localization changes needed"
+            echo "No Product localization changes needed"
             exit 0
           fi
-          git commit -m "Complete Profile and Seller Profile localization"
+          git commit -m "Localize Product List and Product Detail screens"
           git push origin HEAD:ios-sync-android46
