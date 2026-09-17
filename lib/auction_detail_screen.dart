@@ -22,15 +22,18 @@ class AuctionDetailScreen extends StatefulWidget {
 class _AuctionDetailScreenState extends State<AuctionDetailScreen>
     with TickerProviderStateMixin {
   static const _adminId = 'WBdQVvrgEIPBTcgIlumu6bAZGUl2';
-  static const _bg = Color(0xFF0D1117);
-  static const _card = Color(0xFF161B22);
-  static const _border = Color(0xFF30363D);
-  static const _accent = Color(0xFF238636);
-  static const _accentBlue = Color(0xFF1F6FEB);
-  static const _text = Color(0xFFE6EDF3);
-  static const _textMuted = Color(0xFF8B949E);
-  static const _red = Color(0xFFDA3633);
-  static const _gold = Color(0xFFFFB300);
+  static const _bg = Color(0xFFF7FAF7);
+  static const _card = Colors.white;
+  static const _border = Color(0xFFDDE8DF);
+  static const _accent = Color(0xFF2E7D32);
+  static const _accentBlue = Color(0xFFF57C00);
+  static const _text = Color(0xFF1F2933);
+  static const _textMuted = Color(0xFF6B7280);
+  static const _red = Color(0xFFD32F2F);
+  static const _gold = Color(0xFFF57C00);
+
+  String _t(String km, String en) =>
+      Localizations.localeOf(context).languageCode == 'en' ? en : km;
 
   bool _isBidding = false;
   int _currentImageIndex = 0;
@@ -164,7 +167,7 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
       if (doc.exists && mounted) {
         final data = doc.data() as Map<String, dynamic>;
         setState(() {
-          _ownerName = data['name'] ?? data['displayName'] ?? 'គ្មានឈ្មោះ';
+          _ownerName = data['name'] ?? data['displayName'] ?? _t('គ្មានឈ្មោះ', 'Unnamed');
           _ownerPhotoUrl = data['photoUrl'] ?? data['photo'] ?? '';
           _sesanId = data['sesan_id'] ?? '';
         });
@@ -194,8 +197,8 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
                 child: const Icon(Icons.delete_outline_rounded, color: _red, size: 30),
               ),
               const SizedBox(height: 16),
-              const Text(
-                'លុបការដេញថ្លៃ?',
+              Text(
+                _t('លុបការដេញថ្លៃ?', 'Delete auction?'),
                 style: TextStyle(
                   color: _text,
                   fontSize: 18,
@@ -221,7 +224,7 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
                         padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
                       onPressed: () => Navigator.pop(ctx),
-                      child: const Text('បោះបង់', style: TextStyle(fontFamily: 'Siemreap')),
+                      child: Text(_t('បោះបង់', 'Cancel'), style: TextStyle(fontFamily: 'Siemreap')),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -241,8 +244,8 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
                         if (ctx.mounted) Navigator.pop(ctx);
                         if (mounted) Navigator.pop(context);
                       },
-                      child: const Text(
-                        'លុប',
+                      child: Text(
+                        _t('លុប', 'Delete'),
                         style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontFamily: 'Siemreap'),
                       ),
                     ),
@@ -263,7 +266,7 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
     required String winnerName,
   }) async {
     if (_currentUid == null || !_isLoggedIn) {
-      _showSnack('❌ សូម Login មុនសិន', _red);
+      _showSnack(_t('❌ សូម Login មុនសិន', '❌ Please log in first'), _red);
       return;
     }
     await FirebaseFirestore.instance
@@ -298,7 +301,7 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
     print('DEBUG: _userLoaded = $_userLoaded');
     await _loadUser();
     if (_currentUid == null || !_isLoggedIn) {
-      _showSnack('❌ សូម Login មុនសិន', _red);
+      _showSnack(_t('❌ សូម Login មុនសិន', '❌ Please log in first'), _red);
       return;
     }
     final confirmed = await _showConfirmDialog(currentPrice + bidStep, productName);
@@ -330,7 +333,7 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
       });
       await batch.commit();
       _bidPulseCtrl.forward().then((_) => _bidPulseCtrl.reverse());
-      _showSnack('🎉 ដេញថ្លៃជោគជ័យ! ${NumberFormat('#,###').format(newBid)} ៛', _accent);
+      _showSnack('${_t('🎉 ដេញថ្លៃជោគជ័យ!', '🎉 Bid placed successfully!')} ${NumberFormat('#,###').format(newBid)} ៛', _accent);
     } catch (e) {
       _showSnack('❌ Error: $e', _red);
     } finally {
@@ -355,8 +358,8 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
                     child: const Icon(Icons.gavel_rounded, color: _accent, size: 32),
                   ),
                   const SizedBox(height: 16),
-                  const Text(
-                    'បញ្ជាក់ការដេញថ្លៃ',
+                  Text(
+                    _t('បញ្ជាក់ការដេញថ្លៃ', 'Confirm bid'),
                     style: TextStyle(color: _text, fontSize: 18, fontWeight: FontWeight.w700, fontFamily: 'Siemreap'),
                   ),
                   const SizedBox(height: 8),
@@ -377,7 +380,7 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
                             padding: const EdgeInsets.symmetric(vertical: 14),
                           ),
                           onPressed: () => Navigator.pop(ctx, false),
-                          child: const Text('បោះបង់', style: TextStyle(fontFamily: 'Siemreap')),
+                          child: Text(_t('បោះបង់', 'Cancel'), style: TextStyle(fontFamily: 'Siemreap')),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -390,8 +393,8 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
                             padding: const EdgeInsets.symmetric(vertical: 14),
                           ),
                           onPressed: () => Navigator.pop(ctx, true),
-                          child: const Text(
-                            'យល់ព្រម',
+                          child: Text(
+                            _t('យល់ព្រម', 'Confirm'),
                             style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontFamily: 'Siemreap'),
                           ),
                         ),
@@ -431,13 +434,13 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
           borderRadius: BorderRadius.circular(10),
           border: Border.all(color: _red.withOpacity(0.3)),
         ),
-        child: const Row(
+        child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.timer_off_outlined, color: _red, size: 14),
             SizedBox(width: 5),
             Text(
-              'ចប់ហើយ',
+              _t('ចប់ហើយ', 'Ended'),
               style: TextStyle(color: _red, fontWeight: FontWeight.w700, fontSize: 12, fontFamily: 'Siemreap'),
             ),
           ],
@@ -487,7 +490,7 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
           );
         }
         final data = snap.data!.data() as Map<String, dynamic>;
-        final productName = data['product_name'] ?? 'គ្មានឈ្មោះ';
+        final productName = data['product_name'] ?? _t('គ្មានឈ្មោះ', 'Unnamed product');
         final currentPrice = int.tryParse(data['current_price']?.toString() ?? '0') ?? 0;
         final bidStep = int.tryParse(data['bid_step']?.toString() ?? '0') ?? 0;
         final endTime = data['end_time'];
@@ -512,7 +515,7 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
           appBar: AppBar(
             backgroundColor: Colors.transparent,
             elevation: 0,
-            systemOverlayStyle: SystemUiOverlayStyle.light,
+            systemOverlayStyle: SystemUiOverlayStyle.dark,
             leading: GestureDetector(
               onTap: () => Navigator.pop(context),
               child: Container(
@@ -565,12 +568,12 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                           decoration: BoxDecoration(color: _red, borderRadius: BorderRadius.circular(20)),
-                          child: const Row(
+                          child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.circle, size: 7, color: Colors.white),
-                              SizedBox(width: 4),
-                              Text('LIVE', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w800)),
+                              const Icon(Icons.circle, size: 7, color: Colors.white),
+                              const SizedBox(width: 4),
+                              Text(_t('កំពុងដេញថ្លៃ', 'LIVE'), style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w800)),
                             ],
                           ),
                         ),
@@ -587,7 +590,7 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
                             children: [
                               const Icon(Icons.visibility, color: Colors.white, size: 14),
                               const SizedBox(width: 4),
-                              Text('$_viewerCount នាក់', style: const TextStyle(color: Colors.white, fontSize: 11)),
+                              Text('$_viewerCount ${_t('នាក់', 'viewers')}', style: const TextStyle(color: Colors.white, fontSize: 11)),
                             ],
                           ),
                         ),
@@ -681,7 +684,7 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    const Text('តម្លៃបច្ចុប្បន្ន', style: TextStyle(color: _textMuted, fontSize: 12, fontFamily: 'Siemreap')),
+                                    Text(_t('តម្លៃបច្ចុប្បន្ន', 'Current price'), style: TextStyle(color: _textMuted, fontSize: 12, fontFamily: 'Siemreap')),
                                     const SizedBox(height: 4),
                                     FittedBox(
                                       fit: BoxFit.scaleDown,
@@ -697,7 +700,7 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
-                                  const Text('ដេញបន្ទាប់', style: TextStyle(color: _textMuted, fontSize: 12, fontFamily: 'Siemreap')),
+                                  Text(_t('ដេញបន្ទាប់', 'Next bid'), style: TextStyle(color: _textMuted, fontSize: 12, fontFamily: 'Siemreap')),
                                   const SizedBox(height: 4),
                                   Text('+${fmt.format(bidStep)} ៛', style: const TextStyle(color: _gold, fontSize: 16, fontWeight: FontWeight.w700)),
                                   FittedBox(
@@ -837,12 +840,12 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
                                         child: Column(
                                           crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
-                                            const Text(
-                                              'ការដេញថ្លៃបានចប់!',
+                                            Text(
+                                              _t('ការដេញថ្លៃបានចប់!', 'Auction ended!'),
                                               style: TextStyle(color: _gold, fontSize: 15, fontWeight: FontWeight.w700, fontFamily: 'Siemreap'),
                                             ),
                                             Text(
-                                              isOwner ? 'អ្នកឈ្នះ: ${lastBidder ?? ''}' : 'អ្នកឈ្នះហើយ!',
+                                              isOwner ? '${_t('អ្នកឈ្នះ', 'Winner')}: ${lastBidder ?? ''}' : _t('អ្នកឈ្នះហើយ!', 'You won!'),
                                               style: const TextStyle(color: _textMuted, fontSize: 12, fontFamily: 'Siemreap'),
                                             ),
                                           ],
@@ -868,7 +871,7 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
                                               crossAxisAlignment: CrossAxisAlignment.start,
                                               children: [
                                                 Text(
-                                                  isOwner ? 'លេខអ្នកឈ្នះ' : 'លេខម្ចាស់ទំនិញ',
+                                                  isOwner ? _t('លេខអ្នកឈ្នះ', 'Winner phone') : _t('លេខម្ចាស់ទំនិញ', 'Seller phone'),
                                                   style: const TextStyle(color: _textMuted, fontSize: 11, fontFamily: 'Siemreap'),
                                                 ),
                                                 const SizedBox(height: 2),
@@ -941,7 +944,7 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
                                         ),
                                         icon: const Icon(Icons.chat_bubble_outline_rounded, color: Colors.white, size: 18),
                                         label: Text(
-                                          isOwner ? 'Chat ជាមួយអ្នកឈ្នះ' : 'Chat ជាមួយម្ចាស់ទំនិញ',
+                                          isOwner ? _t('Chat ជាមួយអ្នកឈ្នះ', 'Chat with winner') : _t('Chat ជាមួយម្ចាស់ទំនិញ', 'Chat with seller'),
                                           style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontFamily: 'Siemreap'),
                                         ),
                                       ),
@@ -983,8 +986,8 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
                                     const SizedBox(width: 8),
                                     Text(
                                       isFinished
-                                          ? 'ការដេញថ្លៃបានបញ្ចប់'
-                                          : 'ដេញថ្លៃ ${fmt.format(currentPrice + bidStep)} ៛',
+                                          ? _t('ការដេញថ្លៃបានបញ្ចប់', 'Auction ended')
+                                          : '${_t('ដេញថ្លៃ', 'Bid')} ${fmt.format(currentPrice + bidStep)} ៛',
                                       style: const TextStyle(
                                         color: Colors.white,
                                         fontSize: 15,
@@ -997,12 +1000,12 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
                         ),
                       ),
                       const SizedBox(height: 24),
-                      const Row(
+                      Row(
                         children: [
-                          Icon(Icons.history_rounded, color: _textMuted, size: 18),
+                          const Icon(Icons.history_rounded, color: _textMuted, size: 18),
                           SizedBox(width: 8),
                           Text(
-                            'ប្រវត្តិដេញថ្លៃ',
+                            _t('ប្រវត្តិដេញថ្លៃ', 'Bid history'),
                             style: TextStyle(color: _text, fontSize: 16, fontWeight: FontWeight.w700, fontFamily: 'Siemreap'),
                           ),
                         ],
@@ -1028,12 +1031,12 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
                                 borderRadius: BorderRadius.circular(14),
                                 border: Border.all(color: _border),
                               ),
-                              child: const Center(
+                              child: Center(
                                 child: Column(
                                   children: [
-                                    Icon(Icons.gavel_rounded, color: _textMuted, size: 32),
-                                    SizedBox(height: 8),
-                                    Text('មិនទាន់មានអ្នកដេញ', style: TextStyle(color: _textMuted, fontFamily: 'Siemreap')),
+                                    const Icon(Icons.gavel_rounded, color: _textMuted, size: 32),
+                                    const SizedBox(height: 8),
+                                    Text(_t('មិនទាន់មានអ្នកដេញ', 'No bids yet'), style: TextStyle(color: _textMuted, fontFamily: 'Siemreap')),
                                   ],
                                 ),
                               ),
@@ -1099,7 +1102,7 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
   }
 
   Widget _buildOwnerBadge() {
-    final displayName = _ownerName.isNotEmpty ? _ownerName : 'រកឈ្មោះ...';
+    final displayName = _ownerName.isNotEmpty ? _ownerName : _t('រកឈ្មោះ...', 'Loading name...');
     final displaySesanId = _sesanId.isNotEmpty ? _sesanId : '...';
     return Positioned(
       bottom: 40,
