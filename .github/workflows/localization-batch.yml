@@ -28,6 +28,9 @@ jobs:
             ('content: Text("$actionText មេត្រូវចូលប្រើប្រាស់គណនីជាមុនសិន។"),', "content: Text(_t('$actionText មេត្រូវចូលប្រើប្រាស់គណនីជាមុនសិន។', 'Please sign in $actionText.')),"),
             ('child: const Text(\n              "ទៅ Login",\n              style: TextStyle(color: Colors.white),\n            ),', "child: Text(\n              _t('ទៅ Login', 'Go to sign in'),\n              style: const TextStyle(color: Colors.white),\n            ),"),
             ('_showLoginRequiredDialog(context, "ដើម្បីប្រើប្រាស់មុខងារនេះ");', "_showLoginRequiredDialog(context, _t('ដើម្បីប្រើប្រាស់មុខងារនេះ', 'to use this feature'));"),
+            ('_showLoginRequiredDialog(\n                                  context,\n                                  "ដើម្បីប្រកាសទិញបាន",\n                                );', "_showLoginRequiredDialog(\n                                  context,\n                                  _t('ដើម្បីប្រកាសទិញបាន', 'to post a wanted request'),\n                                );"),
+            ("label: const Text(\n                              _t('ប្រកាសទិញ', 'Wanted'),\n                              style: TextStyle(fontFamily: 'Siemreap'),\n                            ),", "label: Text(\n                              _t('ប្រកាសទិញ', 'Wanted'),\n                              style: const TextStyle(fontFamily: 'Siemreap'),\n                            ),"),
+            ('"ចុះឈ្មោះលក់មុន",\n                      Icons.timer_outlined,', "_t('ចុះឈ្មោះលក់មុន', 'Add pre-order'),\n                      Icons.timer_outlined,"),
           ]
           for old, new in replacements:
               if old in s:
@@ -45,13 +48,15 @@ jobs:
           grep -q "_t('ទៅ Login', 'Go to sign in')" lib/home_screen.dart
           grep -q "_t('ដើម្បីផុសលក់ទំនិញបាន', 'to post a product')" lib/home_screen.dart
           grep -q "_t('ដើម្បីប្រើប្រាស់មុខងារនេះ', 'to use this feature')" lib/home_screen.dart
+          grep -q "_t('ប្រកាសទិញ', 'Wanted')" lib/home_screen.dart
+          grep -q "_t('ចុះឈ្មោះលក់មុន', 'Add pre-order')" lib/home_screen.dart
           grep -q "Product categories" lib/home_screen.dart
           grep -q "New products" lib/home_screen.dart
           grep -q "Pre-order" lib/home_screen.dart
-          grep -q "Wanted" lib/home_screen.dart
           grep -q "ProductSearchV51Controller" lib/home_screen.dart
           grep -q "QrScannerScreen" lib/home_screen.dart
           grep -q "AuctionMainScreen" lib/home_screen.dart
+          if grep -q "label: const Text(.*_t(" lib/home_screen.dart; then exit 1; fi
       - name: Analyze Home Screen
         run: |
           flutter pub get
