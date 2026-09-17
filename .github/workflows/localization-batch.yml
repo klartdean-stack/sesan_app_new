@@ -9,84 +9,97 @@ permissions:
   contents: write
 
 jobs:
-  patch-auction-detail:
+  localize-detail-screens:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ios-sync-android46
-      - name: Apply Sesan theme and bilingual Auction Detail
+      - name: Localize Pre-order Detail and Wanted Detail
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          p=Path('lib/auction_detail_screen.dart')
-          s=p.read_text(encoding='utf-8')
-          theme={
-            "static const _bg = Color(0xFF0D1117);":"static const _bg = Color(0xFFF7FAF7);",
-            "static const _card = Color(0xFF161B22);":"static const _card = Colors.white;",
-            "static const _border = Color(0xFF30363D);":"static const _border = Color(0xFFDDE8DF);",
-            "static const _accent = Color(0xFF238636);":"static const _accent = Color(0xFF2E7D32);",
-            "static const _accentBlue = Color(0xFF1F6FEB);":"static const _accentBlue = Color(0xFFF57C00);",
-            "static const _text = Color(0xFFE6EDF3);":"static const _text = Color(0xFF1F2933);",
-            "static const _textMuted = Color(0xFF8B949E);":"static const _textMuted = Color(0xFF6B7280);",
-            "static const _red = Color(0xFFDA3633);":"static const _red = Color(0xFFD32F2F);",
-            "static const _gold = Color(0xFFFFB300);":"static const _gold = Color(0xFFF57C00);",
-          }
-          for a,b in theme.items():
-            if a not in s: raise SystemExit(f'missing theme token: {a}')
-            s=s.replace(a,b,1)
-          marker="  static const _gold = Color(0xFFF57C00);\n"
-          helper="\n  String _t(String km, String en) =>\n      Localizations.localeOf(context).languageCode == 'en' ? en : km;\n"
-          if helper not in s: s=s.replace(marker, marker+helper, 1)
-          s=s.replace('systemOverlayStyle: SystemUiOverlayStyle.light,','systemOverlayStyle: SystemUiOverlayStyle.dark,')
-          reps={
-            "data['name'] ?? data['displayName'] ?? 'គ្មានឈ្មោះ'":"data['name'] ?? data['displayName'] ?? _t('គ្មានឈ្មោះ', 'Unnamed')",
-            "_showSnack('❌ សូម Login មុនសិន', _red);":"_showSnack(_t('❌ សូម Login មុនសិន', '❌ Please log in first'), _red);",
-            "_showSnack('🎉 ដេញថ្លៃជោគជ័យ! ${NumberFormat('#,###').format(newBid)} ៛', _accent);":"_showSnack('${_t('🎉 ដេញថ្លៃជោគជ័យ!', '🎉 Bid placed successfully!')} ${NumberFormat('#,###').format(newBid)} ៛', _accent);",
-            "final productName = data['product_name'] ?? 'គ្មានឈ្មោះ';":"final productName = data['product_name'] ?? _t('គ្មានឈ្មោះ', 'Unnamed product');",
-            "Text('$_viewerCount នាក់'":"Text('$_viewerCount ${_t('នាក់', 'viewers')}'",
-            "const Text('តម្លៃបច្ចុប្បន្ន',":"Text(_t('តម្លៃបច្ចុប្បន្ន', 'Current price'),",
-            "const Text('ដេញបន្ទាប់',":"Text(_t('ដេញបន្ទាប់', 'Next bid'),",
-            "const Text('អ្នកឈ្នះបច្ចុប្បន្ន',":"Text(_t('អ្នកឈ្នះបច្ចុប្បន្ន', 'Current winner'),",
-            "const Text(\n                                              'ការដេញថ្លៃបានចប់!',":"Text(\n                                              _t('ការដេញថ្លៃបានចប់!', 'Auction ended!'),",
-            "isOwner ? 'អ្នកឈ្នះ: ${lastBidder ?? ''}' : 'អ្នកឈ្នះហើយ!'":"isOwner ? '${_t('អ្នកឈ្នះ', 'Winner')}: ${lastBidder ?? ''}' : _t('អ្នកឈ្នះហើយ!', 'You won!')",
-            "isOwner ? 'លេខអ្នកឈ្នះ' : 'លេខម្ចាស់ទំនិញ'":"isOwner ? _t('លេខអ្នកឈ្នះ', 'Winner phone') : _t('លេខម្ចាស់ទំនិញ', 'Seller phone')",
-            "isOwner ? 'Chat ជាមួយអ្នកឈ្នះ' : 'Chat ជាមួយម្ចាស់ទំនិញ'":"isOwner ? _t('Chat ជាមួយអ្នកឈ្នះ', 'Chat with winner') : _t('Chat ជាមួយម្ចាស់ទំនិញ', 'Chat with seller')",
-            "? 'ការដេញថ្លៃបានបញ្ចប់'\n                                          : 'ដេញថ្លៃ ${fmt.format(currentPrice + bidStep)} ៛'":"? _t('ការដេញថ្លៃបានបញ្ចប់', 'Auction ended')\n                                          : '${_t('ដេញថ្លៃ', 'Bid')} ${fmt.format(currentPrice + bidStep)} ៛'",
-            "'រកឈ្មោះ...'":"_t('រកឈ្មោះ...', 'Loading name...')",
+
+          def add_helper(s, marker):
+              helper = "\n  String _t(String km, String en) =>\n      Localizations.localeOf(context).languageCode == 'en' ? en : km;\n"
+              if helper not in s:
+                  s = s.replace(marker, marker + helper, 1)
+              return s
+
+          # Pre-order Detail
+          p = Path('lib/pre_order_detail_screen.dart')
+          s = p.read_text(encoding='utf-8')
+          s = add_helper(s, "class _PreOrderDetailScreenState extends State<PreOrderDetailScreen> {\n")
+          reps = {
+            "String _posterName = 'កំពុងផ្ទុក...';":"String _posterName = '';",
+            "_posterName = 'មិនស្គាល់អ្នកប្រកាស';":"_posterName = _t('មិនស្គាល់អ្នកប្រកាស', 'Unknown poster');",
+            "userData['name'] ?? userData['displayName'] ?? 'គ្មានឈ្មោះ'":"userData['name'] ?? userData['displayName'] ?? _t('គ្មានឈ្មោះ', 'Unnamed')",
+            "_posterName = 'មិនអាចរកឃើញអ្នកប្រកាស';":"_posterName = _t('មិនអាចរកឃើញអ្នកប្រកាស', 'Poster not found');",
+            "_posterName = 'មានបញ្ហាក្នុងការផ្ទុក';":"_posterName = _t('មានបញ្ហាក្នុងការផ្ទុក', 'Unable to load poster');",
+            "appBar: AppBar(title: const Text('ព័ត៌មានលម្អិត'":"appBar: AppBar(title: Text(_t('ព័ត៌មានលម្អិត', 'Pre-order details')",
+            "ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('បានចម្លង Link រូបភាព')));":"ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(_t('បានចម្លង Link រូបភាព', 'Image link copied'))));",
+            "Share.share('ត្រូវការទិញ: ${widget.data['product_name'] ?? ''}\\nតម្លៃ: ${widget.data['price'] ?? '0'} ៛\\nមើលរូបភាព: $firstImg');":"Share.share('${_t('ត្រូវការទិញ', 'Wanted')}: ${widget.data['product_name'] ?? ''}\\n${_t('តម្លៃ', 'Price')}: ${widget.data['price'] ?? '0'} ៛\\n${_t('មើលរូបភាព', 'View image')}: $firstImg');",
+            "const Text('ម្ចាស់ការប្រកាស'":"Text(_t('ម្ចាស់ការប្រកាស', 'Posted by')",
+            "label: const Text('ផ្ញើសារឥឡូវនេះ'":"label: Text(_t('ផ្ញើសារឥឡូវនេះ', 'Message now')",
+            "ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('សូមចូលប្រើប្រាស់កម្មវិធីជាមុនសិន')));":"ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(_t('សូមចូលប្រើប្រាស់កម្មវិធីជាមុនសិន', 'Please log in first'))));",
+            "widget.data['product_name'] ?? 'ផលិតផល'":"widget.data['product_name'] ?? _t('ផលិតផល', 'Product')",
+            "title: const Text('លុបការប្រកាស?'":"title: Text(_t('លុបការប្រកាស?', 'Delete post?')",
+            "content: const Text('តើអ្នកពិតជាចង់លុបការប្រកាសនេះមែនទេ?')":"content: Text(_t('តើអ្នកពិតជាចង់លុបការប្រកាសនេះមែនទេ?', 'Are you sure you want to delete this post?'))",
+            "child: const Text('ទេ')":"child: Text(_t('ទេ', 'Cancel'))",
+            "child: const Text('លុប', style:":"child: Text(_t('លុប', 'Delete'), style:",
+            "Text('ប្រកាសនៅ: ${_formatDate(widget.data['created_at'])}'":"Text('${_t('ប្រកាសនៅ', 'Posted')}: ${_formatDate(widget.data['created_at'])}'",
+            "_row(Icons.event_available, 'ថ្ងៃប្រមូលផល'":"_row(Icons.event_available, _t('ថ្ងៃប្រមូលផល', 'Harvest date')",
+            "_row(Icons.location_on_outlined, 'ទីតាំង', widget.data['location'] ?? 'មិនមានទីតាំង')":"_row(Icons.location_on_outlined, _t('ទីតាំង', 'Location'), widget.data['location'] ?? _t('មិនមានទីតាំង', 'No location'))",
+            "final displayedPhone = fullPhone.isEmpty ? 'មិនមានលេខទូរស័ព្ទ'":"final displayedPhone = fullPhone.isEmpty ? _t('មិនមានលេខទូរស័ព្ទ', 'No phone number')",
+            "const Text('លេខទូរស័ព្ទ'":"Text(_t('លេខទូរស័ព្ទ', 'Phone number')",
+            "tooltip: showFullPhone ? 'លាក់លេខ' : 'បង្ហាញលេខ 5 វិនាទី'":"tooltip: showFullPhone ? _t('លាក់លេខ', 'Hide number') : _t('បង្ហាញលេខ 5 វិនាទី', 'Show for 5 seconds')",
+            "final displayText = description.isEmpty ? 'មិនមានការពិពណ៌នា' : description;":"final displayText = description.isEmpty ? _t('មិនមានការពិពណ៌នា', 'No description') : description;",
           }
           for a,b in reps.items(): s=s.replace(a,b)
-          s=s.replace("const Text(\n                'លុបការដេញថ្លៃ?',", "Text(\n                _t('លុបការដេញថ្លៃ?', 'Delete auction?'),")
-          s=s.replace("child: const Text('បោះបង់', style:", "child: Text(_t('បោះបង់', 'Cancel'), style:")
-          s=s.replace("child: const Text(\n                        'លុប',", "child: Text(\n                        _t('លុប', 'Delete'),")
-          s=s.replace("const Text(\n                    'បញ្ជាក់ការដេញថ្លៃ',", "Text(\n                    _t('បញ្ជាក់ការដេញថ្លៃ', 'Confirm bid'),")
-          s=s.replace("child: const Text(\n                            'យល់ព្រម',", "child: Text(\n                            _t('យល់ព្រម', 'Confirm'),")
-          s=s.replace("child: const Row(\n          mainAxisSize: MainAxisSize.min,", "child: Row(\n          mainAxisSize: MainAxisSize.min,")
-          s=s.replace("Text(\n              'ចប់ហើយ',", "Text(\n              _t('ចប់ហើយ', 'Ended'),")
-          s=s.replace("const Row(\n                        children: [\n                          Icon(Icons.history_rounded", "Row(\n                        children: [\n                          const Icon(Icons.history_rounded")
-          s=s.replace("Text(\n                            'ប្រវត្តិដេញថ្លៃ',", "Text(\n                            _t('ប្រវត្តិដេញថ្លៃ', 'Bid history'),")
-          s=s.replace("child: const Center(\n                                child: Column(", "child: Center(\n                                child: Column(")
-          s=s.replace("Icon(Icons.gavel_rounded, color: _textMuted, size: 32),\n                                    SizedBox(height: 8),\n                                    Text('មិនទាន់មានអ្នកដេញ'", "const Icon(Icons.gavel_rounded, color: _textMuted, size: 32),\n                                    const SizedBox(height: 8),\n                                    Text(_t('មិនទាន់មានអ្នកដេញ', 'No bids yet')")
-          s=s.replace("child: const Row(\n                            mainAxisSize: MainAxisSize.min,\n                            children: [\n                              Icon(Icons.circle, size: 7, color: Colors.white),\n                              SizedBox(width: 4),\n                              Text('LIVE'", "child: Row(\n                            mainAxisSize: MainAxisSize.min,\n                            children: [\n                              const Icon(Icons.circle, size: 7, color: Colors.white),\n                              const SizedBox(width: 4),\n                              Text(_t('កំពុងដេញថ្លៃ', 'LIVE')")
-          p.write_text(s,encoding='utf-8')
+          p.write_text(s, encoding='utf-8')
+
+          # Wanted Detail
+          p = Path('lib/wanted_detail_screen.dart')
+          s = p.read_text(encoding='utf-8')
+          s = add_helper(s, "class _WantedDetailScreenState extends State<WantedDetailScreen> {\n")
+          reps = {
+            "String _posterName = 'កំពុងផ្ទុក...';":"String _posterName = '';",
+            "_posterName = 'មិនស្គាល់អ្នកប្រកាស';":"_posterName = _t('មិនស្គាល់អ្នកប្រកាស', 'Unknown poster');",
+            "userData['name'] ?? userData['displayName'] ?? 'គ្មានឈ្មោះ'":"userData['name'] ?? userData['displayName'] ?? _t('គ្មានឈ្មោះ', 'Unnamed')",
+            "_posterName = 'មិនអាចរកឃើញអ្នកប្រកាស';":"_posterName = _t('មិនអាចរកឃើញអ្នកប្រកាស', 'Poster not found');",
+            "_posterName = 'មានបញ្ហាក្នុងការផ្ទុក';":"_posterName = _t('មានបញ្ហាក្នុងការផ្ទុក', 'Unable to load poster');",
+            "doc.data()['userName'] ?? 'អ្នកលក់'":"doc.data()['userName'] ?? _t('អ្នកលក់', 'Seller')",
+            "userDoc.data()?['name'] ?? 'អ្នកលក់'":"userDoc.data()?['name'] ?? _t('អ្នកលក់', 'Seller')",
+            "title: const Text(\n            'ខ្ញុំមានលក់'":"title: Text(\n            _t('ខ្ញុំមានលក់', 'I have this for sale')",
+            "decoration: const InputDecoration(\n                  labelText: 'តម្លៃ',":"decoration: InputDecoration(\n                  labelText: _t('តម្លៃ', 'Price'),",
+            "const Text('រូបិយប័ណ្ណ: ')":"Text('${_t('រូបិយប័ណ្ណ', 'Currency')}: ')",
+            "DropdownMenuItem(value: '៛', child: Text('៛ រៀល'))":"DropdownMenuItem(value: '៛', child: Text(_t('៛ រៀល', '៛ Riel')))",
+            "DropdownMenuItem(value: '\\$', child: Text('\\$ ដុល្លារ'))":"DropdownMenuItem(value: '\\$', child: Text(_t('\\$ ដុល្លារ', '\\$ USD')))",
+            "const Text('អាចចរចារបាន')":"Text(_t('អាចចរចារបាន', 'Negotiable'))",
+            "child: const Text('បោះបង់')":"child: Text(_t('បោះបង់', 'Cancel'))",
+            "child: const Text('បញ្ជាក់')":"child: Text(_t('បញ្ជាក់', 'Confirm'))",
+          }
+          for a,b in reps.items(): s=s.replace(a,b)
+          p.write_text(s, encoding='utf-8')
           PY
+          dart format lib/pre_order_detail_screen.dart lib/wanted_detail_screen.dart
           git diff --check
-      - name: Verify preserved auction logic
+      - name: Verify preserved detail logic
         run: |
-          grep -q "collection('auction_products')" lib/auction_detail_screen.dart
-          grep -q "collection('bids')" lib/auction_detail_screen.dart
-          grep -q "last_bidder_id" lib/auction_detail_screen.dart
-          grep -q "ChatScreen" lib/auction_detail_screen.dart
-          grep -q "Current price" lib/auction_detail_screen.dart
-          grep -q "Bid history" lib/auction_detail_screen.dart
-          grep -q "Color(0xFFF7FAF7)" lib/auction_detail_screen.dart
-          grep -q "Color(0xFFF57C00)" lib/auction_detail_screen.dart
-      - name: Commit Auction Detail
+          grep -q "collection('pre_orders')" lib/pre_order_detail_screen.dart
+          grep -q "PreOrderRelatedProductsWidget" lib/pre_order_detail_screen.dart
+          grep -q "ChatScreen" lib/pre_order_detail_screen.dart
+          grep -q "collection('wanted_products')" lib/wanted_detail_screen.dart
+          grep -q "collection('sellers')" lib/wanted_detail_screen.dart
+          grep -q "WantedRelatedProductsWidget" lib/wanted_detail_screen.dart
+          grep -q "I have this for sale" lib/wanted_detail_screen.dart
+          grep -q "Pre-order details" lib/pre_order_detail_screen.dart
+      - name: Commit localized detail screens
         run: |
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add lib/auction_detail_screen.dart
+          git add lib/pre_order_detail_screen.dart lib/wanted_detail_screen.dart
           git diff --cached --check
           if git diff --cached --quiet; then exit 0; fi
-          git commit -m "Refresh Auction Detail Sesan theme and localization"
+          git commit -m "Localize Pre-order and Wanted detail screens"
           git push origin HEAD:ios-sync-android46
