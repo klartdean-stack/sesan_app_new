@@ -169,7 +169,7 @@ jobs:
 
       - name: Prepare Flutter iOS configuration
         run: |
-          BUILD_NUMBER=54
+          BUILD_NUMBER=57
           echo "BUILD_NUMBER=$BUILD_NUMBER" >> "$GITHUB_ENV"
           echo "Using App Store build number: $BUILD_NUMBER"
           flutter build ios --release --config-only --build-number="$BUILD_NUMBER"
