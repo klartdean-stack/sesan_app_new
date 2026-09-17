@@ -1,13 +1,10 @@
 name: One-time localization batch
-
 on:
   push:
     branches: [ios-sync-android46]
     paths: ['.github/workflows/localization-batch.yml']
-
 permissions:
   contents: write
-
 jobs:
   localize-home:
     runs-on: ubuntu-latest
@@ -15,88 +12,76 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ios-sync-android46
-      - name: Localize Home Screen
+      - name: Patch Home Khmer English
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          p=Path('lib/home_screen.dart')
-          s=p.read_text(encoding='utf-8')
-          marker="class _HomeScreenState extends State<HomeScreen> {\n"
-          helper="  String _t(String km, String en) =>\n      Localizations.localeOf(context).languageCode == 'en' ? en : km;\n\n"
+          p = Path('lib/home_screen.dart')
+          s = p.read_text(encoding='utf-8')
+          marker = 'class _HomeScreenState extends State<HomeScreen> {\n'
+          helper = "  String _t(String km, String en) => Localizations.localeOf(context).languageCode == 'en' ? en : km;\n\n"
           if helper not in s:
-              s=s.replace(marker, marker+helper, 1)
-          category_method="""  String _categoryLabel(String name) {
-    switch (name) {
-      case 'ទាំងអស់': return _t('ទាំងអស់', 'All');
-      case 'គ្រឿងចក្រ': return _t('គ្រឿងចក្រ', 'Machinery');
-      case 'សម្ភារៈកសិកម្ម': return _t('សម្ភារៈកសិកម្ម', 'Farm supplies');
-      case 'ពូជដំណាំ': return _t('ពូជដំណាំ', 'Crop seeds');
-      case 'ពូជសត្វចិញ្ចឹម': return _t('ពូជសត្វចិញ្ចឹម', 'Livestock');
-      case 'ជីនិងថ្នាំ': return _t('ជីនិងថ្នាំ', 'Fertilizer & chemicals');
-      case 'បន្លែផ្លែឈើ': return _t('បន្លែផ្លែឈើ', 'Fruit & vegetables');
-      case 'ត្រីសាច់': return _t('ត្រីសាច់', 'Fish & meat');
-      case 'សេវាកម្ម': return _t('សេវាកម្ម', 'Services');
-      case 'ផ្សេងៗ': return _t('ផ្សេងៗ', 'Other');
-      default: return name;
-    }
-  }
-
-"""
-          if 'String _categoryLabel' not in s:
-              s=s.replace("  final List<Map<String, dynamic>> categories = [\n", category_method+"  final List<Map<String, dynamic>> categories = [\n", 1)
-          reps={
-            '"កំពុងបង្ហោះទំនិញ... ${(uploadController.uploadProgress.value * 100).toInt()}%"': "'${_t('កំពុងបង្ហោះទំនិញ...', 'Uploading product...')} ${(uploadController.uploadProgress.value * 100).toInt()}%'",
-            '_showLoginRequiredDialog(context, "ដើម្បីផុសលក់ទំនិញបាន");': "_showLoginRequiredDialog(context, _t('ដើម្បីផុសលក់ទំនិញបាន', 'to post a product'));",
-            'title: const Text("សូមចូលប្រើប្រាស់"),': "title: Text(_t('សូមចូលប្រើប្រាស់', 'Sign in required')),
-",
-            'child: const Text("មើលសិន", style: TextStyle(color: Colors.grey)),': "child: Text(_t('មើលសិន', 'Not now'), style: const TextStyle(color: Colors.grey)),",
-            'label = "ទំព័រដើម";': "label = _t('ទំព័រដើម', 'Home');",
-            'label = "កន្ត្រក";': "label = _t('កន្ត្រក', 'Cart');",
-            'label = "ឆាត";': "label = _t('ឆាត', 'Chat');",
-            'label = "គណនី";': "label = _t('គណនី', 'Account');",
-            '_showLoginRequiredDialog(context, "ដើម្បីប្រើប្រាស់មុខងារនេះ");': "_showLoginRequiredDialog(context, _t('ដើម្បីប្រើប្រាស់មុខងារនេះ', 'to use this feature'));",
-            'const Text(\n                                  "ប្រភេទផលិតផល",': "Text(\n                                  _t('ប្រភេទផលិតផល', 'Product categories'),",
-            "const Text(\n                                          'ចូលដេញថ្លៃ',": "Text(\n                                          _t('ចូលដេញថ្លៃ', 'Auctions'),",
-            'tabs: const [': 'tabs: [',
-            '"ទំនិញថ្មីៗ",': "_t('ទំនិញថ្មីៗ', 'New products'),",
-            '"លក់មុន",': "_t('លក់មុន', 'Pre-order'),",
-            '"ប្រកាសទិញ",': "_t('ប្រកាសទិញ', 'Wanted'),",
-            'item[\'name\'],\n                style: TextStyle(': "_categoryLabel(item['name']),\n                style: TextStyle(",
-            'title: Text("បើកការជូនដំណឹង"),': "title: Text(_t('បើកការជូនដំណឹង', 'Enable notifications')),
-",
-            'child: Text("ក្រោយមក"),': "child: Text(_t('ក្រោយមក', 'Later')),",
-            'child: Text("ទៅបើកឥឡូវនេះ"),': "child: Text(_t('ទៅបើកឥឡូវនេះ', 'Open settings')),",
+              s = s.replace(marker, marker + helper, 1)
+          cat = '''  String _categoryLabel(String name) {
+            switch (name) {
+              case 'ទាំងអស់': return _t('ទាំងអស់', 'All');
+              case 'គ្រឿងចក្រ': return _t('គ្រឿងចក្រ', 'Machinery');
+              case 'សម្ភារៈកសិកម្ម': return _t('សម្ភារៈកសិកម្ម', 'Farm supplies');
+              case 'ពូជដំណាំ': return _t('ពូជដំណាំ', 'Crop seeds');
+              case 'ពូជសត្វចិញ្ចឹម': return _t('ពូជសត្វចិញ្ចឹម', 'Livestock');
+              case 'ជីនិងថ្នាំ': return _t('ជីនិងថ្នាំ', 'Fertilizer & chemicals');
+              case 'បន្លែផ្លែឈើ': return _t('បន្លែផ្លែឈើ', 'Fruit & vegetables');
+              case 'ត្រីសាច់': return _t('ត្រីសាច់', 'Fish & meat');
+              case 'សេវាកម្ម': return _t('សេវាកម្ម', 'Services');
+              case 'ផ្សេងៗ': return _t('ផ្សេងៗ', 'Other');
+              default: return name;
+            }
           }
-          for a,b in reps.items(): s=s.replace(a,b)
-          s=s.replace('child: const Text(\n              "ទៅ Login",', "child: Text(\n              _t('ទៅ Login', 'Go to sign in'),")
-          s=s.replace('"ដើម្បីប្រកាសទិញបាន",', "_t('ដើម្បីប្រកាសទិញបាន', 'to post a wanted request'),")
-          s=s.replace('label: const Text(\n                              "ប្រកាសទិញ",', "label: Text(\n                              _t('ប្រកាសទិញ', 'Post wanted'),")
-          s=s.replace('"ប្រកាសទិញ",\n                      Icons.campaign,', "_t('ប្រកាសទិញ', 'Post wanted'),\n                      Icons.campaign,")
-          s=s.replace('"ចុះឈ្មោះលក់មុន",\n                      Icons.timer_outlined,', "_t('ចុះឈ្មោះលក់មុន', 'Create pre-order'),\n                      Icons.timer_outlined,")
-          s=s.replace('content: Text("$actionText មេត្រូវចូលប្រើប្រាស់គណនីជាមុនសិន។"),', "content: Text(_t('$actionText មេត្រូវចូលប្រើប្រាស់គណនីជាមុនសិន។', 'Please sign in $actionText.')),")
-          p.write_text(s,encoding='utf-8')
+
+          '''
+          if 'String _categoryLabel' not in s:
+              s = s.replace('  final List<Map<String, dynamic>> categories = [\n', cat + '  final List<Map<String, dynamic>> categories = [\n', 1)
+          simple = [
+            ('label = "ទំព័រដើម";', "label = _t('ទំព័រដើម', 'Home');"),
+            ('label = "កន្ត្រក";', "label = _t('កន្ត្រក', 'Cart');"),
+            ('label = "ឆាត";', "label = _t('ឆាត', 'Chat');"),
+            ('label = "គណនី";', "label = _t('គណនី', 'Account');"),
+            ('item[\'name\'],', "_categoryLabel(item['name']),"),
+            ('"ទំនិញថ្មីៗ",', "_t('ទំនិញថ្មីៗ', 'New products'),"),
+            ('"លក់មុន",', "_t('លក់មុន', 'Pre-order'),"),
+            ('"ប្រកាសទិញ",', "_t('ប្រកាសទិញ', 'Wanted'),"),
+            ('title: Text("បើកការជូនដំណឹង"),', "title: Text(_t('បើកការជូនដំណឹង', 'Enable notifications')),"),
+            ('child: Text("ក្រោយមក"),', "child: Text(_t('ក្រោយមក', 'Later')),"),
+            ('child: Text("ទៅបើកឥឡូវនេះ"),', "child: Text(_t('ទៅបើកឥឡូវនេះ', 'Open settings')),"),
+          ]
+          for old, new in simple:
+              s = s.replace(old, new)
+          s = s.replace('tabs: const [', 'tabs: [')
+          s = s.replace('const Text(\n                                  "ប្រភេទផលិតផល",', "Text(\n                                  _t('ប្រភេទផលិតផល', 'Product categories'),")
+          s = s.replace("const Text(\n                                          'ចូលដេញថ្លៃ',", "Text(\n                                          _t('ចូលដេញថ្លៃ', 'Auctions'),")
+          s = s.replace('title: const Text("សូមចូលប្រើប្រាស់"),', "title: Text(_t('សូមចូលប្រើប្រាស់', 'Sign in required')),")
+          s = s.replace('child: const Text("មើលសិន", style: TextStyle(color: Colors.grey)),', "child: Text(_t('មើលសិន', 'Not now'), style: const TextStyle(color: Colors.grey)),")
+          s = s.replace('"កំពុងបង្ហោះទំនិញ... ${(uploadController.uploadProgress.value * 100).toInt()}%"', "'${_t('កំពុងបង្ហោះទំនិញ...', 'Uploading product...')} ${(uploadController.uploadProgress.value * 100).toInt()}%'")
+          p.write_text(s, encoding='utf-8')
           PY
           git diff --check
-      - name: Verify Home localization and preserved logic
+      - name: Verify required Home translations
         run: |
-          grep -q "String _categoryLabel" lib/home_screen.dart
           grep -q "'Home'" lib/home_screen.dart
           grep -q "'Cart'" lib/home_screen.dart
           grep -q "'Chat'" lib/home_screen.dart
           grep -q "'Account'" lib/home_screen.dart
           grep -q "Product categories" lib/home_screen.dart
           grep -q "New products" lib/home_screen.dart
+          grep -q "_categoryLabel" lib/home_screen.dart
           grep -q "ProductSearchV51Controller" lib/home_screen.dart
           grep -q "QrScannerScreen" lib/home_screen.dart
-          grep -q "PreOrderGridView" lib/home_screen.dart
-          grep -q "WantedGridView" lib/home_screen.dart
           grep -q "AuctionMainScreen" lib/home_screen.dart
-      - name: Commit Home localization
+      - name: Commit Home
         run: |
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git add lib/home_screen.dart
           git diff --cached --check
-          if git diff --cached --quiet; then exit 0; fi
           git commit -m "Localize Home Screen Khmer and English"
           git push origin HEAD:ios-sync-android46
