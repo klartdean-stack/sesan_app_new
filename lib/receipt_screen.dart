@@ -61,8 +61,8 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
       setState(() {
         _nameController.text =
             prefs.getString('saved_name') ?? (currentUser?.displayName ?? "");
-        _phoneController.text = prefs.getString('saved_phone') ??
-            (currentUser?.phoneNumber ?? "");
+        _phoneController.text =
+            prefs.getString('saved_phone') ?? (currentUser?.phoneNumber ?? "");
         if (prefs.getString('saved_address') != null) {
           _addressController.text = prefs.getString('saved_address')!;
         }
@@ -170,9 +170,8 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
       }).toList();
 
       String fileName = DateTime.now().millisecondsSinceEpoch.toString();
-      var storageRef = FirebaseStorage.instance
-          .ref()
-          .child('payments/$fileName.jpg');
+      var storageRef =
+          FirebaseStorage.instance.ref().child('payments/$fileName.jpg');
       await storageRef
           .putData(
             _paymentImageBytes!,
@@ -324,7 +323,8 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
                   onLongPress: () async {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text(_t("⌛️ កំពុងរក្សាទុក...", "⌛️ Saving...")),
+                        content:
+                            Text(_t("⌛️ កំពុងរក្សាទុក...", "⌛️ Saving...")),
                       ),
                     );
                     await _saveAssetQrToGallery();
@@ -484,7 +484,12 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
         DropdownButtonFormField<String>(
           value: selectedProvince,
           isDense: true,
-          style: const TextStyle(fontSize: 13, fontFamily: 'Siemreap'),
+          style: const TextStyle(
+            fontSize: 13,
+            fontFamily: 'Siemreap',
+            color: Colors.black87,
+          ),
+          dropdownColor: Colors.white,
           decoration: InputDecoration(
             isDense: true,
             contentPadding: const EdgeInsets.symmetric(
@@ -538,7 +543,9 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
                   style: const TextStyle(
                     fontSize: 13,
                     fontFamily: 'Siemreap',
+                    color: Colors.black87,
                   ),
+                  dropdownColor: Colors.white,
                   decoration: InputDecoration(
                     isDense: true,
                     contentPadding: const EdgeInsets.symmetric(
@@ -573,7 +580,9 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
                   style: const TextStyle(
                     fontSize: 13,
                     fontFamily: 'Siemreap',
+                    color: Colors.black87,
                   ),
+                  dropdownColor: Colors.white,
                   decoration: InputDecoration(
                     isDense: true,
                     contentPadding: const EdgeInsets.symmetric(

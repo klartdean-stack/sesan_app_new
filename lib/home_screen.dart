@@ -9,6 +9,7 @@ import 'package:my_app/auction_main_screen.dart';
 import 'package:my_app/notification_service.dart';
 import 'package:my_app/pre_order_grid_view.dart';
 import 'package:my_app/qr_scanner_screen.dart';
+import 'product_search_v51.dart';
 import 'package:my_app/upload_controller.dart';
 import 'package:my_app/user_notification_list.dart';
 import 'package:my_app/wanted_grid_view.dart';
@@ -27,40 +28,65 @@ import 'package:permission_handler/permission_handler.dart'; // ថែមតែ�
 import 'package:firebase_messaging/firebase_messaging.dart'; // ថែមជួរនេះ
 import 'l10n/app_localizations.dart';
 
-
-
 class HomeScreen extends StatefulWidget {
   final bool guestMode; // បន្ថែមនេះ
   const HomeScreen({super.key, this.guestMode = false}); // កែនេះ
 
-
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
-
-
-
-
-
 
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
   String _selectedCategory = "ទាំងអស់";
   String _searchQuery = "";
 
+  final TextEditingController _homeSearchController = TextEditingController();
+  ProductSearchV51Controller? _searchAiController;
+
+  ProductSearchV51Controller get _searchAi =>
+      _searchAiController ??= ProductSearchV51Controller(context);
+
+  Future<void> _applyAiSearch(String value) async {
+    if (!mounted || value.trim().isEmpty) return;
+
+    final primary = value.split('|').first.trim();
+    _homeSearchController.text = primary;
+    _homeSearchController.selection =
+        TextSelection.collapsed(offset: primary.length);
+
+    setState(() => _searchQuery = value.toLowerCase());
+  }
+
+  Future<void> _imageSearch() async {
+    final result = await _searchAi.searchByImage();
+    if (result != null) {
+      await _applyAiSearch(result);
+    }
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _voiceSearch() async {
+    final ai = _searchAi;
+
+    if (ai.recording) {
+      await ai.finishVoice(onResult: _applyAiSearch);
+    } else {
+      await ai.startVoice(onResult: _applyAiSearch);
+    }
+
+    if (mounted) setState(() {});
+  }
 
   // ១. ថែមជួរនេះដើម្បីឱ្យស្គាល់ UID (បាត់ក្រហម build)
   String? _loggedUid;
-String? name;
-
+  String? name;
 
   @override
   void initState() {
     super.initState();
 
-
     loadUser();
-
 
     if (!widget.guestMode) {
       NotificationService.updateSellerToken();
@@ -69,7 +95,6 @@ String? name;
     }
   }
 
-
   Future<void> loadUser() async {
     try {
       if (widget.guestMode) {
@@ -77,10 +102,8 @@ String? name;
         return;
       }
 
-
       final prefs = await SharedPreferences.getInstance();
       final userId = prefs.getString('user_uid');
-
 
       if (userId == null || userId.isEmpty) {
         // ✅ កុំ redirect — គ្រាន់តែទុកជា guest
@@ -88,13 +111,11 @@ String? name;
         return;
       }
 
-
       _setupFcmToken(userId);
       final doc = await FirebaseFirestore.instance
           .collection('users')
           .doc(userId)
           .get();
-
 
       if (doc.exists && mounted) {
         setState(() {
@@ -107,16 +128,10 @@ String? name;
     }
   }
 
-
-
-
-
-
   // 🎯 បន្ថែម Function នេះដើម្បីទាញ FCM Token និងរក្សាទុកទៅ Firestore
   Future<void> _setupFcmToken(String userId) async {
     try {
       FirebaseMessaging messaging = FirebaseMessaging.instance;
-
 
       // ១. សុំសិទ្ធិបង្ហាញ Notification (សម្រាប់ Android 13+ និង iOS)
       NotificationSettings settings = await messaging.requestPermission(
@@ -125,15 +140,12 @@ String? name;
         sound: true,
       );
 
-
       if (settings.authorizationStatus == AuthorizationStatus.authorized) {
         // ២. ទាញយក Token ពី Firebase
         String? token = await messaging.getToken();
 
-
         if (token != null) {
           print("🔥 FCM Token: $token");
-
 
           // ៣. រក្សាទុក Token ទៅក្នុង Collection 'users' តាមរយៈ userId
           await FirebaseFirestore.instance
@@ -141,8 +153,7 @@ String? name;
               .doc(userId)
               .update({
             'fcmToken': token,
-            'lastUpdate':
-            FieldValue.serverTimestamp(), // ថែមម៉ោងដែលវា Update
+            'lastUpdate': FieldValue.serverTimestamp(), // ថែមម៉ោងដែលវា Update
           });
         }
       }
@@ -151,20 +162,17 @@ String? name;
     }
   }
 
-
   // ១. បន្ថែម Function សម្រាប់រាប់ចំនួន Noti ដែលមិនទាន់អាន
   Future<int> _getUnreadCount(List<QueryDocumentSnapshot> docs) async {
     final prefs = await SharedPreferences.getInstance();
     // យកពេលវេលាដែលចុចមើលចុងក្រោយ (បើអត់មាន យក 0)
     int lastRead = prefs.getInt('last_read_noti') ?? 0;
 
-
     int unread = 0;
     for (var doc in docs) {
       // បង្ការបញ្ហា Timestamp null
       var data = doc.data() as Map<String, dynamic>;
       Timestamp? time = data['created_at'] as Timestamp?;
-
 
       if (time != null && time.millisecondsSinceEpoch > lastRead) {
         unread++;
@@ -173,22 +181,17 @@ String? name;
     return unread;
   }
 
-
   // ២. បន្ថែម Function សម្រាប់សម្គាល់ថាបានអានហើយ
   void _markAsRead() async {
     final prefs = await SharedPreferences.getInstance();
     // រក្សាទុកពេលវេលាបច្ចុប្បន្ន ជាម៉ោងដែលបានអានចុងក្រោយ
-    await prefs.setInt('last_read_noti', DateTime
-        .now()
-        .millisecondsSinceEpoch);
-
+    await prefs.setInt('last_read_noti', DateTime.now().millisecondsSinceEpoch);
 
     // Refresh UI ឱ្យលេខ Noti ក្រហមបាត់ទៅ
     if (mounted) {
       setState(() {});
     }
   }
-
 
   // ៣. បន្ថែម Function នេះដើម្បីទាញទិន្នន័យពី SharedPrefs
   Future<void> _checkLoginStatus() async {
@@ -198,14 +201,12 @@ String? name;
     });
   }
 
-
   void _subscribeAdminTopic() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null && user.uid == "លេខ_ID_របស់មេ") {
       await FirebaseMessaging.instance.subscribeToTopic('admin_orders');
     }
   }
-
 
   final List<Map<String, dynamic>> categories = [
     {'name': 'ទាំងអស់', 'icon': Icons.apps, 'isIcon': true},
@@ -240,156 +241,199 @@ String? name;
     {'name': 'ផ្សេងៗ', 'icon': Icons.grid_view, 'isIcon': true},
   ];
 
-
   @override
+void dispose() {
+  _homeSearchController.dispose();
+  _searchAiController?.dispose();
+  super.dispose();
+}
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final UploadController uploadController = Get.find<UploadController>();
     final user = FirebaseAuth.instance.currentUser;
 
-
     // ៤. ឆែកតាម _loggedUid វិញដើម្បីកុំឱ្យចូលជាភ្ញៀវ
     bool isGuest = _loggedUid == null || _loggedUid!.isEmpty;
 
-
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.green[700],
-        automaticallyImplyLeading: false,
-        // 💡 កែមកប្រើ titleSpacing ទាបដើម្បីឱ្យ Search Bar រីកបានវែង
-        titleSpacing: 10,
-        title: Row(
-          children: [
-            // ១. Logo សេសាន (បង្ហាញតែលើអេក្រង់ធំ)
-            if (MediaQuery
-                .of(context)
-                .size
-                .width > 600)
-              const Padding(
-                padding: EdgeInsets.only(right: 10),
-                child: Text(
-                  "SESAN",
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    fontSize: 16,
-                  ),
-                ),
-              ),
-
-
-            // ២. ប្រអប់ Search Bar (ប្រើ Expanded ដើម្បីឱ្យវារីកពេញលំហដែលនៅសល់)
-            Expanded(
-              child: Container(
-                height: 38,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: TextField(
-                  onChanged: (value) {
-                    setState(() => _searchQuery = value.trim());
-                  },
-                  decoration: InputDecoration(
-                    hintText: l10n.searchProducts,
-                    hintStyle: const TextStyle(
-                      fontFamily: 'Siemreap',
-                      fontSize: 13,
-                    ),
-                    prefixIcon: const Icon(Icons.search, size: 20),
-                    // ✅ ប៊ូតុងស្កែន QR
-                    suffixIcon: IconButton(
-                      padding: EdgeInsets.zero,
-                      icon: const Icon(
-                        Icons.qr_code_scanner,
-                        size: 20,
-                        color: Colors.blue,
+      appBar: _currentIndex == 0
+          ? AppBar(
+              backgroundColor: Colors.green[700],
+              automaticallyImplyLeading: false,
+              // 💡 កែមកប្រើ titleSpacing ទាបដើម្បីឱ្យ Search Bar រីកបានវែង
+              titleSpacing: 10,
+              title: Row(
+                children: [
+                  // ១. Logo សេសាន (បង្ហាញតែលើអេក្រង់ធំ)
+                  if (MediaQuery.of(context).size.width > 600)
+                    const Padding(
+                      padding: EdgeInsets.only(right: 10),
+                      child: Text(
+                        "SESAN",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          fontSize: 16,
+                        ),
                       ),
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const QrScannerScreen(),
+                    ),
+
+                  // ២. ប្រអប់ Search Bar (ប្រើ Expanded ដើម្បីឱ្យវារីកពេញលំហដែលនៅសល់)
+                  Expanded(
+                    child: Container(
+                      height: 38,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: TextField(
+                        controller: _homeSearchController,
+                        onChanged: (value) {
+                          setState(() => _searchQuery = value.trim());
+                        },
+                        decoration: InputDecoration(
+                          hintText: l10n.searchProducts,
+                          hintStyle: const TextStyle(
+                            fontFamily: 'Siemreap',
+                            fontSize: 13,
                           ),
-                        );
-                      },
-                    ),
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(vertical: 9),
-                  ),
-                ),
-              ),
-            ),
-
-
-            // ៣. Icon ជូនដំណឹង (ដាក់នៅកៀនខាងស្តាំបំផុត និងបង្រួមចន្លោះ)
-            Stack(
-              alignment: Alignment.center,
-              children: [
-                IconButton(
-                  // 💡 កាត់បន្ថយ Padding ដើម្បីកុំឱ្យទើស Search Bar
-                  padding: const EdgeInsets.only(left: 8),
-                  constraints: const BoxConstraints(),
-                  icon: const Icon(
-                    Icons.notifications_none_rounded,
-                    color: Colors.white,
-                    size: 26,
-                  ),
-                  onPressed: () {
-                    _markAsRead(); // ✅ សម្គាល់ថាអានរួច
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => UserNotificationScreen(),
-                      ),
-                    );
-                  },
-                ),
-                // 🎯 ផ្នែករាប់លេខ Noti ក្រហម
-                StreamBuilder<QuerySnapshot>(
-                  stream: FirebaseFirestore.instance
-                      .collection('announcements')
-                      .snapshots(),
-                  builder: (context, snapshot) {
-                    if (!snapshot.hasData) return const SizedBox();
-                    return FutureBuilder<int>(
-                      future: _getUnreadCount(snapshot.data!.docs),
-                      builder: (context, countSnapshot) {
-                        int count = countSnapshot.data ?? 0;
-                        if (count == 0) return const SizedBox();
-                        return Positioned(
-                          right: 0,
-                          top: 0,
-                          child: Container(
-                            padding: const EdgeInsets.all(2),
-                            decoration: BoxDecoration(
-                              color: Colors.red,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            constraints: const BoxConstraints(
-                              minWidth: 16,
-                              minHeight: 16,
-                            ),
-                            child: Text(
-                              '$count',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 9,
-                                fontWeight: FontWeight.bold,
+                          prefixIcon: const Icon(Icons.search, size: 20),
+                          // ✅ ប៊ូតុងស្កែន QR
+                          suffixIconConstraints:
+                              const BoxConstraints.tightFor(width: 96),
+                          suffixIcon: Row(
+                            children: [
+                              SizedBox(
+                                width: 32,
+                                child: IconButton(
+                                  padding: EdgeInsets.zero,
+                                  onPressed: _searchAiController?.busy == true
+                                      ? null
+                                      : _imageSearch,
+                                  icon: const Icon(
+                                    Icons.image_search,
+                                    color: Colors.purple,
+                                    size: 21,
+                                  ),
+                                ),
                               ),
-                              textAlign: TextAlign.center,
-                            ),
+                              SizedBox(
+                                width: 32,
+                                child: IconButton(
+                                  padding: EdgeInsets.zero,
+                                  onPressed: _searchAiController?.busy == true
+                                      ? null
+                                      : _voiceSearch,
+                                  icon: Icon(
+                                    _searchAiController?.recording == true
+                                        ? Icons.stop_circle
+                                        : Icons.mic,
+                                    color:
+                                        _searchAiController?.recording == true
+                                            ? Colors.red
+                                            : Colors.green,
+                                    size: 21,
+                                  ),
+                                ),
+                              ),
+                              SizedBox(
+                                width: 32,
+                                child: IconButton(
+                                  padding: EdgeInsets.zero,
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => const QrScannerScreen(),
+                                      ),
+                                    );
+                                  },
+                                  icon: const Icon(
+                                    Icons.qr_code_scanner,
+                                    color: Colors.blue,
+                                    size: 21,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                        );
-                      },
-                    );
-                  },
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
+                          border: InputBorder.none,
+                          contentPadding:
+                              const EdgeInsets.symmetric(vertical: 9),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  // ៣. Icon ជូនដំណឹង (ដាក់នៅកៀនខាងស្តាំបំផុត និងបង្រួមចន្លោះ)
+                  Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      IconButton(
+                        // 💡 កាត់បន្ថយ Padding ដើម្បីកុំឱ្យទើស Search Bar
+                        padding: const EdgeInsets.only(left: 8),
+                        constraints: const BoxConstraints(),
+                        icon: const Icon(
+                          Icons.notifications_none_rounded,
+                          color: Colors.white,
+                          size: 26,
+                        ),
+                        onPressed: () {
+                          _markAsRead(); // ✅ សម្គាល់ថាអានរួច
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => UserNotificationScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                      // 🎯 ផ្នែករាប់លេខ Noti ក្រហម
+                      StreamBuilder<QuerySnapshot>(
+                        stream: FirebaseFirestore.instance
+                            .collection('announcements')
+                            .snapshots(),
+                        builder: (context, snapshot) {
+                          if (!snapshot.hasData) return const SizedBox();
+                          return FutureBuilder<int>(
+                            future: _getUnreadCount(snapshot.data!.docs),
+                            builder: (context, countSnapshot) {
+                              int count = countSnapshot.data ?? 0;
+                              if (count == 0) return const SizedBox();
+                              return Positioned(
+                                right: 0,
+                                top: 0,
+                                child: Container(
+                                  padding: const EdgeInsets.all(2),
+                                  decoration: BoxDecoration(
+                                    color: Colors.red,
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  constraints: const BoxConstraints(
+                                    minWidth: 16,
+                                    minHeight: 16,
+                                  ),
+                                  child: Text(
+                                    '$count',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              );
+                            },
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            )
+          : null,
       body: Stack(
         // 🎯 ប្រើ Stack ដើម្បីឱ្យវាជាន់ពីលើគ្នា
         children: [
@@ -405,44 +449,42 @@ String? name;
             ],
           ),
 
-
           // 🎯 ផាសដុំកូដ Obx (ជំហានទី ២) ត្រង់នេះ
           Obx(() {
             return uploadController.uploadProgress.value > 0 &&
-                uploadController.uploadProgress.value < 1.0
+                    uploadController.uploadProgress.value < 1.0
                 ? Positioned(
-              // ឱ្យវាអណ្ដែតនៅខាងលើបង្អស់
-              top: 0,
-              left: 0,
-              right: 0,
-              child: Container(
-                padding: const EdgeInsets.all(10),
-                color: Colors.blue.shade50,
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.cloud_upload,
-                          color: Colors.blue,
-                        ),
-                        const SizedBox(width: 10),
-                        Text(
-                          "កំពុងបង្ហោះទំនិញ... ${(uploadController
-                              .uploadProgress.value * 100).toInt()}%",
-                        ),
-                      ],
+                    // ឱ្យវាអណ្ដែតនៅខាងលើបង្អស់
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    child: Container(
+                      padding: const EdgeInsets.all(10),
+                      color: Colors.blue.shade50,
+                      child: Column(
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.cloud_upload,
+                                color: Colors.blue,
+                              ),
+                              const SizedBox(width: 10),
+                              Text(
+                                "កំពុងបង្ហោះទំនិញ... ${(uploadController.uploadProgress.value * 100).toInt()}%",
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 5),
+                          LinearProgressIndicator(
+                            value: uploadController.uploadProgress.value,
+                            backgroundColor: Colors.grey.shade300,
+                            color: Colors.blue,
+                          ),
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: 5),
-                    LinearProgressIndicator(
-                      value: uploadController.uploadProgress.value,
-                      backgroundColor: Colors.grey.shade300,
-                      color: Colors.blue,
-                    ),
-                  ],
-                ),
-              ),
-            )
+                  )
                 : const SizedBox.shrink();
           }),
         ],
@@ -477,41 +519,36 @@ String? name;
     );
   }
 
-
   // ៣. បង្កើត Dialog សម្រាប់ដេញភ្ញៀវទៅ Login (ដាក់នៅខាងក្រោម build)
   void _showLoginRequiredDialog(BuildContext context, String actionText) {
     showDialog(
       context: context,
-      builder: (context) =>
-          AlertDialog(
-            title: const Text("សូមចូលប្រើប្រាស់"),
-            content: Text("$actionText មេត្រូវចូលប្រើប្រាស់គណនីជាមុនសិន។"),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text(
-                    "មើលសិន", style: TextStyle(color: Colors.grey)),
-              ),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                onPressed: () {
-                  Navigator.pop(context);
-                  Navigator.pushNamed(context, '/login');
-                },
-                child: const Text(
-                  "ទៅ Login",
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
-            ],
+      builder: (context) => AlertDialog(
+        title: const Text("សូមចូលប្រើប្រាស់"),
+        content: Text("$actionText មេត្រូវចូលប្រើប្រាស់គណនីជាមុនសិន។"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("មើលសិន", style: TextStyle(color: Colors.grey)),
           ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pushNamed(context, '/login');
+            },
+            child: const Text(
+              "ទៅ Login",
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
-
   Widget _navBtn(IconData icon, int index, bool isGuest) {
     final currentUserId = FirebaseAuth.instance.currentUser?.uid;
-
 
     // ១. កំណត់ឈ្មោះ Label តាម index (រក្សាកូដដើមរបស់មេ)
     String label = "";
@@ -530,7 +567,6 @@ String? name;
         break;
     }
 
-
     return InkWell(
       onTap: () {
         // បើមិនទាន់ Login ហើយចុចប៊ូតុងផ្សេងក្រៅពីទំព័រដើម ឱ្យលោត Dialog
@@ -546,63 +582,62 @@ String? name;
           // ២. ឆែកមើល បើជាប៊ូតុង "ឆាត" (Index 3) ឱ្យវាបង្ហាញលេខក្រហម Notification
           index == 3
               ? StreamBuilder<DocumentSnapshot>(
-            stream: FirebaseFirestore.instance
-                .collection('users')
-                .doc(currentUserId)
-                .snapshots(),
-            builder: (context, snapshot) {
-              int totalUnread = 0;
-              if (snapshot.hasData && snapshot.data!.exists) {
-                var data = snapshot.data!.data() as Map<String, dynamic>;
-                totalUnread = data['unreadCount'] ?? 0;
-              }
+                  stream: FirebaseFirestore.instance
+                      .collection('users')
+                      .doc(currentUserId)
+                      .snapshots(),
+                  builder: (context, snapshot) {
+                    int totalUnread = 0;
+                    if (snapshot.hasData && snapshot.data!.exists) {
+                      var data = snapshot.data!.data() as Map<String, dynamic>;
+                      totalUnread = data['unreadCount'] ?? 0;
+                    }
 
-
-              return Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Icon(
-                    icon,
-                    color: _currentIndex == index
-                        ? Colors.green
-                        : Colors.grey,
-                  ),
-                  // បង្ហាញរង្វង់ក្រហមតែពេលមានសារមិនទាន់អាន (totalUnread > 0)
-                  if (totalUnread > 0)
-                    Positioned(
-                      right: -5,
-                      top: -5,
-                      child: Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: const BoxDecoration(
-                          color: Colors.red,
-                          shape: BoxShape.circle,
+                    return Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Icon(
+                          icon,
+                          color: _currentIndex == index
+                              ? Colors.green
+                              : Colors.grey,
                         ),
-                        constraints: const BoxConstraints(
-                          minWidth: 16,
-                          minHeight: 16,
-                        ),
-                        child: Center(
-                          child: Text(
-                            '$totalUnread',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 9,
-                              fontWeight: FontWeight.bold,
+                        // បង្ហាញរង្វង់ក្រហមតែពេលមានសារមិនទាន់អាន (totalUnread > 0)
+                        if (totalUnread > 0)
+                          Positioned(
+                            right: -5,
+                            top: -5,
+                            child: Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: const BoxDecoration(
+                                color: Colors.red,
+                                shape: BoxShape.circle,
+                              ),
+                              constraints: const BoxConstraints(
+                                minWidth: 16,
+                                minHeight: 16,
+                              ),
+                              child: Center(
+                                child: Text(
+                                  '$totalUnread',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
                             ),
                           ),
-                        ),
-                      ),
-                    ),
-                ],
-              );
-            },
-          )
-          // ៣. បើមិនមែនប៊ូតុងឆាតទេ បង្ហាញ Icon ធម្មតា
+                      ],
+                    );
+                  },
+                )
+              // ៣. បើមិនមែនប៊ូតុងឆាតទេ បង្ហាញ Icon ធម្មតា
               : Icon(
-            icon,
-            color: _currentIndex == index ? Colors.green : Colors.grey,
-          ),
+                  icon,
+                  color: _currentIndex == index ? Colors.green : Colors.grey,
+                ),
           const SizedBox(height: 4),
           Text(
             label,
@@ -616,14 +651,12 @@ String? name;
     );
   }
 
-
   Widget _buildMainHome() {
     return DefaultTabController(
       length: 3,
       child: Builder(
         builder: (context) {
           final TabController tabController = DefaultTabController.of(context);
-
 
           return Stack(
             children: [
@@ -637,19 +670,18 @@ String? name;
                         children: [
                           // --- ១. Banner ---
                           AspectRatio(
-                  // Android 51 banner source is 1280x405.
-                  // Keep the exact ratio so the whole image is visible.
-                  aspectRatio: 1280 / 405,
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: Image.asset(
-                      'assets/sesan_banner.png.jpg',
-                      width: double.infinity,
-                      fit: BoxFit.contain,
-                    ),
-                  ),
-                ),
-
+                            // Android 51 banner source is 1280x405.
+                            // Keep the exact ratio so the whole image is visible.
+                            aspectRatio: 1280 / 405,
+                            child: SizedBox(
+                              width: double.infinity,
+                              child: Image.asset(
+                                'assets/sesan_banner.png.jpg',
+                                width: double.infinity,
+                                fit: BoxFit.contain,
+                              ),
+                            ),
+                          ),
 
                           // --- ២. Categories (កែសម្រួលថ្មី) ---
                           Padding(
@@ -658,8 +690,7 @@ String? name;
                               vertical: 8.0,
                             ),
                             child: Row(
-                              mainAxisAlignment: MainAxisAlignment
-                                  .spaceBetween,
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               // រុញអក្សរទៅឆ្វេង ប៊ូតុងទៅស្តាំ
                               children: [
                                 const Text(
@@ -671,7 +702,6 @@ String? name;
                                   ),
                                 ),
 
-
                                 // 🎯 ប៊ូតុងសម្រាប់ចូលទៅកាន់អេក្រង់ដេញថ្លៃ
                                 GestureDetector(
                                   onTap: () {
@@ -679,7 +709,7 @@ String? name;
                                       context,
                                       MaterialPageRoute(
                                         builder: (context) =>
-                                        const AuctionMainScreen(),
+                                            const AuctionMainScreen(),
                                       ),
                                     );
                                   },
@@ -690,8 +720,7 @@ String? name;
                                     ),
                                     decoration: BoxDecoration(
                                       color: Colors
-                                          .amber
-                                          .shade600, // ប្ដូរពីបៃតងទៅមាស
+                                          .amber.shade600, // ប្ដូរពីបៃតងទៅមាស
                                       borderRadius: BorderRadius.circular(20),
                                       boxShadow: [
                                         BoxShadow(
@@ -730,9 +759,7 @@ String? name;
                           ),
                           _buildCategoryGrid(),
 
-
                           const Divider(thickness: 5, color: Color(0xFFF5F5F5)),
-
 
                           // --- ៣. TabBar ---
                           TabBar(
@@ -783,12 +810,11 @@ String? name;
                       searchQuery: _searchQuery,
                       isHome: true,
                     ),
-                    PreOrderGridView(searchQuery: _searchQuery),   // ✅ ថែម
-                    WantedGridView(searchQuery: _searchQuery),     // ✅ ថែម
+                    PreOrderGridView(searchQuery: _searchQuery), // ✅ ថែម
+                    WantedGridView(searchQuery: _searchQuery), // ✅ ថែម
                   ],
                 ),
               ),
-
 
               // --- ៤. ប៊ូតុងអណ្ដែត (បង្ហាញតែពេលនៅ Tab ប្រកាសទិញ) ---
               // --- ៤. ប៊ូតុងអណ្ដែត (បង្ហាញតែពេលនៅ Tab ប្រកាសទិញ) ---
@@ -797,42 +823,41 @@ String? name;
                 builder: (context, child) {
                   return tabController.index == 1
                       ? Positioned(
-                    bottom: 20,
-                    right: 20,
-                    child: FloatingActionButton.extended(
-                      heroTag: "wantedBtn",
-                      // ✅ កែទីនេះ - ប្រើ SharedPreferences ជំនួស FirebaseAuth
-                      onPressed: () async {
-                        // ១. ឆែកមើលថាបាន Login ឬនៅ (ប្រើ SharedPreferences)
-                        final prefs =
-                        await SharedPreferences.getInstance();
-                        String uid = prefs.getString('user_uid') ?? '';
+                          bottom: 20,
+                          right: 20,
+                          child: FloatingActionButton.extended(
+                            heroTag: "wantedBtn",
+                            // ✅ កែទីនេះ - ប្រើ SharedPreferences ជំនួស FirebaseAuth
+                            onPressed: () async {
+                              // ១. ឆែកមើលថាបាន Login ឬនៅ (ប្រើ SharedPreferences)
+                              final prefs =
+                                  await SharedPreferences.getInstance();
+                              String uid = prefs.getString('user_uid') ?? '';
 
-
-                        if (uid.isEmpty) {
-                          _showLoginRequiredDialog(
-                            context,
-                            "ដើម្បីប្រកាសទិញបាន",
-                          );
-                        } else {
-                          // ២. បើ Login ហើយ ឱ្យវាបាញ់ទៅ Screen ផុស
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                              const AddWantedScreen(),
+                              if (uid.isEmpty) {
+                                _showLoginRequiredDialog(
+                                  context,
+                                  "ដើម្បីប្រកាសទិញបាន",
+                                );
+                              } else {
+                                // ២. បើ Login ហើយ ឱ្យវាបាញ់ទៅ Screen ផុស
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        const AddWantedScreen(),
+                                  ),
+                                );
+                              }
+                            },
+                            label: const Text(
+                              "ប្រកាសទិញ",
+                              style: TextStyle(fontFamily: 'Siemreap'),
                             ),
-                          );
-                        }
-                      },
-                      label: const Text(
-                        "ប្រកាសទិញ",
-                        style: TextStyle(fontFamily: 'Siemreap'),
-                      ),
-                      icon: const Icon(Icons.campaign),
-                      backgroundColor: Colors.blue[700],
-                    ),
-                  )
+                            icon: const Icon(Icons.campaign),
+                            backgroundColor: Colors.blue[700],
+                          ),
+                        )
                       : const SizedBox.shrink();
                 },
               ),
@@ -866,12 +891,13 @@ String? name;
     );
   }
 
-
   // 🎯 បង្កើត function ជំនួយដើម្បីកុំឱ្យកូដវែងពេក
-  Widget _buildFloatingBtn(String label,
-      IconData icon,
-      Color color,
-      Widget nextScreen,) {
+  Widget _buildFloatingBtn(
+    String label,
+    IconData icon,
+    Color color,
+    Widget nextScreen,
+  ) {
     return Positioned(
       bottom: 20,
       right: 20,
@@ -894,15 +920,10 @@ String? name;
     );
   }
 
-
   Widget _buildCategoryGrid() {
     // 🎯 ១. ឆែកមើលទំហំអេក្រង់ជាមុន
-    double screenWidth = MediaQuery
-        .of(context)
-        .size
-        .width;
+    double screenWidth = MediaQuery.of(context).size.width;
     bool isDesktop = screenWidth > 800;
-
 
     return GridView.builder(
       shrinkWrap: true,
@@ -921,7 +942,8 @@ String? name;
             Navigator.push(
               context,
               CupertinoPageRoute(
-                builder: (context) => ProductListV51Screen(category: item['name']),
+                builder: (context) =>
+                    ProductListV51Screen(category: item['name']),
               ),
             );
           },
@@ -938,24 +960,23 @@ String? name;
                 ),
                 child: item['isIcon']
                     ? Icon(
-                  item['icon'],
-                  color: Colors.green,
-                  size: isDesktop ? 35 : 24,
-                )
+                        item['icon'],
+                        color: Colors.green,
+                        size: isDesktop ? 35 : 24,
+                      )
                     : Padding(
-                  padding: const EdgeInsets.all(
-                    8.0,
-                  ), // ថែម Padding ឱ្យរូបភាពនៅកណ្ដាលស្អាត
-                  child: Image.asset(item['image'], fit: BoxFit.contain),
-                ),
+                        padding: const EdgeInsets.all(
+                          8.0,
+                        ), // ថែម Padding ឱ្យរូបភាពនៅកណ្ដាលស្អាត
+                        child: Image.asset(item['image'], fit: BoxFit.contain),
+                      ),
               ),
               const SizedBox(height: 8),
               Text(
                 item['name'],
                 style: TextStyle(
-                  fontSize: isDesktop
-                      ? 13
-                      : 10, // លើ Web ឱ្យអក្សរធំជាងមុនបន្តិច
+                  fontSize:
+                      isDesktop ? 13 : 10, // លើ Web ឱ្យអក្សរធំជាងមុនបន្តិច
                   fontWeight: isDesktop ? FontWeight.w500 : FontWeight.normal,
                   color: Colors.black,
                 ),
@@ -970,12 +991,11 @@ String? name;
     );
   }
 
-
   // ✅ ដាក់កូដនេះនៅទីនេះ (ក្នុង class _HomeScreenState)
   void _checkAndRequestPermission() async {
     final prefs = await SharedPreferences.getInstance();
-    final bool hasShownDialog = prefs.getBool(
-        'has_shown_notification_dialog') ?? false;
+    final bool hasShownDialog =
+        prefs.getBool('has_shown_notification_dialog') ?? false;
 
     if (hasShownDialog) return;
 
@@ -985,30 +1005,29 @@ String? name;
         showDialog(
           context: context,
           barrierDismissible: false,
-          builder: (context) =>
-              AlertDialog(
-                title: Text("បើកការជូនដំណឹង"),
-                content: Text(
-                  "ដើម្បីទទួលបានសារកម្ម៉ង់ភ្លាមៗ សូមមេចុច 'បើក' រួច Switch លើពាក្យ 'Allow notifications' ផង!",
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                      prefs.setBool('has_shown_notification_dialog', true);
-                    },
-                    child: Text("ក្រោយមក"),
-                  ),
-                  ElevatedButton(
-                    onPressed: () async {
-                      Navigator.pop(context);
-                      prefs.setBool('has_shown_notification_dialog', true);
-                      await openAppSettings();
-                    },
-                    child: Text("ទៅបើកឥឡូវនេះ"),
-                  ),
-                ],
+          builder: (context) => AlertDialog(
+            title: Text("បើកការជូនដំណឹង"),
+            content: Text(
+              "ដើម្បីទទួលបានសារកម្ម៉ង់ភ្លាមៗ សូមមេចុច 'បើក' រួច Switch លើពាក្យ 'Allow notifications' ផង!",
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  prefs.setBool('has_shown_notification_dialog', true);
+                },
+                child: Text("ក្រោយមក"),
               ),
+              ElevatedButton(
+                onPressed: () async {
+                  Navigator.pop(context);
+                  prefs.setBool('has_shown_notification_dialog', true);
+                  await openAppSettings();
+                },
+                child: Text("ទៅបើកឥឡូវនេះ"),
+              ),
+            ],
+          ),
         );
       }
     }
