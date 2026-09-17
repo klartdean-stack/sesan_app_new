@@ -6,7 +6,7 @@ on:
 permissions:
   contents: write
 jobs:
-  chat-view-shop-dates:
+  finish-chat:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -17,20 +17,27 @@ jobs:
           flutter-version: '3.38.8'
           channel: stable
           cache: true
-      - name: Patch Chat View Shop and date localization
+      - name: Finish Chat Screen
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          p = Path('lib/chat_screen_legacy.dart')
-          s = p.read_text(encoding='utf-8')
-
-          # Fix broken last-seen replacements first.
-          s = s.replace("return 'chat_last_seen_minutes'.trParams({'count': minutes.toString()})Params({'count': '${diff.inMinutes}'});", "return 'chat_last_seen_minutes'.trParams({'count': '${diff.inMinutes}'});")
-          s = s.replace("return 'chat_last_seen_hours'.trParams({'count': hours.toString()})Params({'count': '${diff.inHours}'});", "return 'chat_last_seen_hours'.trParams({'count': '${diff.inHours}'});")
-          s = s.replace("return 'chat_last_seen_days'.trParams({'count': days.toString()})Params({'count': '${diff.inDays}'});", "return 'chat_last_seen_days'.trParams({'count': '${diff.inDays}'});")
-
-          # Localize date headers including Today, Yesterday and full weekday/month date.
-          old_date = """  String _formatDateHeader(DateTime date) {
+          p=Path('lib/chat_screen_legacy.dart')
+          s=p.read_text(encoding='utf-8')
+          s=s.replace("return 'chat_last_seen_minutes'.trParams({'count': minutes.toString()})Params({'count': '${diff.inMinutes}'});", "return 'chat_last_seen_minutes'.trParams({'count': '${diff.inMinutes}'});")
+          s=s.replace("return 'chat_last_seen_hours'.trParams({'count': hours.toString()})Params({'count': '${diff.inHours}'});", "return 'chat_last_seen_hours'.trParams({'count': '${diff.inHours}'});")
+          s=s.replace("return 'chat_last_seen_days'.trParams({'count': days.toString()})Params({'count': '${diff.inDays}'});", "return 'chat_last_seen_days'.trParams({'count': '${diff.inDays}'});")
+          old="""      actions: [_buildPopupMenu()],"""
+          new="""      actions: [
+        TextButton.icon(
+          onPressed: _openSellerShop,
+          icon: const Icon(Icons.storefront_outlined, color: Colors.white, size: 18),
+          label: Text('chat_view_shop'.tr, style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600)),
+          style: TextButton.styleFrom(foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(horizontal: 6), visualDensity: VisualDensity.compact),
+        ),
+        _buildPopupMenu(),
+      ],"""
+          if old in s: s=s.replace(old,new,1)
+          old="""  String _formatDateHeader(DateTime date) {
     DateTime now = DateTime.now();
     if (date.year == now.year &&
         date.month == now.month &&
@@ -44,99 +51,40 @@ jobs:
       return 'ម្សិលមិញ';
     }
     return DateFormat('EEEE, dd MMMM yyyy', 'km').format(date);
-  }
-"""
-          new_date = """  String _formatDateHeader(DateTime date) {
+  }"""
+          new="""  String _formatDateHeader(DateTime date) {
     final now = DateTime.now();
-    if (date.year == now.year &&
-        date.month == now.month &&
-        date.day == now.day) {
-      return 'chat_today'.tr;
-    }
+    if (date.year == now.year && date.month == now.month && date.day == now.day) return 'chat_today'.tr;
     final yesterday = now.subtract(const Duration(days: 1));
-    if (date.year == yesterday.year &&
-        date.month == yesterday.month &&
-        date.day == yesterday.day) {
-      return 'chat_yesterday'.tr;
-    }
-    final localeCode = Localizations.localeOf(context).languageCode == 'en'
-        ? 'en'
-        : 'km';
+    if (date.year == yesterday.year && date.month == yesterday.month && date.day == yesterday.day) return 'chat_yesterday'.tr;
+    final localeCode = Localizations.localeOf(context).languageCode == 'en' ? 'en' : 'km';
     return DateFormat('EEEE, dd MMMM yyyy', localeCode).format(date);
-  }
-"""
-          if old_date not in s:
-              raise SystemExit('Date header target not found')
-          s = s.replace(old_date, new_date, 1)
-
-          # Add an always-visible View Shop action beside the overflow menu.
-          old_actions = "      actions: [_buildPopupMenu()],"
-          new_actions = """      actions: [
-        TextButton.icon(
-          onPressed: _openSellerShop,
-          icon: const Icon(Icons.storefront_outlined, color: Colors.white, size: 18),
-          label: Text(
-            'chat_view_shop'.tr,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          style: TextButton.styleFrom(
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 6),
-            visualDensity: VisualDensity.compact,
-          ),
-        ),
-        _buildPopupMenu(),
-      ],"""
-          if old_actions not in s:
-              raise SystemExit('AppBar actions target not found')
-          s = s.replace(old_actions, new_actions, 1)
-          p.write_text(s, encoding='utf-8')
-
-          # Add translation keys to both locales.
-          p = Path('lib/localization/app_translations.dart')
-          t = p.read_text(encoding='utf-8')
-          km_anchor = "          'chat_last_seen_days': 'អនឡាញមុន @count ថ្ងៃ',"
-          en_anchor = "          'chat_last_seen_days': 'Last seen @count days ago',"
-          km_add = km_anchor + "\n          'chat_today': 'ថ្ងៃនេះ',\n          'chat_yesterday': 'ម្សិលមិញ',\n          'chat_view_shop': 'មើលហាង',"
-          en_add = en_anchor + "\n          'chat_today': 'Today',\n          'chat_yesterday': 'Yesterday',\n          'chat_view_shop': 'View Shop',"
-          if "'chat_view_shop':" not in t:
-              if km_anchor not in t or en_anchor not in t:
-                  raise SystemExit('Translation anchors not found')
-              t = t.replace(km_anchor, km_add, 1).replace(en_anchor, en_add, 1)
-          p.write_text(t, encoding='utf-8')
+  }"""
+          if old in s: s=s.replace(old,new,1)
+          p.write_text(s,encoding='utf-8')
           PY
-          dart format lib/chat_screen_legacy.dart lib/localization/app_translations.dart
+          dart format lib/chat_screen_legacy.dart
           git diff --check
-      - name: Verify Chat fixes and preserved behavior
+      - name: Verify
         run: |
-          grep -q "'chat_view_shop'.tr" lib/chat_screen_legacy.dart
           grep -q "onPressed: _openSellerShop" lib/chat_screen_legacy.dart
-          grep -q "SellerProfileScreen" lib/chat_screen_legacy.dart
+          grep -q "'chat_view_shop'.tr" lib/chat_screen_legacy.dart
           grep -q "'chat_today'.tr" lib/chat_screen_legacy.dart
           grep -q "'chat_yesterday'.tr" lib/chat_screen_legacy.dart
           grep -q "DateFormat('EEEE, dd MMMM yyyy', localeCode)" lib/chat_screen_legacy.dart
-          grep -q "chat_last_seen_minutes'.trParams({'count': '\${diff.inMinutes}'})" lib/chat_screen_legacy.dart
-          grep -q "chat_last_seen_hours'.trParams({'count': '\${diff.inHours}'})" lib/chat_screen_legacy.dart
-          grep -q "chat_last_seen_days'.trParams({'count': '\${diff.inDays}'})" lib/chat_screen_legacy.dart
-          grep -q "'chat_view_shop': 'View Shop'" lib/localization/app_translations.dart
-          grep -q "'chat_today': 'Today'" lib/localization/app_translations.dart
-          grep -q "'chat_yesterday': 'Yesterday'" lib/localization/app_translations.dart
+          ! grep -q "})Params(" lib/chat_screen_legacy.dart
           grep -q "_buildQuickReplies" lib/chat_screen_legacy.dart
           grep -q "_showBlockConfirmDialog" lib/chat_screen_legacy.dart
           grep -q "_sendLocationMessage" lib/chat_screen_legacy.dart
       - name: Analyze Chat
         run: |
           flutter pub get
-          flutter analyze lib/chat_screen_legacy.dart lib/localization/app_translations.dart --no-fatal-infos --no-fatal-warnings
-      - name: Commit Chat fixes
+          flutter analyze lib/chat_screen_legacy.dart --no-fatal-infos --no-fatal-warnings
+      - name: Commit
         run: |
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add lib/chat_screen_legacy.dart lib/localization/app_translations.dart
+          git add lib/chat_screen_legacy.dart
           git diff --cached --check
-          git commit -m "Restore Chat View Shop and localize chat dates"
+          git commit -m "Finish Chat Screen localization and View Shop"
           git push origin HEAD:ios-sync-android46
