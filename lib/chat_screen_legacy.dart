@@ -177,7 +177,7 @@ class _ChatScreenState extends State<ChatScreen> {
       _showSnack('chat_block_success'.tr, Colors.red);
     } catch (e) {
       setState(() => _isLoadingBlock = false);
-      _showSnack('❌ Block មិនបាន: $e', Colors.red);
+      _showSnack(appText(context, km: '❌ មិនអាច Block បាន: $e', en: '❌ Unable to block user: $e'), Colors.red);
     }
   }
 
@@ -198,7 +198,7 @@ class _ChatScreenState extends State<ChatScreen> {
       _showSnack('chat_unblock_success'.tr, Colors.green);
     } catch (e) {
       setState(() => _isLoadingBlock = false);
-      _showSnack('❌ Unblock មិនបាន: $e', Colors.red);
+      _showSnack(appText(context, km: '❌ មិនអាចដោះ Block បាន: $e', en: '❌ Unable to unblock user: $e'), Colors.red);
     }
   }
 
@@ -289,7 +289,7 @@ class _ChatScreenState extends State<ChatScreen> {
         if (mounted) {
           setState(() {
             _isLoading = false;
-            _errorMessage = 'សូម Login មុននឹងប្រើឆាត';
+            _errorMessage = appText(context, km: 'សូមចូលគណនីមុននឹងប្រើឆាត', en: 'Please sign in before using chat.');
           });
         }
         return;
@@ -2981,13 +2981,13 @@ class _ChatScreenState extends State<ChatScreen> {
       final diff = DateTime.now().difference(time);
       if (diff.inMinutes < 1) return 'chat_last_seen_now'.tr;
       if (diff.inHours < 1) {
-        return 'chat_last_seen_minutes'.trParams({'count': '${diff.inMinutes}'});
+        return 'chat_last_seen_minutes'.trParams({'count': minutes.toString()})Params({'count': '${diff.inMinutes}'});
       }
       if (diff.inDays < 1) {
-        return 'chat_last_seen_hours'.trParams({'count': '${diff.inHours}'});
+        return 'chat_last_seen_hours'.trParams({'count': hours.toString()})Params({'count': '${diff.inHours}'});
       }
       if (diff.inDays < 7) {
-        return 'chat_last_seen_days'.trParams({'count': '${diff.inDays}'});
+        return 'chat_last_seen_days'.trParams({'count': days.toString()})Params({'count': '${diff.inDays}'});
       }
       return DateFormat('dd/MM/yyyy').format(time);
     } catch (e) {

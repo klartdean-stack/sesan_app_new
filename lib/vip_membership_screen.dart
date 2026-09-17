@@ -23,6 +23,9 @@ class VipMembershipScreen extends StatefulWidget {
 
 class _VipMembershipScreenState extends State<VipMembershipScreen> {
   final _formKey = GlobalKey<FormState>();
+  String _t(String km, String en) =>
+      Localizations.localeOf(context).languageCode == 'en' ? en : km;
+
   final nameController = TextEditingController();
   final phoneController = TextEditingController();
   File? _receiptImage;
@@ -245,7 +248,7 @@ class _VipMembershipScreenState extends State<VipMembershipScreen> {
       );
       await Gal.putImage(file.path);
       if (!mounted) return;
-      _showTopMessage('✅ បានរក្សាទុកក្នុង Gallery!');
+      _showTopMessage(_t('✅ បានរក្សាទុកក្នុង Gallery!', '✅ Saved to Gallery!'));
     } catch (e) {
       if (!mounted) return;
       _showTopMessage('❌ មិនអាចរក្សាទុក: $e', isError: true);
@@ -273,7 +276,7 @@ class _VipMembershipScreenState extends State<VipMembershipScreen> {
 
   Future<void> _submitVipRequest(BuildContext context, StateSetter setModalState) async {
     if (!_formKey.currentState!.validate() || _receiptImage == null) {
-      _showSnack('សូមបំពេញទិន្នន័យ និងភ្ជាប់រូបភាព', isError: true);
+      _showSnack(_t('សូមបំពេញទិន្នន័យ និងភ្ជាប់រូបភាព', 'Please complete the information and attach a receipt image.'), isError: true);
       return;
     }
     setModalState(() => _isSubmitting = true);try {
@@ -299,7 +302,7 @@ class _VipMembershipScreenState extends State<VipMembershipScreen> {
       _clearForm();
       if (mounted) {
         Navigator.pop(context);
-        _showSnack('✅ សំណើ VIP ត្រូវបានបញ្ជូន!', isError: false);
+        _showSnack(_t('✅ សំណើ VIP ត្រូវបានបញ្ជូន!', '✅ VIP request submitted!'), isError: false);
       }
     } catch (e) {
       if (mounted) _showSnack('❌ មានបញ្ហា: $e', isError: true);
@@ -388,11 +391,11 @@ class _VipMembershipScreenState extends State<VipMembershipScreen> {
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              _vipCardInfo("ចូលជាសមាជិកពី", joinDate),
+                              _vipCardInfo(_t('ចូលជាសមាជិកពី', 'Member since'), joinDate),
                               const SizedBox(height: 10),
                               Row(
                                 children: [
-                                  _vipCardInfo("ថ្ងៃចេញកាត", issuedDate),
+                                  _vipCardInfo(_t('ថ្ងៃចេញកាត', 'Issued on'), issuedDate),
                                   const Spacer(),
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -401,7 +404,7 @@ class _VipMembershipScreenState extends State<VipMembershipScreen> {
                                       borderRadius: BorderRadius.circular(12),
                                       border: Border.all(color: Colors.amber.withOpacity(0.5)),
                                     ),
-                                    child: const Text("✓ ACTIVE", style: TextStyle(color: Colors.amber, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1)),
+                                    child: Text(_t('✓ សកម្ម', '✓ ACTIVE'), style: TextStyle(color: Colors.amber, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1)),
                                   ),
                                 ],
                               ),
@@ -447,10 +450,10 @@ class _VipMembershipScreenState extends State<VipMembershipScreen> {
 
   Widget _buildBenefitsCard() {
     final benefits = [
-    {'icon': Icons.workspace_premium, 'color': Colors.amber, 'title': 'ផ្លាកសញ្ញា VIP', 'desc': 'Badge ពិសេសបង្ហាញលើប្រវត្តិរូប'},
-    {'icon': Icons.bar_chart_rounded, 'color': Colors.blueAccent, 'title': 'ស្ថិតិ Real-time', 'desc': 'មើលចំនួន User ទំនិញ និងការបញ្ជាទិញ'},{'icon': Icons.show_chart, 'color': Colors.greenAccent, 'title': 'ក្រាបទិន្នន័យ', 'desc': 'ក្រាបសកម្មភាពប្រចាំឆ្នាំ ៤ ខ្សែ'},
-      {'icon': Icons.notifications_active, 'color': Colors.orangeAccent, 'title': 'ការជូនដំណឹងមុនគេ', 'desc': 'ទទួលព័ត៌មានពិសេសសម្រាប់ VIP'},
-      {'icon': Icons.support_agent, 'color': Colors.purpleAccent, 'title': 'ជំនួយពិសេស', 'desc': 'ការគាំទ្រផ្ទាល់ពីក្រុមការងារ'},
+    {'icon': Icons.workspace_premium, 'color': Colors.amber, 'title': _t('ផ្លាកសញ្ញា VIP', 'VIP badge'), 'desc': _t('ផ្លាកពិសេសបង្ហាញលើប្រវត្តិរូប', 'Special badge shown on your profile')},
+    {'icon': Icons.bar_chart_rounded, 'color': Colors.blueAccent, 'title': _t('ស្ថិតិផ្ទាល់', 'Real-time stats'), 'desc': _t('មើលចំនួនអ្នកប្រើ ទំនិញ និងការបញ្ជាទិញ', 'View users, products and orders in real time')},{'icon': Icons.show_chart, 'color': Colors.greenAccent, 'title': _t('ក្រាបទិន្នន័យ', 'Activity charts'), 'desc': _t('ក្រាបសកម្មភាពប្រចាំឆ្នាំ ៤ ខ្សែ', 'Four annual activity charts')},
+      {'icon': Icons.notifications_active, 'color': Colors.orangeAccent, 'title': _t('ការជូនដំណឹងមុនគេ', 'Priority notifications'), 'desc': _t('ទទួលព័ត៌មានពិសេសសម្រាប់ VIP', 'Receive special VIP updates')},
+      {'icon': Icons.support_agent, 'color': Colors.purpleAccent, 'title': _t('ជំនួយពិសេស', 'Priority support'), 'desc': _t('ការគាំទ្រផ្ទាល់ពីក្រុមការងារ', 'Direct support from the Sesan team')},
     ];
     return Container(
       width: double.infinity,
@@ -466,7 +469,7 @@ class _VipMembershipScreenState extends State<VipMembershipScreen> {
           Row(children: [
             Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: amberColor.withOpacity(0.15), borderRadius: BorderRadius.circular(10)), child: const Icon(Icons.diamond, color: amberColor, size: 20)),
             const SizedBox(width: 12),
-            const Text("អត្ថប្រយោជន៍ VIP", style: TextStyle(color: Colors.amber, fontSize: 16, fontWeight: FontWeight.bold, fontFamily: 'Siemreap')),
+            Text(_t('អត្ថប្រយោជន៍ VIP', 'VIP benefits'), style: TextStyle(color: Colors.amber, fontSize: 16, fontWeight: FontWeight.bold, fontFamily: 'Siemreap')),
           ]),
           const SizedBox(height: 16),
           ...benefits.map((b) => Padding(
@@ -495,7 +498,7 @@ class _VipMembershipScreenState extends State<VipMembershipScreen> {
     Row(children: [
     Container(width: 4, height: 20, decoration: BoxDecoration(color: amberColor, borderRadius: BorderRadius.circular(2))),
     const SizedBox(width: 8),
-    const Text("សកម្មភាពប្រចាំឆ្នាំ", style: TextStyle(color: Colors.white70, fontSize: 15, fontWeight: FontWeight.bold, fontFamily: 'Siemreap')),
+    Text(_t('សកម្មភាពប្រចាំឆ្នាំ', 'Annual activity'), style: TextStyle(color: Colors.white70, fontSize: 15, fontWeight: FontWeight.bold, fontFamily: 'Siemreap')),
     ]),
     const SizedBox(height: 12),
     FutureBuilder<Map<String, List<int>>>(
@@ -509,7 +512,7 @@ class _VipMembershipScreenState extends State<VipMembershipScreen> {
     Row(children: [
     Container(width: 4, height: 20, decoration: BoxDecoration(color: Colors.blueAccent, borderRadius: BorderRadius.circular(2))),
     const SizedBox(width: 8),
-    const Text("ស្ថិតិថ្ងៃនេះ", style: TextStyle(color: Colors.white70, fontSize: 15, fontWeight: FontWeight.bold, fontFamily: 'Siemreap')),
+    Text(_t('ស្ថិតិថ្ងៃនេះ', "Today's stats"), style: TextStyle(color: Colors.white70, fontSize: 15, fontWeight: FontWeight.bold, fontFamily: 'Siemreap')),
     const Spacer(),
     Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3), decoration: BoxDecoration(color: Colors.green.withOpacity(0.15), borderRadius: BorderRadius.circular(8)), child: const Row(children: [Icon(Icons.circle, color: Colors.greenAccent, size: 8), SizedBox(width: 4), Text("Live", style: TextStyle(color: Colors.greenAccent, fontSize:10))])),
     ]),
@@ -520,13 +523,13 @@ class _VipMembershipScreenState extends State<VipMembershipScreen> {
               if (!snap.hasData) return Shimmer.fromColors(baseColor: const Color(0xFF1A1F3D), highlightColor: const Color(0xFF2A2F4D), child: Container(height: 90, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16))));
               final stats = snap.data!;
               return Row(children: [
-                _statCard("អ្នកថ្មី", stats['newUsers'] ?? 0, Icons.person_add, Colors.blue),
+                _statCard(_t('អ្នកថ្មី', 'New users'), stats['newUsers'] ?? 0, Icons.person_add, Colors.blue),
                 const SizedBox(width: 10),
-                _statCard("ចូលថ្ងៃនេះ", stats['loginsToday'] ?? 0, Icons.login, Colors.green),
+                _statCard(_t('ចូលថ្ងៃនេះ', 'Logins today'), stats['loginsToday'] ?? 0, Icons.login, Colors.green),
                 const SizedBox(width: 10),
-                _statCard("ទំនិញថ្មី", stats['newProducts'] ?? 0, Icons.add_shopping_cart, Colors.orange),
+                _statCard(_t('ទំនិញថ្មី', 'New products'), stats['newProducts'] ?? 0, Icons.add_shopping_cart, Colors.orange),
                 const SizedBox(width: 10),
-                _statCard("ដេញថ្លៃថ្មី", stats['newAuctions'] ?? 0, Icons.gavel, Colors.purpleAccent),
+                _statCard(_t('ដេញថ្លៃថ្មី', 'New auctions'), stats['newAuctions'] ?? 0, Icons.gavel, Colors.purpleAccent),
               ]);
             },
           ),
