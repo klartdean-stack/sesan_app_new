@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
 import 'dart:async';
-import 'dart:ui'; // បន្ថែមសម្រាប់ FontFeature.tabularFigures()
+import 'dart:ui';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -20,19 +20,17 @@ class AuctionMainScreen extends StatefulWidget {
 
 class _AuctionMainScreenState extends State<AuctionMainScreen>
     with TickerProviderStateMixin {
-  // ── Config ──────────────────
   static const _adminId = 'WBdQVvrgEIPBTcgIlumu6bAZGUl2';
 
-  // ── Theme ──────────────────
-  static const _bg = Color(0xFFF5F7F5);
+  // Sesan green / orange / white theme — matches Add Auction.
+  static const _bg = Color(0xFFF7FAF7);
   static const _card = Colors.white;
-  static const _border = Color(0xFFE1E8E2);
-  static const _accent = Color(0xFF43A047);
-  static const _accentBlue = Color(0xFF2E7D32);
-  static const _text = Color(0xFF1F2D24);
-  static const _textMuted = Color(0xFF7A847D);
-  static const _red = Color(0xFFDA3633);
-  static const _gold = Color(0xFFF9A825);
+  static const _border = Color(0xFFDDE8DF);
+  static const _accent = Color(0xFF2E7D32);
+  static const _accentOrange = Color(0xFFF57C00);
+  static const _text = Color(0xFF1F2933);
+  static const _textMuted = Color(0xFF6B7280);
+  static const _red = Color(0xFFD32F2F);
 
   late Timer _timer;
 
@@ -57,10 +55,10 @@ class _AuctionMainScreenState extends State<AuctionMainScreen>
     return Scaffold(
       backgroundColor: _bg,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF388E3C),
+        backgroundColor: _accent,
         foregroundColor: Colors.white,
         elevation: 0,
-        surfaceTintColor: const Color(0xFF388E3C),
+        surfaceTintColor: _accent,
         title: Text(
           Get.locale?.languageCode == 'en' ? 'Auction' : 'ដេញថ្លៃ',
           style: const TextStyle(
@@ -111,9 +109,10 @@ class _AuctionMainScreenState extends State<AuctionMainScreen>
             MaterialPageRoute(builder: (_) => const AuctionAddScreen()),
           );
         },
-        backgroundColor: _accent,
-        elevation: 4,
-        icon: const Icon(Icons.add_rounded, color: Colors.white),
+        backgroundColor: _accentOrange,
+        foregroundColor: Colors.white,
+        elevation: 3,
+        icon: const Icon(Icons.add_rounded),
         label: Text(
           'ដាក់ដេញថ្លៃ'.tr,
           style: const TextStyle(
@@ -132,7 +131,7 @@ class _AuctionMainScreenState extends State<AuctionMainScreen>
         builder: (context, snap) {
           if (!snap.hasData) {
             return const Center(
-              child: CircularProgressIndicator(color: _accentBlue),
+              child: CircularProgressIndicator(color: _accent),
             );
           }
           final docs = snap.data!.docs;
@@ -159,7 +158,7 @@ class _AuctionMainScreenState extends State<AuctionMainScreen>
       builder: (context) => Container(
         decoration: const BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
         child: Column(
@@ -169,7 +168,7 @@ class _AuctionMainScreenState extends State<AuctionMainScreen>
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: const Color(0xFFD7DED8),
+                color: _border,
                 borderRadius: BorderRadius.circular(10),
               ),
             ),
@@ -177,12 +176,12 @@ class _AuctionMainScreenState extends State<AuctionMainScreen>
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: const Color(0xFF43A047).withOpacity(0.10),
+                color: _accent.withOpacity(0.10),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
                 Icons.auto_awesome_rounded,
-                color: Color(0xFF2E7D32),
+                color: _accentOrange,
                 size: 40,
               ),
             ),
@@ -213,7 +212,8 @@ class _AuctionMainScreenState extends State<AuctionMainScreen>
               width: double.infinity,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF43A047),
+                  backgroundColor: _accent,
+                  foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(15),
                   ),
@@ -223,7 +223,6 @@ class _AuctionMainScreenState extends State<AuctionMainScreen>
                 child: Text(
                   'យល់ព្រម'.tr,
                   style: const TextStyle(
-                    color: Colors.white,
                     fontWeight: FontWeight.bold,
                     fontFamily: 'Siemreap',
                   ),
@@ -265,6 +264,13 @@ class _AuctionMainScreenState extends State<AuctionMainScreen>
           color: _card,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: _border),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x0A000000),
+              blurRadius: 12,
+              offset: Offset(0, 4),
+            ),
+          ],
         ),
         child: Column(
           children: [
@@ -351,11 +357,16 @@ class _AuctionMainScreenState extends State<AuctionMainScreen>
                         ),
                         const SizedBox(width: 5),
                         Text(
-                          isFinished ? 'auction_ended'.tr : 'LIVE',
+                          isFinished
+                              ? 'auction_ended'.tr
+                              : (Get.locale?.languageCode == 'en'
+                                  ? 'LIVE'
+                                  : 'កំពុងដេញថ្លៃ'),
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 10,
                             fontWeight: FontWeight.w800,
+                            fontFamily: 'Siemreap',
                           ),
                         ),
                       ],
@@ -402,7 +413,7 @@ class _AuctionMainScreenState extends State<AuctionMainScreen>
                               child: Text(
                                 '${fmt.format(currentPrice)} ៛',
                                 style: const TextStyle(
-                                  color: _red,
+                                  color: _accentOrange,
                                   fontSize: 20,
                                   fontWeight: FontWeight.w900,
                                   fontFeatures: [FontFeature.tabularFigures()],
@@ -446,13 +457,14 @@ class _AuctionMainScreenState extends State<AuctionMainScreen>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
-        color: const Color(0xFFE8F5E9),
+        color: const Color(0xFFFFF3E0),
         borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFFFE0B2)),
       ),
       child: Text(
         '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}',
         style: const TextStyle(
-          color: _accentBlue,
+          color: _accentOrange,
           fontWeight: FontWeight.bold,
           fontFeatures: [FontFeature.tabularFigures()],
         ),
@@ -467,8 +479,15 @@ class _AuctionMainScreenState extends State<AuctionMainScreen>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.gavel_rounded, size: 56, color: _accent),
-            const SizedBox(height: 14),
+            Container(
+              padding: const EdgeInsets.all(18),
+              decoration: const BoxDecoration(
+                color: Color(0xFFE8F5E9),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.gavel_rounded, size: 48, color: _accent),
+            ),
+            const SizedBox(height: 16),
             Text(
               'auction_no_items'.tr,
               textAlign: TextAlign.center,
