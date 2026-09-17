@@ -6,7 +6,7 @@ on:
 permissions:
   contents: write
 jobs:
-  finish-home:
+  finish-order-management:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -17,59 +17,46 @@ jobs:
           flutter-version: '3.38.8'
           channel: stable
           cache: true
-      - name: Finish Home Khmer English localization
+      - name: Localize Order Management error fallbacks
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          p = Path('lib/home_screen.dart')
+          p = Path('lib/order_management_screen.dart')
           s = p.read_text(encoding='utf-8')
-          replacements = [
-            ('_showLoginRequiredDialog(context, "ដើម្បីផុសលក់ទំនិញបាន");', "_showLoginRequiredDialog(context, _t('ដើម្បីផុសលក់ទំនិញបាន', 'to post a product'));"),
-            ('content: Text("$actionText មេត្រូវចូលប្រើប្រាស់គណនីជាមុនសិន។"),', "content: Text(_t('$actionText មេត្រូវចូលប្រើប្រាស់គណនីជាមុនសិន។', 'Please sign in $actionText.')),"),
-            ('child: const Text(\n              "ទៅ Login",\n              style: TextStyle(color: Colors.white),\n            ),', "child: Text(\n              _t('ទៅ Login', 'Go to sign in'),\n              style: const TextStyle(color: Colors.white),\n            ),"),
-            ('_showLoginRequiredDialog(context, "ដើម្បីប្រើប្រាស់មុខងារនេះ");', "_showLoginRequiredDialog(context, _t('ដើម្បីប្រើប្រាស់មុខងារនេះ', 'to use this feature'));"),
-            ('_showLoginRequiredDialog(\n                                  context,\n                                  "ដើម្បីប្រកាសទិញបាន",\n                                );', "_showLoginRequiredDialog(\n                                  context,\n                                  _t('ដើម្បីប្រកាសទិញបាន', 'to post a wanted request'),\n                                );"),
-            ("label: const Text(\n                              _t('ប្រកាសទិញ', 'Wanted'),\n                              style: TextStyle(fontFamily: 'Siemreap'),\n                            ),", "label: Text(\n                              _t('ប្រកាសទិញ', 'Wanted'),\n                              style: const TextStyle(fontFamily: 'Siemreap'),\n                            ),"),
-            ('"ចុះឈ្មោះលក់មុន",\n                      Icons.timer_outlined,', "_t('ចុះឈ្មោះលក់មុន', 'Add pre-order'),\n                      Icons.timer_outlined,"),
-          ]
-          for old, new in replacements:
-              if old in s:
-                  s = s.replace(old, new)
+          old1 = "e.message ?? 'មិនអាចកែស្ថានភាពការកម្ម៉ង់បានទេ',"
+          new1 = "e.message ?? 'sales_update_failed'.tr,"
+          old2 = "content: Text('មានបញ្ហា៖ $e'),"
+          new2 = "content: Text('sales_error'.trParams({'error': e.toString()})),"
+          if old1 not in s:
+              raise SystemExit('Missing FirebaseFunctions fallback target')
+          if old2 not in s:
+              raise SystemExit('Missing generic error fallback target')
+          s = s.replace(old1, new1, 1).replace(old2, new2, 1)
           p.write_text(s, encoding='utf-8')
           PY
-          dart format lib/home_screen.dart
+          dart format lib/order_management_screen.dart
           git diff --check
-      - name: Verify Home localization and preserved features
+      - name: Verify translations and preserved order logic
         run: |
-          grep -q "_t('ទំព័រដើម', 'Home')" lib/home_screen.dart
-          grep -q "_t('កន្ត្រក', 'Cart')" lib/home_screen.dart
-          grep -q "_t('ឆាត', 'Chat')" lib/home_screen.dart
-          grep -q "_t('គណនី', 'Account')" lib/home_screen.dart
-          grep -q "_t('ទៅ Login', 'Go to sign in')" lib/home_screen.dart
-          grep -q "_t('ដើម្បីផុសលក់ទំនិញបាន', 'to post a product')" lib/home_screen.dart
-          grep -q "_t('ដើម្បីប្រើប្រាស់មុខងារនេះ', 'to use this feature')" lib/home_screen.dart
-          grep -q "_t('ប្រកាសទិញ', 'Wanted')" lib/home_screen.dart
-          grep -q "_t('ចុះឈ្មោះលក់មុន', 'Add pre-order')" lib/home_screen.dart
-          grep -q "Product categories" lib/home_screen.dart
-          grep -q "New products" lib/home_screen.dart
-          grep -q "Pre-order" lib/home_screen.dart
-          grep -q "ProductSearchV51Controller" lib/home_screen.dart
-          grep -q "QrScannerScreen" lib/home_screen.dart
-          grep -q "AuctionMainScreen" lib/home_screen.dart
-          if grep -q "label: const Text(.*_t(" lib/home_screen.dart; then exit 1; fi
-      - name: Analyze Home Screen
+          grep -q "e.message ?? 'sales_update_failed'.tr" lib/order_management_screen.dart
+          grep -q "'sales_error'.trParams({'error': e.toString()})" lib/order_management_screen.dart
+          grep -q "'sales_update_failed':" lib/localization/app_translations.dart
+          grep -q "'sales_error':" lib/localization/app_translations.dart
+          grep -q "secureSellerOrderStatus" lib/order_management_screen.dart
+          grep -q "asia-southeast1" lib/order_management_screen.dart
+          grep -q "OrderScannerService.startScan" lib/order_management_screen.dart
+          grep -q "seller_id" lib/order_management_screen.dart
+          grep -q "on_delivery" lib/order_management_screen.dart
+          grep -q "delivered" lib/order_management_screen.dart
+      - name: Analyze Order Management
         run: |
           flutter pub get
-          flutter analyze lib/home_screen.dart --no-fatal-infos --no-fatal-warnings
-      - name: Commit finished Home
+          flutter analyze lib/order_management_screen.dart --no-fatal-infos --no-fatal-warnings
+      - name: Commit Order Management fix
         run: |
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add lib/home_screen.dart
+          git add lib/order_management_screen.dart
           git diff --cached --check
-          if git diff --cached --quiet; then
-            echo "Home already complete"
-          else
-            git commit -m "Finish Home Screen localization"
-            git push origin HEAD:ios-sync-android46
-          fi
+          git commit -m "Localize Order Management error fallbacks"
+          git push origin HEAD:ios-sync-android46
