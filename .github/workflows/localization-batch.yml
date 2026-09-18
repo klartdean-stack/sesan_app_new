@@ -1,45 +1,41 @@
-name: Order History localization verification
+name: Pre-order localization verification
 on:
   push:
     branches: [ios-sync-android46]
-    paths: ['.github/workflows/localization-batch.yml', 'lib/order_history_screen.dart']
+    paths: ['.github/workflows/localization-batch.yml']
 permissions:
   contents: write
 jobs:
-  verify-order-history:
+  verify-preorder:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ios-sync-android46
+        with: {ref: ios-sync-android46}
       - uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.38.8'
-          channel: stable
-          cache: true
+        with: {flutter-version: '3.38.8', channel: stable, cache: true}
       - name: Format
+        run: dart format lib/pre_order_grid_view.dart lib/pre_order_detail_screen.dart
+      - name: Preserve Pre-order behavior
         run: |
-          dart format lib/order_history_screen.dart
-      - name: Preserve Order History behavior
-        run: |
-          grep -q "collection('orders')" lib/order_history_screen.dart
-          grep -q "customer_id" lib/order_history_screen.dart
-          grep -q "_startDisputeProcess" lib/order_history_screen.dart
-          grep -q "_reOrderItems" lib/order_history_screen.dart
-          grep -q "collection('carts')" lib/order_history_screen.dart
-          grep -q "_getSellerName" lib/order_history_screen.dart
+          grep -q "collection('pre_orders')" lib/pre_order_grid_view.dart
+          grep -q "PreOrderDetailScreen" lib/pre_order_grid_view.dart
+          grep -q "collection('pre_orders')" lib/pre_order_detail_screen.dart
+          grep -q "ChatScreen" lib/pre_order_detail_screen.dart
+          grep -q "UserProfileScreen" lib/pre_order_detail_screen.dart
+          grep -q "_revealPhoneTemporarily" lib/pre_order_detail_screen.dart
+          grep -q "Share.share" lib/pre_order_detail_screen.dart
       - name: Analyze
         run: |
           flutter pub get
-          flutter analyze lib/order_history_screen.dart --no-fatal-infos --no-fatal-warnings
+          flutter analyze lib/pre_order_grid_view.dart lib/pre_order_detail_screen.dart --no-fatal-infos --no-fatal-warnings
       - name: Compile check
         run: flutter build bundle --debug
       - name: Commit formatting if needed
         run: |
-          if ! git diff --quiet -- lib/order_history_screen.dart; then
+          if ! git diff --quiet -- lib/pre_order_grid_view.dart lib/pre_order_detail_screen.dart; then
             git config user.name github-actions[bot]
             git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-            git add lib/order_history_screen.dart
-            git commit -m "Format Order History localization"
+            git add lib/pre_order_grid_view.dart lib/pre_order_detail_screen.dart
+            git commit -m "Format Pre-order localization"
             git push origin HEAD:ios-sync-android46
           fi
