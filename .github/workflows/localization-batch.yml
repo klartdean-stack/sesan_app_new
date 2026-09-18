@@ -1,12 +1,12 @@
-name: One-time localization batch
+name: Chat final verification
 on:
   push:
     branches: [ios-sync-android46]
     paths: ['.github/workflows/localization-batch.yml']
 permissions:
-  contents: write
+  contents: read
 jobs:
-  finish-chat:
+  verify-chat:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -17,74 +17,29 @@ jobs:
           flutter-version: '3.38.8'
           channel: stable
           cache: true
-      - name: Finish Chat Screen
+      - name: Format check
         run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          p=Path('lib/chat_screen_legacy.dart')
-          s=p.read_text(encoding='utf-8')
-          s=s.replace("return 'chat_last_seen_minutes'.trParams({'count': minutes.toString()})Params({'count': '${diff.inMinutes}'});", "return 'chat_last_seen_minutes'.trParams({'count': '${diff.inMinutes}'});")
-          s=s.replace("return 'chat_last_seen_hours'.trParams({'count': hours.toString()})Params({'count': '${diff.inHours}'});", "return 'chat_last_seen_hours'.trParams({'count': '${diff.inHours}'});")
-          s=s.replace("return 'chat_last_seen_days'.trParams({'count': days.toString()})Params({'count': '${diff.inDays}'});", "return 'chat_last_seen_days'.trParams({'count': '${diff.inDays}'});")
-          old="""      actions: [_buildPopupMenu()],"""
-          new="""      actions: [
-        TextButton.icon(
-          onPressed: _openSellerShop,
-          icon: const Icon(Icons.storefront_outlined, color: Colors.white, size: 18),
-          label: Text('chat_view_shop'.tr, style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600)),
-          style: TextButton.styleFrom(foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(horizontal: 6), visualDensity: VisualDensity.compact),
-        ),
-        _buildPopupMenu(),
-      ],"""
-          if old in s: s=s.replace(old,new,1)
-          old="""  String _formatDateHeader(DateTime date) {
-    DateTime now = DateTime.now();
-    if (date.year == now.year &&
-        date.month == now.month &&
-        date.day == now.day) {
-      return 'ថ្ងៃនេះ';
-    }
-    DateTime yesterday = now.subtract(const Duration(days: 1));
-    if (date.year == yesterday.year &&
-        date.month == yesterday.month &&
-        date.day == yesterday.day) {
-      return 'ម្សិលមិញ';
-    }
-    return DateFormat('EEEE, dd MMMM yyyy', 'km').format(date);
-  }"""
-          new="""  String _formatDateHeader(DateTime date) {
-    final now = DateTime.now();
-    if (date.year == now.year && date.month == now.month && date.day == now.day) return 'chat_today'.tr;
-    final yesterday = now.subtract(const Duration(days: 1));
-    if (date.year == yesterday.year && date.month == yesterday.month && date.day == yesterday.day) return 'chat_yesterday'.tr;
-    final localeCode = Localizations.localeOf(context).languageCode == 'en' ? 'en' : 'km';
-    return DateFormat('EEEE, dd MMMM yyyy', localeCode).format(date);
-  }"""
-          if old in s: s=s.replace(old,new,1)
-          p.write_text(s,encoding='utf-8')
-          PY
-          dart format lib/chat_screen_legacy.dart
+          dart format lib/chat_screen_legacy.dart lib/localization/app_translations.dart
+          git diff --exit-code -- lib/chat_screen_legacy.dart lib/localization/app_translations.dart
           git diff --check
-      - name: Verify
+      - name: Preserve Chat features
         run: |
-          grep -q "onPressed: _openSellerShop" lib/chat_screen_legacy.dart
+          grep -q "_startRecording" lib/chat_screen_legacy.dart
+          grep -q "_pickMultipleImages" lib/chat_screen_legacy.dart
+          grep -q "_sendLocationMessage" lib/chat_screen_legacy.dart
+          grep -q "CreateInvoiceSheet" lib/chat_screen_legacy.dart
+          grep -q "_buildQuickReplies" lib/chat_screen_legacy.dart
+          grep -q "_showBlockConfirmDialog" lib/chat_screen_legacy.dart
+          grep -q "_showUnblockConfirmDialog" lib/chat_screen_legacy.dart
+          grep -q "_openSellerShop" lib/chat_screen_legacy.dart
           grep -q "'chat_view_shop'.tr" lib/chat_screen_legacy.dart
           grep -q "'chat_today'.tr" lib/chat_screen_legacy.dart
           grep -q "'chat_yesterday'.tr" lib/chat_screen_legacy.dart
-          grep -q "DateFormat('EEEE, dd MMMM yyyy', localeCode)" lib/chat_screen_legacy.dart
           ! grep -q "})Params(" lib/chat_screen_legacy.dart
-          grep -q "_buildQuickReplies" lib/chat_screen_legacy.dart
-          grep -q "_showBlockConfirmDialog" lib/chat_screen_legacy.dart
-          grep -q "_sendLocationMessage" lib/chat_screen_legacy.dart
       - name: Analyze Chat
         run: |
           flutter pub get
-          flutter analyze lib/chat_screen_legacy.dart --no-fatal-infos --no-fatal-warnings
-      - name: Commit
+          flutter analyze lib/chat_screen_legacy.dart lib/localization/app_translations.dart --no-fatal-infos --no-fatal-warnings
+      - name: Compile check
         run: |
-          git config user.name github-actions[bot]
-          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add lib/chat_screen_legacy.dart
-          git diff --cached --check
-          git commit -m "Finish Chat Screen localization and View Shop"
-          git push origin HEAD:ios-sync-android46
+          flutter build apk --debug
