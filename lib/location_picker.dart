@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'localized_text.dart';
 
 
 /// =======================================================
@@ -337,21 +338,32 @@ class _LocationPickerSheetState extends State<LocationPickerSheet>
 
 
   String _getTitle() {
-    if (searchQuery.isNotEmpty) return "🔍 លទ្ធផលស្វែងរក";
-    if (showManualInput) return "✍️ បញ្ចូលដៃ";
-    if (_currentStep == 0) return "📍 ជ្រើសខេត្ត";
-    if (_currentStep == 1) return "🏘️ ជ្រើសស្រុក";
-    return "🏡 ជ្រើសឃុំ/សង្កាត់";
+    if (searchQuery.isNotEmpty) return appText(context, km: "🔍 លទ្ធផលស្វែងរក", en: "🔍 Search results");
+    if (showManualInput) return appText(context, km: "✍️ បញ្ចូលដៃ", en: "✍️ Manual entry");
+    if (_currentStep == 0) return appText(context, km: "📍 ជ្រើសខេត្ត", en: "📍 Select province");
+    if (_currentStep == 1) return appText(context, km: "🏘️ ជ្រើសស្រុក", en: "🏘️ Select district");
+    return appText(context, km: "🏡 ជ្រើសឃុំ/សង្កាត់", en: "🏡 Select commune");
   }
 
 
   String _getSubtitle() {
-    if (searchQuery.isNotEmpty)
-      return "រកឃើញ ${_getSearchResults().length} ទីតាំង";
-    if (showManualInput) return "បញ្ចូលទីតាំងតាមបំណងរបស់អ្នក";
-    if (_currentStep == 0) return "ជ្រើសរើសខេត្ត/ក្រុងដែលអ្នកចង់បាន";
-    if (_currentStep == 1) return "ក្នុងខេត្ត $selectedProvince";
-    return "ក្នុងស្រុក $selectedDistrict";
+    if (searchQuery.isNotEmpty) {
+      return appText(
+        context,
+        km: "រកឃើញ ${_getSearchResults().length} ទីតាំង",
+        en: "Found ${_getSearchResults().length} location(s)",
+      );
+    }
+    if (showManualInput) {
+      return appText(context, km: "បញ្ចូលទីតាំងតាមបំណងរបស់អ្នក", en: "Enter a location manually");
+    }
+    if (_currentStep == 0) {
+      return appText(context, km: "ជ្រើសរើសខេត្ត/ក្រុងដែលអ្នកចង់បាន", en: "Choose a province or city");
+    }
+    if (_currentStep == 1) {
+      return appText(context, km: "ក្នុងខេត្ត $selectedProvince", en: "In $selectedProvince");
+    }
+    return appText(context, km: "ក្នុងស្រុក $selectedDistrict", en: "In $selectedDistrict");
   }
 
 
@@ -378,7 +390,7 @@ class _LocationPickerSheetState extends State<LocationPickerSheet>
                 });
               },
               decoration: InputDecoration(
-                hintText: "ស្វែងរក ខេត្ត ស្រុក ឬ ឃុំ...",
+                hintText: appText(context, km: "ស្វែងរក ខេត្ត ស្រុក ឬ ឃុំ...", en: "Search province, district or commune..."),
                 hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 15),
                 prefixIcon: Icon(Icons.search, color: Colors.grey.shade400),
                 suffixIcon: searchQuery.isNotEmpty
@@ -466,8 +478,8 @@ class _LocationPickerSheetState extends State<LocationPickerSheet>
                           children: [
                             Text(
                               showManualInput
-                                  ? "បិទការបញ្ចូលដៃ"
-                                  : "បញ្ចូលទីតាំងដៃ",
+                                  ? appText(context, km: "បិទការបញ្ចូលដៃ", en: "Close manual entry")
+                                  : appText(context, km: "បញ្ចូលទីតាំងដៃ", en: "Enter location manually"),
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
@@ -478,7 +490,7 @@ class _LocationPickerSheetState extends State<LocationPickerSheet>
                             ),
                             if (!showManualInput)
                               Text(
-                                "វាយបញ្ចូលទីតាំងតាមចិត្តអ្នក",
+                                appText(context, km: "វាយបញ្ចូលទីតាំងតាមចិត្តអ្នក", en: "Type any location you need"),
                                 style: TextStyle(
                                   fontSize: 12,
                                   color: Colors.grey.shade500,
@@ -516,7 +528,7 @@ class _LocationPickerSheetState extends State<LocationPickerSheet>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "វាយបញ្ចូលទីតាំង",
+                    appText(context, km: "វាយបញ្ចូលទីតាំង", en: "Enter location"),
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
@@ -590,9 +602,9 @@ class _LocationPickerSheetState extends State<LocationPickerSheet>
                         ),
                         elevation: 0,
                       ),
-                      child: const Text(
-                        "បញ្ជាក់ទីតាំង",
-                        style: TextStyle(
+                      child: Text(
+                        appText(context, km: "បញ្ជាក់ទីតាំង", en: "Confirm location"),
+                        style: const TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.bold,
                         ),
@@ -611,9 +623,13 @@ class _LocationPickerSheetState extends State<LocationPickerSheet>
 
 
   String _getManualHint() {
-    if (_currentStep == 0) return "ឧទាហរណ៍៖ ភ្នំពេញ, បាត់ដំបង...";
-    if (_currentStep == 1) return "ឧទាហរណ៍៖ ស្រុកពញាឮ, ស្រុកមង្គលបូរី...";
-    return "ឧទាហរណ៍៖ ឃុំទួលពង្រ, សង្កាត់ទន្លេបាសាក់...";
+    if (_currentStep == 0) {
+      return appText(context, km: "ឧទាហរណ៍៖ ភ្នំពេញ, បាត់ដំបង...", en: "Example: Phnom Penh, Battambang...");
+    }
+    if (_currentStep == 1) {
+      return appText(context, km: "ឧទាហរណ៍៖ ស្រុកពញាឮ, ស្រុកមង្គលបូរី...", en: "Example: Ponhea Lueu, Mongkol Borei...");
+    }
+    return appText(context, km: "ឧទាហរណ៍៖ ឃុំទួលពង្រ, សង្កាត់ទន្លេបាសាក់...", en: "Example: Tuol Pongro, Tonle Bassac...");
   }
 
 
@@ -701,7 +717,7 @@ class _LocationPickerSheetState extends State<LocationPickerSheet>
             Icon(Icons.search_off, size: 64, color: Colors.grey.shade300),
             const SizedBox(height: 16),
             Text(
-              "រកមិនឃើញទីតាំង",
+              appText(context, km: "រកមិនឃើញទីតាំង", en: "Location not found"),
               style: TextStyle(
                 fontSize: 16,
                 color: Colors.grey.shade500,
@@ -710,7 +726,7 @@ class _LocationPickerSheetState extends State<LocationPickerSheet>
             ),
             const SizedBox(height: 8),
             Text(
-              "សូមព្យាយាមវាយឈ្មោះផ្សេងទៀត",
+              appText(context, km: "សូមព្យាយាមវាយឈ្មោះផ្សេងទៀត", en: "Try another location name"),
               style: TextStyle(fontSize: 13, color: Colors.grey.shade400),
             ),
           ],
@@ -965,7 +981,7 @@ class ExampleLocationScreen extends StatefulWidget {
 
 
 class _ExampleLocationScreenState extends State<ExampleLocationScreen> {
-  String selectedLocation = "មិនទាន់ជ្រើសទីតាំង";
+  String selectedLocation = "";
   bool isLoading = true;
 
 
@@ -989,9 +1005,9 @@ class _ExampleLocationScreenState extends State<ExampleLocationScreen> {
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.white,
-        title: const Text(
-          "ជ្រើសរើសទីតាំង",
-          style: TextStyle(
+        title: Text(
+          appText(context, km: "ជ្រើសរើសទីតាំង", en: "Select location"),
+          style: const TextStyle(
             color: Color(0xFF1A1A1A),
             fontWeight: FontWeight.bold,
           ),
@@ -1038,7 +1054,7 @@ class _ExampleLocationScreenState extends State<ExampleLocationScreen> {
                     ),
                     const SizedBox(height: 20),
                     Text(
-                      "ទីតាំងបច្ចុប្បន្ន",
+                      appText(context, km: "ទីតាំងបច្ចុប្បន្ន", en: "Current location"),
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.grey.shade500,
@@ -1047,7 +1063,9 @@ class _ExampleLocationScreenState extends State<ExampleLocationScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      selectedLocation,
+                      selectedLocation.isEmpty
+                          ? appText(context, km: "មិនទាន់ជ្រើសទីតាំង", en: "No location selected")
+                          : selectedLocation,
                       textAlign: TextAlign.center,
                       style: const TextStyle(
                         fontSize: 18,
@@ -1084,14 +1102,14 @@ class _ExampleLocationScreenState extends State<ExampleLocationScreen> {
                     ),
                     elevation: 0,
                   ),
-                  child: const Row(
+                  child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.map_outlined),
-                      SizedBox(width: 12),
+                      const Icon(Icons.map_outlined),
+                      const SizedBox(width: 12),
                       Text(
-                        "ជ្រើសរើសទីតាំង",
-                        style: TextStyle(
+                        appText(context, km: "ជ្រើសរើសទីតាំង", en: "Select location"),
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
