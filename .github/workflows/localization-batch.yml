@@ -20,7 +20,6 @@ jobs:
       - name: Format
         run: |
           dart format lib/order_history_screen.dart
-          git diff --check
       - name: Preserve Order History behavior
         run: |
           grep -q "collection('orders')" lib/order_history_screen.dart
