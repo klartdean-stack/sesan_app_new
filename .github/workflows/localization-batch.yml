@@ -40,7 +40,6 @@ jobs:
             git config user.name github-actions[bot]
             git config user.email 41898282+github-actions[bot]@users.noreply.github.com
             git add lib/order_history_screen.dart
-            git diff --cached --check
             git commit -m "Format Order History localization"
             git push origin HEAD:ios-sync-android46
           fi
