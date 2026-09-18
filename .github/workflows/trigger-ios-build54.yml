@@ -1,4 +1,4 @@
-name: Trigger iOS Build 54 Upload
+name: Trigger iOS Build 58 Upload
 
 on:
   push:
@@ -22,4 +22,4 @@ jobs:
             --repo klartdean-stack/sesan_app_new \
             --ref ios-sync-android46
 
-# Triggered for current iOS parity Build 54 and App Store Connect upload: 2026-09-17 retry
+# Triggered for current iOS parity Build 54 and App Store Connect upload: 2026-09-18 Build 58
