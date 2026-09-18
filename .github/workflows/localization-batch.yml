@@ -1,4 +1,4 @@
-name: Notification Profile VIP localization verification
+name: Add Auction localization verification
 on:
   push:
     branches: [ios-sync-android46]
@@ -6,7 +6,7 @@ on:
 permissions:
   contents: write
 jobs:
-  verify-localization:
+  verify-add-auction:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -19,21 +19,34 @@ jobs:
           cache: true
       - name: Format
         run: |
-          dart format lib/user_notification_list.dart lib/profile_screen_legacy.dart lib/vip_membership_screen.dart
+          dart format lib/auction_add_screen.dart
           git diff --check
+      - name: Preserve Add Auction behavior
+        run: |
+          grep -q "String _t(String km, String en)" lib/auction_add_screen.dart
+          grep -q "_currentStep == 0" lib/auction_add_screen.dart
+          grep -q "setState(() => _currentStep = 1)" lib/auction_add_screen.dart
+          grep -q "_showPaymentDialog()" lib/auction_add_screen.dart
+          grep -q "assets/aba_qr.png" lib/auction_add_screen.dart
+          grep -q "https://pay.ababank.com/oRF8/oizn40j9" lib/auction_add_screen.dart
+          grep -q "onLongPress: () async => await _downloadQR()" lib/auction_add_screen.dart
+          grep -q "_pickProductVideo" lib/auction_add_screen.dart
+          grep -q "_pickProductImages" lib/auction_add_screen.dart
+          grep -q "_pickPaymentImage" lib/auction_add_screen.dart
+          grep -q "collection('auction_products')" lib/auction_add_screen.dart
       - name: Analyze
         run: |
           flutter pub get
-          flutter analyze lib/user_notification_list.dart lib/profile_screen_legacy.dart lib/vip_membership_screen.dart --no-fatal-infos --no-fatal-warnings
+          flutter analyze lib/auction_add_screen.dart --no-fatal-infos --no-fatal-warnings
       - name: Compile check
         run: flutter build bundle --debug
       - name: Commit formatting if needed
         run: |
-          if ! git diff --quiet -- lib/user_notification_list.dart lib/profile_screen_legacy.dart lib/vip_membership_screen.dart; then
+          if ! git diff --quiet -- lib/auction_add_screen.dart; then
             git config user.name github-actions[bot]
             git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-            git add lib/user_notification_list.dart lib/profile_screen_legacy.dart lib/vip_membership_screen.dart
+            git add lib/auction_add_screen.dart
             git diff --cached --check
-            git commit -m "Format Notification Profile VIP localization"
+            git commit -m "Format Add Auction localization"
             git push origin HEAD:ios-sync-android46
           fi
