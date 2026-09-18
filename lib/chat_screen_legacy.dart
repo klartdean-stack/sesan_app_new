@@ -2999,33 +2999,36 @@ class _ChatScreenState extends State<ChatScreen> {
       final diff = DateTime.now().difference(time);
       if (diff.inMinutes < 1) return 'chat_last_seen_now'.tr;
       if (diff.inHours < 1) {
-        return 'chat_last_seen_minutes'.trParams({'count': minutes.toString()})Params({'count': '${diff.inMinutes}'});
+        return 'chat_last_seen_minutes'
+            .trParams({'count': '${diff.inMinutes}'});
       }
       if (diff.inDays < 1) {
-        return 'chat_last_seen_hours'.trParams({'count': hours.toString()})Params({'count': '${diff.inHours}'});
+        return 'chat_last_seen_hours'.trParams({'count': '${diff.inHours}'});
       }
       if (diff.inDays < 7) {
-        return 'chat_last_seen_days'.trParams({'count': days.toString()})Params({'count': '${diff.inDays}'});
+        return 'chat_last_seen_days'.trParams({'count': '${diff.inDays}'});
       }
-      return DateFormat('dd/MM/yyyy').format(time);
+      final locale = Get.locale?.languageCode == 'en' ? 'en' : 'km';
+      return DateFormat('dd MMM yyyy', locale).format(time);
     } catch (e) {
       return 'chat_unknown'.tr;
     }
   }
 
   String _formatDateHeader(DateTime date) {
-    DateTime now = DateTime.now();
+    final now = DateTime.now();
     if (date.year == now.year &&
         date.month == now.month &&
         date.day == now.day) {
-      return 'ថ្ងៃនេះ';
+      return 'chat_today'.tr;
     }
-    DateTime yesterday = now.subtract(const Duration(days: 1));
+    final yesterday = now.subtract(const Duration(days: 1));
     if (date.year == yesterday.year &&
         date.month == yesterday.month &&
         date.day == yesterday.day) {
-      return 'ម្សិលមិញ';
+      return 'chat_yesterday'.tr;
     }
-    return DateFormat('EEEE, dd MMMM yyyy', 'km').format(date);
+    final locale = Get.locale?.languageCode == 'en' ? 'en' : 'km';
+    return DateFormat('EEEE, dd MMMM yyyy', locale).format(date);
   }
 }
