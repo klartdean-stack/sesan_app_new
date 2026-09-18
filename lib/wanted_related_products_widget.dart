@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'wanted_detail_screen.dart';
+import 'localized_text.dart';
 
 class WantedRelatedProductsWidget extends StatelessWidget {
   final String category;
@@ -18,11 +19,11 @@ class WantedRelatedProductsWidget extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           child: Text(
-            "ប្រកាសទិញស្រដៀងគ្នា",
-            style: TextStyle(
+            appText(context, km: "ប្រកាសទិញស្រដៀងគ្នា", en: "Similar wanted listings"),
+            style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
               fontFamily: 'Siemreap',
@@ -78,8 +79,8 @@ class WantedRelatedProductsWidget extends StatelessWidget {
     final remaining = expiryDate.difference(DateTime.now());
     final daysLeft = remaining.inDays;
     final countdownText = daysLeft > 0
-        ? "នៅសល់ $daysLeft ថ្ងៃ"
-        : "ជិតផុតកំណត់";
+        ? appText(context, km: "នៅសល់ $daysLeft ថ្ងៃ", en: "$daysLeft days left")
+        : appText(context, km: "ជិតផុតកំណត់", en: "Expiring soon");
 
     // ទាញរូប
     String imageUrl = '';
@@ -165,7 +166,9 @@ class WantedRelatedProductsWidget extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          "ត្រូវការ៖ ${data['quantity']} ${data['unit']}",
+                          appText(context,
+                            km: "ត្រូវការ៖ ${data['quantity']} ${data['unit']}",
+                            en: "Wanted: ${data['quantity']} ${data['unit']}"),
                           style: const TextStyle(
                             color: Colors.red,
                             fontSize: 12,
@@ -173,7 +176,9 @@ class WantedRelatedProductsWidget extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          "តម្លៃ៖ ${data['price']} ${data['currency']}",
+                          appText(context,
+                            km: "តម្លៃ៖ ${data['price']} ${data['currency']}",
+                            en: "Price: ${data['price']} ${data['currency']}"),
                           style: const TextStyle(
                             color: Colors.green,
                             fontWeight: FontWeight.bold,
