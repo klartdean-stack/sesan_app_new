@@ -4,15 +4,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 import 'package:my_app/dispute_system.dart';
 
-
 class OrderHistoryScreen extends StatefulWidget {
   const OrderHistoryScreen({super.key});
-
 
   @override
   State<OrderHistoryScreen> createState() => _OrderHistoryScreenState();
 }
-
 
 class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
   String _t(String km, String en) =>
@@ -22,17 +19,14 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
   bool _isLoading = true;
   final currencyFormat = NumberFormat("#,###");
 
-
   // ✅ Cache ឈ្មោះអ្នកលក់ កុំឱ្យបូមឡើងវិញច្រើនដង
   final Map<String, String> _sellerNameCache = {};
-
 
   @override
   void initState() {
     super.initState();
     _loadUserId();
   }
-
 
   Future<void> _loadUserId() async {
     final prefs = await SharedPreferences.getInstance();
@@ -44,14 +38,12 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
     }
   }
 
-
   // ✅ មុខងារទាញឈ្មោះអ្នកលក់ពី seller_id
   Future<String> _getSellerName(String sellerId) async {
     // បើមានក្នុង Cache យកចេញមកវិញ
     if (_sellerNameCache.containsKey(sellerId)) {
       return _sellerNameCache[sellerId]!;
     }
-
 
     try {
       // ព្យាយាមយកពី Collection 'sellers' ជាមុន
@@ -60,14 +52,13 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
           .doc(sellerId)
           .get();
 
-
       if (sellerDoc.exists) {
         var data = sellerDoc.data() as Map<String, dynamic>?;
-        String name = data?['seller_name'] ?? data?['name'] ?? _t('អ្នកលក់', 'Seller');
+        String name =
+            data?['seller_name'] ?? data?['name'] ?? _t('អ្នកលក់', 'Seller');
         _sellerNameCache[sellerId] = name;
         return name;
       }
-
 
       // បើអត់ឃើញ ព្យាយាមយកពី Collection 'users'
       var userDoc = await FirebaseFirestore.instance
@@ -75,14 +66,13 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
           .doc(sellerId)
           .get();
 
-
       if (userDoc.exists) {
         var data = userDoc.data() as Map<String, dynamic>?;
-        String name = data?['name'] ?? data?['seller_name'] ?? _t('អ្នកលក់', 'Seller');
+        String name =
+            data?['name'] ?? data?['seller_name'] ?? _t('អ្នកលក់', 'Seller');
         _sellerNameCache[sellerId] = name;
         return name;
       }
-
 
       return _t('អ្នកលក់', 'Seller');
     } catch (e) {
@@ -90,7 +80,6 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
       return _t('អ្នកលក់', 'Seller');
     }
   }
-
 
   Color _getStatusColor(String status) {
     switch (status) {
@@ -109,7 +98,6 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
     }
   }
 
-
   String _getStatusText(String status) {
     switch (status) {
       case 'pending':
@@ -126,7 +114,6 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
         return status.toUpperCase();
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -151,73 +138,73 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
           : _userId.isEmpty
           ? _buildEmptyState()
           : StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection('orders') // 🎯 ចូលទៅរកក្នុង collection orders
-            .where(
-          'customer_id',
-          isEqualTo: _userId,
-        ) // 🎯 ប្រើ 'customer_id' ឱ្យត្រូវតាម Database មេ
-            .orderBy('created_at', descending: true)
-            .snapshots(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            debugPrint("Order Stream Error: ${snapshot.error}");
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.error_outline,
-                    color: Colors.red[300],
-                    size: 64,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    _t('មិនអាចផ្ទុកប្រវត្តិបាន', 'Could not load order history'),
-                    style: TextStyle(color: Colors.red[300]),
-                  ),
-                ],
-              ),
-            );
-          }
-          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return _buildEmptyState();
-          }
+              stream: FirebaseFirestore.instance
+                  .collection('orders') // 🎯 ចូលទៅរកក្នុង collection orders
+                  .where(
+                    'customer_id',
+                    isEqualTo: _userId,
+                  ) // 🎯 ប្រើ 'customer_id' ឱ្យត្រូវតាម Database មេ
+                  .orderBy('created_at', descending: true)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.hasError) {
+                  debugPrint("Order Stream Error: ${snapshot.error}");
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.error_outline,
+                          color: Colors.red[300],
+                          size: 64,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          _t(
+                            'មិនអាចផ្ទុកប្រវត្តិបាន',
+                            'Could not load order history',
+                          ),
+                          style: TextStyle(color: Colors.red[300]),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                  return _buildEmptyState();
+                }
 
+                return ListView.builder(
+                  padding: const EdgeInsets.all(12),
+                  itemCount: snapshot.data!.docs.length,
+                  itemBuilder: (context, index) {
+                    var order = snapshot.data!.docs[index];
+                    var orderData = order.data() as Map<String, dynamic>;
+                    List items = orderData['items'] ?? [];
+                    DateTime date = orderData['created_at'] != null
+                        ? (orderData['created_at'] as Timestamp).toDate()
+                        : DateTime.now();
+                    String status = orderData['status'] ?? 'pending';
+                    String orderId = order.id.substring(0, 8).toUpperCase();
 
-          return ListView.builder(
-            padding: const EdgeInsets.all(12),
-            itemCount: snapshot.data!.docs.length,
-            itemBuilder: (context, index) {
-              var order = snapshot.data!.docs[index];
-              var orderData = order.data() as Map<String, dynamic>;
-              List items = orderData['items'] ?? [];
-              DateTime date = orderData['created_at'] != null
-                  ? (orderData['created_at'] as Timestamp).toDate()
-                  : DateTime.now();
-              String status = orderData['status'] ?? 'pending';
-              String orderId = order.id.substring(0, 8).toUpperCase();
-
-
-              return _buildOrderCard(
-                context: context,
-                order: order,
-                orderData: orderData,
-                items: items,
-                date: date,
-                status: status,
-                orderId: orderId,
-              );
-            },
-          );
-        },
-      ),
+                    return _buildOrderCard(
+                      context: context,
+                      order: order,
+                      orderData: orderData,
+                      items: items,
+                      date: date,
+                      status: status,
+                      orderId: orderId,
+                    );
+                  },
+                );
+              },
+            ),
     );
   }
-
 
   Widget _buildOrderCard({
     required BuildContext context,
@@ -266,7 +253,6 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
           ...items.map((item) {
             String sellerId = item['seller_id']?.toString() ?? '';
 
-
             return Column(
               children: [
                 ListTile(
@@ -278,7 +264,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                       height: 50,
                       fit: BoxFit.cover,
                       errorBuilder: (_, __, ___) =>
-                      const Icon(Icons.image_not_supported),
+                          const Icon(Icons.image_not_supported),
                     ),
                   ),
                   title: Text(
@@ -331,7 +317,6 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
             );
           }).toList(),
 
-
           // Footer
           Padding(
             padding: const EdgeInsets.all(15),
@@ -382,7 +367,6 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
     );
   }
 
-
   Widget _buildSellerName(String sellerId) {
     if (sellerId.isEmpty) {
       return Text(
@@ -392,7 +376,6 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
         overflow: TextOverflow.ellipsis,
       );
     }
-
 
     return FutureBuilder<String>(
       future: _getSellerName(sellerId),
@@ -405,9 +388,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
           );
         }
 
-
         String sellerName = snapshot.data ?? _t('អ្នកលក់', 'Seller');
-
 
         return Row(
           mainAxisSize: MainAxisSize.min, // ✅ កុំឱ្យរីកធំហួស
@@ -433,17 +414,15 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
     );
   }
 
-
   Future<void> _startDisputeProcess(
-      BuildContext context,
-      String orderId,
-      Map<String, dynamic> item,
-      Map<String, dynamic> fullOrderData,
-      ) async {
+    BuildContext context,
+    String orderId,
+    Map<String, dynamic> item,
+    Map<String, dynamic> fullOrderData,
+  ) async {
     // ទាញឈ្មោះអ្នកលក់ជាមុន
     String sellerId = item['seller_id']?.toString() ?? '';
     String sellerName = await _getSellerName(sellerId);
-
 
     showDialog(
       context: context,
@@ -454,14 +433,18 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
       Map<String, dynamic> completeDisputeData = {
         'order_id': orderId,
         'product_id': item['product_id'],
-        'product_name': item['product_name'] ?? _t('គ្មានឈ្មោះ', 'Unnamed product'),
+        'product_name':
+            item['product_name'] ?? _t('គ្មានឈ្មោះ', 'Unnamed product'),
         'product_image': item['image_url'] ?? '',
-        'customer_phone': fullOrderData['phone_number'] ?? _t('គ្មានលេខ', 'No phone number'),
+        'customer_phone':
+            fullOrderData['phone_number'] ?? _t('គ្មានលេខ', 'No phone number'),
         'shipping_address':
-        fullOrderData['shipping_address'] ?? _t('គ្មានអាសយដ្ឋាន', 'No address'),
+            fullOrderData['shipping_address'] ??
+            _t('គ្មានអាសយដ្ឋាន', 'No address'),
         'seller_id': sellerId,
         'seller_name': sellerName, // ✅ ប្រើឈ្មោះពិតប្រាកដ
-        'seller_phone': item['seller_phone'] ?? _t('គ្មានលេខ', 'No phone number'),
+        'seller_phone':
+            item['seller_phone'] ?? _t('គ្មានលេខ', 'No phone number'),
       };
       Navigator.pop(context);
       Navigator.push(
@@ -474,7 +457,6 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
       Navigator.pop(context);
     }
   }
-
 
   Future<void> _reOrderItems(BuildContext context, List items) async {
     if (_userId.isEmpty) return;
@@ -490,7 +472,8 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
           'price': item['price'],
           'quantity': 1,
           'seller_id': item['seller_id'],
-          'seller_name': item['seller_name'] ?? _t('អ្នកលក់ទូទៅ', 'General seller'),
+          'seller_name':
+              item['seller_name'] ?? _t('អ្នកលក់ទូទៅ', 'General seller'),
           'image_url': item['image_url'],
           'created_at': FieldValue.serverTimestamp(),
         });
@@ -509,7 +492,6 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
       debugPrint('ReOrder Error: $e');
     }
   }
-
 
   Widget _buildEmptyState() {
     return Center(
@@ -531,6 +513,3 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
     );
   }
 }
-
-
-
