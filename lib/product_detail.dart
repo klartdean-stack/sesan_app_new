@@ -389,9 +389,9 @@ Product ID៖ $productId
                         ),
                       ),
                       const SizedBox(height: 4),
-                      const Text(
+                      Text(
                         _t('ស្កេនដើម្បីមើលក្នុង Sesan App', 'Scan to view in Sesan App'),
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 10,
                           color: Colors.grey,
                           fontStyle: FontStyle.italic,
@@ -2245,9 +2245,9 @@ Android: $androidPlayStoreLink
                                           mainAxisAlignment:
                                               MainAxisAlignment.spaceBetween,
                                           children: [
-                                            const Text(
+                                            Text(
                                               _t('តម្លៃសរុប៖', 'Total price:'),
-                                              style: TextStyle(
+                                              style: const TextStyle(
                                                 fontSize: 13,
                                                 fontWeight: FontWeight.w500,
                                                 fontFamily: 'Siemreap',
