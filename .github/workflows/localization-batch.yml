@@ -4,7 +4,7 @@ on:
     branches: [ios-sync-android46]
     paths: ['.github/workflows/localization-batch.yml']
 permissions:
-  contents: read
+  contents: write
 jobs:
   verify-chat:
     runs-on: ubuntu-latest
@@ -41,7 +41,7 @@ jobs:
           flutter analyze lib/chat_screen_legacy.dart lib/localization/app_translations.dart --no-fatal-infos --no-fatal-warnings
       - name: Compile check
         run: |
-          flutter build apk --debug
+          flutter build bundle --debug
       - name: Commit formatting if needed
         run: |
           if ! git diff --quiet -- lib/chat_screen_legacy.dart lib/localization/app_translations.dart; then
