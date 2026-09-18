@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart'; // សម្រាប់ format កាលបរិច្ឆេទ
 import 'pre_order_detail_screen.dart';
+import 'localized_text.dart';
 
 
 class PreOrderRelatedProductsWidget extends StatelessWidget {
@@ -28,8 +29,8 @@ class PreOrderRelatedProductsWidget extends StatelessWidget {
 
 
   // ជំនួយ format កាលបរិច្ឆេទ (ពេញ)
-  String _formatDate(dynamic date) {
-    if (date == null) return 'មិនទាន់កំណត់';
+  String _formatDate(BuildContext context, dynamic date) {
+    if (date == null) return appText(context, km: 'មិនទាន់កំណត់', en: 'Not set');
     if (date is Timestamp) {
       return DateFormat('dd/MM/yyyy').format(date.toDate());
     }
@@ -52,11 +53,11 @@ class PreOrderRelatedProductsWidget extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           child: Text(
-            "ប្រកាសលក់មុនដទៃទៀត",
-            style: TextStyle(
+            appText(context, km: "ប្រកាសលក់មុនដទៃទៀត", en: "More pre-order listings"),
+            style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
               fontFamily: 'Siemreap',
@@ -104,9 +105,9 @@ class PreOrderRelatedProductsWidget extends StatelessWidget {
                 final String name =
                     item['product_name'] ??
                         item['productName'] ??
-                        'មិនមានឈ្មោះ';
+                        appText(context, km: 'មិនមានឈ្មោះ', en: 'Unnamed product');
                 final String price = formatPrice(item['price']);
-                final String unit = item['unit'] ?? 'ឯកតា';
+                final String unit = item['unit'] ?? appText(context, km: 'ឯកតា', en: 'unit');
                 final dynamic createdAt = item['created_at'];
                 final dynamic harvestDate = item['harvest_date'];
 
@@ -227,7 +228,7 @@ class PreOrderRelatedProductsWidget extends StatelessWidget {
                                   Flexible(
                                     // ✅ ប្រើ Flexible ជំនួស Text ធម្មតា ដើម្បីការពារ overflow
                                     child: Text(
-                                      "ផុសថ្ងៃ: ${_formatDate(createdAt)}",
+                                      appText(context, km: "ផុសថ្ងៃ: ${_formatDate(context, createdAt)}", en: "Posted: ${_formatDate(context, createdAt)}"),
                                       style: TextStyle(
                                         color: Colors.grey[500],
                                         fontSize: 9, // ✅ បង្រួមពី 10 ទៅ 9
