@@ -61,7 +61,9 @@ class PreOrderGridView extends StatelessWidget {
               if (isExpired(data['harvest_date'])) return false;
               // 2. ✅ ត្រងតាម searchQuery (ឈ្មោះផលិតផល)
               if (searchQuery.isNotEmpty) {
-                final name = (data['product_name'] ?? '').toString().toLowerCase();
+                final name = (data['product_name'] ?? '')
+                    .toString()
+                    .toLowerCase();
                 return name.contains(searchQuery.toLowerCase());
               }
               return true;
@@ -96,20 +98,21 @@ class PreOrderGridView extends StatelessWidget {
 
   Widget _buildInfoCard(BuildContext context) {
     return Container(
-        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.orange.shade700, Colors.orange.shade400],
-            ),
-            borderRadius: BorderRadius.circular(10),
-            boxShadow: [BoxShadow(
-              color: Colors.orange.withOpacity(0.3),
-              blurRadius: 6,
-              offset: const Offset(0, 2),
-            ),
-            ],
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.orange.shade700, Colors.orange.shade400],
         ),
+        borderRadius: BorderRadius.circular(10),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.orange.withOpacity(0.3),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
       child: Row(
         children: [
           const Icon(Icons.auto_graph_rounded, color: Colors.white, size: 22),
@@ -120,7 +123,11 @@ class PreOrderGridView extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  _t(context, "យល់ដឹងពីមុខងារ 'លក់មុន'", "Learn about Pre-order"),
+                  _t(
+                    context,
+                    "យល់ដឹងពីមុខងារ 'លក់មុន'",
+                    "Learn about Pre-order",
+                  ),
                   style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -130,7 +137,11 @@ class PreOrderGridView extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  _t(context, "ផ្ដល់ឱកាសឱ្យម្ចាស់ចម្ការបង្កើតការលក់ទុកជាមុន ដើម្បីធានាទីផ្សារ និងការកក់ពីអតិថិជនយ៉ាងច្បាស់លាស់", "Let farm owners offer products in advance to secure demand and customer reservations."),
+                  _t(
+                    context,
+                    "ផ្ដល់ឱកាសឱ្យម្ចាស់ចម្ការបង្កើតការលក់ទុកជាមុន ដើម្បីធានាទីផ្សារ និងការកក់ពីអតិថិជនយ៉ាងច្បាស់លាស់",
+                    "Let farm owners offer products in advance to secure demand and customer reservations.",
+                  ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
@@ -145,7 +156,10 @@ class PreOrderGridView extends StatelessWidget {
                   onPressed: () => _showBenefitDialog(context),
                   style: TextButton.styleFrom(
                     backgroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 2,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -175,7 +189,11 @@ class PreOrderGridView extends StatelessWidget {
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
-          _t(context, "អត្ថប្រយោជន៍នៃការលក់មុន (Pre-order)", "Benefits of Pre-order"),
+          _t(
+            context,
+            "អត្ថប្រយោជន៍នៃការលក់មុន (Pre-order)",
+            "Benefits of Pre-order",
+          ),
           style: TextStyle(fontWeight: FontWeight.bold, color: Colors.orange),
         ),
         content: SingleChildScrollView(
@@ -184,18 +202,42 @@ class PreOrderGridView extends StatelessWidget {
             children: [
               _benefitItem(
                 Icons.account_balance_wallet_rounded,
-                _t(context, "យុទ្ធសាស្ត្រសម្រាប់ម្ចាស់អាជីវកម្ម", "Strategy for business owners"),
-                _t(context, "កាត់បន្ថយហានិភ័យនៃតុល្យភាពទីផ្សារ (Market Risk) ធានាបាននូវលំហូរទុនបង្វិល និងបង្កើនប្រសិទ្ធភាពក្នុងការគ្រប់គ្រងស្ដុកកសិផល។", "Reduce market risk, support cash flow, and improve agricultural stock management."),
+                _t(
+                  context,
+                  "យុទ្ធសាស្ត្រសម្រាប់ម្ចាស់អាជីវកម្ម",
+                  "Strategy for business owners",
+                ),
+                _t(
+                  context,
+                  "កាត់បន្ថយហានិភ័យនៃតុល្យភាពទីផ្សារ (Market Risk) ធានាបាននូវលំហូរទុនបង្វិល និងបង្កើនប្រសិទ្ធភាពក្នុងការគ្រប់គ្រងស្ដុកកសិផល។",
+                  "Reduce market risk, support cash flow, and improve agricultural stock management.",
+                ),
               ),
               _benefitItem(
                 Icons.hub_rounded,
-                _t(context, "ដំណោះស្រាយសម្រាប់ម្ចាស់គម្រោង", "Solution for project owners"),
-                _t(context, "ពង្រឹងខ្សែចង្វាក់ផ្គត់ផ្គង់ (Supply Chain) ឱ្យមានស្ថេរភាព និងបង្កើតអំណាចចរចាទីផ្សារទុកជាមុនជូនដល់សមាជិកក្នុងបណ្ដាញផលិតកម្ម។", "Strengthen supply-chain stability and improve advance market negotiation for production-network members."),
+                _t(
+                  context,
+                  "ដំណោះស្រាយសម្រាប់ម្ចាស់គម្រោង",
+                  "Solution for project owners",
+                ),
+                _t(
+                  context,
+                  "ពង្រឹងខ្សែចង្វាក់ផ្គត់ផ្គង់ (Supply Chain) ឱ្យមានស្ថេរភាព និងបង្កើតអំណាចចរចាទីផ្សារទុកជាមុនជូនដល់សមាជិកក្នុងបណ្ដាញផលិតកម្ម។",
+                  "Strengthen supply-chain stability and improve advance market negotiation for production-network members.",
+                ),
               ),
               _benefitItem(
                 Icons.stars_rounded,
-                _t(context, "អត្ថប្រយោជន៍សម្រាប់អតិថិជន", "Benefits for customers"),
-                _t(context, "ទទួលបានតម្លៃយុទ្ធសាស្ត្រ (Competitive Price) ធានាបាននូវប្រភពទំនិញពិតប្រាកដ និងកាត់បន្ថយភាពមិនច្បាស់លាស់នៃតម្លៃនៅលើទីផ្សារ។", "Access competitive prices, secure a real product source, and reduce market-price uncertainty."),
+                _t(
+                  context,
+                  "អត្ថប្រយោជន៍សម្រាប់អតិថិជន",
+                  "Benefits for customers",
+                ),
+                _t(
+                  context,
+                  "ទទួលបានតម្លៃយុទ្ធសាស្ត្រ (Competitive Price) ធានាបាននូវប្រភពទំនិញពិតប្រាកដ និងកាត់បន្ថយភាពមិនច្បាស់លាស់នៃតម្លៃនៅលើទីផ្សារ។",
+                  "Access competitive prices, secure a real product source, and reduce market-price uncertainty.",
+                ),
               ),
             ],
           ),
@@ -203,12 +245,17 @@ class PreOrderGridView extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(_t(context, "បិទ", "Close"), style: const TextStyle(color: Colors.grey)),
+            child: Text(
+              _t(context, "បិទ", "Close"),
+              style: const TextStyle(color: Colors.grey),
+            ),
           ),
         ],
       ),
     );
-  }Widget _benefitItem(IconData icon, String title, String desc) {
+  }
+
+  Widget _benefitItem(IconData icon, String title, String desc) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 15),
       child: Row(
@@ -241,10 +288,10 @@ class PreOrderGridView extends StatelessWidget {
 
   // ✅ កាតបង្ហាញទំនិញ
   Widget _buildPreOrderCard(
-      BuildContext context,
-      Map<String, dynamic> data,
-      String docId,
-      ) {
+    BuildContext context,
+    Map<String, dynamic> data,
+    String docId,
+  ) {
     List<dynamic> images = data['images'] ?? [];
     String? firstImage = images.isNotEmpty ? images[0] : null;
 
@@ -257,145 +304,153 @@ class PreOrderGridView extends StatelessWidget {
         ),
       ),
       child: Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(15),
-            border: Border.all(color: Colors.grey.shade200),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 8,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-          Expanded(
-          child: ClipRRect(
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
-      child: firstImage != null
-          ? Image.network(
-        firstImage,
-        fit: BoxFit.cover,
-        width: double.infinity,
-        loadingBuilder: (context, child, loadingProgress) {
-          if (loadingProgress == null) return child;
-          return Center(
-            child: CircularProgressIndicator(
-              value: loadingProgress.expectedTotalBytes != null
-                  ? loadingProgress.cumulativeBytesLoaded /
-                  loadingProgress.expectedTotalBytes!
-                  : null,
-              strokeWidth: 2,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(color: Colors.grey.shade200),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
             ),
-          );
-        },
-        errorBuilder: (context, error, stackTrace) => Container(
-          color: Colors.grey[200],
-          child: const Icon(
-            Icons.broken_image,
-            color: Colors.grey,
-            size: 40,
-          ),
+          ],
         ),
-      )
-          : Container(
-        color: Colors.grey[200],
-        child: const Icon(
-          Icons.image,
-          color: Colors.grey,
-          size: 40,
-        ),
-      ),
-    ),
-    ),
-    Padding(
-    padding: const EdgeInsets.all(10.0),
-    child: Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-    Text(data['product_name'] ?? _t(context, 'មិនមានឈ្មោះ', 'Unnamed product'),
-      style: const TextStyle(
-        color: Colors.black87,
-        fontWeight: FontWeight.bold,
-        fontSize: 14,
-        fontFamily: 'Siemreap',
-      ),
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-    ),
-      const SizedBox(height: 6),
-      Text(
-        formatPrice(data['price']),
-        style: TextStyle(
-          color: Colors.red[700],
-          fontWeight: FontWeight.bold,
-          fontSize: 16,
-        ),
-      ),
-      const SizedBox(height: 6),
-      Text(
-        "/ ${data['unit'] ?? _t(context, 'ឯកតា', 'unit')}",
-        style: TextStyle(
-          color: Colors.grey[600],
-          fontSize: 12,
-          fontFamily: 'Siemreap',
-        ),
-      ),
-      const SizedBox(height: 8),
-      Row(
-        children: [
-          Icon(
-            Icons.calendar_month,
-            size: 12,
-            color: Colors.grey[400],
-          ),
-          const SizedBox(width: 4),
-          Text(
-            _t(context, "ផុសថ្ងៃ: ${_formatDate(data['created_at'])}", "Posted: ${_formatDate(data['created_at'])}"),
-            style: TextStyle(color: Colors.grey[500], fontSize: 10),
-          ),
-        ],
-      ),
-      Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 8,
-              vertical: 3,
-            ),
-            decoration: BoxDecoration(
-              color: Colors.orange.shade50,
-              borderRadius: BorderRadius.circular(5),
-              border: Border.all(color: Colors.orange.shade200),
-            ),
-            child: const Text(
-              "Pre-order",
-              style: TextStyle(
-                color: Colors.orange,
-                fontSize: 10,
-                fontWeight: FontWeight.bold,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: ClipRRect(
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(15),
+                ),
+                child: firstImage != null
+                    ? Image.network(
+                        firstImage,
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return Center(
+                            child: CircularProgressIndicator(
+                              value: loadingProgress.expectedTotalBytes != null
+                                  ? loadingProgress.cumulativeBytesLoaded /
+                                        loadingProgress.expectedTotalBytes!
+                                  : null,
+                              strokeWidth: 2,
+                            ),
+                          );
+                        },
+                        errorBuilder: (context, error, stackTrace) => Container(
+                          color: Colors.grey[200],
+                          child: const Icon(
+                            Icons.broken_image,
+                            color: Colors.grey,
+                            size: 40,
+                          ),
+                        ),
+                      )
+                    : Container(
+                        color: Colors.grey[200],
+                        child: const Icon(
+                          Icons.image,
+                          color: Colors.grey,
+                          size: 40,
+                        ),
+                      ),
               ),
             ),
-          ),
-          const Spacer(),
-          if (data['harvest_date'] != null)
-            Text(
-              _formatShortDate(data['harvest_date']),
-              style: TextStyle(
-                fontSize: 10,
-                color: Colors.grey[500],
+            Padding(
+              padding: const EdgeInsets.all(10.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    data['product_name'] ??
+                        _t(context, 'មិនមានឈ្មោះ', 'Unnamed product'),
+                    style: const TextStyle(
+                      color: Colors.black87,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                      fontFamily: 'Siemreap',
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    formatPrice(data['price']),
+                    style: TextStyle(
+                      color: Colors.red[700],
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    "/ ${data['unit'] ?? _t(context, 'ឯកតា', 'unit')}",
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 12,
+                      fontFamily: 'Siemreap',
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.calendar_month,
+                        size: 12,
+                        color: Colors.grey[400],
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        _t(
+                          context,
+                          "ផុសថ្ងៃ: ${_formatDate(data['created_at'])}",
+                          "Posted: ${_formatDate(data['created_at'])}",
+                        ),
+                        style: TextStyle(color: Colors.grey[500], fontSize: 10),
+                      ),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.shade50,
+                          borderRadius: BorderRadius.circular(5),
+                          border: Border.all(color: Colors.orange.shade200),
+                        ),
+                        child: const Text(
+                          "Pre-order",
+                          style: TextStyle(
+                            color: Colors.orange,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      const Spacer(),
+                      if (data['harvest_date'] != null)
+                        Text(
+                          _formatShortDate(data['harvest_date']),
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: Colors.grey[500],
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
               ),
             ),
-        ],
-      ),
-    ],
-    ),
-    ),
-              ],
-          ),
+          ],
+        ),
       ),
     );
   }
@@ -416,36 +471,45 @@ class PreOrderGridView extends StatelessWidget {
 
   Widget _buildEmptyState() {
     return LayoutBuilder(
-        builder: (context, constraints) {
-          return SingleChildScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              child: ConstrainedBox(
-                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                  child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,children: [
-                        Icon(
-                          Icons.hourglass_empty_rounded,
-                          size: 50,
-                          color: Colors.grey[400],
-                        ),
-                        const SizedBox(height: 10),
-                        Text(
-                          searchQuery.isNotEmpty
-                              ? _t(context, "រកមិនឃើញការលក់មុនដែលត្រូវនឹង '$searchQuery'", "No pre-orders match '$searchQuery'")
-                              : _t(context, "មិនទាន់មានការប្រកាសលក់មុននៅឡើយទេ", "No pre-order listings yet"),
-                          style: const TextStyle(
-                            color: Colors.grey,
-                            fontFamily: 'Siemreap',
-                            fontSize: 14,
-                          ),
-                        ),
-                      ],
-                      ),
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.hourglass_empty_rounded,
+                    size: 50,
+                    color: Colors.grey[400],
                   ),
+                  const SizedBox(height: 10),
+                  Text(
+                    searchQuery.isNotEmpty
+                        ? _t(
+                            context,
+                            "រកមិនឃើញការលក់មុនដែលត្រូវនឹង '$searchQuery'",
+                            "No pre-orders match '$searchQuery'",
+                          )
+                        : _t(
+                            context,
+                            "មិនទាន់មានការប្រកាសលក់មុននៅឡើយទេ",
+                            "No pre-order listings yet",
+                          ),
+                    style: const TextStyle(
+                      color: Colors.grey,
+                      fontFamily: 'Siemreap',
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
               ),
-          );
-        },
+            ),
+          ),
+        );
+      },
     );
   }
 }
