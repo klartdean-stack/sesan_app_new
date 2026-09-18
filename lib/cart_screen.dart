@@ -19,6 +19,8 @@ class CartScreen extends StatefulWidget {
 
 class _CartScreenState extends State<CartScreen>
     with AutomaticKeepAliveClientMixin, WidgetsBindingObserver {
+  String _t(String km, String en) =>
+      Localizations.localeOf(context).languageCode == 'en' ? en : km;
   @override
   bool get wantKeepAlive => true;
   bool _isProcessingCheckout = false;
@@ -248,7 +250,7 @@ class _CartScreenState extends State<CartScreen>
         const SizedBox(width: 12),
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(item['product_name'] ?? 'គ្មានឈ្មោះ',
+            Text(item['product_name'] ?? _t('គ្មានឈ្មោះ', 'Unnamed product'),
                 style: const TextStyle(fontWeight: FontWeight.bold)),
             Text('${currencyFormat.format(price)} ៛',
                 style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
