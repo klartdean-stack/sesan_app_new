@@ -1,12 +1,12 @@
-name: Chat final verification
+name: Notification Profile VIP localization verification
 on:
   push:
     branches: [ios-sync-android46]
-    paths: ['.github/workflows/localization-batch.yml', 'lib/product_detail.dart']
+    paths: ['.github/workflows/localization-batch.yml']
 permissions:
   contents: write
 jobs:
-  verify-chat:
+  verify-localization:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -19,36 +19,21 @@ jobs:
           cache: true
       - name: Format
         run: |
-          dart format lib/chat_screen_legacy.dart lib/localization/app_translations.dart
+          dart format lib/user_notification_list.dart lib/profile_screen_legacy.dart lib/vip_membership_screen.dart
           git diff --check
-      - name: Preserve Chat features
-        run: |
-          grep -q "_startRecording" lib/chat_screen_legacy.dart
-          grep -q "_pickMultipleImages" lib/chat_screen_legacy.dart
-          grep -q "_sendLocationMessage" lib/chat_screen_legacy.dart
-          grep -q "CreateInvoiceSheet" lib/chat_screen_legacy.dart
-          grep -q "_buildQuickReplies" lib/chat_screen_legacy.dart
-          grep -q "_showBlockConfirmDialog" lib/chat_screen_legacy.dart
-          grep -q "_showUnblockConfirmDialog" lib/chat_screen_legacy.dart
-          grep -q "_openSellerShop" lib/chat_screen_legacy.dart
-          grep -q "'chat_view_shop'.tr" lib/chat_screen_legacy.dart
-          grep -q "'chat_today'.tr" lib/chat_screen_legacy.dart
-          grep -q "'chat_yesterday'.tr" lib/chat_screen_legacy.dart
-          ! grep -q "})Params(" lib/chat_screen_legacy.dart
-      - name: Analyze Chat
+      - name: Analyze
         run: |
           flutter pub get
-          flutter analyze lib/chat_screen_legacy.dart lib/localization/app_translations.dart --no-fatal-infos --no-fatal-warnings
+          flutter analyze lib/user_notification_list.dart lib/profile_screen_legacy.dart lib/vip_membership_screen.dart --no-fatal-infos --no-fatal-warnings
       - name: Compile check
-        run: |
-          flutter build bundle --debug
+        run: flutter build bundle --debug
       - name: Commit formatting if needed
         run: |
-          if ! git diff --quiet -- lib/chat_screen_legacy.dart lib/localization/app_translations.dart; then
+          if ! git diff --quiet -- lib/user_notification_list.dart lib/profile_screen_legacy.dart lib/vip_membership_screen.dart; then
             git config user.name github-actions[bot]
             git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-            git add lib/chat_screen_legacy.dart lib/localization/app_translations.dart
+            git add lib/user_notification_list.dart lib/profile_screen_legacy.dart lib/vip_membership_screen.dart
             git diff --cached --check
-            git commit -m "Format Chat localization source"
+            git commit -m "Format Notification Profile VIP localization"
             git push origin HEAD:ios-sync-android46
           fi
