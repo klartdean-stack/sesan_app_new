@@ -126,8 +126,10 @@ class _AddWantedScreenState extends State<AddWantedScreen> {
           );
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("ជ្រើសរើសបានអតិបរមាត្រឹមតែ ៣ សន្លឹកប៉ុណ្ណោះ!"),
+          SnackBar(
+            content: Text(appText(context,
+              km: "ជ្រើសរើសបានអតិបរមាត្រឹមតែ ៣ សន្លឹកប៉ុណ្ណោះ!",
+              en: "You can select up to 3 images only!")),
           ),
         );
       } else {
@@ -142,8 +144,10 @@ class _AddWantedScreenState extends State<AddWantedScreen> {
   Future<void> _submitPost() async {
     if (_userId.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("សូម Login មុននឹងប្រកាស"),
+        SnackBar(
+          content: Text(appText(context,
+            km: "សូម Login មុននឹងប្រកាស",
+            en: "Please log in before posting")),
           backgroundColor: Colors.red,
         ),
       );
@@ -151,14 +155,18 @@ class _AddWantedScreenState extends State<AddWantedScreen> {
     }
     if (_priceType == "បំពេញតម្លៃ" && _currency == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("សូមជ្រើសរើសរូបិយប័ណ្ណ (ដុល្លារ ឬ រៀល)")),
+        SnackBar(content: Text(appText(context,
+          km: "សូមជ្រើសរើសរូបិយប័ណ្ណ (ដុល្លារ ឬ រៀល)",
+          en: "Please select a currency (Dollar or Riel)"))),
       );
       return;
     }
     if (!_formKey.currentState!.validate() || _selectedImages.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("សូមបំពេញព័ត៌មាន និងដាក់រូបភាពយ៉ាងហោច ១ សន្លឹក"),
+        SnackBar(
+          content: Text(appText(context,
+            km: "សូមបំពេញព័ត៌មាន និងដាក់រូបភាពយ៉ាងហោច ១ សន្លឹក",
+            en: "Please complete the information and add at least 1 image")),
         ),
       );
       return;
@@ -206,12 +214,15 @@ class _AddWantedScreenState extends State<AddWantedScreen> {
 
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("ប្រកាសទិញត្រូវបានចុះផ្សាយ")),
+        SnackBar(content: Text(appText(context,
+          km: "ប្រកាសទិញត្រូវបានចុះផ្សាយ",
+          en: "Wanted listing published"))),
       );
     } catch (e) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text("កំហុស៖ $e")));
+      ).showSnackBar(SnackBar(content: Text(appText(context,
+          km: "កំហុស៖ $e", en: "Error: $e"))));
     } finally {
       setState(() => _isLoading = false);
     }
@@ -304,13 +315,13 @@ class _AddWantedScreenState extends State<AddWantedScreen> {
               TextFormField(
                 controller: _phoneController,
                 keyboardType: TextInputType.phone,
-                decoration: const InputDecoration(
-                  labelText: "លេខទូរស័ព្ទ",
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.phone),
+                decoration: InputDecoration(
+                  labelText: appText(context, km: "លេខទូរស័ព្ទ", en: "Phone number"),
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.phone),
                 ),
                 validator: (v) => (v == null || v.trim().isEmpty)
-                    ? "សូមបញ្ចូលលេខទូរស័ព្ទ"
+                    ? appText(context, km: "សូមបញ្ចូលលេខទូរស័ព្ទ", en: "Please enter a phone number")
                     : null, // ✅ បន្ថែម
               ),
               const SizedBox(height: 15),
@@ -322,17 +333,18 @@ class _AddWantedScreenState extends State<AddWantedScreen> {
 
 
               // --- ការពិពណ៌នា ---
-              const Text(
-                "រៀបរាប់បន្ថែម *",
-                style: TextStyle(fontWeight: FontWeight.bold),
+              Text(
+                appText(context, km: "រៀបរាប់បន្ថែម *", en: "Additional description *"),
+                style: const TextStyle(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 10),
               TextFormField(
                 controller: _descriptionController,
                 maxLines: 4,
                 decoration: InputDecoration(
-                  hintText:
-                  "ឧទាហរណ៍៖ ត្រូវការទិញយកទៅប្រើប្រាស់ផ្ទាល់ខ្លួន...",
+                  hintText: appText(context,
+                    km: "ឧទាហរណ៍៖ ត្រូវការទិញយកទៅប្រើប្រាស់ផ្ទាល់ខ្លួន...",
+                    en: "Example: I want to buy this for personal use..."),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
@@ -354,9 +366,9 @@ class _AddWantedScreenState extends State<AddWantedScreen> {
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
-                  child: const Text(
-                    "ចុះផ្សាយប្រកាសទិញ",
-                    style: TextStyle(
+                  child: Text(
+                    appText(context, km: "ចុះផ្សាយប្រកាសទិញ", en: "Publish wanted listing"),
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 18,
                       fontFamily: 'Siemreap',
@@ -379,9 +391,11 @@ class _AddWantedScreenState extends State<AddWantedScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          "រូបភាពទំនិញត្រូវការទិញ (អតិបរមា ៣ សន្លឹក) *",
-          style: TextStyle(fontWeight: FontWeight.bold),
+        Text(
+          appText(context,
+            km: "រូបភាពទំនិញត្រូវការទិញ (អតិបរមា ៣ សន្លឹក) *",
+            en: "Product images (maximum 3) *"),
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 10),
 
@@ -404,7 +418,7 @@ class _AddWantedScreenState extends State<AddWantedScreen> {
                   const Icon(Icons.add_a_photo, size: 40, color: Colors.blue),
                   const SizedBox(height: 8),
                   Text(
-                    "ចុចដើម្បីដាក់រូបភាព (0/3)",
+                    appText(context, km: "ចុចដើម្បីដាក់រូបភាព (0/3)", en: "Tap to add images (0/3)"),
                     style: TextStyle(
                       color: Colors.blue[800],
                       fontFamily: 'Siemreap',
@@ -494,7 +508,9 @@ class _AddWantedScreenState extends State<AddWantedScreen> {
           const SizedBox(height: 5),
           // ✅ បង្ហាញចំនួនរូបភាព
           Text(
-            "បានជ្រើសរើស ${_selectedImages.length}/3 សន្លឹក",
+            appText(context,
+              km: "បានជ្រើសរើស ${_selectedImages.length}/3 សន្លឹក",
+              en: "Selected ${_selectedImages.length}/3 images"),
             style: TextStyle(
               fontSize: 12,
               color: _selectedImages.length >= 3 ? Colors.red : Colors.green,
@@ -512,9 +528,9 @@ class _AddWantedScreenState extends State<AddWantedScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          "តម្លៃរំពឹងទុក៖",
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+        Text(
+          appText(context, km: "តម្លៃរំពឹងទុក៖", en: "Expected price:"),
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
         ),
         const SizedBox(height: 8),
 
@@ -531,7 +547,7 @@ class _AddWantedScreenState extends State<AddWantedScreen> {
             ),
             GestureDetector(
               onTap: () => setState(() => _priceType = "បំពេញតម្លៃ"),
-              child: const Text("បំពេញ", style: TextStyle(fontSize: 13)),
+              child: Text(appText(context, km: "បំពេញ", en: "Fixed price"), style: const TextStyle(fontSize: 13)),
             ),
             const SizedBox(width: 16),
             Radio(
@@ -543,7 +559,7 @@ class _AddWantedScreenState extends State<AddWantedScreen> {
             ),
             GestureDetector(
               onTap: () => setState(() => _priceType = "ចរចារ"),
-              child: const Text("ចរចារ", style: TextStyle(fontSize: 13)),
+              child: Text(appText(context, km: "ចរចារ", en: "Negotiable"), style: const TextStyle(fontSize: 13)),
             ),
           ],
         ),
@@ -562,11 +578,11 @@ class _AddWantedScreenState extends State<AddWantedScreen> {
                 controller: _priceController,
                 keyboardType: TextInputType.number,
                 inputFormatters: [ThousandsSeparatorInputFormatter()],
-                decoration: const InputDecoration(
-                  labelText: "តម្លៃ",
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: appText(context, km: "តម្លៃ", en: "Price"),
+                  border: const OutlineInputBorder(),
                   // ✅ គ្មាន prefixIcon ដើម្បីកុំឲ្យច្រឡំ
-                  contentPadding: EdgeInsets.symmetric(
+                  contentPadding: const EdgeInsets.symmetric(
                     horizontal: 12,
                     vertical: 14,
                   ),
@@ -576,9 +592,9 @@ class _AddWantedScreenState extends State<AddWantedScreen> {
 
 
               // ✅ ប៊ូតុងរូបិយប័ណ្ណ (សាមញ្ញ តូច)
-              const Text(
-                "រូបិយប័ណ្ណ៖",
-                style: TextStyle(fontWeight: FontWeight.w500, fontSize: 13),
+              Text(
+                appText(context, km: "រូបិយប័ណ្ណ៖", en: "Currency:"),
+                style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 13),
               ),
               const SizedBox(height: 6),
               Row(
@@ -617,7 +633,7 @@ class _AddWantedScreenState extends State<AddWantedScreen> {
                             ),
                             const SizedBox(width: 6),
                             Text(
-                              "ដុល្លារ",
+                              appText(context, km: "ដុល្លារ", en: "Dollar"),
                               style: TextStyle(
                                 fontSize: 13,
                                 color: _currency == "\$"
@@ -666,7 +682,7 @@ class _AddWantedScreenState extends State<AddWantedScreen> {
                             ),
                             const SizedBox(width: 6),
                             Text(
-                              "រៀល",
+                              appText(context, km: "រៀល", en: "Riel"),
                               style: TextStyle(
                                 fontSize: 13,
                                 color: _currency == "៛"
@@ -684,10 +700,10 @@ class _AddWantedScreenState extends State<AddWantedScreen> {
               ),
               // សារព្រមានបើមិនបានជ្រើសរើស
               if (_currency == null)
-                const Padding(
-                  padding: EdgeInsets.only(top: 6),
+                Padding(
+                  padding: const EdgeInsets.only(top: 6),
                   child: Text(
-                    "សូមជ្រើសរើសរូបិយប័ណ្ណ",
+                    appText(context, km: "សូមជ្រើសរើសរូបិយប័ណ្ណ", en: "Please select a currency"),
                     style: TextStyle(color: Colors.red, fontSize: 12),
                   ),
                 ),
@@ -704,12 +720,12 @@ class _AddWantedScreenState extends State<AddWantedScreen> {
               borderRadius: BorderRadius.circular(8),
               border: Border.all(color: Colors.orange.withOpacity(0.3)),
             ),
-            child: const Row(
+            child: Row(
               children: [
-                Icon(Icons.handshake, color: Colors.orange, size: 20),
-                SizedBox(width: 8),
+                const Icon(Icons.handshake, color: Colors.orange, size: 20),
+                const SizedBox(width: 8),
                 Text(
-                  "តម្លៃអាចចរចារបាន",
+                  appText(context, km: "តម្លៃអាចចរចារបាន", en: "Price is negotiable"),
                   style: TextStyle(
                     color: Colors.orange,
                     fontWeight: FontWeight.bold,
@@ -730,9 +746,9 @@ class _AddWantedScreenState extends State<AddWantedScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          "ទីតាំងត្រូវការទិញ *",
-          style: TextStyle(fontWeight: FontWeight.bold),
+        Text(
+          appText(context, km: "ទីតាំងត្រូវការទិញ *", en: "Wanted location *"),
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 10),
         Row(
@@ -772,7 +788,7 @@ class _AddWantedScreenState extends State<AddWantedScreen> {
                       Expanded(
                         child: Text(
                           _locationController.text.isEmpty
-                              ? "ជ្រើសរើសទីតាំង *"
+                              ? appText(context, km: "ជ្រើសរើសទីតាំង *", en: "Select location *")
                               : _locationController.text,
                           style: TextStyle(
                             fontSize: 14,
