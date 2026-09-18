@@ -11,6 +11,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'localized_text.dart';
 
 class ShopUpgradeScreen extends StatefulWidget {
   const ShopUpgradeScreen({super.key});
@@ -95,10 +96,15 @@ class _ShopUpgradeScreenState extends State<ShopUpgradeScreen> {
       final ok = await _checkShopNameAvailability(_currentShopName!);
       setState(() {
         _isNameAvailable = ok;
-        _nameCheckError = ok ? null : 'ឈ្មោះនេះមានម្ចាស់ហើយ!';
+        _nameCheckError = ok
+            ? null
+            : appText(context,
+                km: 'ឈ្មោះនេះមានម្ចាស់ហើយ!',
+                en: 'This shop name is already owned!');
       });
     } catch (_) {
-      setState(() => _nameCheckError = 'មិនអាចពិនិត្យបាន');
+      setState(() => _nameCheckError = appText(context,
+          km: 'មិនអាចពិនិត្យបាន', en: 'Could not check availability'));
     } finally {
       setState(() => _isCheckingName = false);
     }
@@ -190,7 +196,9 @@ class _ShopUpgradeScreenState extends State<ShopUpgradeScreen> {
         await Gal.requestAccess();
       }
       if (!await Gal.hasAccess()) {
-        throw Exception('សូមអនុញ្ញាតឱ្យ App រក្សាទុករូបភាពក្នុង Gallery');
+        throw Exception(appText(context,
+            km: 'សូមអនុញ្ញាតឱ្យ App រក្សាទុករូបភាពក្នុង Gallery',
+            en: 'Please allow the app to save images to your gallery'));
       }
       final byteData = await rootBundle.load('assets/aba_qr.png');
       final tempDir = await getTemporaryDirectory();
@@ -198,10 +206,17 @@ class _ShopUpgradeScreenState extends State<ShopUpgradeScreen> {
       await file.writeAsBytes(byteData.buffer.asUint8List(byteData.offsetInBytes, byteData.lengthInBytes));
       await Gal.putImage(file.path);
       if (!mounted) return;
-      _showTopMessage('✅ បានរក្សាទុកក្នុង Gallery រួចរាល់!');
+      _showTopMessage(appText(context,
+          km: '✅ បានរក្សាទុកក្នុង Gallery រួចរាល់!',
+          en: '✅ Saved to your gallery!'));
     } catch (e) {
       if (!mounted) return;
-      _showTopMessage('❌ មិនអាចរក្សាទុកបាន: $e', isError: true);
+      _showTopMessage(
+        appText(context,
+            km: '❌ មិនអាចរក្សាទុកបាន: $e',
+            en: '❌ Could not save: $e'),
+        isError: true,
+      );
     }
   }
 
@@ -221,13 +236,21 @@ class _ShopUpgradeScreenState extends State<ShopUpgradeScreen> {
   Future<void> _submitRequest(BuildContext context, StateSetter setModalState) async {
     if (_selectedTier == null || _receiptImage == null) return;
     if (_selectedTier == 'premium' && _isNameAvailable != true) {
-      _showSnack('ឈ្មោះហាងមានម្ចាស់ហើយ មិនអាចទិញបាន', isError: true);
+      _showSnack(
+        appText(context,
+            km: 'ឈ្មោះហាងមានម្ចាស់ហើយ មិនអាចទិញបាន',
+            en: 'This shop name is already owned and cannot be purchased'),
+        isError: true,
+      );
       return;
     }
     setModalState(() => _isSubmitting = true);
     try {
       final url = await _uploadImage(_receiptImage!);
-      if (url == null) throw Exception('Upload failed');
+      if (url == null) {
+        throw Exception(appText(context,
+            km: 'ការបង្ហោះរូបភាពបានបរាជ័យ', en: 'Upload failed'));
+      }
       String sesanId = '';
       try {
         final d = await FirebaseFirestore.instance.collection('users').doc(_currentUserId).get();
@@ -252,10 +275,20 @@ class _ShopUpgradeScreenState extends State<ShopUpgradeScreen> {
       });
       if (mounted) {
         Navigator.pop(context);
-        _showSnack('✅ សំណើដំឡើងហាងត្រូវបានបញ្ជូន!', isError: false);
+        _showSnack(
+          appText(context,
+              km: '✅ សំណើដំឡើងហាងត្រូវបានបញ្ជូន!',
+              en: '✅ Shop upgrade request submitted!'),
+          isError: false,
+        );
       }
     } catch (e) {
-      if (mounted) _showSnack('❌ មានបញ្ហា: $e', isError: true);
+      if (mounted) {
+        _showSnack(
+          appText(context, km: '❌ មានបញ្ហា: $e', en: '❌ Error: $e'),
+          isError: true,
+        );
+      }
     } finally {
       setModalState(() => _isSubmitting = false);
     }
@@ -284,7 +317,9 @@ class _ShopUpgradeScreenState extends State<ShopUpgradeScreen> {
                 ),
                 const SizedBox(height: 20),
                 Text(
-                  _selectedTier == 'premium' ? '💎 Premium Shop' : '✓ Basic Shop',
+                  _selectedTier == 'premium'
+                      ? appText(context, km: '💎 ហាង Premium', en: '💎 Premium Shop')
+                      : appText(context, km: '✓ ហាង Basic', en: '✓ Basic Shop'),
                   style: TextStyle(
                     color: _selectedTier == 'premium' ? amberColor : Colors.blueAccent,
                     fontSize: 18, fontWeight: FontWeight.bold, fontFamily: 'Siemreap',
@@ -292,7 +327,7 @@ class _ShopUpgradeScreenState extends State<ShopUpgradeScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  "ជំហាន ${currentStep + 1}/3",
+                  "${appText(context, km: 'ជំហាន', en: 'Step')} ${currentStep + 1}/3",
                   style: TextStyle(color: Colors.white.withOpacity(0.45), fontSize: 12),
                 ),
                 const SizedBox(height: 20),
@@ -325,7 +360,8 @@ class _ShopUpgradeScreenState extends State<ShopUpgradeScreen> {
       ),
       onPressed: () => setModalState(() => currentStep--),
       icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white54, size: 14),
-      label: const Text('ថយក្រោយ', style: TextStyle(color: Colors.white60, fontFamily: 'Siemreap')),
+      label: Text(appText(context, km: 'ថយក្រោយ', en: 'Back'),
+          style: const TextStyle(color: Colors.white60, fontFamily: 'Siemreap')),
     ),
     ),
     const SizedBox(width: 12),
@@ -347,7 +383,9 @@ class _ShopUpgradeScreenState extends State<ShopUpgradeScreen> {
       },
       child: _isSubmitting
           ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-          : Text(currentStep < 2 ? 'បន្ត →' : '✓ បញ្ជូនសំណើ',
+          : Text(currentStep < 2
+              ? appText(context, km: 'បន្ត →', en: 'Continue →')
+              : appText(context, km: '✓ បញ្ជូនសំណើ', en: '✓ Submit request'),
           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, fontFamily: 'Siemreap')),
     ),
     ),
@@ -405,10 +443,15 @@ class _ShopUpgradeScreenState extends State<ShopUpgradeScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(_selectedTier == 'premium' ? '💎 Premium Shop' : '✓ Basic Shop',
+            Text(_selectedTier == 'premium'
+                ? appText(context, km: '💎 ហាង Premium', en: '💎 Premium Shop')
+                : appText(context, km: '✓ ហាង Basic', en: '✓ Basic Shop'),
                 style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 15, fontFamily: 'Siemreap')),
             const SizedBox(height: 4),
-            const Text('ទិញម្ដងប្រើអស់មួយជីវិត', style: TextStyle(color: Colors.white38, fontSize: 11, fontFamily: 'Siemreap')),
+            Text(appText(context,
+                km: 'ទិញម្ដងប្រើអស់មួយជីវិត',
+                en: 'One-time purchase, lifetime access'),
+                style: const TextStyle(color: Colors.white38, fontSize: 11, fontFamily: 'Siemreap')),
           ]),
           Text('${formatter.format(price)} ៛', style: TextStyle(color: color, fontSize: 22, fontWeight: FontWeight.bold)),
         ],
@@ -416,9 +459,9 @@ class _ShopUpgradeScreenState extends State<ShopUpgradeScreen> {
     ),
     const SizedBox(height: 20),
     _infoCard([
-    _infoRow('👤 ឈ្មោះអ្នកលក់', _currentUserName ?? '—'),
-    _infoRow('📱 លេខទូរស័ព្ទ', _currentPhone ?? '—'),
-    _infoRow('🏪 ឈ្មោះហាង', _currentShopName ?? '—'),
+    _infoRow(appText(context, km: '👤 ឈ្មោះអ្នកលក់', en: '👤 Seller name'), _currentUserName ?? '—'),
+    _infoRow(appText(context, km: '📱 លេខទូរស័ព្ទ', en: '📱 Phone number'), _currentPhone ?? '—'),
+    _infoRow(appText(context, km: '🏪 ឈ្មោះហាង', en: '🏪 Shop name'), _currentShopName ?? '—'),
     ]),
     if (_selectedTier == 'premium') ...[
     const SizedBox(height: 12),
@@ -430,12 +473,14 @@ class _ShopUpgradeScreenState extends State<ShopUpgradeScreen> {
     color: amberColor.withOpacity(0.08),borderRadius: BorderRadius.circular(10),
       border: Border.all(color: amberColor.withOpacity(0.25)),
     ),
-      child: const Row(children: [
-        Icon(Icons.info_outline, color: Colors.amber, size: 16),
-        SizedBox(width: 8),
+      child: Row(children: [
+        const Icon(Icons.info_outline, color: Colors.amber, size: 16),
+        const SizedBox(width: 8),
         Expanded(
-          child: Text('ឈ្មោះហាងនឹងក្លាយជាកម្មសិទ្ធិផ្ដាច់របស់អ្នក',
-              style: TextStyle(color: Colors.amber, fontSize: 12, fontFamily: 'Siemreap')),
+          child: Text(appText(context,
+              km: 'ឈ្មោះហាងនឹងក្លាយជាកម្មសិទ្ធិផ្ដាច់របស់អ្នក',
+              en: 'The shop name will become your exclusive property'),
+              style: const TextStyle(color: Colors.amber, fontSize: 12, fontFamily: 'Siemreap')),
         ),
       ]),
     ),
@@ -471,10 +516,14 @@ class _ShopUpgradeScreenState extends State<ShopUpgradeScreen> {
       return Row(children: [
         const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white38)),
         const SizedBox(width: 8),
-        Text('កំពុងពិនិត្យ...', style: TextStyle(color: Colors.white.withOpacity(0.5), fontFamily: 'Siemreap')),
+        Text(appText(context, km: 'កំពុងពិនិត្យ...', en: 'Checking...'),
+            style: TextStyle(color: Colors.white.withOpacity(0.5), fontFamily: 'Siemreap')),
       ]);
     if (_nameCheckError != null) return _statusRow(Icons.error_outline, _nameCheckError!, redColor);
-    if (_isNameAvailable == true) return _statusRow(Icons.check_circle_outline, 'ឈ្មោះហាងអាចប្រើបាន', greenColor);
+    if (_isNameAvailable == true) return _statusRow(
+        Icons.check_circle_outline,
+        appText(context, km: 'ឈ្មោះហាងអាចប្រើបាន', en: 'Shop name is available'),
+        greenColor);
     return const SizedBox.shrink();
   }
 
@@ -500,7 +549,8 @@ class _ShopUpgradeScreenState extends State<ShopUpgradeScreen> {
         ),
         child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
             Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const Text('ចំនួនទឹកប្រាក់', style: TextStyle(color: Colors.white38, fontSize: 11, fontFamily: 'Siemreap')),
+              Text(appText(context, km: 'ចំនួនទឹកប្រាក់', en: 'Amount'),
+                  style: const TextStyle(color: Colors.white38, fontSize: 11, fontFamily: 'Siemreap')),
               const SizedBox(height: 4),
               Text('${formatter.format(price)} ៛', style: TextStyle(color: color, fontSize: 26, fontWeight: FontWeight.bold)),
             ]),
@@ -511,9 +561,12 @@ class _ShopUpgradeScreenState extends State<ShopUpgradeScreen> {
         ]),
         ),
       const SizedBox(height: 20),
-      const Text('QR Code បង់ប្រាក់', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14, fontFamily: 'Siemreap')),
+      Text(appText(context, km: 'QR Code បង់ប្រាក់', en: 'Payment QR code'),
+          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14, fontFamily: 'Siemreap')),
       const SizedBox(height: 4),
-      Text('សង្កត់ជាប់ដើម្បីទាញ QR', style: TextStyle(color: Colors.white.withOpacity(0.35), fontSize: 11)),
+      Text(appText(context,
+          km: 'សង្កត់ជាប់ដើម្បីទាញ QR', en: 'Press and hold to save the QR code'),
+          style: TextStyle(color: Colors.white.withOpacity(0.35), fontSize: 11)),
       const SizedBox(height: 14),
       GestureDetector(
         onLongPress: () async {
@@ -537,7 +590,8 @@ class _ShopUpgradeScreenState extends State<ShopUpgradeScreen> {
         child: ElevatedButton.icon(
           onPressed: _launchABA,
           icon: const Icon(Icons.open_in_new, size: 18),
-          label: const Text('បើក App ABA', style: TextStyle(fontFamily: 'Siemreap')),
+          label: Text(appText(context, km: 'បើក App ABA', en: 'Open ABA app'),
+              style: const TextStyle(fontFamily: 'Siemreap')),
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFF005D7E),
             foregroundColor: Colors.white,
@@ -557,11 +611,14 @@ class _ShopUpgradeScreenState extends State<ShopUpgradeScreen> {
   borderRadius: BorderRadius.circular(12),
   border: Border.all(color: greenColor.withOpacity(0.3)),
   ),
-  child: const Row(children: [
-  Icon(Icons.check_circle_outline, color: Color(0xFF00C48C), size: 18),
-  SizedBox(width: 10),
+  child: Row(children: [
+  const Icon(Icons.check_circle_outline, color: Color(0xFF00C48C), size: 18),
+  const SizedBox(width: 10),
   Expanded(
-  child: Text('ភ្ជាប់រូបថតវិក្កយបត្របង់ប្រាក់', style: TextStyle(color: Colors.white70, fontSize: 12, fontFamily: 'Siemreap')),
+  child: Text(appText(context,
+      km: 'ភ្ជាប់រូបថតវិក្កយបត្របង់ប្រាក់',
+      en: 'Attach a photo of the payment receipt'),
+      style: const TextStyle(color: Colors.white70, fontSize: 12, fontFamily: 'Siemreap')),
   ),
   ]),
   ),
@@ -584,7 +641,9 @@ class _ShopUpgradeScreenState extends State<ShopUpgradeScreen> {
   ? Column(mainAxisAlignment: MainAxisAlignment.center, children: [
   Icon(Icons.add_a_photo_outlined, color: Colors.white.withOpacity(0.3), size: 44),
   const SizedBox(height: 10),
-  Text('ចុចដើម្បីជ្រើសរូបភាព', style: TextStyle(color: Colors.white.withOpacity(0.35), fontSize: 13, fontFamily: 'Siemreap')),
+  Text(appText(context,
+      km: 'ចុចដើម្បីជ្រើសរូបភាព', en: 'Tap to select an image'),
+      style: TextStyle(color: Colors.white.withOpacity(0.35), fontSize: 13, fontFamily: 'Siemreap')),
   ])
       : ClipRRect(borderRadius: BorderRadius.circular(14), child: Image.file(_receiptImage!, fit: BoxFit.cover)),),
   ),
@@ -592,7 +651,8 @@ class _ShopUpgradeScreenState extends State<ShopUpgradeScreen> {
       TextButton.icon(
         onPressed: () => setModalState(() => _receiptImage = null),
         icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 18),
-        label: const Text('លុបចេញ', style: TextStyle(color: Colors.redAccent, fontFamily: 'Siemreap')),
+        label: Text(appText(context, km: 'លុបចេញ', en: 'Remove'),
+            style: const TextStyle(color: Colors.redAccent, fontFamily: 'Siemreap')),
       ),
   ]);
 
@@ -607,7 +667,8 @@ class _ShopUpgradeScreenState extends State<ShopUpgradeScreen> {
     return Scaffold(
         backgroundColor: bgColor,
         appBar: AppBar(
-          title: const Text('ដំឡើងហាង', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 1)),
+          title: Text(appText(context, km: 'ដំឡើងហាង', en: 'Upgrade shop'),
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 1)),
           backgroundColor: Colors.transparent, elevation: 0,
           leading: IconButton(icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white), onPressed: () => Navigator.pop(context)),
         ),
@@ -618,22 +679,42 @@ class _ShopUpgradeScreenState extends State<ShopUpgradeScreen> {
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 _buildHeroBanner(),
             const SizedBox(height: 28),
-            _sectionLabel('ជ្រើសកញ្ចប់'),
+            _sectionLabel(appText(context, km: 'ជ្រើសកញ្ចប់', en: 'Choose a plan')),
             const SizedBox(height: 14),
             _buildTierCard(
-              tier: 'basic', title: 'Basic Shop', subtitle: 'ល្អសម្រាប់ហាងដំបូង',
+              tier: 'basic', title: appText(context,
+                  km: 'ហាង Basic', en: 'Basic Shop'), subtitle: appText(context,
+                  km: 'ល្អសម្រាប់ហាងដំបូង', en: 'Ideal for a first shop'),
               price: basicPrice, color: Colors.blueAccent, icon: Icons.verified_user_rounded,
-              benefits: const ['ផ្លាក Blue Verify ✓', 'ស្ថិតិអ្នកចូលមើលហាង', 'បញ្ជីអ្នក Follow'],
+              benefits: [
+                appText(context, km: 'ផ្លាក Blue Verify ✓', en: 'Blue verification badge ✓'),
+                appText(context, km: 'ស្ថិតិអ្នកចូលមើលហាង', en: 'Shop visitor statistics'),
+                appText(context, km: 'បញ្ជីអ្នក Follow', en: 'Follower list'),
+              ],
               enabled: canSelectBasic,
-              statusLabel: _currentShopTier == 'basic' ? 'ទិញរួច' : _currentShopTier == 'premium' ? 'មាន Premium' : null,
+              statusLabel: _currentShopTier == 'basic'
+                  ? appText(context, km: 'ទិញរួច', en: 'Purchased')
+                  : _currentShopTier == 'premium'
+                      ? appText(context, km: 'មាន Premium', en: 'Premium active')
+                      : null,
             ),
             const SizedBox(height: 14),
             _buildTierCard(
-              tier: 'premium', title: 'Premium Shop', subtitle: 'ហាងពេញលេញ + ឈ្មោះផ្ដាច់',
+              tier: 'premium', title: appText(context,
+                  km: 'ហាង Premium', en: 'Premium Shop'), subtitle: appText(context,
+                  km: 'ហាងពេញលេញ + ឈ្មោះផ្ដាច់',
+                  en: 'Full shop + exclusive name'),
               price: premiumPrice, color: amberColor, icon: Icons.diamond_rounded,
-              benefits: const ['ផ្លាក Gold Verify ✓', 'ស្ថិតិ + អ្នក Follow', 'Event Space លើហាង', 'ភាពជាម្ចាស់ឈ្មោះហាង'],
+              benefits: [
+                appText(context, km: 'ផ្លាក Gold Verify ✓', en: 'Gold verification badge ✓'),
+                appText(context, km: 'ស្ថិតិ + អ្នក Follow', en: 'Statistics + followers'),
+                appText(context, km: 'Event Space លើហាង', en: 'Event space on your shop'),
+                appText(context, km: 'ភាពជាម្ចាស់ឈ្មោះហាង', en: 'Shop name ownership'),
+              ],
               showShopNameStatus: true, enabled: canSelectPremium,
-              statusLabel: _currentShopTier == 'premium' ? 'មានរួច' : null, isBestValue: true,
+              statusLabel: _currentShopTier == 'premium'
+                  ? appText(context, km: 'មានរួច', en: 'Already active')
+                  : null, isBestValue: true,
             ),
             const SizedBox(height: 28),
             if (alreadyPremium)
@@ -656,17 +737,22 @@ class _ShopUpgradeScreenState extends State<ShopUpgradeScreen> {
     onPressed: canPurchase ? () => _showPurchaseDialog(context) : null,icon: Icon(canPurchase ? Icons.shopping_cart_checkout_rounded : Icons.touch_app_outlined, size: 20),
       label: Text(
         _selectedTier == null
-            ? 'ជ្រើសកញ្ចប់ខាងលើ'
+            ? appText(context,
+                km: 'ជ្រើសកញ្ចប់ខាងលើ', en: 'Choose a plan above')
             : (_selectedTier == 'premium' && _isNameAvailable == false
-            ? 'ឈ្មោះហាងមិនទំនេរ'
-            : 'ទិញ${_selectedTier == 'premium' ? ' Premium' : ' Basic'} · ${formatter.format(price)} ៛'),
+            ? appText(context,
+                km: 'ឈ្មោះហាងមិនទំនេរ', en: 'Shop name is unavailable')
+            : '${appText(context, km: 'ទិញ', en: 'Buy')}${_selectedTier == 'premium' ? ' Premium' : ' Basic'} · ${formatter.format(price)} ៛'),
         style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, fontFamily: 'Siemreap'),
       ),
     ),
     ),
               if (_selectedTier == null) ...[
                 const SizedBox(height: 10),
-                Center(child: Text('👆 ជ្រើសកញ្ចប់ Basic ឬ Premium', style: TextStyle(color: Colors.white.withOpacity(0.3), fontSize: 12, fontFamily: 'Siemreap'))),
+                Center(child: Text(appText(context,
+                    km: '👆 ជ្រើសកញ្ចប់ Basic ឬ Premium',
+                    en: '👆 Choose the Basic or Premium plan'),
+                    style: TextStyle(color: Colors.white.withOpacity(0.3), fontSize: 12, fontFamily: 'Siemreap'))),
               ],
             ],
             ]),
@@ -691,9 +777,14 @@ class _ShopUpgradeScreenState extends State<ShopUpgradeScreen> {
         const SizedBox(width: 16),
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Text('ដំឡើងហាងរបស់អ្នក', style: TextStyle(color: Colors.amber, fontSize: 17, fontWeight: FontWeight.bold, fontFamily: 'Siemreap')),
+            Text(appText(context,
+                km: 'ដំឡើងហាងរបស់អ្នក', en: 'Upgrade your shop'),
+                style: const TextStyle(color: Colors.amber, fontSize: 17, fontWeight: FontWeight.bold, fontFamily: 'Siemreap')),
             const SizedBox(height: 5),
-            Text('ទិញម្ដង ✦ ប្រើអស់មួយជីវិត ✦ គ្មានថ្លៃប្រចាំខែ', style: TextStyle(color: Colors.white.withOpacity(0.55), fontSize: 12, fontFamily: 'Siemreap')),
+            Text(appText(context,
+                km: 'ទិញម្ដង ✦ ប្រើអស់មួយជីវិត ✦ គ្មានថ្លៃប្រចាំខែ',
+                en: 'One-time purchase ✦ Lifetime access ✦ No monthly fee'),
+                style: TextStyle(color: Colors.white.withOpacity(0.55), fontSize: 12, fontFamily: 'Siemreap')),
             const SizedBox(height: 10),
             if (_currentShopName != null)
               Container(
@@ -746,7 +837,9 @@ class _ShopUpgradeScreenState extends State<ShopUpgradeScreen> {
                     ),
                     Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
                       Text('${formatter.format(price)} ៛', style: TextStyle(color: enabled ? color : Colors.grey, fontSize: 15, fontWeight: FontWeight.bold)),
-                      Text('ម្ដងអស់ជីវិត', style: TextStyle(color: Colors.white.withOpacity(0.3), fontSize: 9, fontFamily: 'Siemreap')),
+                      Text(appText(context,
+                          km: 'ម្ដងអស់ជីវិត', en: 'Lifetime'),
+                          style: TextStyle(color: Colors.white.withOpacity(0.3), fontSize: 9, fontFamily: 'Siemreap')),
                     ]),
                   ]),
                   const SizedBox(height: 14),
@@ -768,7 +861,8 @@ class _ShopUpgradeScreenState extends State<ShopUpgradeScreen> {
                       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                         Row(children: [
                           const Icon(Icons.store_rounded, color: Colors.white38, size: 15), const SizedBox(width: 6),
-                          Text('ឈ្មោះហាង: ', style: TextStyle(color: Colors.white.withOpacity(0.45), fontSize: 12, fontFamily: 'Siemreap')),
+                          Text(appText(context, km: 'ឈ្មោះហាង: ', en: 'Shop name: '),
+                              style: TextStyle(color: Colors.white.withOpacity(0.45), fontSize: 12, fontFamily: 'Siemreap')),
                           Expanded(child: Text(_currentShopName ?? '—', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12, fontFamily: 'Siemreap'))),
                         ]),
                         const SizedBox(height: 8),
@@ -801,7 +895,9 @@ class _ShopUpgradeScreenState extends State<ShopUpgradeScreen> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                     decoration: BoxDecoration(color: amberColor, borderRadius: BorderRadius.circular(8)),
-                    child: const Text('⭐ Best Value', style: TextStyle(color: Colors.black, fontSize: 10, fontWeight: FontWeight.bold)),
+                    child: Text(appText(context,
+                        km: '⭐ តម្លៃល្អបំផុត', en: '⭐ Best Value'),
+                        style: const TextStyle(color: Colors.black, fontSize: 10, fontWeight: FontWeight.bold)),
                   ),
                 ),
             ]),
@@ -826,10 +922,15 @@ class _ShopUpgradeScreenState extends State<ShopUpgradeScreen> {
             child: const Icon(Icons.workspace_premium_rounded, color: amberColor, size: 24),
           ),
           const SizedBox(width: 12),
-          const Expanded(
+          Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('Premium Shop · Active', style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold, fontSize: 15, fontFamily: 'Siemreap')),
-              Text('ឈ្មោះហាងត្រូវបានការពារ', style: TextStyle(color: Colors.white38, fontSize: 11, fontFamily: 'Siemreap')),
+              Text(appText(context,
+                  km: 'ហាង Premium · កំពុងប្រើ',
+                  en: 'Premium Shop · Active'),
+                  style: const TextStyle(color: Colors.amber, fontWeight: FontWeight.bold, fontSize: 15, fontFamily: 'Siemreap')),
+              Text(appText(context,
+                  km: 'ឈ្មោះហាងត្រូវបានការពារ', en: 'Shop name is protected'),
+                  style: const TextStyle(color: Colors.white38, fontSize: 11, fontFamily: 'Siemreap')),
             ]),
           ),
           Container(
@@ -839,16 +940,21 @@ class _ShopUpgradeScreenState extends State<ShopUpgradeScreen> {
               borderRadius: BorderRadius.circular(10),
               border: Border.all(color: greenColor.withOpacity(0.4)),
             ),
-            child: const Text('✓ ACTIVE', style: TextStyle(color: Color(0xFF00C48C), fontSize: 11, fontWeight: FontWeight.bold)),
+            child: Text(appText(context, km: '✓ កំពុងប្រើ', en: '✓ ACTIVE'),
+                style: const TextStyle(color: Color(0xFF00C48C), fontSize: 11, fontWeight: FontWeight.bold)),
           ),
         ]),
         const SizedBox(height: 16),
         Divider(color: Colors.white.withOpacity(0.08)),
         const SizedBox(height: 12),
         OutlinedButton.icon(
-          onPressed: () => _showSnack('មុខងារផ្ទេរកម្មសិទ្ធិកំពុងអភិវឌ្ឍន៍', isError: false),
+          onPressed: () => _showSnack(appText(context,
+              km: 'មុខងារផ្ទេរកម្មសិទ្ធិកំពុងអភិវឌ្ឍន៍',
+              en: 'Shop ownership transfer is under development'), isError: false),
           icon: const Icon(Icons.swap_horiz_rounded, color: Colors.white54, size: 18),
-          label: const Text('ផ្ទេរកម្មសិទ្ធិហាង', style: TextStyle(color: Colors.white60, fontFamily: 'Siemreap')),
+          label: Text(appText(context,
+              km: 'ផ្ទេរកម្មសិទ្ធិហាង', en: 'Transfer shop ownership'),
+              style: const TextStyle(color: Colors.white60, fontFamily: 'Siemreap')),
           style: OutlinedButton.styleFrom(
             side: BorderSide(color: Colors.white.withOpacity(0.15)),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),

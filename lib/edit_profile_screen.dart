@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:my_app/otp_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'localized_text.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -123,14 +124,19 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("✅ រក្សាទុក Profile ជោគជ័យ"),
-              backgroundColor: Colors.green),
+          SnackBar(
+            content: Text(appText(context,
+                km: "✅ រក្សាទុក Profile ជោគជ័យ",
+                en: "✅ Profile saved successfully")),
+            backgroundColor: Colors.green,
+          ),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("❌ បញ្ហា: $e")));
+            SnackBar(content: Text(appText(context,
+                km: "❌ បញ្ហា: $e", en: "❌ Error: $e"))));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -148,8 +154,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     if (_storedNationalId != null && _storedNationalId!.isNotEmpty) {
       if (idNumber != _storedNationalId!.trim()) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text("លេខអត្តសញ្ញាណមិនត្រឹមត្រូវ មិនអាចកែប្រែបាន"),
+          SnackBar(
+              content: Text(appText(context,
+                  km: "លេខអត្តសញ្ញាណមិនត្រឹមត្រូវ មិនអាចកែប្រែបាន",
+                  en: "The ID number is incorrect and cannot be changed")),
               backgroundColor: Colors.red),
         );
         return;
@@ -157,21 +165,27 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     } else {
       if (idNumber.isEmpty || idNumberConfirm.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("សូមបំពេញលេខអត្តសញ្ញាណឲ្យបានពីរដង"),
+          SnackBar(content: Text(appText(context,
+              km: "សូមបំពេញលេខអត្តសញ្ញាណឲ្យបានពីរដង",
+              en: "Please enter the ID number twice")),
               backgroundColor: Colors.red),
         );
         return;
       }
       if (idNumber != idNumberConfirm) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("លេខអត្តសញ្ញាណមិនត្រូវគ្នា"),
+          SnackBar(content: Text(appText(context,
+              km: "លេខអត្តសញ្ញាណមិនត្រូវគ្នា",
+              en: "The ID numbers do not match")),
               backgroundColor: Colors.red),
         );
         return;
       }
       if (idNumber.length != 9) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("លេខអត្តសញ្ញាណត្រូវមាន ៩ ខ្ទង់"),
+          SnackBar(content: Text(appText(context,
+              km: "លេខអត្តសញ្ញាណត្រូវមាន ៩ ខ្ទង់",
+              en: "The ID number must be 9 digits")),
               backgroundColor: Colors.red),
         );
         return;
@@ -206,14 +220,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("✅ រក្សាទុកព័ត៌មានដកប្រាក់ជោគជ័យ"),
+          SnackBar(content: Text(appText(context,
+              km: "✅ រក្សាទុកព័ត៌មានដកប្រាក់ជោគជ័យ",
+              en: "✅ Withdrawal information saved successfully")),
               backgroundColor: Colors.green),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("❌ បញ្ហា: $e")));
+            SnackBar(content: Text(appText(context,
+                km: "❌ បញ្ហា: $e", en: "❌ Error: $e"))));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -231,22 +248,26 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       context: context,
       builder: (context) =>
           AlertDialog(
-            title: const Text("ប្ដូរលេខសម្ងាត់ ៦ ខ្ទង់",
-                style: TextStyle(fontFamily: 'KHMEROS')),
+            title: Text(appText(context,
+                km: "ប្ដូរលេខសម្ងាត់ ៦ ខ្ទង់", en: "Change 6-digit PIN"),
+                style: const TextStyle(fontFamily: 'KHMEROS')),
             content: Form(
               key: formKeyDialog,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  _buildDialogInput(oldPassController, "លេខសម្ងាត់ចាស់"),
-                  _buildDialogInput(newPassController, "លេខសម្ងាត់ថ្មី"),
-                  _buildDialogInput(confirmPassController, "បញ្ជាក់លេខថ្មី"),
+                  _buildDialogInput(oldPassController,
+                      appText(context, km: "លេខសម្ងាត់ចាស់", en: "Old PIN")),
+                  _buildDialogInput(newPassController,
+                      appText(context, km: "លេខសម្ងាត់ថ្មី", en: "New PIN")),
+                  _buildDialogInput(confirmPassController,
+                      appText(context, km: "បញ្ជាក់លេខថ្មី", en: "Confirm new PIN")),
                 ],
               ),
             ),
             actions: [
               TextButton(onPressed: () => Navigator.pop(context),
-                  child: const Text("បោះបង់")),
+                  child: Text(appText(context, km: "បោះបង់", en: "Cancel"))),
               ElevatedButton(
                 onPressed: () {
                   if (formKeyDialog.currentState!.validate()) {
@@ -259,8 +280,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 },
                 style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green[700]),
-                child: const Text(
-                    "រក្សាទុក", style: TextStyle(color: Colors.white)),
+                child: Text(
+                    appText(context, km: "រក្សាទុក", en: "Save"),
+                    style: const TextStyle(color: Colors.white)),
               ),
             ],
           ),
@@ -271,8 +293,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       String confirmP) async {
     if (newP != confirmP) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text("❌ លេខថ្មីមិនស៊ីគ្នា"), backgroundColor: Colors.red),
+        SnackBar(
+            content: Text(appText(context,
+                km: "❌ លេខថ្មីមិនស៊ីគ្នា",
+                en: "❌ The new PINs do not match")),
+            backgroundColor: Colors.red),
       );
       return;
     }
@@ -290,18 +315,23 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         });
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text("✅ ប្ដូរជោគជ័យ"), backgroundColor: Colors.green),
+          SnackBar(
+              content: Text(appText(context,
+                  km: "✅ ប្ដូរជោគជ័យ", en: "✅ Changed successfully")),
+              backgroundColor: Colors.green),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("❌ លេខចាស់មិនត្រឹមត្រូវ"),
+          SnackBar(content: Text(appText(context,
+              km: "❌ លេខចាស់មិនត្រឹមត្រូវ",
+              en: "❌ The old PIN is incorrect")),
               backgroundColor: Colors.red),
         );
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("❌ បញ្ហា: $e")));
+          SnackBar(content: Text(appText(context,
+              km: "❌ បញ្ហា: $e", en: "❌ Error: $e"))));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -316,7 +346,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         maxLength: 6,
         obscureText: true,
         decoration: InputDecoration(labelText: label),
-        validator: (value) => value!.length < 6 ? "ត្រូវមាន ៦ ខ្ទង់" : null,
+        validator: (value) => value!.length < 6
+            ? appText(context, km: "ត្រូវមាន ៦ ខ្ទង់", en: "Must be 6 digits")
+            : null,
       ),
     );
   }
@@ -325,8 +357,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("កែប្រែព័ត៌មានផ្ទាល់ខ្លួន",
-            style: TextStyle(fontFamily: 'KHMEROS')),
+        title: Text(appText(context,
+            km: "កែប្រែព័ត៌មានផ្ទាល់ខ្លួន", en: "Edit profile"),
+            style: const TextStyle(fontFamily: 'KHMEROS')),
         backgroundColor: Colors.green[700],
       ),
       body: _isLoading
@@ -370,9 +403,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               ),
               const SizedBox(height: 30),
               // Basic info fields (no validation)
-              _buildInput(_nameController, "ឈ្មោះបង្ហាញ", Icons.person),
+              _buildInput(_nameController,
+                  appText(context, km: "ឈ្មោះបង្ហាញ", en: "Display name"),
+                  Icons.person),
               _buildInput(
-                  _phoneController, "លេខទូរស័ព្ទ", Icons.phone, isNumber: true),
+                  _phoneController,
+                  appText(context, km: "លេខទូរស័ព្ទ", en: "Phone number"),
+                  Icons.phone, isNumber: true),
               const SizedBox(height: 20),
 
               // Save Basic Profile button
@@ -385,8 +422,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10)),
                   ),
-                  child: const Text("រក្សាទុក Profile",
-                      style: TextStyle(color: Colors.white, fontSize: 16)),
+                  child: Text(appText(context,
+                      km: "រក្សាទុក Profile", en: "Save profile"),
+                      style: const TextStyle(color: Colors.white, fontSize: 16)),
                 ),
               ),
 
@@ -395,24 +433,32 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               const SizedBox(height: 15),
 
               // Withdrawal info section
-              const Text("ព័ត៌មានសម្រាប់ដកប្រាក់ (បំពេញម្តងគត់)",
-                  style: TextStyle(
+              Text(appText(context,
+                  km: "ព័ត៌មានសម្រាប់ដកប្រាក់ (បំពេញម្តងគត់)",
+                  en: "Withdrawal information (complete once)"),
+                  style: const TextStyle(
                       fontWeight: FontWeight.bold, color: Colors.blueGrey)),
               const SizedBox(height: 15),
 
               // Full name (required)
-              _buildInput(_fullNameKhController, "ឈ្មោះពិត (អក្សរឡាតាំង/ខ្មែរ)",
+              _buildInput(_fullNameKhController,
+                  appText(context,
+                      km: "ឈ្មោះពិត (អក្សរឡាតាំង/ខ្មែរ)",
+                      en: "Full name (Latin/Khmer)"),
                   Icons.badge,
                   validator: (v) =>
                   (v == null || v
                       .trim()
-                      .isEmpty) ? "សូមបំពេញឈ្មោះពិត" : null),
+                      .isEmpty) ? appText(context,
+                          km: "សូមបំពេញឈ្មោះពិត",
+                          en: "Please enter your full name") : null),
 
               // Bank dropdown (required implicitly)
               DropdownButtonFormField<String>(
                 value: _selectedBank,
                 decoration: InputDecoration(
-                  labelText: "រើសធនាគារ",
+                  labelText: appText(context,
+                      km: "រើសធនាគារ", en: "Select a bank"),
                   prefixIcon: const Icon(
                       Icons.account_balance, color: Colors.green),
                   border: OutlineInputBorder(
@@ -427,16 +473,23 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               const SizedBox(height: 20),
 
               // Bank account number (required)
-              _buildInput(_bankAccountNumberController, "លេខគណនីធនាគារ (តែ ៛)",
+              _buildInput(_bankAccountNumberController,
+                  appText(context,
+                      km: "លេខគណនីធនាគារ (តែ ៛)",
+                      en: "Bank account number (KHR only)"),
                   Icons.credit_card, isNumber: true,
                   validator: (v) =>
                   (v == null || v
                       .trim()
-                      .isEmpty) ? "សូមបំពេញលេខគណនី" : null),
+                      .isEmpty) ? appText(context,
+                          km: "សូមបំពេញលេខគណនី",
+                          en: "Please enter the account number") : null),
 
               const SizedBox(height: 20),
-              const Text("លេខអត្តសញ្ញាណ (សម្រាប់សុវត្ថិភាព)",
-                  style: TextStyle(fontWeight: FontWeight.bold)),
+              Text(appText(context,
+                  km: "លេខអត្តសញ្ញាណ (សម្រាប់សុវត្ថិភាព)",
+                  en: "ID number (for security)"),
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 10),
               // National ID field
               TextFormField(
@@ -448,7 +501,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   LengthLimitingTextInputFormatter(9)
                 ],
                 decoration: InputDecoration(
-                  labelText: "លេខអត្តសញ្ញាណ (9 ខ្ទង់)",
+                  labelText: appText(context,
+                      km: "លេខអត្តសញ្ញាណ (9 ខ្ទង់)",
+                      en: "ID number (9 digits)"),
                   prefixIcon: const Icon(Icons.credit_card),
                   counterText: "",
                   border: OutlineInputBorder(
@@ -460,17 +515,24 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     // Must match old ID
                     if (v == null || v
                         .trim()
-                        .isEmpty) return "សូមបញ្ចូលលេខអត្តសញ្ញាណចាស់";
+                        .isEmpty) return appText(context,
+                            km: "សូមបញ្ចូលលេខអត្តសញ្ញាណចាស់",
+                            en: "Please enter the existing ID number");
                     if (v.trim() != _storedNationalId!.trim())
-                      return "លេខអត្តសញ្ញាណមិនត្រឹមត្រូវ";
+                      return appText(context,
+                          km: "លេខអត្តសញ្ញាណមិនត្រឹមត្រូវ",
+                          en: "The ID number is incorrect");
                   } else {
                     // First time: must not be empty and 9 digits
                     if (v == null || v
                         .trim()
-                        .isEmpty) return "សូមបញ្ចូលលេខអត្តសញ្ញាណ";
+                        .isEmpty) return appText(context,
+                            km: "សូមបញ្ចូលលេខអត្តសញ្ញាណ",
+                            en: "Please enter the ID number");
                     if (v
                         .trim()
-                        .length != 9) return "ត្រូវមាន ៩ ខ្ទង់";
+                        .length != 9) return appText(context,
+                            km: "ត្រូវមាន ៩ ខ្ទង់", en: "Must be 9 digits");
                   }
                   return null;
                 },
@@ -487,7 +549,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     LengthLimitingTextInputFormatter(9)
                   ],
                   decoration: InputDecoration(
-                    labelText: "បញ្ជាក់លេខអត្តសញ្ញាណ",
+                    labelText: appText(context,
+                        km: "បញ្ជាក់លេខអត្តសញ្ញាណ",
+                        en: "Confirm ID number"),
                     prefixIcon: const Icon(Icons.credit_card),
                     counterText: "",
                     border: OutlineInputBorder(
@@ -496,16 +560,21 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   validator: (v) {
                     if (v == null || v
                         .trim()
-                        .isEmpty) return "សូមបញ្ជាក់លេខអត្តសញ្ញាណ";
+                        .isEmpty) return appText(context,
+                            km: "សូមបញ្ជាក់លេខអត្តសញ្ញាណ",
+                            en: "Please confirm the ID number");
                     if (v.trim() != _idNumberController.text.trim())
-                      return "មិនត្រូវគ្នា";
+                      return appText(context,
+                          km: "មិនត្រូវគ្នា", en: "Does not match");
                     return null;
                   },
                 ),
               ],
 
               const SizedBox(height: 20),
-              const Text("រូបភាព KHQR សម្រាប់ទទួលលុយ"),
+              Text(appText(context,
+                  km: "រូបភាព KHQR សម្រាប់ទទួលលុយ",
+                  en: "KHQR image for receiving payments")),
               const SizedBox(height: 10),
               GestureDetector(
                 onTap: () async {
@@ -542,8 +611,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10)),
                   ),
-                  child: const Text("រក្សាទុកព័ត៌មានដកប្រាក់",
-                      style: TextStyle(color: Colors.white, fontSize: 16)),
+                  child: Text(appText(context,
+                      km: "រក្សាទុកព័ត៌មានដកប្រាក់",
+                      en: "Save withdrawal information"),
+                      style: const TextStyle(color: Colors.white, fontSize: 16)),
                 ),
               ),
 
@@ -554,7 +625,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               OutlinedButton.icon(
                 onPressed: _showChangePasswordDialog,
                 icon: const Icon(Icons.lock_outline),
-                label: const Text("ប្ដូរលេខសម្ងាត់ ៦ ខ្ទង់"),
+                label: Text(appText(context,
+                    km: "ប្ដូរលេខសម្ងាត់ ៦ ខ្ទង់",
+                    en: "Change 6-digit PIN")),
                 style: OutlinedButton.styleFrom(
                   minimumSize: const Size(double.infinity, 50),
                   foregroundColor: Colors.green[700],
@@ -568,7 +641,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   String phoneNumber = _phoneController.text.trim();
                   if (phoneNumber.isEmpty) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("សូមបំពេញលេខទូរស័ព្ទសិន!")),
+                      SnackBar(content: Text(appText(context,
+                          km: "សូមបំពេញលេខទូរស័ព្ទសិន!",
+                          en: "Please enter your phone number first!"))),
                     );
                     return;
                   }
@@ -585,8 +660,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     verificationFailed: (FirebaseAuthException e) {
                       Navigator.pop(context);
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(
-                            "ផ្ញើសារមិនជោគជ័យ៖ ${e.message}")),
+                        SnackBar(content: Text(appText(context,
+                            km: "ផ្ញើសារមិនជោគជ័យ៖ ${e.message}",
+                            en: "Could not send the message: ${e.message}"))),
                       );
                     },
                     codeSent: (String verificationId, int? resendToken) {
@@ -607,8 +683,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     codeAutoRetrievalTimeout: (String verificationId) {},
                   );
                 },
-                child: const Text("ភ្លេចលេខសម្ងាត់? កំណត់ឡើងវិញតាម OTP",
-                    style: TextStyle(color: Colors.grey,
+                child: Text(appText(context,
+                    km: "ភ្លេចលេខសម្ងាត់? កំណត់ឡើងវិញតាម OTP",
+                    en: "Forgot your PIN? Reset it with OTP"),
+                    style: const TextStyle(color: Colors.grey,
                         fontSize: 14,
                         fontFamily: 'KHMEROS')),
               ),

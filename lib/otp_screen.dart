@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/services.dart';
 import 'package:my_app/reset_password_screen.dart';
+import 'localized_text.dart';
 
 // Enum សម្រាប់ពិនិត្យប្រភេទ OTP
 enum OTPPurpose { signUp, login, resetPassword }
@@ -34,7 +35,12 @@ class _OTPScreenState extends State<OTPScreen> {
   Future<void> _verifyAndLogin() async {
     String otp = _otpController.text.trim();
     if (otp.length < 6) {
-      _showSnackBar("⚠️ សូមបញ្ចូលលេខកូដឱ្យគ្រប់ ៦ ខ្ទង់", isError: true);
+      _showSnackBar(
+        appText(context,
+            km: "⚠️ សូមបញ្ចូលលេខកូដឱ្យគ្រប់ ៦ ខ្ទង់",
+            en: "⚠️ Please enter the complete 6-digit code"),
+        isError: true,
+      );
       return;
     }
 
@@ -116,7 +122,12 @@ class _OTPScreenState extends State<OTPScreen> {
       }
     } catch (e) {
       setState(() => _isLoading = false);
-      _showSnackBar("❌ លេខកូដ OTP មិនត្រឹមត្រូវ៖ $e", isError: true);
+      _showSnackBar(
+        appText(context,
+            km: "❌ លេខកូដ OTP មិនត្រឹមត្រូវ៖ $e",
+            en: "❌ Invalid OTP code: $e"),
+        isError: true,
+      );
     }
   }
 
@@ -138,9 +149,10 @@ class _OTPScreenState extends State<OTPScreen> {
           children: [
             const Icon(Icons.security_rounded, size: 80, color: Colors.green),
             const SizedBox(height: 20),
-            const Text(
-              "ផ្ទៀងផ្ទាត់លេខកូដ OTP",
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            Text(
+              appText(context,
+                  km: "ផ្ទៀងផ្ទាត់លេខកូដ OTP", en: "Verify OTP code"),
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
             RichText(
@@ -148,7 +160,11 @@ class _OTPScreenState extends State<OTPScreen> {
               text: TextSpan(
                 style: const TextStyle(color: Colors.grey, fontSize: 14),
                 children: [
-                  const TextSpan(text: "លេខកូដ ៦ ខ្ទង់បានផ្ញើទៅកាន់\n"),
+                  TextSpan(
+                    text: appText(context,
+                        km: "លេខកូដ ៦ ខ្ទង់បានផ្ញើទៅកាន់\n",
+                        en: "A 6-digit code was sent to\n"),
+                  ),
                   TextSpan(
                     text: widget.phone,
                     style: const TextStyle(
@@ -209,9 +225,11 @@ class _OTPScreenState extends State<OTPScreen> {
                 ),
                 child: _isLoading
                     ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text(
-                        "ផ្ទៀងផ្ទាត់ និងចូលប្រើ",
-                        style: TextStyle(
+                    : Text(
+                        appText(context,
+                            km: "ផ្ទៀងផ្ទាត់ និងចូលប្រើ",
+                            en: "Verify and continue"),
+                        style: const TextStyle(
                           fontSize: 18,
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
@@ -223,9 +241,11 @@ class _OTPScreenState extends State<OTPScreen> {
             const SizedBox(height: 20),
             TextButton(
               onPressed: _isLoading ? null : () => Navigator.pop(context),
-              child: const Text(
-                "ប្តូរលេខទូរស័ព្ទ?",
-                style: TextStyle(color: Colors.blueGrey),
+              child: Text(
+                appText(context,
+                    km: "ប្តូរលេខទូរស័ព្ទ?",
+                    en: "Change phone number?"),
+                style: const TextStyle(color: Colors.blueGrey),
               ),
             ),
           ],

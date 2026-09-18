@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'auth_session_store.dart';
 import 'user_service.dart';
+import 'localized_text.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -63,7 +64,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         .get();
 
     if (query.docs.isEmpty) {
-      _showSnack('មិនមានគណនីចុះឈ្មោះជាមួយលេខនេះទេ', isError: true);
+      _showSnack(
+        appText(context,
+            km: 'មិនមានគណនីចុះឈ្មោះជាមួយលេខនេះទេ',
+            en: 'No account is registered with this number'),
+        isError: true,
+      );
       return;
     }
 
@@ -83,7 +89,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         },
         verificationFailed: (FirebaseAuthException e) {
           if (!mounted) return;
-          _showSnack('បរាជ័យ៖ ${e.message}', isError: true);
+          _showSnack(
+            appText(context,
+                km: 'បរាជ័យ៖ ${e.message}',
+                en: 'Failed: ${e.message}'),
+            isError: true,
+          );
           setState(() => _isLoading = false);
         },
         codeSent: (String verificationId, int? resendToken) {
@@ -93,7 +104,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             _codeSent = true;
             _isLoading = false;
           });
-          _showSnack('បានផ្ញើ OTP ជោគជ័យ!', isError: false);
+          _showSnack(
+            appText(context,
+                km: 'បានផ្ញើ OTP ជោគជ័យ!',
+                en: 'OTP sent successfully!'),
+            isError: false,
+          );
         },
         codeAutoRetrievalTimeout: (String verificationId) {
           _verificationId = verificationId;
@@ -102,7 +118,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
-      _showSnack('មានបញ្ហា៖ $e', isError: true);
+      _showSnack(
+        appText(context, km: 'មានបញ្ហា៖ $e', en: 'Error: $e'),
+        isError: true,
+      );
     }
   }
 
@@ -112,19 +131,36 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     final confirm = _confirmController.text.trim();
 
     if (code.isEmpty || password.isEmpty) {
-      _showSnack('សូមបំពេញគ្រប់ចន្លោះ', isError: true);
+      _showSnack(
+        appText(context,
+            km: 'សូមបំពេញគ្រប់ចន្លោះ', en: 'Please complete all fields'),
+        isError: true,
+      );
       return;
     }
     if (password.length < 6) {
-      _showSnack('លេខសម្ងាត់ត្រូវមានយ៉ាងតិច ៦ តួ', isError: true);
+      _showSnack(
+        appText(context,
+            km: 'លេខសម្ងាត់ត្រូវមានយ៉ាងតិច ៦ តួ',
+            en: 'Password must be at least 6 characters'),
+        isError: true,
+      );
       return;
     }
     if (password != confirm) {
-      _showSnack('លេខសម្ងាត់មិនត្រូវគ្នា', isError: true);
+      _showSnack(
+        appText(context,
+            km: 'លេខសម្ងាត់មិនត្រូវគ្នា', en: 'Passwords do not match'),
+        isError: true,
+      );
       return;
     }
     if (_verificationId == null || _verificationId!.isEmpty) {
-      _showSnack('សូមផ្ញើ OTP ម្ដងទៀត', isError: true);
+      _showSnack(
+        appText(context,
+            km: 'សូមផ្ញើ OTP ម្ដងទៀត', en: 'Please resend the OTP'),
+        isError: true,
+      );
       return;
     }
 
@@ -219,17 +255,30 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       if (!mounted) return;
       setState(() => _isLoading = false);
       final message = e.code == 'weak-password'
-          ? 'លេខសម្ងាត់ថ្មីមិនគ្រប់លក្ខខណ្ឌ Firebase'
+          ? appText(context,
+              km: 'លេខសម្ងាត់ថ្មីមិនគ្រប់លក្ខខណ្ឌ Firebase',
+              en: 'The new password does not meet Firebase requirements')
           : e.code == 'requires-recent-login'
-              ? 'សូមផ្ទៀងផ្ទាត់ OTP ម្ដងទៀត'
+              ? appText(context,
+                  km: 'សូមផ្ទៀងផ្ទាត់ OTP ម្ដងទៀត',
+                  en: 'Please verify the OTP again')
               : e.code == 'user-mismatch'
-                  ? 'OTP មិនត្រូវនឹងគណនីនេះទេ'
-                  : 'កូដមិនត្រឹមត្រូវ ឬមិនអាចប្ដូរលេខសម្ងាត់បាន';
+                  ? appText(context,
+                      km: 'OTP មិនត្រូវនឹងគណនីនេះទេ',
+                      en: 'The OTP does not match this account')
+                  : appText(context,
+                      km: 'កូដមិនត្រឹមត្រូវ ឬមិនអាចប្ដូរលេខសម្ងាត់បាន',
+                      en: 'The code is invalid or the password could not be changed');
       _showSnack(message, isError: true);
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
-      _showSnack('មិនអាចប្ដូរលេខសម្ងាត់បាន៖ $e', isError: true);
+      _showSnack(
+        appText(context,
+            km: 'មិនអាចប្ដូរលេខសម្ងាត់បាន៖ $e',
+            en: 'Could not change the password: $e'),
+        isError: true,
+      );
     }
   }
 
@@ -265,9 +314,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          'ភ្លេចលេខសម្ងាត់',
-          style: TextStyle(
+        title: Text(
+          appText(context,
+              km: 'ភ្លេចលេខសម្ងាត់', en: 'Forgot password'),
+          style: const TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.bold,
             fontFamily: 'Siemreap',
@@ -308,9 +358,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           child: const Icon(Icons.lock_reset, color: accentColor, size: 42),
         ),
         const SizedBox(height: 24),
-        const Text(
-          'កំណត់លេខសម្ងាត់ឡើងវិញ',
-          style: TextStyle(
+        Text(
+          appText(context,
+              km: 'កំណត់លេខសម្ងាត់ឡើងវិញ', en: 'Reset your password'),
+          style: const TextStyle(
             color: Colors.white,
             fontSize: 20,
             fontWeight: FontWeight.bold,
@@ -319,7 +370,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         ),
         const SizedBox(height: 8),
         Text(
-          'បញ្ចូលលេខទូរស័ព្ទដែលបានចុះឈ្មោះ\nប្រព័ន្ធនឹងផ្ញើ OTP ទៅលេខរបស់អ្នក',
+          appText(context,
+              km: 'បញ្ចូលលេខទូរស័ព្ទដែលបានចុះឈ្មោះ\nប្រព័ន្ធនឹងផ្ញើ OTP ទៅលេខរបស់អ្នក',
+              en: 'Enter your registered phone number\nand we will send you an OTP'),
           textAlign: TextAlign.center,
           style: TextStyle(
             color: Colors.white.withOpacity(0.5),
@@ -331,23 +384,26 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         const SizedBox(height: 36),
         _buildStepRow(step: 1),
         const SizedBox(height: 32),
-        _buildLabel('លេខទូរស័ព្ទ'),
+        _buildLabel(appText(context,
+            km: 'លេខទូរស័ព្ទ', en: 'Phone number')),
         const SizedBox(height: 8),
         TextFormField(
           controller: _phoneController,
           keyboardType: TextInputType.phone,
           style: const TextStyle(color: Colors.white, fontSize: 15),
           decoration: _inputDeco(
-            'ឧ. 012 345 678',
+            appText(context, km: 'ឧ. 012 345 678', en: 'e.g. 012 345 678'),
             Icons.phone_android_outlined,
           ),
           validator: (v) => v == null || v.trim().isEmpty
-              ? 'សូមបញ្ចូលលេខទូរស័ព្ទ'
+              ? appText(context,
+                  km: 'សូមបញ្ចូលលេខទូរស័ព្ទ',
+                  en: 'Please enter your phone number')
               : null,
         ),
         const SizedBox(height: 28),
         _buildMainButton(
-          label: 'ផ្ញើ OTP',
+          label: appText(context, km: 'ផ្ញើ OTP', en: 'Send OTP'),
           icon: Icons.send_rounded,
           onTap: _sendOtp,
         ),
@@ -378,9 +434,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           ),
         ),
         const SizedBox(height: 24),
-        const Text(
-          'ផ្ទៀងផ្ទាត់ OTP',
-          style: TextStyle(
+        Text(
+          appText(context, km: 'ផ្ទៀងផ្ទាត់ OTP', en: 'Verify OTP'),
+          style: const TextStyle(
             color: Colors.white,
             fontSize: 20,
             fontWeight: FontWeight.bold,
@@ -389,7 +445,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         ),
         const SizedBox(height: 8),
         Text(
-          'លេខកូដ ៦ ខ្ទង់ត្រូវបានផ្ញើទៅ\n${_phoneController.text.trim()}',
+          '${appText(context, km: 'លេខកូដ ៦ ខ្ទង់ត្រូវបានផ្ញើទៅ', en: 'A 6-digit code was sent to')}\n${_phoneController.text.trim()}',
           textAlign: TextAlign.center,
           style: TextStyle(
             color: Colors.white.withOpacity(0.5),
@@ -401,7 +457,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         const SizedBox(height: 36),
         _buildStepRow(step: 2),
         const SizedBox(height: 32),
-        _buildLabel('លេខកូដ OTP'),
+        _buildLabel(appText(context,
+            km: 'លេខកូដ OTP', en: 'OTP code')),
         const SizedBox(height: 8),
         TextFormField(
           controller: _codeController,
@@ -420,14 +477,16 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           ).copyWith(counterText: ''),
         ),
         const SizedBox(height: 20),
-        _buildLabel('លេខសម្ងាត់ថ្មី'),
+        _buildLabel(appText(context,
+            km: 'លេខសម្ងាត់ថ្មី', en: 'New password')),
         const SizedBox(height: 8),
         TextFormField(
           controller: _passwordController,
           obscureText: _obscurePass,
           style: const TextStyle(color: Colors.white, fontSize: 15),
           decoration: _inputDeco(
-            'យ៉ាងតិច ៦ តួ',
+            appText(context,
+                km: 'យ៉ាងតិច ៦ តួ', en: 'At least 6 characters'),
             Icons.lock_outline,
           ).copyWith(
             suffixIcon: IconButton(
@@ -442,18 +501,20 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             ),
           ),
           validator: (v) => (v == null || v.length < 6)
-              ? 'យ៉ាងតិច ៦ តួ'
+              ? appText(context,
+                  km: 'យ៉ាងតិច ៦ តួ', en: 'At least 6 characters')
               : null,
         ),
         const SizedBox(height: 16),
-        _buildLabel('បញ្ជាក់លេខសម្ងាត់'),
+        _buildLabel(appText(context,
+            km: 'បញ្ជាក់លេខសម្ងាត់', en: 'Confirm password')),
         const SizedBox(height: 8),
         TextFormField(
           controller: _confirmController,
           obscureText: _obscureConfirm,
           style: const TextStyle(color: Colors.white, fontSize: 15),
           decoration: _inputDeco(
-            'វាយម្ដងទៀត',
+            appText(context, km: 'វាយម្ដងទៀត', en: 'Enter it again'),
             Icons.lock_outline,
           ).copyWith(
             suffixIcon: IconButton(
@@ -490,9 +551,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   color: Colors.white54,
                   size: 15,
                 ),
-                label: const Text(
-                  'ថយក្រោយ',
-                  style: TextStyle(
+                label: Text(
+                  appText(context, km: 'ថយក្រោយ', en: 'Back'),
+                  style: const TextStyle(
                     color: Colors.white60,
                     fontFamily: 'Siemreap',
                   ),
@@ -503,7 +564,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             Expanded(
               flex: 2,
               child: _buildMainButton(
-                label: 'ប្ដូរលេខសម្ងាត់',
+                label: appText(context,
+                    km: 'ប្ដូរលេខសម្ងាត់', en: 'Change password'),
                 icon: Icons.check_rounded,
                 onTap: _verifyAndReset,
                 color: greenColor,
@@ -543,9 +605,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             child: const Icon(Icons.check_rounded, color: greenColor, size: 56),
           ),
           const SizedBox(height: 28),
-          const Text(
-            'ជោគជ័យ!',
-            style: TextStyle(
+          Text(
+            appText(context, km: 'ជោគជ័យ!', en: 'Success!'),
+            style: const TextStyle(
               color: Colors.white,
               fontSize: 26,
               fontWeight: FontWeight.bold,
@@ -554,7 +616,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           ),
           const SizedBox(height: 10),
           Text(
-            'លេខសម្ងាត់ត្រូវបានប្ដូរជោគជ័យ\nអ្នកអាចចូលប្រើប្រាស់ App បានហើយ',
+            appText(context,
+                km: 'លេខសម្ងាត់ត្រូវបានប្ដូរជោគជ័យ\nអ្នកអាចចូលប្រើប្រាស់ App បានហើយ',
+                en: 'Your password was changed successfully\nYou can now sign in to the app'),
             textAlign: TextAlign.center,
             style: TextStyle(
               color: Colors.white.withOpacity(0.5),
@@ -567,7 +631,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           SizedBox(
             width: double.infinity,
             child: _buildMainButton(
-              label: 'ត្រឡប់ទៅចូលប្រើ',
+              label: appText(context,
+                  km: 'ត្រឡប់ទៅចូលប្រើ', en: 'Back to sign in'),
               icon: Icons.login_rounded,
               onTap: () => Navigator.pop(context),
               color: accentColor,
@@ -579,7 +644,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   }
 
   Widget _buildStepRow({required int step}) {
-    final steps = ['លេខទូរស័ព្ទ', 'OTP', 'ជោគជ័យ'];
+    final steps = [
+      appText(context, km: 'លេខទូរស័ព្ទ', en: 'Phone'),
+      'OTP',
+      appText(context, km: 'ជោគជ័យ', en: 'Success'),
+    ];
     return Row(
       children: List.generate(steps.length * 2 - 1, (i) {
         if (i.isOdd) {
@@ -734,9 +803,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               )
             : Icon(icon, size: 18),
         label: _isLoading
-            ? const Text(
-                'កំពុងដំណើរការ...',
-                style: TextStyle(
+            ? Text(
+                appText(context,
+                    km: 'កំពុងដំណើរការ...', en: 'Processing...'),
+                style: const TextStyle(
                   fontFamily: 'Siemreap',
                   fontWeight: FontWeight.bold,
                 ),

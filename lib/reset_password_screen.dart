@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'localized_text.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
   final String uid; // ទទួលលេខទូរស័ព្ទដែលមានសញ្ញា "+" ពី OTPScreen
@@ -20,12 +21,16 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
     // ១. ឆែកលក្ខខណ្ឌបញ្ចូលទិន្នន័យ
     if (pass.length != 6 || confirmPass.length != 6) {
-      _showMsg("សូមបញ្ចូលលេខសម្ងាត់ឱ្យគ្រប់ ៦ ខ្ទង់");
+      _showMsg(appText(context,
+          km: "សូមបញ្ចូលលេខសម្ងាត់ឱ្យគ្រប់ ៦ ខ្ទង់",
+          en: "Please enter a 6-digit password"));
       return;
     }
 
     if (pass != confirmPass) {
-      _showMsg("លេខសម្ងាត់ទាំង ២ មិនដូចគ្នាទេ!");
+      _showMsg(appText(context,
+          km: "លេខសម្ងាត់ទាំង ២ មិនដូចគ្នាទេ!",
+          en: "The passwords do not match!"));
       return;
     }
 
@@ -41,7 +46,12 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
             'updated_at': FieldValue.serverTimestamp(),
           });
 
-      _showMsg("ប្ដូរលេខសម្ងាត់ជោគជ័យ!", isSuccess: true);
+      _showMsg(
+        appText(context,
+            km: "ប្ដូរលេខសម្ងាត់ជោគជ័យ!",
+            en: "Password changed successfully!"),
+        isSuccess: true,
+      );
 
       // ៣. រុញទៅកាន់ទំព័រដើមវិញ
       if (mounted) {
@@ -50,7 +60,9 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
         });
       }
     } catch (e) {
-      _showMsg("មានបញ្ហាក្នុងការរក្សាទុក៖ $e");
+      _showMsg(appText(context,
+          km: "មានបញ្ហាក្នុងការរក្សាទុក៖ $e",
+          en: "Could not save the password: $e"));
     } finally {
       setState(() => _isLoading = false);
     }
@@ -69,7 +81,8 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("កំណត់លេខសម្ងាត់ថ្មី"),
+        title: Text(appText(context,
+            km: "កំណត់លេខសម្ងាត់ថ្មី", en: "Set a new password")),
         backgroundColor: const Color(0xFF4CAF50), // ពណ៌បៃតងដូច App Sesan
       ),
       body: Padding(
@@ -77,9 +90,11 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              "សូមកំណត់លេខសម្ងាត់ ៦ ខ្ទង់ថ្មីសម្រាប់ដកប្រាក់៖",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            Text(
+              appText(context,
+                  km: "សូមកំណត់លេខសម្ងាត់ ៦ ខ្ទង់ថ្មីសម្រាប់ដកប្រាក់៖",
+                  en: "Set a new 6-digit withdrawal password:"),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),
 
@@ -89,10 +104,11 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
               keyboardType: TextInputType.number,
               maxLength: 6,
               obscureText: true,
-              decoration: const InputDecoration(
-                labelText: "លេខសម្ងាត់ថ្មី",
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.lock_outline),
+              decoration: InputDecoration(
+                labelText: appText(context,
+                    km: "លេខសម្ងាត់ថ្មី", en: "New password"),
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.lock_outline),
               ),
             ),
             const SizedBox(height: 10),
@@ -103,10 +119,12 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
               keyboardType: TextInputType.number,
               maxLength: 6,
               obscureText: true,
-              decoration: const InputDecoration(
-                labelText: "បញ្ជាក់លេខសម្ងាត់ថ្មី",
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.lock_reset),
+              decoration: InputDecoration(
+                labelText: appText(context,
+                    km: "បញ្ជាក់លេខសម្ងាត់ថ្មី",
+                    en: "Confirm new password"),
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.lock_reset),
               ),
             ),
             const SizedBox(height: 30),
@@ -125,9 +143,11 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                 ),
                 child: _isLoading
                     ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text(
-                        "រក្សាទុកលេខសម្ងាត់ថ្មី",
-                        style: TextStyle(fontSize: 18, color: Colors.white),
+                    : Text(
+                        appText(context,
+                            km: "រក្សាទុកលេខសម្ងាត់ថ្មី",
+                            en: "Save new password"),
+                        style: const TextStyle(fontSize: 18, color: Colors.white),
                       ),
               ),
             ),
