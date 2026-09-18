@@ -1,12 +1,12 @@
-name: Add Auction localization verification
+name: Product Detail localization verification
 on:
   push:
     branches: [ios-sync-android46]
-    paths: ['.github/workflows/localization-batch.yml', 'lib/auction_add_screen.dart']
+    paths: ['.github/workflows/localization-batch.yml']
 permissions:
   contents: write
 jobs:
-  verify-add-auction:
+  verify-product-detail:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -19,34 +19,31 @@ jobs:
           cache: true
       - name: Format
         run: |
-          dart format lib/auction_add_screen.dart
+          dart format lib/product_detail.dart
           git diff --check
-      - name: Preserve Add Auction behavior
+      - name: Preserve Product Detail features
         run: |
-          grep -q "String _t(String km, String en)" lib/auction_add_screen.dart
-          grep -q "_currentStep == 0" lib/auction_add_screen.dart
-          grep -q "setState(() => _currentStep = 1)" lib/auction_add_screen.dart
-          grep -q "_showPaymentDialog()" lib/auction_add_screen.dart
-          grep -q "assets/aba_qr.png" lib/auction_add_screen.dart
-          grep -q "https://pay.ababank.com/oRF8/oizn40j9" lib/auction_add_screen.dart
-          grep -q "onLongPress: () async => await _downloadQR()" lib/auction_add_screen.dart
-          grep -q "_pickProductVideo" lib/auction_add_screen.dart
-          grep -q "_pickProductImages" lib/auction_add_screen.dart
-          grep -q "_pickPaymentImage" lib/auction_add_screen.dart
-          grep -q "collection('auction_products')" lib/auction_add_screen.dart
+          grep -q "_askAiAboutProduct" lib/product_detail.dart
+          grep -q "_shareProductWithWatermark" lib/product_detail.dart
+          grep -q "_showSaveOption" lib/product_detail.dart
+          grep -q "_openProductLocationMap" lib/product_detail.dart
+          grep -q "_openSellerShop" lib/product_detail.dart
+          grep -q "GoogleMap" lib/product_detail.dart
+          grep -q "addToCart" lib/product_detail.dart
+          grep -q "collection('ratings')" lib/product_detail.dart
       - name: Analyze
         run: |
           flutter pub get
-          flutter analyze lib/auction_add_screen.dart --no-fatal-infos --no-fatal-warnings
+          flutter analyze lib/product_detail.dart --no-fatal-infos --no-fatal-warnings
       - name: Compile check
         run: flutter build bundle --debug
       - name: Commit formatting if needed
         run: |
-          if ! git diff --quiet -- lib/auction_add_screen.dart; then
+          if ! git diff --quiet -- lib/product_detail.dart; then
             git config user.name github-actions[bot]
             git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-            git add lib/auction_add_screen.dart
+            git add lib/product_detail.dart
             git diff --cached --check
-            git commit -m "Format Add Auction localization"
+            git commit -m "Format Product Detail localization"
             git push origin HEAD:ios-sync-android46
           fi
