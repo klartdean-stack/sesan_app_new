@@ -12,35 +12,32 @@ import 'edit_wanted_screen.dart';
 import 'user_profile_screen.dart';
 import 'media_viewer.dart';
 
-
 class WantedDetailScreen extends StatefulWidget {
   final Map<String, dynamic> data;
   const WantedDetailScreen({super.key, required this.data});
-
 
   @override
   State<WantedDetailScreen> createState() => _WantedDetailScreenState();
 }
 
-
 class _WantedDetailScreenState extends State<WantedDetailScreen> {
-  String _t(String km, String en) => Localizations.localeOf(context).languageCode == 'en' ? en : km;
+  String _t(String km, String en) =>
+      Localizations.localeOf(context).languageCode == 'en' ? en : km;
   String? _currentUid;
   int _currentImageIndex = 0;
-// ✅ ពិនិត្យថាជាម្ចាស់ប្រកាសដែរឬទេ
-  bool get _isOwner => _currentUid != null && _currentUid == widget.data['userId'];
+  // ✅ ពិនិត្យថាជាម្ចាស់ប្រកាសដែរឬទេ
+  bool get _isOwner =>
+      _currentUid != null && _currentUid == widget.data['userId'];
 
   // សម្រាប់ "ខ្ញុំមានលក់"
   List<Map<String, dynamic>> _sellers = [];
   bool _hasClickedSell = false;
-
 
   // ✅ ព័ត៌មានអ្នកប្រកាស
   String _posterName = '';
   String _posterPhotoUrl = '';
   String _posterSesanId = '';
   bool _isPosterLoading = true;
-
 
   @override
   void initState() {
@@ -50,13 +47,11 @@ class _WantedDetailScreenState extends State<WantedDetailScreen> {
     _loadPosterInfo(); // ✅ បន្ថែម
   }
 
-
   Future<void> _loadUser() async {
     final prefs = await SharedPreferences.getInstance();
     _currentUid = prefs.getString('user_uid');
     if (mounted) setState(() {});
   }
-
 
   // ✅ ទាញយកព័ត៌មានអ្នកប្រកាស
   Future<void> _loadPosterInfo() async {
@@ -71,19 +66,19 @@ class _WantedDetailScreenState extends State<WantedDetailScreen> {
       return;
     }
 
-
     try {
       final doc = await FirebaseFirestore.instance
           .collection('users')
           .doc(userId)
           .get();
 
-
       if (doc.exists && mounted) {
         final userData = doc.data() as Map<String, dynamic>;
         setState(() {
           _posterName =
-              userData['name'] ?? userData['displayName'] ?? _t('គ្មានឈ្មោះ', 'Unnamed user');
+              userData['name'] ??
+              userData['displayName'] ??
+              _t('គ្មានឈ្មោះ', 'Unnamed user');
           _posterPhotoUrl = userData['photoUrl'] ?? userData['photo'] ?? '';
           _posterSesanId = userData['sesan_id'] ?? '';
           _isPosterLoading = false;
@@ -106,12 +101,10 @@ class _WantedDetailScreenState extends State<WantedDetailScreen> {
     }
   }
 
-
   Future<void> _loadSellers() async {
     try {
       final productId = widget.data['id'] ?? '';
       if (productId.isEmpty) return;
-
 
       final sellersSnapshot = await FirebaseFirestore.instance
           .collection('wanted_products')
@@ -119,7 +112,6 @@ class _WantedDetailScreenState extends State<WantedDetailScreen> {
           .collection('sellers')
           .orderBy('createdAt', descending: true)
           .get();
-
 
       final sellers = sellersSnapshot.docs.map((doc) {
         return {
@@ -132,9 +124,7 @@ class _WantedDetailScreenState extends State<WantedDetailScreen> {
         };
       }).toList();
 
-
       final hasClicked = sellers.any((s) => s['uid'] == _currentUid);
-
 
       if (mounted) {
         setState(() {
@@ -147,21 +137,17 @@ class _WantedDetailScreenState extends State<WantedDetailScreen> {
     }
   }
 
-
   Future<void> _clickToSell() async {
     if (_currentUid == null || _hasClickedSell) return;
 
-
     final result = await _showSellDialog();
     if (result == null) return;
-
 
     final price = result['price'] as String;
     final currency = result['currency'] as String;
     final isNegotiable = result['isNegotiable'] as bool;
     final productId = widget.data['id'] ?? '';
     if (productId.isEmpty) return;
-
 
     final userDoc = await FirebaseFirestore.instance
         .collection('users')
@@ -170,32 +156,28 @@ class _WantedDetailScreenState extends State<WantedDetailScreen> {
     final userName = userDoc.data()?['name'] ?? 'អ្នកលក់';
     final photoUrl = userDoc.data()?['photoUrl'] ?? '';
 
-
     await FirebaseFirestore.instance
         .collection('wanted_products')
         .doc(productId)
         .collection('sellers')
         .doc(_currentUid)
         .set({
-      'uid': _currentUid,
-      'userName': userName,
-      'photoUrl': photoUrl,
-      'price': price,
-      'currency': currency,
-      'isNegotiable': isNegotiable,
-      'createdAt': FieldValue.serverTimestamp(),
-    });
-
+          'uid': _currentUid,
+          'userName': userName,
+          'photoUrl': photoUrl,
+          'price': price,
+          'currency': currency,
+          'isNegotiable': isNegotiable,
+          'createdAt': FieldValue.serverTimestamp(),
+        });
 
     _loadSellers();
   }
-
 
   Future<Map<String, dynamic>?> _showSellDialog() {
     final priceController = TextEditingController();
     String currency = '៛';
     bool isNegotiable = false;
-
 
     return showDialog<Map<String, dynamic>>(
       context: context,
@@ -263,12 +245,10 @@ class _WantedDetailScreenState extends State<WantedDetailScreen> {
     );
   }
 
-
   @override
   Widget build(BuildContext context) {
     final d = widget.data;
     final List<dynamic> images = d['imageUrls'] ?? [];
-
 
     return Scaffold(
       appBar: AppBar(
@@ -285,7 +265,11 @@ class _WantedDetailScreenState extends State<WantedDetailScreen> {
               String firstImg = images.isNotEmpty ? images[0] : "";
               Clipboard.setData(ClipboardData(text: firstImg));
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(_t('ចម្លង Link រូបភាពរួចរាល់!', 'Image link copied!'))),
+                SnackBar(
+                  content: Text(
+                    _t('ចម្លង Link រូបភាពរួចរាល់!', 'Image link copied!'),
+                  ),
+                ),
               );
             },
           ),
@@ -293,7 +277,12 @@ class _WantedDetailScreenState extends State<WantedDetailScreen> {
             icon: const Icon(Icons.share),
             onPressed: () {
               String firstImg = images.isNotEmpty ? images[0] : "";
-              Share.share(_t("ត្រូវការទិញ: ${d['productName']}\nតម្លៃ: ${d['price']} ${d['currency']}\nមើលរូបភាព: $firstImg", "Wanted: ${d['productName']}\nPrice: ${d['price']} ${d['currency']}\nView image: $firstImg"));
+              Share.share(
+                _t(
+                  "ត្រូវការទិញ: ${d['productName']}\nតម្លៃ: ${d['price']} ${d['currency']}\nមើលរូបភាព: $firstImg",
+                  "Wanted: ${d['productName']}\nPrice: ${d['price']} ${d['currency']}\nView image: $firstImg",
+                ),
+              );
             },
           ),
           // ✅ ប៊ូតុងកែប្រែ (សម្រាប់តែម្ចាស់)
@@ -305,7 +294,8 @@ class _WantedDetailScreenState extends State<WantedDetailScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => EditWantedScreen(  // ✅ ប្រើ EditWantedScreen
+                    builder: (context) => EditWantedScreen(
+                      // ✅ ប្រើ EditWantedScreen
                       productId: d['id'] ?? '',
                       productData: d,
                     ),
@@ -328,10 +318,8 @@ class _WantedDetailScreenState extends State<WantedDetailScreen> {
             // 🎯 រូបភាពស្លាយ + លេខរាប់
             _buildImageGallery(images),
 
-
             // ✅ ប្រអប់ព័ត៌មានអ្នកប្រកាស
             _buildPosterCard(),
-
 
             Padding(
               padding: const EdgeInsets.all(16.0),
@@ -357,7 +345,10 @@ class _WantedDetailScreenState extends State<WantedDetailScreen> {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          _t('ប្រកាសនៅ: ${_formatDate(d['createdAt'])}', 'Posted: ${_formatDate(d['createdAt'])}'),
+                          _t(
+                            'ប្រកាសនៅ: ${_formatDate(d['createdAt'])}',
+                            'Posted: ${_formatDate(d['createdAt'])}',
+                          ),
                           style: const TextStyle(
                             fontSize: 12,
                             color: Colors.grey,
@@ -369,15 +360,19 @@ class _WantedDetailScreenState extends State<WantedDetailScreen> {
                   const SizedBox(height: 8),
                   // ✅ ពិនិត្យថាតើតម្លៃជា "ចរចារ" ឬអត់
                   Text(
-                  d['price'] == 'ចរចារ' || d['price'] == 'negotiable' || d['price'].toString().toLowerCase() == 'ចរចារ'
-                  ? _t('ចរចារ', 'Negotiable')
-                      : "${d['price']} ${d['currency']}",
-                  style: TextStyle(
-                  fontSize: 24,
-                  color: d['price'] == 'ចរចារ' || d['price'] == 'negotiable' ? Colors.orange : Colors.red,
-    fontWeight: FontWeight.bold,
-    ),
-    ),
+                    d['price'] == 'ចរចារ' ||
+                            d['price'] == 'negotiable' ||
+                            d['price'].toString().toLowerCase() == 'ចរចារ'
+                        ? _t('ចរចារ', 'Negotiable')
+                        : "${d['price']} ${d['currency']}",
+                    style: TextStyle(
+                      fontSize: 24,
+                      color: d['price'] == 'ចរចារ' || d['price'] == 'negotiable'
+                          ? Colors.orange
+                          : Colors.red,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   const Divider(height: 30),
                   _infoTile(
                     Icons.shopping_bag,
@@ -389,7 +384,11 @@ class _WantedDetailScreenState extends State<WantedDetailScreen> {
                     _t('ទីតាំង', 'Location'),
                     d['location'] ?? _t('មិនបញ្ជាក់', 'Not specified'),
                   ),
-                  _infoTile(Icons.phone, _t('លេខទូរស័ព្ទ', 'Phone number'), d['phone'] ?? _t('មិនមាន', 'Not available')),
+                  _infoTile(
+                    Icons.phone,
+                    _t('លេខទូរស័ព្ទ', 'Phone number'),
+                    d['phone'] ?? _t('មិនមាន', 'Not available'),
+                  ),
                   const SizedBox(height: 20),
                   Text(
                     _t('ការរៀបរាប់បន្ថែម:', 'Additional description:'),
@@ -397,7 +396,8 @@ class _WantedDetailScreenState extends State<WantedDetailScreen> {
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    d['description'] ?? _t('មិនមានការរៀបរាប់...', 'No description...'),
+                    d['description'] ??
+                        _t('មិនមានការរៀបរាប់...', 'No description...'),
                     style: const TextStyle(fontSize: 15),
                   ),
                   const SizedBox(height: 30),
@@ -459,14 +459,17 @@ class _WantedDetailScreenState extends State<WantedDetailScreen> {
             // ✅ ប៊ូតុងលុប (សម្រាប់តែម្ចាស់)
             if (_isOwner) ...[
               const SizedBox(width: 12),
-              _bottomActionIcon(Icons.delete_outline, Colors.red, () => _confirmDelete()),
+              _bottomActionIcon(
+                Icons.delete_outline,
+                Colors.red,
+                () => _confirmDelete(),
+              ),
             ],
           ],
         ),
       ),
     );
   }
-
 
   // ✅ Widget បង្ហាញព័ត៌មានអ្នកប្រកាស
   Widget _buildPosterCard() {
@@ -538,7 +541,6 @@ class _WantedDetailScreenState extends State<WantedDetailScreen> {
       ),
     );
   }
-
 
   // ✅ ផ្នែក "ខ្ញុំមានលក់"
   Widget _buildSellersSection() {
@@ -621,7 +623,10 @@ class _WantedDetailScreenState extends State<WantedDetailScreen> {
                   const Icon(Icons.check_circle, color: Colors.green, size: 18),
                   const SizedBox(width: 8),
                   Text(
-                    _t('អ្នកបានបញ្ជាក់ថាមានលក់', 'You confirmed that you have this to sell'),
+                    _t(
+                      'អ្នកបានបញ្ជាក់ថាមានលក់',
+                      'You confirmed that you have this to sell',
+                    ),
                     style: TextStyle(color: Colors.green),
                   ),
                 ],
@@ -641,12 +646,10 @@ class _WantedDetailScreenState extends State<WantedDetailScreen> {
     );
   }
 
-
   Widget _buildSellerItem(Map<String, dynamic> seller) {
     final price = seller['price']?.toString() ?? '0';
     final currency = seller['currency'] ?? '៛';
     final isNegotiable = seller['isNegotiable'] ?? false;
-
 
     return GestureDetector(
       onTap: () {
@@ -669,13 +672,13 @@ class _WantedDetailScreenState extends State<WantedDetailScreen> {
             CircleAvatar(
               radius: 22,
               backgroundImage:
-              seller['photoUrl'] != null &&
-                  seller['photoUrl'].toString().isNotEmpty
+                  seller['photoUrl'] != null &&
+                      seller['photoUrl'].toString().isNotEmpty
                   ? CachedNetworkImageProvider(seller['photoUrl'])
                   : null,
               child:
-              seller['photoUrl'] == null ||
-                  seller['photoUrl'].toString().isEmpty
+                  seller['photoUrl'] == null ||
+                      seller['photoUrl'].toString().isEmpty
                   ? const Icon(Icons.person)
                   : null,
             ),
@@ -730,7 +733,6 @@ class _WantedDetailScreenState extends State<WantedDetailScreen> {
     );
   }
 
-
   Widget _buildImageGallery(List<dynamic> images) {
     return Stack(
       children: [
@@ -739,35 +741,35 @@ class _WantedDetailScreenState extends State<WantedDetailScreen> {
           width: double.infinity,
           child: images.isNotEmpty
               ? GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => MediaViewer(
-                    url: images[_currentImageIndex],
-                    type: 'image',
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => MediaViewer(
+                          url: images[_currentImageIndex],
+                          type: 'image',
+                        ),
+                      ),
+                    );
+                  },
+                  child: PageView.builder(
+                    itemCount: images.length,
+                    onPageChanged: (i) =>
+                        setState(() => _currentImageIndex = i),
+                    itemBuilder: (_, i) => CachedNetworkImage(
+                      imageUrl: images[i],
+                      fit: BoxFit.cover,
+                      placeholder: (_, __) =>
+                          Container(color: Colors.grey[300]),
+                      errorWidget: (_, __, ___) =>
+                          const Icon(Icons.broken_image, size: 50),
+                    ),
                   ),
-                ),
-              );
-            },
-            child: PageView.builder(
-              itemCount: images.length,
-              onPageChanged: (i) =>
-                  setState(() => _currentImageIndex = i),
-              itemBuilder: (_, i) => CachedNetworkImage(
-                imageUrl: images[i],
-                fit: BoxFit.cover,
-                placeholder: (_, __) =>
-                    Container(color: Colors.grey[300]),
-                errorWidget: (_, __, ___) =>
-                const Icon(Icons.broken_image, size: 50),
-              ),
-            ),
-          )
+                )
               : Container(
-            color: Colors.grey[300],
-            child: const Icon(Icons.image, size: 50),
-          ),
+                  color: Colors.grey[300],
+                  child: const Icon(Icons.image, size: 50),
+                ),
         ),
         if (images.length > 1)
           Positioned(
@@ -789,7 +791,6 @@ class _WantedDetailScreenState extends State<WantedDetailScreen> {
     );
   }
 
-
   Widget _infoTile(IconData icon, String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
@@ -803,7 +804,6 @@ class _WantedDetailScreenState extends State<WantedDetailScreen> {
       ),
     );
   }
-
 
   Widget _bottomActionIcon(IconData icon, Color color, VoidCallback onTap) {
     return InkWell(
@@ -819,7 +819,6 @@ class _WantedDetailScreenState extends State<WantedDetailScreen> {
     );
   }
 
-
   String _formatDate(dynamic date) {
     if (date == null) return _t('មិនកំណត់', 'Not set');
     if (date is Timestamp) {
@@ -828,6 +827,7 @@ class _WantedDetailScreenState extends State<WantedDetailScreen> {
     }
     return date.toString();
   }
+
   // ✅ មុខងារលុបការប្រកាស
   void _confirmDelete() {
     showDialog(
@@ -837,7 +837,12 @@ class _WantedDetailScreenState extends State<WantedDetailScreen> {
           _t('លុបការប្រកាស?', 'Delete listing?'),
           style: TextStyle(fontFamily: 'Siemreap'),
         ),
-        content: Text(_t('តើអ្នកពិតជាចង់លុបការប្រកាសនេះមែនទេ?', 'Are you sure you want to delete this listing?')),
+        content: Text(
+          _t(
+            'តើអ្នកពិតជាចង់លុបការប្រកាសនេះមែនទេ?',
+            'Are you sure you want to delete this listing?',
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
@@ -852,14 +857,13 @@ class _WantedDetailScreenState extends State<WantedDetailScreen> {
               Navigator.pop(ctx);
               Navigator.pop(context);
             },
-            child: Text(_t('លុប', 'Delete'), style: const TextStyle(color: Colors.red)),
+            child: Text(
+              _t('លុប', 'Delete'),
+              style: const TextStyle(color: Colors.red),
+            ),
           ),
         ],
       ),
     );
   }
 }
-
-
-
-
