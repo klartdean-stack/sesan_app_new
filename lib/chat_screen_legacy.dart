@@ -177,7 +177,14 @@ class _ChatScreenState extends State<ChatScreen> {
       _showSnack('chat_block_success'.tr, Colors.red);
     } catch (e) {
       setState(() => _isLoadingBlock = false);
-      _showSnack(appText(context, km: '❌ មិនអាច Block បាន: $e', en: '❌ Unable to block user: $e'), Colors.red);
+      _showSnack(
+        appText(
+          context,
+          km: '❌ មិនអាច Block បាន: $e',
+          en: '❌ Unable to block user: $e',
+        ),
+        Colors.red,
+      );
     }
   }
 
@@ -198,7 +205,14 @@ class _ChatScreenState extends State<ChatScreen> {
       _showSnack('chat_unblock_success'.tr, Colors.green);
     } catch (e) {
       setState(() => _isLoadingBlock = false);
-      _showSnack(appText(context, km: '❌ មិនអាចដោះ Block បាន: $e', en: '❌ Unable to unblock user: $e'), Colors.red);
+      _showSnack(
+        appText(
+          context,
+          km: '❌ មិនអាចដោះ Block បាន: $e',
+          en: '❌ Unable to unblock user: $e',
+        ),
+        Colors.red,
+      );
     }
   }
 
@@ -289,7 +303,11 @@ class _ChatScreenState extends State<ChatScreen> {
         if (mounted) {
           setState(() {
             _isLoading = false;
-            _errorMessage = appText(context, km: 'សូមចូលគណនីមុននឹងប្រើឆាត', en: 'Please sign in before using chat.');
+            _errorMessage = appText(
+              context,
+              km: 'សូមចូលគណនីមុននឹងប្រើឆាត',
+              en: 'Please sign in before using chat.',
+            );
           });
         }
         return;
@@ -387,12 +405,13 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _executeUpload(_UploadTask task) async {
-    final String ext = task.extension ??
+    final String ext =
+        task.extension ??
         (task.type == 'image'
             ? 'jpg'
             : task.type == 'video'
-                ? 'mp4'
-                : 'm4a');
+            ? 'mp4'
+            : 'm4a');
     final String path =
         'chat_${task.type}/${DateTime.now().millisecondsSinceEpoch}.$ext';
     final Reference ref = FirebaseStorage.instance.ref().child(path);
@@ -505,10 +524,7 @@ class _ChatScreenState extends State<ChatScreen> {
     String status = 'sent',
   }) async {
     if (_amIBlocked) {
-      _showSnack(
-        'chat_blocked_send'.tr,
-        Colors.red,
-      );
+      _showSnack('chat_blocked_send'.tr, Colors.red);
       return;
     }
 
@@ -536,9 +552,11 @@ class _ChatScreenState extends State<ChatScreen> {
       _scrollToBottom();
     } catch (e) {
       debugPrint("ផ្ញើសារមិនចេញ៖ $e");
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('chat_send_failed'.trParams({'error': e.toString()}))));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('chat_send_failed'.trParams({'error': e.toString()})),
+        ),
+      );
     }
   }
 
@@ -590,7 +608,10 @@ class _ChatScreenState extends State<ChatScreen> {
       );
     } catch (e) {
       debugPrint("❌ Send image error: $e");
-      _showSnack(appText(context, km: '❌ ផ្ញើរូបមិនបាន', en: '❌ Could not send image'), Colors.red);
+      _showSnack(
+        appText(context, km: '❌ ផ្ញើរូបមិនបាន', en: '❌ Could not send image'),
+        Colors.red,
+      );
     }
   }
 
@@ -620,7 +641,14 @@ class _ChatScreenState extends State<ChatScreen> {
       );
     } catch (e) {
       debugPrint("❌ Send video error: $e");
-      _showSnack(appText(context, km: '❌ ផ្ញើវីដេអូមិនបាន', en: '❌ Could not send video'), Colors.red);
+      _showSnack(
+        appText(
+          context,
+          km: '❌ ផ្ញើវីដេអូមិនបាន',
+          en: '❌ Could not send video',
+        ),
+        Colors.red,
+      );
     }
   }
 
@@ -643,10 +671,7 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
-  Future<void> _sendWebAudio(
-    Uint8List audioBytes,
-    int durationSeconds,
-  ) async {
+  Future<void> _sendWebAudio(Uint8List audioBytes, int durationSeconds) async {
     try {
       final String msgId = await _createPlaceholderMessage(
         type: 'audio',
@@ -664,11 +689,7 @@ class _ChatScreenState extends State<ChatScreen> {
     } catch (e) {
       debugPrint("❌ Send web audio error: $e");
       _showSnack(
-        appText(
-          context,
-          km: 'ផ្ញើសម្លេងមិនបាន',
-          en: 'Could not send audio',
-        ),
+        appText(context, km: 'ផ្ញើសម្លេងមិនបាន', en: 'Could not send audio'),
         Colors.red,
       );
     }
@@ -718,11 +739,21 @@ class _ChatScreenState extends State<ChatScreen> {
         }
       }
 
-      _showSnack(appText(context, km: '✅ បានផ្ញើ ${files.length} សន្លឹក', en: '✅ Sent ${files.length} images'), Colors.green);
+      _showSnack(
+        appText(
+          context,
+          km: '✅ បានផ្ញើ ${files.length} សន្លឹក',
+          en: '✅ Sent ${files.length} images',
+        ),
+        Colors.green,
+      );
     } catch (e, stackTrace) {
       debugPrint("❌ Pick multiple images error: $e");
       debugPrint(stackTrace.toString());
-      _showSnack(appText(context, km: 'មានបញ្ហា: $e', en: 'Error: $e'), Colors.red);
+      _showSnack(
+        appText(context, km: 'មានបញ្ហា: $e', en: 'Error: $e'),
+        Colors.red,
+      );
     }
   }
 
@@ -735,8 +766,7 @@ class _ChatScreenState extends State<ChatScreen> {
     const int channels = 1;
     const int bitsPerSample = 16;
     const int headerSize = 44;
-    final int byteRate =
-        _webAudioSampleRate * channels * (bitsPerSample ~/ 8);
+    final int byteRate = _webAudioSampleRate * channels * (bitsPerSample ~/ 8);
     final int blockAlign = channels * (bitsPerSample ~/ 8);
     final header = ByteData(headerSize);
     final headerBytes = header.buffer.asUint8List();
@@ -877,9 +907,7 @@ class _ChatScreenState extends State<ChatScreen> {
       try {
         await _audioRecorder.stop();
         try {
-          await _webAudioStreamDone?.future.timeout(
-            const Duration(seconds: 1),
-          );
+          await _webAudioStreamDone?.future.timeout(const Duration(seconds: 1));
         } catch (_) {
           // Some browsers stop without sending an explicit stream done event.
         }
@@ -956,7 +984,10 @@ class _ChatScreenState extends State<ChatScreen> {
         final file = File(path);
         if (await file.exists()) await file.delete();
       }
-      _showSnack(appText(context, km: 'បានលប់សម្លេង', en: 'Recording deleted'), Colors.orange);
+      _showSnack(
+        appText(context, km: 'បានលប់សម្លេង', en: 'Recording deleted'),
+        Colors.orange,
+      );
     } catch (e) {
       debugPrint("❌ Cancel recording error: $e");
       if (mounted) {
@@ -985,7 +1016,14 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void _lockRecording() {
     setState(() => _isLocked = true);
-    _showSnack(appText(context, km: '🔒 បានចាក់សោ — ចុចផ្ញើពេលចប់', en: '🔒 Locked — tap Send when finished'), Colors.green);
+    _showSnack(
+      appText(
+        context,
+        km: '🔒 បានចាក់សោ — ចុចផ្ញើពេលចប់',
+        en: '🔒 Locked — tap Send when finished',
+      ),
+      Colors.green,
+    );
   }
 
   // ─── Send Location ───────────────────────────────────────────────
@@ -1054,9 +1092,7 @@ class _ChatScreenState extends State<ChatScreen> {
       _scrollToBottom();
     } catch (e) {
       debugPrint("ផ្ញើទីតាំងមិនបាន៖ $e");
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
             appText(
@@ -1149,7 +1185,10 @@ class _ChatScreenState extends State<ChatScreen> {
                   children: [
                     const Icon(Icons.check_circle, color: Colors.green),
                     const SizedBox(width: 8),
-                    Text('chat_unblock'.tr, style: const TextStyle(color: Colors.green)),
+                    Text(
+                      'chat_unblock'.tr,
+                      style: const TextStyle(color: Colors.green),
+                    ),
                   ],
                 ),
               ),
@@ -1412,7 +1451,10 @@ class _ChatScreenState extends State<ChatScreen> {
                       const SizedBox(width: 10),
                       Text(
                         'chat_view_shop'.tr,
-                        style: const TextStyle(fontFamily: 'Siemreap', fontSize: 11),
+                        style: const TextStyle(
+                          fontFamily: 'Siemreap',
+                          fontSize: 11,
+                        ),
                       ),
                     ],
                   ),
@@ -1425,7 +1467,10 @@ class _ChatScreenState extends State<ChatScreen> {
                       const SizedBox(width: 10),
                       Text(
                         'chat_manage_sales'.tr,
-                        style: const TextStyle(fontFamily: 'Siemreap', fontSize: 11),
+                        style: const TextStyle(
+                          fontFamily: 'Siemreap',
+                          fontSize: 11,
+                        ),
                       ),
                     ],
                   ),
@@ -1453,7 +1498,11 @@ class _ChatScreenState extends State<ChatScreen> {
                     value: 'unblock',
                     child: Row(
                       children: [
-                        const Icon(Icons.check_circle, color: Colors.green, size: 20),
+                        const Icon(
+                          Icons.check_circle,
+                          color: Colors.green,
+                          size: 20,
+                        ),
                         const SizedBox(width: 10),
                         Text(
                           'chat_unblock'.tr,
@@ -2253,9 +2302,16 @@ class _ChatScreenState extends State<ChatScreen> {
           SnackBar(
             content: Row(
               children: [
-                const Icon(Icons.check_circle_outline, color: Colors.white, size: 16),
+                const Icon(
+                  Icons.check_circle_outline,
+                  color: Colors.white,
+                  size: 16,
+                ),
                 const SizedBox(width: 8),
-                Text('chat_copied'.tr, style: const TextStyle(fontFamily: 'Siemreap')),
+                Text(
+                  'chat_copied'.tr,
+                  style: const TextStyle(fontFamily: 'Siemreap'),
+                ),
               ],
             ),
             backgroundColor: Colors.green[700],
@@ -2387,7 +2443,11 @@ class _ChatScreenState extends State<ChatScreen> {
         children: [
           Icon(Icons.arrow_back, size: 14, color: Colors.grey[500]),
           Text(
-            appText(context, km: ' អូសទៅឆ្វេងដើម្បីលុប', en: ' Swipe left to cancel'),
+            appText(
+              context,
+              km: ' អូសទៅឆ្វេងដើម្បីលុប',
+              en: ' Swipe left to cancel',
+            ),
             style: TextStyle(fontSize: 11, color: Colors.grey[500]),
           ),
         ],
@@ -2429,11 +2489,17 @@ class _ChatScreenState extends State<ChatScreen> {
               TextButton(
                 onPressed: _isLoadingBlock ? null : _showUnblockConfirmDialog,
                 style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 4,
+                  ),
                   minimumSize: Size.zero,
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
-                child: Text('chat_unblock'.tr, style: const TextStyle(fontSize: 11)),
+                child: Text(
+                  'chat_unblock'.tr,
+                  style: const TextStyle(fontSize: 11),
+                ),
               ),
             ],
           ),
@@ -2532,7 +2598,11 @@ class _ChatScreenState extends State<ChatScreen> {
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            appText(context, km: 'កំពុងថតសម្លេង...', en: 'Recording...'),
+                            appText(
+                              context,
+                              km: 'កំពុងថតសម្លេង...',
+                              en: 'Recording...',
+                            ),
                             style: const TextStyle(
                               color: Colors.red,
                               fontWeight: FontWeight.bold,
@@ -2724,9 +2794,19 @@ class _ChatScreenState extends State<ChatScreen> {
           children: [
             ListTile(
               leading: const Icon(Icons.photo_library, color: Colors.purple),
-              title: Text(appText(context, km: 'ជ្រើសរើសរូបភាពពី Gallery', en: 'Choose images from Gallery')),
+              title: Text(
+                appText(
+                  context,
+                  km: 'ជ្រើសរើសរូបភាពពី Gallery',
+                  en: 'Choose images from Gallery',
+                ),
+              ),
               subtitle: Text(
-                appText(context, km: 'ជ្រើសរើសបានច្រើនសន្លឹកក្នុងពេលតែមួយ', en: 'Select multiple images at once'),
+                appText(
+                  context,
+                  km: 'ជ្រើសរើសបានច្រើនសន្លឹកក្នុងពេលតែមួយ',
+                  en: 'Select multiple images at once',
+                ),
                 style: TextStyle(fontSize: 12, color: Colors.grey),
               ),
               onTap: () {
@@ -2736,7 +2816,9 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
             ListTile(
               leading: const Icon(Icons.camera_alt, color: Colors.green),
-              title: Text(appText(context, km: 'ថតរូបថ្មី', en: 'Take a new photo')),
+              title: Text(
+                appText(context, km: 'ថតរូបថ្មី', en: 'Take a new photo'),
+              ),
               onTap: () {
                 Navigator.pop(context);
                 _pickMedia(ImageSource.camera, false);
@@ -2744,7 +2826,13 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
             ListTile(
               leading: const Icon(Icons.video_library, color: Colors.orange),
-              title: Text(appText(context, km: 'វីដេអូពី Gallery', en: 'Choose video from Gallery')),
+              title: Text(
+                appText(
+                  context,
+                  km: 'វីដេអូពី Gallery',
+                  en: 'Choose video from Gallery',
+                ),
+              ),
               onTap: () {
                 Navigator.pop(context);
                 _pickMedia(ImageSource.gallery, true);
@@ -2752,7 +2840,9 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
             ListTile(
               leading: const Icon(Icons.videocam, color: Colors.red),
-              title: Text(appText(context, km: 'ថតវីដេអូថ្មី', en: 'Record a new video')),
+              title: Text(
+                appText(context, km: 'ថតវីដេអូថ្មី', en: 'Record a new video'),
+              ),
               onTap: () {
                 Navigator.pop(context);
                 _pickMedia(ImageSource.camera, true);
@@ -2806,7 +2896,10 @@ class _ChatScreenState extends State<ChatScreen> {
               Navigator.pop(context);
               _blockUser();
             },
-            child: Text('chat_block'.tr, style: const TextStyle(color: Colors.white)),
+            child: Text(
+              'chat_block'.tr,
+              style: const TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),
@@ -2833,7 +2926,10 @@ class _ChatScreenState extends State<ChatScreen> {
               Navigator.pop(context);
               _unblockUser();
             },
-            child: Text('chat_unblock'.tr, style: const TextStyle(color: Colors.white)),
+            child: Text(
+              'chat_unblock'.tr,
+              style: const TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),
@@ -2999,8 +3095,9 @@ class _ChatScreenState extends State<ChatScreen> {
       final diff = DateTime.now().difference(time);
       if (diff.inMinutes < 1) return 'chat_last_seen_now'.tr;
       if (diff.inHours < 1) {
-        return 'chat_last_seen_minutes'
-            .trParams({'count': '${diff.inMinutes}'});
+        return 'chat_last_seen_minutes'.trParams({
+          'count': '${diff.inMinutes}',
+        });
       }
       if (diff.inDays < 1) {
         return 'chat_last_seen_hours'.trParams({'count': '${diff.inHours}'});
