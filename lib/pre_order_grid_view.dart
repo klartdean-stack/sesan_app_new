@@ -7,6 +7,9 @@ class PreOrderGridView extends StatelessWidget {
   final String searchQuery; // ✅ បន្ថែម
   const PreOrderGridView({super.key, this.searchQuery = ""}); // ✅ បន្ថែម
 
+  String _t(BuildContext context, String km, String en) =>
+      Localizations.localeOf(context).languageCode == 'en' ? en : km;
+
   // ✅ static final - បង្កើតតែម្តង
   static final formatter = NumberFormat('#,###');
 
@@ -116,8 +119,8 @@ class PreOrderGridView extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text(
-                  "យល់ដឹងពីមុខងារ 'លក់មុន'",
+                Text(
+                  _t(context, "យល់ដឹងពីមុខងារ 'លក់មុន'", "Learn about Pre-order"),
                   style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -127,7 +130,7 @@ class PreOrderGridView extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  "ផ្ដល់ឱកាសឱ្យម្ចាស់ចម្ការបង្កើតការលក់ទុកជាមុន ដើម្បីធានាទីផ្សារ និងការកក់ពីអតិថិជនយ៉ាងច្បាស់លាស់",
+                  _t(context, "ផ្ដល់ឱកាសឱ្យម្ចាស់ចម្ការបង្កើតការលក់ទុកជាមុន ដើម្បីធានាទីផ្សារ និងការកក់ពីអតិថិជនយ៉ាងច្បាស់លាស់", "Let farm owners offer products in advance to secure demand and customer reservations."),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
@@ -149,8 +152,8 @@ class PreOrderGridView extends StatelessWidget {
                     minimumSize: Size.zero,
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
-                  child: const Text(
-                    "🔍 អានបន្ថែម",
+                  child: Text(
+                    _t(context, "🔍 អានបន្ថែម", "🔍 Learn more"),
                     style: TextStyle(
                       color: Colors.orange,
                       fontSize: 10,
@@ -171,8 +174,8 @@ class PreOrderGridView extends StatelessWidget {
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text(
-          "អត្ថប្រយោជន៍នៃការលក់មុន (Pre-order)",
+        title: Text(
+          _t(context, "អត្ថប្រយោជន៍នៃការលក់មុន (Pre-order)", "Benefits of Pre-order"),
           style: TextStyle(fontWeight: FontWeight.bold, color: Colors.orange),
         ),
         content: SingleChildScrollView(
@@ -181,18 +184,18 @@ class PreOrderGridView extends StatelessWidget {
             children: [
               _benefitItem(
                 Icons.account_balance_wallet_rounded,
-                "យុទ្ធសាស្ត្រសម្រាប់ម្ចាស់អាជីវកម្ម",
-                "កាត់បន្ថយហានិភ័យនៃតុល្យភាពទីផ្សារ (Market Risk) ធានាបាននូវលំហូរទុនបង្វិល និងបង្កើនប្រសិទ្ធភាពក្នុងការគ្រប់គ្រងស្ដុកកសិផល។",
+                _t(context, "យុទ្ធសាស្ត្រសម្រាប់ម្ចាស់អាជីវកម្ម", "Strategy for business owners"),
+                _t(context, "កាត់បន្ថយហានិភ័យនៃតុល្យភាពទីផ្សារ (Market Risk) ធានាបាននូវលំហូរទុនបង្វិល និងបង្កើនប្រសិទ្ធភាពក្នុងការគ្រប់គ្រងស្ដុកកសិផល។", "Reduce market risk, support cash flow, and improve agricultural stock management."),
               ),
               _benefitItem(
                 Icons.hub_rounded,
-                "ដំណោះស្រាយសម្រាប់ម្ចាស់គម្រោង",
-                "ពង្រឹងខ្សែចង្វាក់ផ្គត់ផ្គង់ (Supply Chain) ឱ្យមានស្ថេរភាព និងបង្កើតអំណាចចរចាទីផ្សារទុកជាមុនជូនដល់សមាជិកក្នុងបណ្ដាញផលិតកម្ម។",
+                _t(context, "ដំណោះស្រាយសម្រាប់ម្ចាស់គម្រោង", "Solution for project owners"),
+                _t(context, "ពង្រឹងខ្សែចង្វាក់ផ្គត់ផ្គង់ (Supply Chain) ឱ្យមានស្ថេរភាព និងបង្កើតអំណាចចរចាទីផ្សារទុកជាមុនជូនដល់សមាជិកក្នុងបណ្ដាញផលិតកម្ម។", "Strengthen supply-chain stability and improve advance market negotiation for production-network members."),
               ),
               _benefitItem(
                 Icons.stars_rounded,
-                "អត្ថប្រយោជន៍សម្រាប់អតិថិជន",
-                "ទទួលបានតម្លៃយុទ្ធសាស្ត្រ (Competitive Price) ធានាបាននូវប្រភពទំនិញពិតប្រាកដ និងកាត់បន្ថយភាពមិនច្បាស់លាស់នៃតម្លៃនៅលើទីផ្សារ។",
+                _t(context, "អត្ថប្រយោជន៍សម្រាប់អតិថិជន", "Benefits for customers"),
+                _t(context, "ទទួលបានតម្លៃយុទ្ធសាស្ត្រ (Competitive Price) ធានាបាននូវប្រភពទំនិញពិតប្រាកដ និងកាត់បន្ថយភាពមិនច្បាស់លាស់នៃតម្លៃនៅលើទីផ្សារ។", "Access competitive prices, secure a real product source, and reduce market-price uncertainty."),
               ),
             ],
           ),
@@ -200,7 +203,7 @@ class PreOrderGridView extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text("បិទ", style: TextStyle(color: Colors.grey)),
+            child: Text(_t(context, "បិទ", "Close"), style: const TextStyle(color: Colors.grey)),
           ),
         ],
       ),
@@ -313,7 +316,7 @@ class PreOrderGridView extends StatelessWidget {
     child: Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-    Text(data['product_name'] ?? 'មិនមានឈ្មោះ',
+    Text(data['product_name'] ?? _t(context, 'មិនមានឈ្មោះ', 'Unnamed product'),
       style: const TextStyle(
         color: Colors.black87,
         fontWeight: FontWeight.bold,
@@ -334,7 +337,7 @@ class PreOrderGridView extends StatelessWidget {
       ),
       const SizedBox(height: 6),
       Text(
-        "/ ${data['unit'] ?? 'ឯកតា'}",
+        "/ ${data['unit'] ?? _t(context, 'ឯកតា', 'unit')}",
         style: TextStyle(
           color: Colors.grey[600],
           fontSize: 12,
@@ -351,7 +354,7 @@ class PreOrderGridView extends StatelessWidget {
           ),
           const SizedBox(width: 4),
           Text(
-            "ផុសថ្ងៃ: ${_formatDate(data['created_at'])}",
+            _t(context, "ផុសថ្ងៃ: ${_formatDate(data['created_at'])}", "Posted: ${_formatDate(data['created_at'])}"),
             style: TextStyle(color: Colors.grey[500], fontSize: 10),
           ),
         ],
@@ -429,8 +432,8 @@ class PreOrderGridView extends StatelessWidget {
                         const SizedBox(height: 10),
                         Text(
                           searchQuery.isNotEmpty
-                              ? "រកមិនឃើញការលក់មុនដែលត្រូវនឹង '$searchQuery'"
-                              : "មិនទាន់មានការប្រកាសលក់មុននៅឡើយទេ",
+                              ? _t(context, "រកមិនឃើញការលក់មុនដែលត្រូវនឹង '$searchQuery'", "No pre-orders match '$searchQuery'")
+                              : _t(context, "មិនទាន់មានការប្រកាសលក់មុននៅឡើយទេ", "No pre-order listings yet"),
                           style: const TextStyle(
                             color: Colors.grey,
                             fontFamily: 'Siemreap',
