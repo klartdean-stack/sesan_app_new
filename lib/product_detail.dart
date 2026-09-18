@@ -371,7 +371,7 @@ Product ID៖ $productId
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        "រក្សាសិទ្ធិដោយ៖ $sellerName",
+                        _t('រក្សាសិទ្ធិដោយ៖ $sellerName', 'Listed by: $sellerName'),
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 14,
@@ -381,7 +381,7 @@ Product ID៖ $productId
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        "ទំនាក់ទំនង៖ ${_maskSellerPhone(sellerPhone)}",
+                        _t('ទំនាក់ទំនង៖ ${_maskSellerPhone(sellerPhone)}', 'Contact: ${_maskSellerPhone(sellerPhone)}'),
                         style: const TextStyle(
                           fontSize: 12,
                           color: Colors.black54,
@@ -390,7 +390,7 @@ Product ID៖ $productId
                       ),
                       const SizedBox(height: 4),
                       const Text(
-                        "ស្កេនដើម្បីមើលក្នុង Sesan App",
+                        _t('ស្កេនដើម្បីមើលក្នុង Sesan App', 'Scan to view in Sesan App'),
                         style: TextStyle(
                           fontSize: 10,
                           color: Colors.grey,
@@ -433,7 +433,7 @@ Product ID៖ $productId
       final image = await _screenshotController.captureFromWidget(
         _buildWatermarkImage(
           imageUrl,
-          widget.product['seller_name'] ?? 'អាជីវករ សេសាន',
+          widget.product['seller_name'] ?? _t('អាជីវករ សេសាន', 'Sesan Seller'),
           widget.product['phone1'] ?? '088XXXXXXX',
           widget.product['id'] ?? '',
         ),
@@ -470,8 +470,8 @@ Product ID៖ $productId
         // ✅ រក្សាទុកជា JPEG គុណភាពខ្ពស់
         await Gal.putImage(jpgFile.path);
         Get.snackbar(
-          "ជោគជ័យ!",
-          "បានរក្សាទុកក្នុង Gallery រួចរាល់! ✅",
+          _t('ជោគជ័យ!', 'Success!'),
+          _t('បានរក្សាទុកក្នុង Gallery រួចរាល់! ✅', 'Saved to Gallery! ✅'),
           snackPosition: SnackPosition.TOP,
           backgroundColor: Colors.green,
           colorText: Colors.white,
@@ -483,8 +483,8 @@ Product ID៖ $productId
       Get.back();
       debugPrint("Error: $e");
       Get.snackbar(
-        "កំហុស",
-        "មិនអាចរក្សាទុកបាន: $e",
+        _t('កំហុស', 'Error'),
+        _t('មិនអាចរក្សាទុកបាន: $e', 'Could not save: $e'),
         snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.red,
         colorText: Colors.white,
@@ -506,7 +506,7 @@ Product ID៖ $productId
 
       // ២. បង្ហាញ Loading តូចមួយ (មិនឱ្យជាន់ UI របស់ Watermark)
       Get.rawSnackbar(
-        message: "កំពុងរៀបចំរូបភាព...",
+        message: _t('កំពុងរៀបចំរូបភាព...', 'Preparing image...'),
         showProgressIndicator: true,
         duration: const Duration(seconds: 2),
       );
@@ -538,8 +538,8 @@ Product ID៖ $productId
       // _showSnack(_t('❌ កំហុស: $e', '❌ Error: $e'), Colors.red);
       // 🎯 កូដសម្រាប់បង្ហាញសារ "បានរក្សាទុក" ឱ្យលោតពីលើចុះមក
       Get.snackbar(
-        "ជោគជ័យ!", // ចំណងជើង
-        "បានរក្សាទុកក្នុង Gallery រួចរាល់! ✅", // សារបង្ហាញ
+        _t('ជោគជ័យ!', 'Success!'), // ចំណងជើង
+        _t('បានរក្សាទុកក្នុង Gallery រួចរាល់! ✅', 'Saved to Gallery! ✅'), // សារបង្ហាញ
         snackPosition: SnackPosition.TOP, // ឱ្យលោតពីខាងលើ
         backgroundColor: Colors.green.withOpacity(0.9),
         colorText: Colors.white,
@@ -956,11 +956,11 @@ Android: $androidPlayStoreLink
         _myRating = rating;
       });
 
-      _showSnack('សូមអរគុណសម្រាប់ការផ្ដល់ពិន្ទុ! ✅', Colors.green);
+      _showSnack(_t('សូមអរគុណសម្រាប់ការផ្ដល់ពិន្ទុ! ✅', 'Thank you for your rating! ✅'), Colors.green);
     } catch (e) {
       debugPrint("Error submitting rating: $e");
       if (mounted) {
-        _showSnack('❌ ផ្ដល់ពិន្ទុមិនបាន៖ $e', Colors.red);
+        _showSnack(_t('❌ ផ្ដល់ពិន្ទុមិនបាន៖ $e', '❌ Could not submit rating: $e'), Colors.red);
       }
     } finally {
       if (mounted) {
@@ -994,7 +994,7 @@ Android: $androidPlayStoreLink
 
       await Share.shareXFiles([
         XFile(file.path),
-      ], text: 'Sesan Store - មើលផលិតផលនេះក្នុង App');
+      ], text: _t('Sesan Store - មើលផលិតផលនេះក្នុង App', 'Sesan Store - View this product in the App'));
     } catch (e) {
       Get.back();
       _showSnack(_t('❌ កំហុស: $e', '❌ Error: $e'), Colors.red);
@@ -1078,7 +1078,7 @@ Android: $androidPlayStoreLink
     final sellerId = (widget.product['seller_id'] ?? '').toString();
     final sellerName =
         (widget.product['seller_name'] ??
-                appText(context, km: 'អ្នកលក់', en: 'Seller'))
+                appText(context, km: _t('អ្នកលក់', 'Seller'), en: 'Seller'))
             .toString();
     final sellerPhoto = (widget.product['seller_photo'] ?? '').toString();
     return Column(
@@ -1417,7 +1417,7 @@ Android: $androidPlayStoreLink
           onPressed: () => Navigator.maybePop(context),
         ),
         title: Text(
-          widget.product['product_name'] ?? 'លម្អិតទំនិញ',
+          widget.product['product_name'] ?? _t('លម្អិតទំនិញ', 'Product details'),
           style: const TextStyle(color: Colors.white), // ✅ បន្ថែម
         ),
         backgroundColor: Colors.blue,
@@ -2092,7 +2092,7 @@ Android: $androidPlayStoreLink
                                 height: 18,
                               ), // ៤. ចំនួនកម្ម៉ង់ និង តម្លៃសរុប
                               const Text(
-                                "ជ្រើសរើសចំនួន៖",
+                                _t('ជ្រើសរើសចំនួន៖', 'Select quantity:'),
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.bold,
@@ -2196,7 +2196,7 @@ Android: $androidPlayStoreLink
                                           }),
                                           const SizedBox(width: 6),
                                           const Text(
-                                            "ចំនួន",
+                                            _t('ចំនួន', 'Quantity'),
                                             style: TextStyle(
                                               color: Colors.grey,
                                               fontSize: 12,
@@ -2246,7 +2246,7 @@ Android: $androidPlayStoreLink
                                               MainAxisAlignment.spaceBetween,
                                           children: [
                                             const Text(
-                                              "តម្លៃសរុប៖",
+                                              _t('តម្លៃសរុប៖', 'Total price:'),
                                               style: TextStyle(
                                                 fontSize: 13,
                                                 fontWeight: FontWeight.w500,
@@ -2281,14 +2281,14 @@ Android: $androidPlayStoreLink
 
                               const Divider(height: 30),
                               const Text(
-                                "ការពិពណ៌នា៖",
+                                _t('ការពិពណ៌នា៖', 'Description:'),
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
                               Text(
-                                _shownProductDescription('មិនមានការពិពណ៌នា...'),
+                                _shownProductDescription(_t('មិនមានការពិពណ៌នា...', 'No description available...')),
                                 style: const TextStyle(fontSize: 16),
                               ),
 
@@ -2372,7 +2372,7 @@ Android: $androidPlayStoreLink
                                                       sellerName:
                                                           widget
                                                               .product['seller_name'] ??
-                                                          'អ្នកលក់',
+                                                          _t('អ្នកលក់', 'Seller'),
                                                     ),
                                               ),
                                             );
@@ -2408,7 +2408,7 @@ Android: $androidPlayStoreLink
                                               sellerName:
                                                   widget
                                                       .product['seller_name'] ??
-                                                  'អ្នកលក់',
+                                                  _t('អ្នកលក់', 'Seller'),
                                             ),
                                           ),
                                         );
@@ -2500,8 +2500,8 @@ Android: $androidPlayStoreLink
                                         ),
                                         subtitle: Text(
                                           widget.product['updated_at'] != null
-                                              ? "ផុសនៅ៖ ${DateFormat('dd-MM-yyyy HH:mm').format((widget.product['updated_at'] as Timestamp).toDate())}"
-                                              : "ម្ចាស់ចំការ / អ្នកលក់",
+                                              ? _t('ផុសនៅ៖ ${DateFormat('dd-MM-yyyy HH:mm').format((widget.product['updated_at'] as Timestamp).toDate())}', 'Posted: ${DateFormat('dd-MM-yyyy HH:mm').format((widget.product['updated_at'] as Timestamp).toDate())}')
+                                              : _t('ម្ចាស់ចំការ / អ្នកលក់', 'Farm owner / Seller'),
                                           style: TextStyle(
                                             fontSize: 10,
                                             color: Colors.grey.shade600,
@@ -2706,7 +2706,7 @@ Android: $androidPlayStoreLink
     final String? savedUid = prefs.getString('user_uid');
 
     if (savedUid == null || savedUid.isEmpty) {
-      Get.snackbar("ចូលប្រើប្រាស់", "សូមមេ Login សិន ទើបអាច Save បាន!");
+      Get.snackbar(_t('ចូលប្រើប្រាស់', 'Login required'), _t('សូម Login សិន ទើបអាច Save បាន!', 'Please log in before saving this product!'));
       return;
     }
 
@@ -2722,13 +2722,13 @@ Android: $androidPlayStoreLink
       }
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text("បានលុបចេញពីបញ្ជីរក្សាទុក")));
+      ).showSnackBar(SnackBar(content: Text(_t('បានលុបចេញពីបញ្ជីរក្សាទុក', 'Removed from saved products'))));
     } else {
       // ✅ រក្សាទុកទិន្នន័យសំខាន់ៗទាំងអស់
       await bookmarkRef.add({
         'userId': savedUid,
         'productId': widget.product['id'] ?? '',
-        'product_name': widget.product['product_name'] ?? 'គ្មានឈ្មោះ',
+        'product_name': widget.product['product_name'] ?? _t('គ្មានឈ្មោះ', 'Unnamed product'),
         'price': widget.product['price'] ?? '0',
         'currency': widget.product['currency'] ?? '៛',
         'location': widget.product['location'] ?? '',
@@ -2743,7 +2743,7 @@ Android: $androidPlayStoreLink
           (widget.product['sub_sub_category'] ?? '').toString(),
         ),
         'seller_id': widget.product['seller_id'] ?? '',
-        'seller_name': widget.product['seller_name'] ?? 'មិនស្គាល់',
+        'seller_name': widget.product['seller_name'] ?? _t('មិនស្គាល់', 'Unknown'),
         'seller_photo': widget.product['seller_photo'] ?? '',
         'seller_phone':
             widget.product['phone1'] ?? widget.product['seller_phone'] ?? '',
@@ -2761,7 +2761,7 @@ Android: $androidPlayStoreLink
 
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text("រក្សាទុកជោគជ័យ! ✅")));
+      ).showSnackBar(SnackBar(content: Text(_t('រក្សាទុកជោគជ័យ! ✅', 'Saved successfully! ✅'))));
     }
   }
 
@@ -2886,7 +2886,7 @@ Android: $androidPlayStoreLink
       await FirebaseFirestore.instance.collection('carts').add({
         'customer_id': userId,
         'product_id': productId,
-        'product_name': product['product_name'] ?? 'គ្មានឈ្មោះ',
+        'product_name': product['product_name'] ?? _t('គ្មានឈ្មោះ', 'Unnamed product'),
         'price': product['price'] ?? 0,
         'image_url': finalImageUrl,
         'quantity': _tempQty,
@@ -2895,7 +2895,7 @@ Android: $androidPlayStoreLink
         if (tracksStock) 'stock_unit': product['stock_unit'] ?? 'item',
         'created_at': FieldValue.serverTimestamp(),
         'seller_id': product['seller_id'] ?? 'UNKNOWN_ID',
-        'seller_name': product['seller_name'] ?? 'អាជីវករ សេសាន',
+        'seller_name': product['seller_name'] ?? _t('អាជីវករ សេសាន', 'Sesan Seller'),
         'seller_phone': product['seller_phone'] ?? '',
         'seller_photo': product['seller_photo'] ?? '',
       });
