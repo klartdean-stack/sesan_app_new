@@ -24,7 +24,7 @@ jobs:
           grep -q "onLongPress" lib/receipt_screen.dart
           grep -q "_launchABA" lib/receipt_screen.dart
           grep -q "_pickImage" lib/receipt_screen.dart
-          grep -q "createOrderFromCart" lib/receipt_screen.dart
+          grep -q "createOrder(" lib/receipt_screen.dart
           grep -q "clearCart" lib/receipt_screen.dart
       - name: Analyze
         run: |
