@@ -2,7 +2,7 @@ name: Add Auction localization verification
 on:
   push:
     branches: [ios-sync-android46]
-    paths: ['.github/workflows/localization-batch.yml']
+    paths: ['.github/workflows/localization-batch.yml', 'lib/auction_add_screen.dart']
 permissions:
   contents: write
 jobs:
