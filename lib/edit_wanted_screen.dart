@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:my_app/location_picker.dart';
+import 'localized_text.dart';
 
 class EditWantedScreen extends StatefulWidget {
   final String productId;
@@ -45,6 +46,25 @@ class _EditWantedScreenState extends State<EditWantedScreen> {
     "ដើម", "គ្រាប់", "គ្រឿង", "គីឡូ", "តោន",
     "បាវ", "កញ្ចប់", "ធុង", "ហិតា", "ម៉ែត្រ", "ដុំ", "..."
   ];
+
+  String _unitLabel(String unit) {
+    if (Localizations.localeOf(context).languageCode != 'en') return unit;
+    const labels = <String, String>{
+      'ដើម': 'plant',
+      'គ្រាប់': 'piece',
+      'គ្រឿង': 'unit',
+      'គីឡូ': 'kg',
+      'តោន': 'ton',
+      'បាវ': 'bag',
+      'កញ្ចប់': 'pack',
+      'ធុង': 'container',
+      'ហិតា': 'hectare',
+      'ម៉ែត្រ': 'meter',
+      'ដុំ': 'piece',
+      '...': '...',
+    };
+    return labels[unit] ?? unit;
+  }
 
   @override
   void initState() {
@@ -105,7 +125,9 @@ class _EditWantedScreenState extends State<EditWantedScreen> {
     if (images.isNotEmpty) {
       if ((_selectedImages.length + images.length) > 3) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("ជ្រើសរើសបានត្រឹមតែ ៣ សន្លឹកប៉ុណ្ណោះ!")),
+          SnackBar(content: Text(appText(context,
+            km: "ជ្រើសរើសបានត្រឹមតែ ៣ សន្លឹកប៉ុណ្ណោះ!",
+            en: "You can select up to 3 images only!"))),
         );
       } else {
         setState(() => _selectedImages.addAll(images.map((x) => File(x.path)).toList()));
@@ -123,14 +145,19 @@ class _EditWantedScreenState extends State<EditWantedScreen> {
   Future<void> _updatePost() async {
     if (_userId.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("សូម Login មុននឹងកែប្រែ"), backgroundColor: Colors.red),
+        SnackBar(content: Text(appText(context,
+          km: "សូម Login មុននឹងកែប្រែ",
+          en: "Please log in before editing")),
+          backgroundColor: Colors.red),
       );
       return;
     }
     if (!_formKey.currentState!.validate()) return;
     if (_priceType == "បំពេញតម្លៃ" && _currency == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("សូមជ្រើសរើសរូបិយប័ណ្ណ (ដុល្លារ ឬ រៀល)")),
+        SnackBar(content: Text(appText(context,
+          km: "សូមជ្រើសរើសរូបិយប័ណ្ណ (ដុល្លារ ឬ រៀល)",
+          en: "Please select a currency (Dollar or Riel)"))),
       );
       return;
     }
@@ -171,13 +198,16 @@ class _EditWantedScreenState extends State<EditWantedScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("ការកែប្រែត្រូវបានរក្សាទុក")),
+          SnackBar(content: Text(appText(context,
+            km: "ការកែប្រែត្រូវបានរក្សាទុក",
+            en: "Changes saved"))),
         );
         Navigator.pop(context);
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("កំហុស៖ $e")),
+        SnackBar(content: Text(appText(context,
+          km: "កំហុស៖ $e", en: "Error: $e"))),
       );
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -188,7 +218,10 @@ class _EditWantedScreenState extends State<EditWantedScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          title: const Text("កែប្រែប្រកាសទិញ", style: TextStyle(fontFamily: 'Siemreap')),
+          title: Text(appText(context,
+            km: "កែប្រែប្រកាសទិញ",
+            en: "Edit wanted listing"),
+            style: const TextStyle(fontFamily: 'Siemreap')),
           backgroundColor: Colors.blue[700],
         ),
         body: _isLoading
@@ -200,7 +233,10 @@ class _EditWantedScreenState extends State<EditWantedScreen> {
               child: Column(
                   children: [
                   // --- រូបភាព ---
-                  const Text("រូបភាពទំនិញ (អតិបរមា ៣ សន្លឹក)", style: TextStyle(fontWeight: FontWeight.bold)),
+                  Text(appText(context,
+                    km: "រូបភាពទំនិញ (អតិបរមា ៣ សន្លឹក)",
+                    en: "Product images (maximum 3)"),
+                    style: const TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 10),
               Wrap(
                   spacing: 10,
@@ -259,8 +295,8 @@ class _EditWantedScreenState extends State<EditWantedScreen> {
             // --- ឈ្មោះទំនិញ ---
             TextFormField(
               controller: _nameController,
-              decoration: const InputDecoration(labelText: "ឈ្មោះទំនិញ", border: OutlineInputBorder()),
-              validator: (v) => v!.isEmpty ? "សូមបញ្ចូលឈ្មោះ" : null,
+              decoration: InputDecoration(labelText: appText(context, km: "ឈ្មោះទំនិញ", en: "Product name"), border: const OutlineInputBorder()),
+              validator: (v) => v!.isEmpty ? appText(context, km: "សូមបញ្ចូលឈ្មោះ", en: "Please enter a name") : null,
             ),
             const SizedBox(height: 15),
 
@@ -272,7 +308,7 @@ class _EditWantedScreenState extends State<EditWantedScreen> {
                   child: TextFormField(
                     controller: _qtyController,
                     keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(labelText: "ចំនួនត្រូវការ", border: OutlineInputBorder()),
+                    decoration: InputDecoration(labelText: appText(context, km: "ចំនួនត្រូវការ", en: "Quantity wanted"), border: const OutlineInputBorder()),
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -280,7 +316,7 @@ class _EditWantedScreenState extends State<EditWantedScreen> {
                   child: DropdownButtonFormField(
                     value: _selectedUnit,
                     decoration: const InputDecoration(border: OutlineInputBorder()),
-                    items: _units.map((u) => DropdownMenuItem(value: u, child: Text(u))).toList(),
+                    items: _units.map((u) => DropdownMenuItem(value: u, child: Text(_unitLabel(u)))).toList(),
                     onChanged: (v) => setState(() => _selectedUnit = v.toString()),
                   ),
                 ),
@@ -289,13 +325,13 @@ class _EditWantedScreenState extends State<EditWantedScreen> {
             const SizedBox(height: 15),
 
             // --- តម្លៃ ---
-            const Text("តម្លៃរំពឹងទុក៖", style: TextStyle(fontWeight: FontWeight.bold)),
+            Text(appText(context, km: "តម្លៃរំពឹងទុក៖", en: "Expected price:"), style: const TextStyle(fontWeight: FontWeight.bold)),
             Row(
                 children: [
                 Radio(value: "បំពេញតម្លៃ", groupValue: _priceType, onChanged: (v) => setState(() => _priceType = v.toString())),
-            const Text("បំពេញ"),
+            Text(appText(context, km: "បំពេញ", en: "Fixed price")),
             Radio(value: "ចរចារ", groupValue: _priceType, onChanged: (v) => setState(() => _priceType = v.toString())),
-                  const Text("ចរចារ"),
+                  Text(appText(context, km: "ចរចារ", en: "Negotiable")),
                 ],
             ),
               if (_priceType == "បំពេញតម្លៃ")
@@ -305,7 +341,7 @@ class _EditWantedScreenState extends State<EditWantedScreen> {
         child: TextFormField(
           controller: _priceController,
           keyboardType: TextInputType.number,
-          decoration: const InputDecoration(labelText: "តម្លៃ", border: OutlineInputBorder()),
+          decoration: InputDecoration(labelText: appText(context, km: "តម្លៃ", en: "Price"), border: const OutlineInputBorder()),
         ),
     ),
     const SizedBox(width: 10),
@@ -321,9 +357,9 @@ class _EditWantedScreenState extends State<EditWantedScreen> {
     ],
     ),
     if (_priceType == "បំពេញតម្លៃ" && _currency == null)
-    const Padding(
-    padding: EdgeInsets.only(top: 5),
-    child: Text("សូមជ្រើសរើសរូបិយប័ណ្ណ", style: TextStyle(color: Colors.red, fontSize: 12)),
+    Padding(
+    padding: const EdgeInsets.only(top: 5),
+    child: Text(appText(context, km: "សូមជ្រើសរើសរូបិយប័ណ្ណ", en: "Please select a currency"), style: const TextStyle(color: Colors.red, fontSize: 12)),
     ),
     const SizedBox(height: 15),
 
@@ -331,14 +367,14 @@ class _EditWantedScreenState extends State<EditWantedScreen> {
     TextFormField(
     controller: _phoneController,
     keyboardType: TextInputType.phone,
-    decoration: const InputDecoration(
-    labelText: "លេខទូរស័ព្ទ", border: OutlineInputBorder(), prefixIcon: Icon(Icons.phone),
+    decoration: InputDecoration(
+    labelText: appText(context, km: "លេខទូរស័ព្ទ", en: "Phone number"), border: const OutlineInputBorder(), prefixIcon: const Icon(Icons.phone),
     ),
     ),
     const SizedBox(height: 15),
 
     // --- ទីតាំង (ដូច AddWantedScreen បេះបិទ) ---
-    const Text("ទីតាំងត្រូវការទិញ *", style: TextStyle(fontWeight: FontWeight.bold)),
+    Text(appText(context, km: "ទីតាំងត្រូវការទិញ *", en: "Wanted location *"), style: const TextStyle(fontWeight: FontWeight.bold)),
     const SizedBox(height: 10),
     InkWell(
     onTap: () {
@@ -363,7 +399,7 @@ class _EditWantedScreenState extends State<EditWantedScreen> {
     const SizedBox(width: 10),
     Expanded(
     child: Text(
-    _locationController.text.isEmpty ? "ជ្រើសរើសទីតាំង *" : _locationController.text,
+    _locationController.text.isEmpty ? appText(context, km: "ជ្រើសរើសទីតាំង *", en: "Select location *") : _locationController.text,
     style: TextStyle(
     fontSize: 14,
     fontFamily: 'Siemreap',
@@ -380,17 +416,17 @@ class _EditWantedScreenState extends State<EditWantedScreen> {
                     const SizedBox(height: 15),
 
                     // --- ការពិពណ៌នា ---
-                    const Text("រៀបរាប់បន្ថែម *", style: TextStyle(fontWeight: FontWeight.bold)),
+                    Text(appText(context, km: "រៀបរាប់បន្ថែម *", en: "Additional description *"), style: const TextStyle(fontWeight: FontWeight.bold)),
                     const SizedBox(height: 10),
                     TextFormField(
                       controller: _descriptionController,
                       maxLines: 4,
                       decoration: InputDecoration(
-                        hintText: "ឧទាហរណ៍៖ ត្រូវការទិញយកទៅប្រើប្រាស់ផ្ទាល់ខ្លួន...",
+                        hintText: appText(context, km: "ឧទាហរណ៍៖ ត្រូវការទិញយកទៅប្រើប្រាស់ផ្ទាល់ខ្លួន...", en: "Example: I want to buy this for personal use..."),
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                         contentPadding: const EdgeInsets.all(12),
                       ),
-                      validator: (v) => v!.isEmpty ? "សូមបំពេញការរៀបរាប់" : null,
+                      validator: (v) => v!.isEmpty ? appText(context, km: "សូមបំពេញការរៀបរាប់", en: "Please enter a description") : null,
                     ),
                     const SizedBox(height: 30),
 
@@ -404,8 +440,8 @@ class _EditWantedScreenState extends State<EditWantedScreen> {
                           backgroundColor: Colors.blue[700],
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                         ),
-                        child: const Text("រក្សាទុកការកែប្រែ",
-                            style: TextStyle(color: Colors.white, fontSize: 18, fontFamily: 'Siemreap')),
+                        child: Text(appText(context, km: "រក្សាទុកការកែប្រែ", en: "Save changes"),
+                            style: const TextStyle(color: Colors.white, fontSize: 18, fontFamily: 'Siemreap')),
                       ),
                     ),
                     const SizedBox(height: 40),
