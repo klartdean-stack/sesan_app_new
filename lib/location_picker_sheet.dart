@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../location_data.dart';
 import '../vireak_buntham_data.dart';
+import 'localized_text.dart';
 
 class LocationPickerSheet extends StatefulWidget {
   final Function(Map<String, dynamic>) onLocationSelected;
@@ -65,12 +66,12 @@ class _LocationPickerSheetState extends State<LocationPickerSheet> {
                         child: Icon(Icons.location_on, color: Colors.green[700], size: 24),
                       ),
                       const SizedBox(width: 12),
-                      const Expanded(
+                      Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('ទំលាក់ទីតាំងទទួល', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1A1A1A))),
-                            Text('បំពេញព័ត៌មានដឹកជញ្ជូន', style: TextStyle(fontSize: 13, color: Colors.grey)),
+                            Text(appText(context, km: 'ទំលាក់ទីតាំងទទួល', en: 'Delivery location'), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1A1A1A))),
+                            Text(appText(context, km: 'បំពេញព័ត៌មានដឹកជញ្ជូន', en: 'Enter delivery information'), style: const TextStyle(fontSize: 13, color: Colors.grey)),
                           ],
                         ),
                       ),
@@ -85,7 +86,7 @@ class _LocationPickerSheetState extends State<LocationPickerSheet> {
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     children: [
                       _buildDropdown(
-                        label: 'ជ្រើសរើសខេត្ត/ក្រុង',
+                        label: appText(context, km: 'ជ្រើសរើសខេត្ត/ក្រុង', en: 'Select province/city'),
                         icon: Icons.map_outlined,
                         value: selectedProvince,
                         items: cambodiaProvinceData.keys.toList(),
@@ -105,7 +106,7 @@ class _LocationPickerSheetState extends State<LocationPickerSheet> {
                           border: Border.all(color: Colors.grey.shade200),
                         ),
                         child: SwitchListTile(
-                          title: const Text('ផ្ញើតាមវិរៈប៊ុនថាំ', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.red)),
+                          title: Text(appText(context, km: 'ផ្ញើតាមវិរៈប៊ុនថាំ', en: 'Send via Vireak Buntham'), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.red)),
                           value: isVireakBuntham,
                           onChanged: (val) {
                             setState(() {
@@ -120,7 +121,7 @@ class _LocationPickerSheetState extends State<LocationPickerSheet> {
                       if (selectedProvince != null)
                         isVireakBuntham
                             ? _buildDropdown(
-                                label: 'ជ្រើសរើសសាខាវិរៈ',
+                                label: appText(context, km: 'ជ្រើសរើសសាខាវិរៈ', en: 'Select Vireak branch'),
                                 icon: Icons.store_outlined,
                                 value: selectedVireakBranch,
                                 iconColor: Colors.red,
@@ -128,7 +129,7 @@ class _LocationPickerSheetState extends State<LocationPickerSheet> {
                                 onChanged: (val) => setState(() => selectedVireakBranch = val),
                               )
                             : _buildDropdown(
-                                label: 'ជ្រើសរើសស្រុក/ខណ្ឌ',
+                                label: appText(context, km: 'ជ្រើសរើសស្រុក/ខណ្ឌ', en: 'Select district'),
                                 icon: Icons.location_city_outlined,
                                 value: selectedDistrict,
                                 items: cambodiaProvinceData[selectedProvince!] ?? [],
@@ -141,7 +142,7 @@ class _LocationPickerSheetState extends State<LocationPickerSheet> {
                         onChanged: (_) => setState(() {}),
                         style: const TextStyle(color: Color(0xFF1A1A1A)),
                         decoration: InputDecoration(
-                          labelText: 'លេខទូរស័ព្ទ/អាសយដ្ឋានលម្អិត',
+                          labelText: appText(context, km: 'លេខទូរស័ព្ទ/អាសយដ្ឋានលម្អិត', en: 'Phone number / detailed address'),
                           labelStyle: const TextStyle(color: Color(0xFF555555)),
                           filled: true,
                           fillColor: Colors.grey.shade50,
@@ -154,7 +155,7 @@ class _LocationPickerSheetState extends State<LocationPickerSheet> {
                         child: ElevatedButton.icon(
                           onPressed: _canSubmit() ? _submitLocation : null,
                           icon: const Icon(Icons.send),
-                          label: const Text('ផ្ញើទីតាំង'),
+                          label: Text(appText(context, km: 'ផ្ញើទីតាំង', en: 'Send location')),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF4CAF50),
                             foregroundColor: Colors.white,
