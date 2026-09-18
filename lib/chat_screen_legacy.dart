@@ -1340,7 +1340,25 @@ class _ChatScreenState extends State<ChatScreen> {
           );
         },
       ),
-      actions: [_buildPopupMenu()],
+      actions: [
+        TextButton.icon(
+          onPressed: _openSellerShop,
+          icon: const Icon(
+            Icons.storefront_outlined,
+            color: Colors.white,
+            size: 18,
+          ),
+          label: Text(
+            'មើលហាង'.tr,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+              fontFamily: 'Siemreap',
+            ),
+          ),
+        ),
+        _buildPopupMenu(),
+      ],
     );
   }
 
