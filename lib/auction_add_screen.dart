@@ -970,18 +970,18 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
                             color: _accentBlue.withOpacity(0.4),
                           ),
                         ),
-                        child: const Column(
+                        child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(
+                            const Icon(
                               Icons.add_rounded,
                               color: _accentBlue,
                               size: 24,
                             ),
-                            SizedBox(height: 4),
+                            const SizedBox(height: 4),
                             Text(
                               _t('បន្ថែម', 'Add'),
-                              style: TextStyle(
+                              style: const TextStyle(
                                 color: _accentBlue,
                                 fontSize: 11,
                               ),
