@@ -402,6 +402,8 @@ warning • The declaration '_getSubtitleText' isn't referenced • lib/chat_lis
    info • The variable name 'receiver_id' isn't a lowerCamelCase identifier • lib/chat_screen.dart:18:16 • non_constant_identifier_names
    info • The variable name 'seller_id' isn't a lowerCamelCase identifier • lib/chat_screen.dart:24:19 • non_constant_identifier_names
    info • The variable name 'receiver_id' isn't a lowerCamelCase identifier • lib/chat_screen.dart:25:19 • non_constant_identifier_names
+warning • Unused import: 'dart:ui' • lib/chat_screen_legacy.dart:3:8 • unused_import
+warning • Unused import: 'package:gal/gal.dart' • lib/chat_screen_legacy.dart:12:8 • unused_import
    info • The variable name 'seller_id' isn't a lowerCamelCase identifier • lib/chat_screen_legacy.dart:47:16 • non_constant_identifier_names
    info • The variable name 'receiver_id' isn't a lowerCamelCase identifier • lib/chat_screen_legacy.dart:48:16 • non_constant_identifier_names
    info • The variable name 'seller_id' isn't a lowerCamelCase identifier • lib/chat_screen_legacy.dart:54:19 • non_constant_identifier_names
@@ -435,18 +437,6 @@ warning • The declaration '_buildBlockedScreen' isn't referenced • lib/chat_
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/chat_screen_legacy.dart:2627:53 • deprecated_member_use
    info • Don't use 'BuildContext's across async gaps • lib/chat_screen_legacy.dart:2959:15 • use_build_context_synchronously
    info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/chat_screen_legacy.dart:2979:29 • use_build_context_synchronously
-  error • Undefined name 'minutes' • lib/chat_screen_legacy.dart:3002:60 • undefined_identifier
-  error • Expected to find ';' • lib/chat_screen_legacy.dart:3002:79 • expected_token
-warning • Dead code • lib/chat_screen_legacy.dart:3002:80 • dead_code
-  error • The method 'Params' isn't defined for the type '_ChatScreenState' • lib/chat_screen_legacy.dart:3002:80 • undefined_method
-  error • Undefined name 'hours' • lib/chat_screen_legacy.dart:3005:58 • undefined_identifier
-  error • Expected to find ';' • lib/chat_screen_legacy.dart:3005:75 • expected_token
-warning • Dead code • lib/chat_screen_legacy.dart:3005:76 • dead_code
-  error • The method 'Params' isn't defined for the type '_ChatScreenState' • lib/chat_screen_legacy.dart:3005:76 • undefined_method
-  error • Undefined name 'days' • lib/chat_screen_legacy.dart:3008:57 • undefined_identifier
-  error • Expected to find ';' • lib/chat_screen_legacy.dart:3008:73 • expected_token
-warning • Dead code • lib/chat_screen_legacy.dart:3008:74 • dead_code
-  error • The method 'Params' isn't defined for the type '_ChatScreenState' • lib/chat_screen_legacy.dart:3008:74 • undefined_method
    info • The imported package 'flutter_cache_manager' isn't a dependency of the importing package • lib/chat_video_bubble.dart:4:8 • depend_on_referenced_packages
 warning • Unused import: 'package:path_provider/path_provider.dart' • lib/chat_video_bubble.dart:6:8 • unused_import
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/chat_video_bubble.dart:123:25 • deprecated_member_use
@@ -1178,4 +1168,4 @@ warning • The value of the local variable 'permission' isn't used • lib/weat
    info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/weight_calc.dart:115:15 • deprecated_member_use
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/weight_calc.dart:272:22 • deprecated_member_use
 
-1037 issues found. (ran in 21.5s)
+1027 issues found. (ran in 16.7s)
