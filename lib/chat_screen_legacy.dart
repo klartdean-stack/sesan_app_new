@@ -312,7 +312,7 @@ class _ChatScreenState extends State<ChatScreen> {
       if (mounted) {
         setState(() {
           _isLoading = false;
-          _errorMessage = 'មានបញ្ហា: $e';
+          _errorMessage = appText(context, km: 'មានបញ្ហា: $e', en: 'Error: $e');
         });
       }
     }
@@ -506,7 +506,7 @@ class _ChatScreenState extends State<ChatScreen> {
   }) async {
     if (_amIBlocked) {
       _showSnack(
-        'អ្នកត្រូវបាន Block ដោយអ្នកប្រើនេះ មិនអាចផ្ញើសារបានទេ',
+        'chat_blocked_send'.tr,
         Colors.red,
       );
       return;
@@ -538,7 +538,7 @@ class _ChatScreenState extends State<ChatScreen> {
       debugPrint("ផ្ញើសារមិនចេញ៖ $e");
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('ផ្ញើសារមិនបាន: $e')));
+      ).showSnackBar(SnackBar(content: Text('chat_send_failed'.trParams({'error': e.toString()}))));
     }
   }
 
@@ -1143,13 +1143,13 @@ class _ChatScreenState extends State<ChatScreen> {
               if (value == 'unblock') _showUnblockConfirmDialog();
             },
             itemBuilder: (context) => [
-              const PopupMenuItem<String>(
+              PopupMenuItem<String>(
                 value: 'unblock',
                 child: Row(
                   children: [
-                    Icon(Icons.check_circle, color: Colors.green),
-                    SizedBox(width: 8),
-                    Text('Unblock', style: TextStyle(color: Colors.green)),
+                    const Icon(Icons.check_circle, color: Colors.green),
+                    const SizedBox(width: 8),
+                    Text('chat_unblock'.tr, style: const TextStyle(color: Colors.green)),
                   ],
                 ),
               ),
@@ -1164,7 +1164,7 @@ class _ChatScreenState extends State<ChatScreen> {
             Icon(Icons.block_rounded, color: Colors.red.shade300, size: 80),
             const SizedBox(height: 20),
             Text(
-              'អ្នកបាន Block អ្នកប្រើនេះ',
+              'chat_you_blocked'.tr,
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -1174,7 +1174,7 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
             const SizedBox(height: 10),
             Text(
-              'អ្នកមិនអាចផ្ញើ ឬទទួលសារពីអ្នកប្រើនេះបានទេ',
+              'chat_blocked_description'.tr,
               style: TextStyle(
                 fontSize: 14,
                 color: Colors.grey.shade500,
@@ -1202,7 +1202,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     )
                   : const Icon(Icons.check_circle, color: Colors.white),
               label: Text(
-                _isLoadingBlock ? 'កំពុងដំណើរការ...' : 'Unblock',
+                _isLoadingBlock ? 'chat_loading'.tr : 'chat_unblock'.tr,
                 style: const TextStyle(
                   color: Colors.white,
                   fontFamily: 'Siemreap',
@@ -1241,7 +1241,7 @@ class _ChatScreenState extends State<ChatScreen> {
               const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('ត្រឡប់ក្រោយ'),
+                child: Text('chat_back'.tr),
               ),
             ],
           ),
@@ -1737,11 +1737,11 @@ class _ChatScreenState extends State<ChatScreen> {
         }
 
         if (docs.isEmpty) {
-          return const Center(
+          return Center(
             child: Text(
-              "មិនទាន់មានសារ\nចាប់ផ្តើមសន្ទនាឥឡូវនេះ!",
+              'chat_empty'.tr,
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey),
+              style: const TextStyle(color: Colors.grey),
             ),
           );
         }
@@ -1831,9 +1831,9 @@ class _ChatScreenState extends State<ChatScreen> {
         children: [
           const Icon(Icons.error_outline, color: Colors.red, size: 48),
           const SizedBox(height: 16),
-          const Text(
-            "មិនអាចផ្ទុកសារបាន",
-            style: TextStyle(color: Colors.red, fontSize: 16),
+          Text(
+            'chat_load_failed'.tr,
+            style: const TextStyle(color: Colors.red, fontSize: 16),
           ),
           const SizedBox(height: 8),
           Text(
@@ -1844,7 +1844,7 @@ class _ChatScreenState extends State<ChatScreen> {
           const SizedBox(height: 16),
           ElevatedButton(
             onPressed: () => setState(() {}),
-            child: Text('ព្យាយាមម្តងទៀត'.tr),
+            child: Text('chat_retry'.tr),
           ),
         ],
       ),
@@ -2221,7 +2221,7 @@ class _ChatScreenState extends State<ChatScreen> {
       return AudioBubble(url: data['fileUrl'], isMe: isMe);
     }
 
-    return _buildAudioError("សម្លេងមិនអាចផ្ទុកបាន");
+    return _buildAudioError('chat_audio_load_failed'.tr);
   }
 
   Widget _buildAudioError(String message) {
@@ -2251,11 +2251,11 @@ class _ChatScreenState extends State<ChatScreen> {
         Clipboard.setData(ClipboardData(text: data['message']));
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Row(
+            content: Row(
               children: [
-                Icon(Icons.check_circle_outline, color: Colors.white, size: 16),
-                SizedBox(width: 8),
-                Text('បានចម្លងហើយ!', style: TextStyle(fontFamily: 'Siemreap')),
+                const Icon(Icons.check_circle_outline, color: Colors.white, size: 16),
+                const SizedBox(width: 8),
+                Text('chat_copied'.tr, style: const TextStyle(fontFamily: 'Siemreap')),
               ],
             ),
             backgroundColor: Colors.green[700],
@@ -2854,16 +2854,16 @@ class _ChatScreenState extends State<ChatScreen> {
             if (data['type'] == 'text')
               ListTile(
                 leading: const Icon(Icons.copy, color: Colors.blue),
-                title: const Text('ចម្លង'),
+                title: Text('chat_copy'.tr),
                 onTap: () {
                   Clipboard.setData(ClipboardData(text: data['message']));
                   Navigator.pop(context);
-                  _showSnack('បានចម្លងហើយ!', Colors.green);
+                  _showSnack('chat_copied'.tr, Colors.green);
                 },
               ),
             ListTile(
               leading: const Icon(Icons.delete, color: Colors.red),
-              title: const Text('លុបសារ'),
+              title: Text('chat_delete_message'.tr),
               onTap: () {
                 FirebaseFirestore.instance
                     .collection('chats')
