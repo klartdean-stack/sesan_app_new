@@ -6,6 +6,7 @@ as ml; // ✅ កែត្រង់នេះ
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:my_app/seller_profile_screen.dart';
 import 'product_detail.dart';
+import 'localized_text.dart';
 
 
 class QrScannerScreen extends StatefulWidget {
@@ -21,7 +22,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
   final ms.MobileScannerController _controller =
   ms.MobileScannerController(); // ✅ ថែម ms.
   bool _isProcessing = false;
-  String _statusMsg = 'ស្កែន QR Code ផលិតផល';
+  String _statusMsg = '';
 
 
   // ── Scan from Gallery ──────────────────────────────────
@@ -45,7 +46,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
         final code = barcodes.first.displayValue;
         if (code != null) _handleQrCode(code);
       } else {
-        _showSnackBar('រកមិនឃើញ QR ក្នុងរូបភាពទេ!');
+        _showSnackBar(appText(context, km: 'រកមិនឃើញ QR ក្នុងរូបភាពទេ!', en: 'No QR code found in the image!'));
       }
     } finally {
       barcodeScanner.close();
@@ -55,7 +56,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
 
   // ── Handle QR Code ─────────────────────────────────────
   Future<void> _handleQrCode(String code) async {
-    setState(() => _statusMsg = 'កំពុងស្វែងរក...');
+    setState(() => _statusMsg = appText(context, km: 'កំពុងស្វែងរក...', en: 'Searching...'));
 
 
     // 1. ពិនិត្យ Product QR
@@ -85,10 +86,10 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
             ),
           );
         } else {
-          _showSnackBar('រកមិនឃើញផលិតផលក្នុងប្រព័ន្ធ!');
+          _showSnackBar(appText(context, km: 'រកមិនឃើញផលិតផលក្នុងប្រព័ន្ធ!', en: 'Product not found in the system!'));
         }
       } catch (e) {
-        _showSnackBar('Error: $e');
+        _showSnackBar(appText(context, km: 'មានបញ្ហា: $e', en: 'Error: $e'));
       }
     }
     // 2. ពិនិត្យ Shop QR
@@ -108,7 +109,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
 
         if (doc.exists) {
           final userData = doc.data()!;
-          final String shopName = userData['name'] ?? 'ហាង';
+          final String shopName = userData['name'] ?? appText(context, km: 'ហាង', en: 'Shop');
 
 
           await Navigator.push(
@@ -119,15 +120,15 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
             ),
           );
         } else {
-          _showSnackBar('រកមិនឃើញហាងនេះទេ!');
+          _showSnackBar(appText(context, km: 'រកមិនឃើញហាងនេះទេ!', en: 'Shop not found!'));
         }
       } catch (e) {
-        _showSnackBar('Error: $e');
+        _showSnackBar(appText(context, km: 'មានបញ្ហា: $e', en: 'Error: $e'));
       }
     }
     // 3. មិនមែន QR របស់ Sesan App
     else {
-      _showSnackBar('QR Code នេះមិនមែនជារបស់ Sesan App!');
+      _showSnackBar(appText(context, km: 'QR Code នេះមិនមែនជារបស់ Sesan App!', en: 'This QR code does not belong to Sesan App!'));
     }
 
 
@@ -135,7 +136,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
     if (mounted) {
       setState(() {
         _isProcessing = false;
-        _statusMsg = 'ស្កែន QR Code';
+        _statusMsg = appText(context, km: 'ស្កែន QR Code', en: 'Scan QR code');
       });
     }
   }
@@ -164,9 +165,9 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
       appBar: AppBar(
         backgroundColor: Colors.black,
         foregroundColor: Colors.white,
-        title: const Text(
-          'ស្កែន QR ផលិតផល',
-          style: TextStyle(fontFamily: 'Siemreap'),
+        title: Text(
+          appText(context, km: 'ស្កែន QR ផលិតផល', en: 'Scan product QR'),
+          style: const TextStyle(fontFamily: 'Siemreap'),
         ),
         actions: [
           // Flash toggle
@@ -238,7 +239,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  _statusMsg,
+                  _statusMsg.isEmpty ? appText(context, km: 'ស្កែន QR Code ផលិតផល', en: 'Scan product QR code') : _statusMsg,
                   style: const TextStyle(
                     color: Colors.white,
                     fontFamily: 'Siemreap',
@@ -269,9 +270,9 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                 ),
                 onPressed: _isProcessing ? null : _pickAndScanImage,
                 icon: const Icon(Icons.image_rounded, color: Colors.blue),
-                label: const Text(
-                  'ជ្រើសរើសរូបពី Gallery',
-                  style: TextStyle(
+                label: Text(
+                  appText(context, km: 'ជ្រើសរើសរូបពី Gallery', en: 'Choose image from Gallery'),
+                  style: const TextStyle(
                     color: Colors.black87,
                     fontFamily: 'Siemreap',
                   ),
