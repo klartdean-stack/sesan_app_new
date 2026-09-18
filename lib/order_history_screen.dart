@@ -60,7 +60,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
 
       if (sellerDoc.exists) {
         var data = sellerDoc.data() as Map<String, dynamic>?;
-        String name = data?['seller_name'] ?? data?['name'] ?? 'អ្នកលក់';
+        String name = data?['seller_name'] ?? data?['name'] ?? _t('អ្នកលក់', 'Seller');
         _sellerNameCache[sellerId] = name;
         return name;
       }
@@ -75,16 +75,16 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
 
       if (userDoc.exists) {
         var data = userDoc.data() as Map<String, dynamic>?;
-        String name = data?['name'] ?? data?['seller_name'] ?? 'អ្នកលក់';
+        String name = data?['name'] ?? data?['seller_name'] ?? _t('អ្នកលក់', 'Seller');
         _sellerNameCache[sellerId] = name;
         return name;
       }
 
 
-      return 'អ្នកលក់';
+      return _t('អ្នកលក់', 'Seller');
     } catch (e) {
       debugPrint("Get seller name error: $e");
-      return 'អ្នកលក់';
+      return _t('អ្នកលក់', 'Seller');
     }
   }
 
@@ -110,15 +110,15 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
   String _getStatusText(String status) {
     switch (status) {
       case 'pending':
-        return '⏳ រង់ចាំ';
+        return _t('⏳ រង់ចាំ', '⏳ Pending');
       case 'confirmed':
-        return '✅ បញ្ជាក់ហើយ';
+        return _t('✅ បញ្ជាក់ហើយ', '✅ Confirmed');
       case 'packing':
-        return '📦 កំពុងខ្ចប់';
+        return _t('📦 កំពុងខ្ចប់', '📦 Packing');
       case 'on_delivery':
-        return '🚚 កំពុងដឹក';
+        return _t('🚚 កំពុងដឹក', '🚚 On delivery');
       case 'delivered':
-        return '✅ ដល់ទីតាំង';
+        return _t('✅ ដល់ទីតាំង', '✅ Delivered');
       default:
         return status.toUpperCase();
     }
@@ -131,7 +131,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
       backgroundColor: const Color(0xFFF5F7FA),
       appBar: AppBar(
         title: const Text(
-          'ប្រវត្តិកម្មង់របស់ខ្ញុំ',
+          _t('ប្រវត្តិកម្មង់របស់ខ្ញុំ', 'My order history'),
           style: TextStyle(
             fontWeight: FontWeight.bold,
             fontFamily: 'Siemreap',
@@ -173,7 +173,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    "មិនអាចផ្ទុកប្រវត្តិបាន",
+                    _t('មិនអាចផ្ទុកប្រវត្តិបាន', 'Could not load order history'),
                     style: TextStyle(color: Colors.red[300]),
                   ),
                 ],
@@ -235,7 +235,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
           ListTile(
             leading: Icon(Icons.receipt_long, color: _getStatusColor(status)),
             title: Text(
-              "បុងលេខ: $orderId",
+              _t('បុងលេខ: $orderId', 'Order: $orderId'),
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
             ),
             subtitle: Text(
@@ -279,7 +279,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                     ),
                   ),
                   title: Text(
-                    item['product_name'] ?? "គ្មានឈ្មោះ",
+                    item['product_name'] ?? _t('គ្មានឈ្មោះ', 'Unnamed product'),
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 13,
@@ -339,7 +339,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      "តម្លៃសរុប",
+                      _t('តម្លៃសរុប', 'Total'),
                       style: TextStyle(
                         color: Colors.grey,
                         fontSize: 12,
@@ -360,7 +360,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                   onPressed: () => _reOrderItems(context, items),
                   icon: const Icon(Icons.refresh, size: 18),
                   label: const Text(
-                    "ទិញម្ដងទៀត",
+                    _t('ទិញម្ដងទៀត', 'Buy again'),
                     style: TextStyle(fontFamily: 'Siemreap'),
                   ),
                   style: ElevatedButton.styleFrom(
@@ -383,7 +383,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
   Widget _buildSellerName(String sellerId) {
     if (sellerId.isEmpty) {
       return const Text(
-        "អ្នកលក់៖ មិនស្គាល់",
+        _t('អ្នកលក់៖ មិនស្គាល់', 'Seller: Unknown'),
         style: TextStyle(fontSize: 11, color: Colors.grey),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
@@ -396,14 +396,14 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Text(
-            "កំពុងទាញយក...",
+            _t('កំពុងទាញយក...', 'Loading...'),
             style: TextStyle(fontSize: 11, color: Colors.grey[400]),
             maxLines: 1,
           );
         }
 
 
-        String sellerName = snapshot.data ?? 'អ្នកលក់';
+        String sellerName = snapshot.data ?? _t('អ្នកលក់', 'Seller');
 
 
         return Row(
@@ -414,7 +414,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
             Flexible(
               // ✅ អនុញ្ញាតឱ្យអក្សរកាត់បើវែង
               child: Text(
-                "អ្នកលក់៖ $sellerName",
+                _t('អ្នកលក់៖ $sellerName', 'Seller: $sellerName'),
                 style: TextStyle(
                   fontSize: 11,
                   color: Colors.green[700],
@@ -451,14 +451,14 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
       Map<String, dynamic> completeDisputeData = {
         'order_id': orderId,
         'product_id': item['product_id'],
-        'product_name': item['product_name'] ?? 'គ្មានឈ្មោះ',
+        'product_name': item['product_name'] ?? _t('គ្មានឈ្មោះ', 'Unnamed product'),
         'product_image': item['image_url'] ?? '',
-        'customer_phone': fullOrderData['phone_number'] ?? 'គ្មានលេខ',
+        'customer_phone': fullOrderData['phone_number'] ?? _t('គ្មានលេខ', 'No phone number'),
         'shipping_address':
-        fullOrderData['shipping_address'] ?? 'គ្មានអាសយដ្ឋាន',
+        fullOrderData['shipping_address'] ?? _t('គ្មានអាសយដ្ឋាន', 'No address'),
         'seller_id': sellerId,
         'seller_name': sellerName, // ✅ ប្រើឈ្មោះពិតប្រាកដ
-        'seller_phone': item['seller_phone'] ?? 'គ្មានលេខ',
+        'seller_phone': item['seller_phone'] ?? _t('គ្មានលេខ', 'No phone number'),
       };
       Navigator.pop(context);
       Navigator.push(
@@ -487,7 +487,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
           'price': item['price'],
           'quantity': 1,
           'seller_id': item['seller_id'],
-          'seller_name': item['seller_name'] ?? 'អ្នកលក់ទូទៅ',
+          'seller_name': item['seller_name'] ?? _t('អ្នកលក់ទូទៅ', 'General seller'),
           'image_url': item['image_url'],
           'created_at': FieldValue.serverTimestamp(),
         });
@@ -496,7 +496,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            '🛒 បានថែមចូលកន្ត្រកហើយ!',
+            _t('🛒 បានថែមចូលកន្ត្រកហើយ!', '🛒 Added to cart!'),
             style: TextStyle(fontFamily: 'Siemreap'),
           ),
           backgroundColor: Colors.green,
@@ -516,7 +516,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
           Icon(Icons.receipt_long_outlined, size: 64, color: Colors.grey[400]),
           const SizedBox(height: 20),
           const Text(
-            'មិនទាន់មានប្រវត្តិកម្មង់',
+            _t('មិនទាន់មានប្រវត្តិកម្មង់', 'No order history yet'),
             style: TextStyle(
               color: Colors.grey,
               fontSize: 16,
