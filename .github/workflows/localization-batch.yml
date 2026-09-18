@@ -1,4 +1,4 @@
-name: Wanted localization verification
+name: Receipt Checkout localization verification
 on:
   push:
     branches: [ios-sync-android46]
@@ -6,7 +6,7 @@ on:
 permissions:
   contents: write
 jobs:
-  verify-wanted:
+  verify-checkout:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -14,29 +14,30 @@ jobs:
       - uses: subosito/flutter-action@v2
         with: {flutter-version: '3.38.8', channel: stable, cache: true}
       - name: Format
-        run: dart format lib/wanted_grid_view.dart lib/wanted_detail_screen.dart
-      - name: Preserve Wanted behavior
+        run: dart format lib/cart_screen.dart lib/receipt_screen.dart lib/paymentauto_screen.dart
+      - name: Preserve checkout payment behavior
         run: |
-          grep -q "collection('wanted_products')" lib/wanted_grid_view.dart
-          grep -q "WantedDetailScreen" lib/wanted_grid_view.dart
-          grep -q "collection('wanted_products')" lib/wanted_detail_screen.dart
-          grep -q "ChatScreen" lib/wanted_detail_screen.dart
-          grep -q "EditWantedScreen" lib/wanted_detail_screen.dart
-          grep -q "_clickToSell" lib/wanted_detail_screen.dart
-          grep -q "Share.share" lib/wanted_detail_screen.dart
-          grep -q "UserProfileScreen" lib/wanted_detail_screen.dart
+          grep -q "collection('carts')" lib/cart_screen.dart
+          grep -q "ReceiptScreen" lib/cart_screen.dart
+          grep -q "checkout_started" lib/cart_screen.dart
+          grep -q "assets/aba_qr.png" lib/receipt_screen.dart
+          grep -q "onLongPress" lib/receipt_screen.dart
+          grep -q "_launchABA" lib/receipt_screen.dart
+          grep -q "_pickImage" lib/receipt_screen.dart
+          grep -q "createOrderFromCart" lib/receipt_screen.dart
+          grep -q "clearCart" lib/receipt_screen.dart
       - name: Analyze
         run: |
           flutter pub get
-          flutter analyze lib/wanted_grid_view.dart lib/wanted_detail_screen.dart --no-fatal-infos --no-fatal-warnings
+          flutter analyze lib/cart_screen.dart lib/receipt_screen.dart lib/paymentauto_screen.dart --no-fatal-infos --no-fatal-warnings
       - name: Compile check
         run: flutter build bundle --debug
       - name: Commit formatting if needed
         run: |
-          if ! git diff --quiet -- lib/wanted_grid_view.dart lib/wanted_detail_screen.dart; then
+          if ! git diff --quiet -- lib/cart_screen.dart lib/receipt_screen.dart lib/paymentauto_screen.dart; then
             git config user.name github-actions[bot]
             git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-            git add lib/wanted_grid_view.dart lib/wanted_detail_screen.dart
-            git commit -m "Format Wanted localization"
+            git add lib/cart_screen.dart lib/receipt_screen.dart lib/paymentauto_screen.dart
+            git commit -m "Format Receipt Checkout localization"
             git push origin HEAD:ios-sync-android46
           fi
