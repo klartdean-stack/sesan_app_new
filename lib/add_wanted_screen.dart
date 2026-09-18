@@ -9,6 +9,7 @@ import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'localized_text.dart';
 
 
 class AddWantedScreen extends StatefulWidget {
@@ -59,6 +60,25 @@ class _AddWantedScreenState extends State<AddWantedScreen> {
     "...",
   ];
 
+
+  String _unitLabel(String unit) {
+    if (Localizations.localeOf(context).languageCode != 'en') return unit;
+    const labels = <String, String>{
+      'ដើម': 'plant',
+      'គ្រាប់': 'piece',
+      'គ្រឿង': 'unit',
+      'គីឡូ': 'kg',
+      'តោន': 'ton',
+      'បាវ': 'bag',
+      'កញ្ចប់': 'pack',
+      'ធុង': 'container',
+      'ហិតា': 'hectare',
+      'ម៉ែត្រ': 'meter',
+      'ដុំ': 'piece',
+      '...': '...',
+    };
+    return labels[unit] ?? unit;
+  }
 
   @override
   void initState() {
@@ -202,9 +222,9 @@ class _AddWantedScreenState extends State<AddWantedScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          "បង្កើតការប្រកាសទិញ",
-          style: TextStyle(fontFamily: 'Siemreap'),
+        title: Text(
+          appText(context, km: "បង្កើតការប្រកាសទិញ", en: "Create wanted listing"),
+          style: const TextStyle(fontFamily: 'Siemreap'),
         ),
       ),
         body: GestureDetector(
@@ -226,11 +246,13 @@ class _AddWantedScreenState extends State<AddWantedScreen> {
               // --- ឈ្មោះទំនិញ ---
               TextFormField(
                 controller: _nameController,
-                decoration: const InputDecoration(
-                  labelText: "ឈ្មោះទំនិញ",
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: appText(context, km: "ឈ្មោះទំនិញ", en: "Product name"),
+                  border: const OutlineInputBorder(),
                 ),
-                validator: (v) => v!.isEmpty ? "សូមបញ្ចូលឈ្មោះ" : null,
+                validator: (v) => v!.isEmpty
+                    ? appText(context, km: "សូមបញ្ចូលឈ្មោះ", en: "Please enter a name")
+                    : null,
               ),
               const SizedBox(height: 15),
 
@@ -243,9 +265,9 @@ class _AddWantedScreenState extends State<AddWantedScreen> {
                     child: TextFormField(
                       controller: _qtyController,
                       keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                        labelText: "ចំនួនត្រូវការ",
-                        border: OutlineInputBorder(),
+                      decoration: InputDecoration(
+                        labelText: appText(context, km: "ចំនួនត្រូវការ", en: "Quantity wanted"),
+                        border: const OutlineInputBorder(),
                       ),
                     ),
                   ),
@@ -260,7 +282,7 @@ class _AddWantedScreenState extends State<AddWantedScreen> {
                           .map(
                             (u) => DropdownMenuItem(
                           value: u,
-                          child: Text(u),
+                          child: Text(_unitLabel(u)),
                         ),
                       )
                           .toList(),
