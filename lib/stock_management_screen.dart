@@ -1336,8 +1336,8 @@ class _StockManagementScreenState extends State<StockManagementScreen>
                         if (context.mounted) Navigator.pop(context);
                         _showSnack(
                           isAdd
-                              ? '✅ បន្ថែម $amount ${data['unit'] ?? ''}'
-                              : '✅ កាត់ $amount ${data['unit'] ?? ''}',
+                              ? appText(context, km: '✅ បន្ថែម $amount ${data['unit'] ?? ''}', en: '✅ Added $amount ${stockValueLabel(context, (data['unit'] ?? '').toString())}')
+                              : appText(context, km: '✅ កាត់ $amount ${data['unit'] ?? ''}', en: '✅ Removed $amount ${stockValueLabel(context, (data['unit'] ?? '').toString())}'),
                           isAdd ? Colors.green : Colors.orange,
                         );
                       } catch (e) {
@@ -2332,10 +2332,8 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
                                   setState(() {});
                                   _showSnack(
                                     isAdd
-                                        ? '✅ បន្ថែម $amount ${data['unit'] ??
-                                        ''}'
-                                        : '✅ កាត់ $amount ${data['unit'] ??
-                                        ''}',
+                                        ? appText(context, km: '✅ បន្ថែម $amount ${data['unit'] ?? ''}', en: '✅ Added $amount ${stockValueLabel(context, (data['unit'] ?? '').toString())}')
+                                        : appText(context, km: '✅ កាត់ $amount ${data['unit'] ?? ''}', en: '✅ Removed $amount ${stockValueLabel(context, (data['unit'] ?? '').toString())}'),
                                     isAdd ? Colors.green : Colors.orange,
                                   );
                                 }
