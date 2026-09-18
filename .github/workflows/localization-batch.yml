@@ -17,10 +17,9 @@ jobs:
           flutter-version: '3.38.8'
           channel: stable
           cache: true
-      - name: Format check
+      - name: Format
         run: |
           dart format lib/chat_screen_legacy.dart lib/localization/app_translations.dart
-          git diff --exit-code -- lib/chat_screen_legacy.dart lib/localization/app_translations.dart
           git diff --check
       - name: Preserve Chat features
         run: |
@@ -43,3 +42,13 @@ jobs:
       - name: Compile check
         run: |
           flutter build apk --debug
+      - name: Commit formatting if needed
+        run: |
+          if ! git diff --quiet -- lib/chat_screen_legacy.dart lib/localization/app_translations.dart; then
+            git config user.name github-actions[bot]
+            git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+            git add lib/chat_screen_legacy.dart lib/localization/app_translations.dart
+            git diff --cached --check
+            git commit -m "Format Chat localization source"
+            git push origin HEAD:ios-sync-android46
+          fi
