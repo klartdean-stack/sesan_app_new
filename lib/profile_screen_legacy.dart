@@ -161,7 +161,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _ensureUserExists() async {
     if (_loggedUid != null) {
-      final userDoc = FirebaseFirestore.instance.collection('users').doc(_loggedUid);
+      final userDoc = FirebaseFirestore.instance
+          .collection('users')
+          .doc(_loggedUid);
       final docSnapshot = await userDoc.get();
       if (!docSnapshot.exists) {
         String role = (_loggedUid == adminUID) ? "admin" : "seller";
@@ -198,7 +200,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
         backgroundColor: Colors.grey[100],
         appBar: AppBar(
           automaticallyImplyLeading: false,
-          title: Text(l10n.account, style: const TextStyle(fontFamily: 'Siemreap')),
+          title: Text(
+            l10n.account,
+            style: const TextStyle(fontFamily: 'Siemreap'),
+          ),
           backgroundColor: Colors.green[700],
         ),
         body: Center(
@@ -267,8 +272,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             return const Center(child: CircularProgressIndicator());
           }
           final data = snapshot.data?.data() as Map<String, dynamic>?;
-          String name =
-              data?['name'] ?? _t("រកឈ្មោះមិនឃើញ", "Name not found");
+          String name = data?['name'] ?? _t("រកឈ្មោះមិនឃើញ", "Name not found");
           int balance = (data?['balance'] ?? 0).toInt();
           String photoUrl = data?['photoUrl'] ?? "";
           bool isFrozen = data?['isFrozen'] ?? false;
@@ -333,7 +337,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       await SharedPreferences.getInstance();
                                   await prefs.clear();
                                   if (context.mounted) {
-                                    Navigator.of(context).pushNamedAndRemoveUntil(
+                                    Navigator.of(
+                                      context,
+                                    ).pushNamedAndRemoveUntil(
                                       '/login',
                                       (route) => false,
                                     );
@@ -387,9 +393,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       onTap: () => Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => SellerAccountingScreen(
-            sellerId: _loggedUid ?? "",
-          ),
+          builder: (context) =>
+              SellerAccountingScreen(sellerId: _loggedUid ?? ""),
         ),
       ),
     );
@@ -414,9 +419,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => OrderManagementScreen(
-                    sellerId: _loggedUid ?? "",
-                  ),
+                  builder: (context) =>
+                      OrderManagementScreen(sellerId: _loggedUid ?? ""),
                 ),
               ),
             ),
@@ -425,8 +429,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 right: 38,
                 top: 10,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  constraints: const BoxConstraints(minWidth: 22, minHeight: 22),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
+                  constraints: const BoxConstraints(
+                    minWidth: 22,
+                    minHeight: 22,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.red,
                     borderRadius: BorderRadius.circular(11),
@@ -459,17 +469,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
       color: Colors.green,
       onTap: () => Navigator.push(
         context,
-        MaterialPageRoute(
-          builder: (context) => const SesanAiAssistantScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const SesanAiAssistantScreen()),
       ),
     );
   }
 
-  Widget _buildUserMode(
-    Map<String, dynamic>? data,
-    AppLocalizations l10n,
-  ) {
+  Widget _buildUserMode(Map<String, dynamic>? data, AppLocalizations l10n) {
     return Column(
       children: [
         _buildSesanAiAssistantCard(),
@@ -516,10 +521,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildSellerMode(
-    Map<String, dynamic>? data,
-    AppLocalizations l10n,
-  ) {
+  Widget _buildSellerMode(Map<String, dynamic>? data, AppLocalizations l10n) {
     return Column(
       children: [
         _buildSesanAiAssistantCard(),
@@ -531,9 +533,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => const ProductListScreen(
-                category: 'ទំនិញរបស់ខ្ញុំ',
-              ),
+              builder: (context) =>
+                  const ProductListScreen(category: 'ទំនិញរបស់ខ្ញុំ'),
             ),
           ),
         ),
@@ -591,9 +592,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             color: Colors.orange,
             onTap: () => Navigator.push(
               context,
-              MaterialPageRoute(
-                builder: (context) => const AdminConfirmPage(),
-              ),
+              MaterialPageRoute(builder: (context) => const AdminConfirmPage()),
             ),
           ),
         if (_loggedUid == adminUID)
@@ -687,16 +686,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
           color: Colors.green,
           onTap: () => Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (context) => const SellerGuideScreen(),
-            ),
+            MaterialPageRoute(builder: (context) => const SellerGuideScreen()),
           ),
         ),
         _buildMenuCard(
-          title: _t(
-            'កិច្ចព្រមព្រៀងឌីជីថលអ្នកលក់',
-            'Seller digital agreement',
-          ),
+          title: _t('កិច្ចព្រមព្រៀងឌីជីថលអ្នកលក់', 'Seller digital agreement'),
           subtitle: _t(
             'អាន និងយល់ព្រមលើលក្ខខណ្ឌលក់ដូរជាមួយ Sesan App',
             'Review and accept the Sesan App seller terms',
@@ -770,10 +764,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         _buildMenuCard(
           title: l10n.settings,
-          subtitle: _t(
-            "ភាសា និងការកំណត់គណនី",
-            "Language & account settings",
-          ),
+          subtitle: _t("ភាសា និងការកំណត់គណនី", "Language & account settings"),
           icon: Icons.settings_rounded,
           color: Colors.green,
           onTap: () => Navigator.push(
@@ -791,17 +782,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
           color: Colors.blue,
           onTap: () => Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (context) => const SupportChatScreen(),
-            ),
+            MaterialPageRoute(builder: (context) => const SupportChatScreen()),
           ),
         ),
         _buildMenuCard(
           title: l10n.aboutUs,
-          subtitle: _t(
-            "ស្វែងយល់បន្ថែមអំពី Sesan",
-            "Learn more about Sesan",
-          ),
+          subtitle: _t("ស្វែងយល់បន្ថែមអំពី Sesan", "Learn more about Sesan"),
           icon: Icons.info_outline_rounded,
           color: Colors.orange,
           onTap: () async {
@@ -894,11 +880,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.only(
-                  bottom: 20,
-                  left: 20,
-                  right: 20,
-                ),
+                padding: const EdgeInsets.only(bottom: 20, left: 20, right: 20),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
@@ -988,7 +970,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ListTile(
             leading: CircleAvatar(
               radius: 30,
-              backgroundImage: photoUrl.isNotEmpty ? NetworkImage(photoUrl) : null,
+              backgroundImage: photoUrl.isNotEmpty
+                  ? NetworkImage(photoUrl)
+                  : null,
               child: photoUrl.isEmpty
                   ? const Icon(Icons.person, size: 35)
                   : null,
@@ -1075,8 +1059,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           onPressed: () {
                             setState(() => _hideBalance = !_hideBalance);
                           },
-                          tooltip:
-                              _hideBalance ? _t('បង្ហាញសមតុល្យ', 'Show balance') : _t('លាក់សមតុល្យ', 'Hide balance'),
+                          tooltip: _hideBalance
+                              ? _t('បង្ហាញសមតុល្យ', 'Show balance')
+                              : _t('លាក់សមតុល្យ', 'Hide balance'),
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(
                             minWidth: 48,
@@ -1164,10 +1149,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildSesanIdCard(
-    Map<String, dynamic>? data,
-    AppLocalizations l10n,
-  ) {
+  Widget _buildSesanIdCard(Map<String, dynamic>? data, AppLocalizations l10n) {
     final sesanId = (data?['sesan_id'] ?? '').toString().trim();
     final hasId = sesanId.isNotEmpty;
 
@@ -1178,17 +1160,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
       clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(15),
-        side: BorderSide(
-          color: Colors.black.withOpacity(0.06),
-          width: 0.8,
-        ),
+        side: BorderSide(color: Colors.black.withOpacity(0.06), width: 0.8),
       ),
       child: ListTile(
         dense: true,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 12,
-          vertical: 6,
-        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         minLeadingWidth: 44,
         leading: Container(
           width: 44,
@@ -1198,11 +1174,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             color: Colors.green.withOpacity(0.10),
             borderRadius: BorderRadius.circular(11),
           ),
-          child: const Icon(
-            Icons.tag_rounded,
-            color: Colors.green,
-            size: 23,
-          ),
+          child: const Icon(Icons.tag_rounded, color: Colors.green, size: 23),
         ),
         title: Text(
           l10n.mySesanId,
@@ -1303,18 +1275,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
       clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(15),
-        side: BorderSide(
-          color: Colors.black.withOpacity(0.06),
-          width: 0.8,
-        ),
+        side: BorderSide(color: Colors.black.withOpacity(0.06), width: 0.8),
       ),
       child: ListTile(
         onTap: onTap,
         dense: true,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 12,
-          vertical: 6,
-        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         minLeadingWidth: 44,
         leading: Container(
           width: 44,
@@ -1393,9 +1359,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Column(
@@ -1490,8 +1454,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       bool isUnique = false;
 
       while (!isUnique) {
-        newId = (100000 +
-                (DateTime.now().microsecondsSinceEpoch % 900000))
+        newId = (100000 + (DateTime.now().microsecondsSinceEpoch % 900000))
             .toString();
 
         final existing = await FirebaseFirestore.instance
@@ -1715,10 +1678,7 @@ class AboutMeScreen extends StatelessWidget {
                       const SizedBox(height: 16),
                       Text(
                         '© ${DateTime.now().year} Sesan Agriculture Technology',
-                        style: TextStyle(
-                          color: Colors.grey[500],
-                          fontSize: 11,
-                        ),
+                        style: TextStyle(color: Colors.grey[500], fontSize: 11),
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 30),
@@ -1815,9 +1775,7 @@ class AboutMeScreen extends StatelessWidget {
                 topLeft: Radius.circular(20),
                 topRight: Radius.circular(20),
               ),
-              border: Border(
-                left: BorderSide(color: color, width: 4),
-              ),
+              border: Border(left: BorderSide(color: color, width: 4)),
             ),
             child: Row(
               children: [

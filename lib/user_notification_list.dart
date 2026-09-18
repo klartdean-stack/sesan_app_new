@@ -96,33 +96,63 @@ class _UserNotificationScreenState extends State<UserNotificationScreen>
             labelColor: Colors.black87,
             unselectedLabelColor: Colors.grey,
             tabs: [
-              Tab(child: Text(_t('ដំណឹងទូទៅ', 'General'), style: const TextStyle(fontFamily: 'Siemreap', fontSize: 12))),
+              Tab(
+                child: Text(
+                  _t('ដំណឹងទូទៅ', 'General'),
+                  style: const TextStyle(fontFamily: 'Siemreap', fontSize: 12),
+                ),
+              ),
               StreamBuilder<QuerySnapshot>(
                 stream: _currentUserId != null && _currentUserId!.isNotEmpty
                     ? FirebaseFirestore.instance
-                        .collection('users')
-                        .doc(_currentUserId)
-                        .collection('notifications')
-                        .where('type', whereIn: ['new_comment', 'comment_reply'])
-                        .where('isRead', isEqualTo: false)
-                        .snapshots()
+                          .collection('users')
+                          .doc(_currentUserId)
+                          .collection('notifications')
+                          .where(
+                            'type',
+                            whereIn: ['new_comment', 'comment_reply'],
+                          )
+                          .where('isRead', isEqualTo: false)
+                          .snapshots()
                     : const Stream.empty(),
                 builder: (context, snapshot) {
-                  final count = snapshot.hasData ? snapshot.data!.docs.length : 0;
+                  final count = snapshot.hasData
+                      ? snapshot.data!.docs.length
+                      : 0;
                   return Tab(
                     child: Stack(
                       clipBehavior: Clip.none,
                       children: [
-                        Text(_t('មតិយោបល់', 'Comments'), style: const TextStyle(fontFamily: 'Siemreap', fontSize: 12)),
+                        Text(
+                          _t('មតិយោបល់', 'Comments'),
+                          style: const TextStyle(
+                            fontFamily: 'Siemreap',
+                            fontSize: 12,
+                          ),
+                        ),
                         if (count > 0)
                           Positioned(
                             right: -18,
                             top: -4,
                             child: Container(
                               padding: const EdgeInsets.all(4),
-                              decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
-                              constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
-                              child: Text('$count', style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+                              decoration: const BoxDecoration(
+                                color: Colors.red,
+                                shape: BoxShape.circle,
+                              ),
+                              constraints: const BoxConstraints(
+                                minWidth: 18,
+                                minHeight: 18,
+                              ),
+                              child: Text(
+                                '$count',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
                             ),
                           ),
                       ],
@@ -130,7 +160,12 @@ class _UserNotificationScreenState extends State<UserNotificationScreen>
                   );
                 },
               ),
-              Tab(child: Text(_t('ពិន្ទុ', 'Ratings'), style: const TextStyle(fontFamily: 'Siemreap', fontSize: 12))),
+              Tab(
+                child: Text(
+                  _t('ពិន្ទុ', 'Ratings'),
+                  style: const TextStyle(fontFamily: 'Siemreap', fontSize: 12),
+                ),
+              ),
             ],
           ),
         ),
@@ -148,13 +183,21 @@ class _UserNotificationScreenState extends State<UserNotificationScreen>
 
   Widget _buildAnnouncementsTab() {
     return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance.collection('announcements').orderBy('created_at', descending: true).snapshots(),
+      stream: FirebaseFirestore.instance
+          .collection('announcements')
+          .orderBy('created_at', descending: true)
+          .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator(color: Color(0xFF3B5BFF)));
+          return const Center(
+            child: CircularProgressIndicator(color: Color(0xFF3B5BFF)),
+          );
         }
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-          return _emptyState(Icons.notifications_none_rounded, _t('មិនទាន់មានដំណឹងថ្មីឡើយ', 'No new notifications yet'));
+          return _emptyState(
+            Icons.notifications_none_rounded,
+            _t('មិនទាន់មានដំណឹងថ្មីឡើយ', 'No new notifications yet'),
+          );
         }
         final docs = snapshot.data!.docs;
         return ListView.builder(
@@ -184,12 +227,20 @@ class _UserNotificationScreenState extends State<UserNotificationScreen>
           .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator(color: Color(0xFF3B5BFF)));
+          return const Center(
+            child: CircularProgressIndicator(color: Color(0xFF3B5BFF)),
+          );
         }
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
           return type == 'comment'
-              ? _emptyState(Icons.comment_bank_outlined, _t('មិនមានការជូនដំណឹងពីមតិ', 'No comment notifications'))
-              : _emptyState(Icons.star_border_rounded, _t('មិនមានការជូនដំណឹងពីពិន្ទុ', 'No rating notifications'));
+              ? _emptyState(
+                  Icons.comment_bank_outlined,
+                  _t('មិនមានការជូនដំណឹងពីមតិ', 'No comment notifications'),
+                )
+              : _emptyState(
+                  Icons.star_border_rounded,
+                  _t('មិនមានការជូនដំណឹងពីពិន្ទុ', 'No rating notifications'),
+                );
         }
         final docs = snapshot.data!.docs;
         return ListView.builder(
@@ -197,7 +248,11 @@ class _UserNotificationScreenState extends State<UserNotificationScreen>
           itemCount: docs.length,
           itemBuilder: (context, index) {
             final data = docs[index].data() as Map<String, dynamic>;
-            return _NotiCard(data: data, isPersonal: true, onTap: () => _handlePersonalNotificationTap(data));
+            return _NotiCard(
+              data: data,
+              isPersonal: true,
+              onTap: () => _handlePersonalNotificationTap(data),
+            );
           },
         );
       },
@@ -211,7 +266,14 @@ class _UserNotificationScreenState extends State<UserNotificationScreen>
         children: [
           Icon(icon, size: 64, color: Colors.grey.shade400),
           const SizedBox(height: 20),
-          Text(message, style: TextStyle(fontFamily: 'Siemreap', color: Colors.grey.shade500, fontSize: 16)),
+          Text(
+            message,
+            style: TextStyle(
+              fontFamily: 'Siemreap',
+              color: Colors.grey.shade500,
+              fontSize: 16,
+            ),
+          ),
         ],
       ),
     );
@@ -221,11 +283,19 @@ class _UserNotificationScreenState extends State<UserNotificationScreen>
     final String? productId = data['productId'] ?? data['product_id'];
     if (productId == null || productId.isEmpty) return;
     try {
-      final doc = await FirebaseFirestore.instance.collection('products').doc(productId).get();
+      final doc = await FirebaseFirestore.instance
+          .collection('products')
+          .doc(productId)
+          .get();
       if (!doc.exists || !mounted) return;
       final product = doc.data()!;
       product['id'] = productId;
-      Navigator.push(context, MaterialPageRoute(builder: (_) => ProductDetailScreen(product: product)));
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ProductDetailScreen(product: product),
+        ),
+      );
     } catch (e) {
       debugPrint('Error fetching product: $e');
     }
@@ -238,7 +308,12 @@ class _NotiCard extends StatefulWidget {
   final bool isPersonal;
   final VoidCallback? onTap;
 
-  const _NotiCard({required this.data, this.isNew = false, this.isPersonal = false, this.onTap});
+  const _NotiCard({
+    required this.data,
+    this.isNew = false,
+    this.isPersonal = false,
+    this.onTap,
+  });
 
   @override
   State<_NotiCard> createState() => _NotiCardState();
@@ -253,26 +328,59 @@ class _NotiCardState extends State<_NotiCard> {
 
   _NotiStyle _getStyle(String? type, bool personal) {
     if (personal) {
-      if (type == 'comment_reply') return const _NotiStyle(color: Color(0xFF8B5CF6), bg: Color(0xFFF3EEFF), icon: Icons.reply_rounded);
-      if (type == 'new_comment') return const _NotiStyle(color: Color(0xFF3B5BFF), bg: Color(0xFFEEF2FF), icon: Icons.chat_bubble_rounded);
-      if (type == 'new_rating') return const _NotiStyle(color: Color(0xFFFFB300), bg: Color(0xFFFFF8E1), icon: Icons.star_rounded);
+      if (type == 'comment_reply')
+        return const _NotiStyle(
+          color: Color(0xFF8B5CF6),
+          bg: Color(0xFFF3EEFF),
+          icon: Icons.reply_rounded,
+        );
+      if (type == 'new_comment')
+        return const _NotiStyle(
+          color: Color(0xFF3B5BFF),
+          bg: Color(0xFFEEF2FF),
+          icon: Icons.chat_bubble_rounded,
+        );
+      if (type == 'new_rating')
+        return const _NotiStyle(
+          color: Color(0xFFFFB300),
+          bg: Color(0xFFFFF8E1),
+          icon: Icons.star_rounded,
+        );
     }
     switch (type) {
       case 'warning':
-        return const _NotiStyle(color: Color(0xFFFF6B35), bg: Color(0xFFFFF3EE), icon: Icons.warning_amber_rounded);
+        return const _NotiStyle(
+          color: Color(0xFFFF6B35),
+          bg: Color(0xFFFFF3EE),
+          icon: Icons.warning_amber_rounded,
+        );
       case 'success':
-        return const _NotiStyle(color: Color(0xFF2DCB73), bg: Color(0xFFEEFBF4), icon: Icons.check_circle_rounded);
+        return const _NotiStyle(
+          color: Color(0xFF2DCB73),
+          bg: Color(0xFFEEFBF4),
+          icon: Icons.check_circle_rounded,
+        );
       case 'info':
-        return const _NotiStyle(color: Color(0xFF3B5BFF), bg: Color(0xFFEEF2FF), icon: Icons.info_rounded);
+        return const _NotiStyle(
+          color: Color(0xFF3B5BFF),
+          bg: Color(0xFFEEF2FF),
+          icon: Icons.info_rounded,
+        );
       default:
-        return const _NotiStyle(color: Color(0xFF3B5BFF), bg: Color(0xFFEEF2FF), icon: Icons.campaign_rounded);
+        return const _NotiStyle(
+          color: Color(0xFF3B5BFF),
+          bg: Color(0xFFEEF2FF),
+          icon: Icons.campaign_rounded,
+        );
     }
   }
 
   String _formatDate(dynamic ts) {
     if (ts == null) return '';
     try {
-      return DateFormat('dd MMM yyyy • HH:mm').format((ts as Timestamp).toDate());
+      return DateFormat(
+        'dd MMM yyyy • HH:mm',
+      ).format((ts as Timestamp).toDate());
     } catch (_) {
       return '';
     }
@@ -282,10 +390,16 @@ class _NotiCardState extends State<_NotiCard> {
   Widget build(BuildContext context) {
     final personal = widget.isPersonal;
     final title = (widget.data['title'] ?? '').toString();
-    final body = (personal ? widget.data['body'] : widget.data['message'] ?? widget.data['body'] ?? '').toString();
+    final body =
+        (personal
+                ? widget.data['body']
+                : widget.data['message'] ?? widget.data['body'] ?? '')
+            .toString();
     final type = widget.data['type'] as String?;
     final style = _getStyle(type, personal);
-    final date = _formatDate(personal ? widget.data['createdAt'] : widget.data['created_at']);
+    final date = _formatDate(
+      personal ? widget.data['createdAt'] : widget.data['created_at'],
+    );
     final isLong = body.length > _maxChars;
 
     return GestureDetector(
@@ -295,7 +409,13 @@ class _NotiCardState extends State<_NotiCard> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(18),
-          boxShadow: [BoxShadow(color: style.color.withOpacity(0.08), blurRadius: 12, offset: const Offset(0, 4))],
+          boxShadow: [
+            BoxShadow(
+              color: style.color.withOpacity(0.08),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(18),
@@ -313,7 +433,10 @@ class _NotiCardState extends State<_NotiCard> {
                       children: [
                         Container(
                           padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(color: style.bg, borderRadius: BorderRadius.circular(12)),
+                          decoration: BoxDecoration(
+                            color: style.bg,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                           child: Icon(style.icon, color: style.color, size: 22),
                         ),
                         const SizedBox(width: 12),
@@ -323,39 +446,120 @@ class _NotiCardState extends State<_NotiCard> {
                             children: [
                               Row(
                                 children: [
-                                  Expanded(child: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.black87, fontFamily: 'Siemreap', height: 1.4))),
+                                  Expanded(
+                                    child: Text(
+                                      title,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 15,
+                                        color: Colors.black87,
+                                        fontFamily: 'Siemreap',
+                                        height: 1.4,
+                                      ),
+                                    ),
+                                  ),
                                   if (widget.isNew && !personal)
                                     Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                      decoration: BoxDecoration(color: Colors.red, borderRadius: BorderRadius.circular(20)),
-                                      child: Text(_t('ថ្មី', 'NEW'), style: const TextStyle(color: Colors.white, fontSize: 10, fontFamily: 'Siemreap', fontWeight: FontWeight.bold)),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 3,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.red,
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      child: Text(
+                                        _t('ថ្មី', 'NEW'),
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 10,
+                                          fontFamily: 'Siemreap',
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
                                     ),
                                 ],
                               ),
                               if (date.isNotEmpty) ...[
                                 const SizedBox(height: 4),
-                                Row(children: [Icon(Icons.access_time_rounded, size: 12, color: Colors.grey.shade400), const SizedBox(width: 4), Text(date, style: TextStyle(fontSize: 11, color: Colors.grey.shade400))]),
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.access_time_rounded,
+                                      size: 12,
+                                      color: Colors.grey.shade400,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      date,
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: Colors.grey.shade400,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ],
                             ],
                           ),
                         ),
                       ],
                     ),
-                    Padding(padding: const EdgeInsets.symmetric(vertical: 12), child: Divider(height: 1, color: Colors.grey.shade100)),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      child: Divider(height: 1, color: Colors.grey.shade100),
+                    ),
                     AnimatedCrossFade(
-                      firstChild: Text(body, maxLines: 4, overflow: TextOverflow.ellipsis, style: TextStyle(height: 1.6, color: Colors.grey.shade700, fontSize: 13.5, fontFamily: 'Siemreap')),
-                      secondChild: Text(body, style: TextStyle(height: 1.6, color: Colors.grey.shade700, fontSize: 13.5, fontFamily: 'Siemreap')),
-                      crossFadeState: _isExpanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+                      firstChild: Text(
+                        body,
+                        maxLines: 4,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          height: 1.6,
+                          color: Colors.grey.shade700,
+                          fontSize: 13.5,
+                          fontFamily: 'Siemreap',
+                        ),
+                      ),
+                      secondChild: Text(
+                        body,
+                        style: TextStyle(
+                          height: 1.6,
+                          color: Colors.grey.shade700,
+                          fontSize: 13.5,
+                          fontFamily: 'Siemreap',
+                        ),
+                      ),
+                      crossFadeState: _isExpanded
+                          ? CrossFadeState.showSecond
+                          : CrossFadeState.showFirst,
                       duration: const Duration(milliseconds: 200),
                     ),
                     if (isLong)
                       Align(
                         alignment: Alignment.centerRight,
                         child: TextButton.icon(
-                          onPressed: () => setState(() => _isExpanded = !_isExpanded),
+                          onPressed: () =>
+                              setState(() => _isExpanded = !_isExpanded),
                           iconAlignment: IconAlignment.end,
-                          icon: Icon(_isExpanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded, color: style.color, size: 18),
-                          label: Text(_isExpanded ? _t('បិទវិញ', 'Show less') : _t('មើលបន្ថែម', 'Show more'), style: TextStyle(color: style.color, fontSize: 13, fontWeight: FontWeight.w600, fontFamily: 'Siemreap')),
+                          icon: Icon(
+                            _isExpanded
+                                ? Icons.keyboard_arrow_up_rounded
+                                : Icons.keyboard_arrow_down_rounded,
+                            color: style.color,
+                            size: 18,
+                          ),
+                          label: Text(
+                            _isExpanded
+                                ? _t('បិទវិញ', 'Show less')
+                                : _t('មើលបន្ថែម', 'Show more'),
+                            style: TextStyle(
+                              color: style.color,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              fontFamily: 'Siemreap',
+                            ),
+                          ),
                         ),
                       ),
                   ],
