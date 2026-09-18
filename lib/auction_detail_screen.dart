@@ -309,12 +309,13 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
     setState(() => _isBidding = true);
     final newBid = currentPrice + bidStep;
     try {
-      String bidderName = _currentUserName ?? 'Unknown';
-      if (bidderName == 'Unknown' || bidderName.isEmpty) {
+      final unknownName = _t('មិនស្គាល់', 'Unknown');
+      String bidderName = _currentUserName ?? unknownName;
+      if (bidderName == unknownName || bidderName.isEmpty) {
         final userDoc = await FirebaseFirestore.instance.collection('users').doc(_currentUid).get();
         if (userDoc.exists) {
           final u = userDoc.data() as Map<String, dynamic>;
-          bidderName = u['name'] ?? u['displayName'] ?? 'Unknown';
+          bidderName = u['name'] ?? u['displayName'] ?? unknownName;
         }
       }
       final batch = FirebaseFirestore.instance.batch();
@@ -335,7 +336,7 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
       _bidPulseCtrl.forward().then((_) => _bidPulseCtrl.reverse());
       _showSnack('${_t('🎉 ដេញថ្លៃជោគជ័យ!', '🎉 Bid placed successfully!')} ${NumberFormat('#,###').format(newBid)} ៛', _accent);
     } catch (e) {
-      _showSnack('❌ Error: $e', _red);
+      _showSnack(_t('❌ កំហុស៖ $e', '❌ Error: $e'), _red);
     } finally {
       if (mounted) setState(() => _isBidding = false);
     }
@@ -773,11 +774,11 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
                                       child: Column(
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
-                                          const Row(
+                                          Row(
                                             children: [
-                                              Icon(Icons.emoji_events_rounded, color: _gold, size: 13),
-                                              SizedBox(width: 4),
-                                              Text('អ្នកឈ្នះបច្ចុប្បន្ន', style: TextStyle(color: _textMuted, fontSize: 11, fontFamily: 'Siemreap')),
+                                              const Icon(Icons.emoji_events_rounded, color: _gold, size: 13),
+                                              const SizedBox(width: 4),
+                                              Text(_t('អ្នកឈ្នះបច្ចុប្បន្ន', 'Current winner'), style: const TextStyle(color: _textMuted, fontSize: 11, fontFamily: 'Siemreap')),
                                             ],
                                           ),
                                           const SizedBox(height: 2),
@@ -940,7 +941,7 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
                                           productName: productName,
                                           ownerId: ownerId,
                                           winnerId: lastBidderId,
-                                          winnerName: lastBidder ?? 'Unknown',
+                                          winnerName: lastBidder ?? _t('មិនស្គាល់', 'Unknown'),
                                         ),
                                         icon: const Icon(Icons.chat_bubble_outline_rounded, color: Colors.white, size: 18),
                                         label: Text(
@@ -1067,7 +1068,7 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
                                           Text(
-                                            bid['bidder_name'] ?? 'Unknown',
+                                            bid['bidder_name'] ?? _t('មិនស្គាល់', 'Unknown'),
                                             style: TextStyle(color: isTop ? _gold : _text, fontWeight: FontWeight.w600, fontSize: 14),
                                           ),
                                           if (bidTime != null)
@@ -1220,6 +1221,7 @@ class _ExpandableDescriptionState extends State<_ExpandableDescription> {
 
   @override
   Widget build(BuildContext context) {
+    final isEnglish = Localizations.localeOf(context).languageCode == 'en';
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -1230,13 +1232,13 @@ class _ExpandableDescriptionState extends State<_ExpandableDescription> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(Icons.description_outlined, color: _accentBlue, size: 16),
-              SizedBox(width: 10),
+              const Icon(Icons.description_outlined, color: _accentBlue, size: 16),
+              const SizedBox(width: 10),
               Text(
-                'ការរៀបរាប់',
-                style: TextStyle(color: _text, fontSize: 14, fontWeight: FontWeight.w700, fontFamily: 'Siemreap'),
+                isEnglish ? 'Description' : 'ការរៀបរាប់',
+                style: const TextStyle(color: _text, fontSize: 14, fontWeight: FontWeight.w700, fontFamily: 'Siemreap'),
               ),
             ],
           ),
@@ -1262,7 +1264,9 @@ class _ExpandableDescriptionState extends State<_ExpandableDescription> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  _expanded ? 'លាក់វិញ' : 'អានបន្ថែម',
+                  _expanded
+                      ? (isEnglish ? 'Show less' : 'លាក់វិញ')
+                      : (isEnglish ? 'Read more' : 'អានបន្ថែម'),
                   style: const TextStyle(color: _accentBlue, fontSize: 12, fontWeight: FontWeight.w600, fontFamily: 'Siemreap'),
                 ),
                 Icon(

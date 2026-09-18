@@ -116,7 +116,7 @@ class _WantedDetailScreenState extends State<WantedDetailScreen> {
       final sellers = sellersSnapshot.docs.map((doc) {
         return {
           'uid': doc.data()['uid'],
-          'userName': doc.data()['userName'] ?? 'អ្នកលក់',
+          'userName': doc.data()['userName'] ?? _t('អ្នកលក់', 'Seller'),
           'photoUrl': doc.data()['photoUrl'] ?? '',
           'price': doc.data()['price'],
           'currency': doc.data()['currency'] ?? '៛',
@@ -153,7 +153,7 @@ class _WantedDetailScreenState extends State<WantedDetailScreen> {
         .collection('users')
         .doc(_currentUid)
         .get();
-    final userName = userDoc.data()?['name'] ?? 'អ្នកលក់';
+    final userName = userDoc.data()?['name'] ?? _t('អ្នកលក់', 'Seller');
     final photoUrl = userDoc.data()?['photoUrl'] ?? '';
 
     await FirebaseFirestore.instance
@@ -204,9 +204,15 @@ class _WantedDetailScreenState extends State<WantedDetailScreen> {
                   Text(_t('រូបិយប័ណ្ណ: ', 'Currency: ')),
                   DropdownButton<String>(
                     value: currency,
-                    items: const [
-                      DropdownMenuItem(value: '៛', child: Text('៛ រៀល')),
-                      DropdownMenuItem(value: '\$', child: Text('\$ ដុល្លារ')),
+                    items: [
+                      DropdownMenuItem(
+                        value: '៛',
+                        child: Text(_t('៛ រៀល', '៛ Riel')),
+                      ),
+                      DropdownMenuItem(
+                        value: '\$',
+                        child: Text(_t('\$ ដុល្លារ', '\$ Dollar')),
+                      ),
                     ],
                     onChanged: (v) => setDialogState(() => currency = v!),
                   ),

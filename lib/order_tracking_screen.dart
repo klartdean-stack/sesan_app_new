@@ -47,10 +47,11 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
         );
       }
     } on FirebaseFunctionsException catch (e) {
+      debugPrint('Confirm receipt function error: ${e.code} ${e.message}');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.message ?? 'Unable to confirm receipt'),
+            content: Text('tracking_confirm_failed'.tr),
             backgroundColor: Colors.red,
           ),
         );
@@ -60,7 +61,9 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: $e'),
+            content: Text(
+              'tracking_error'.trParams({'error': '$e'}),
+            ),
             backgroundColor: Colors.red,
           ),
         );

@@ -326,7 +326,11 @@ class _ChatListScreenState extends State<ChatListScreen> {
                     .snapshots(),
                 builder: (context, snapshot) {
                   if (snapshot.hasError) {
-                    return Center(child: Text("មានបញ្ហា៖ ${snapshot.error}"));
+                    return Center(
+                      child: Text(
+                        'chat_error'.trParams({'error': '${snapshot.error}'}),
+                      ),
+                    );
                   }
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(child: CircularProgressIndicator());
@@ -381,9 +385,9 @@ class _ChatListScreenState extends State<ChatListScreen> {
           CupertinoButton(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             onPressed: () => FocusScope.of(context).unfocus(),
-            child: const Text(
-              'រួចរាល់',
-              style: TextStyle(
+            child: Text(
+              'common_done'.tr,
+              style: const TextStyle(
                 color: Colors.green,
                 fontWeight: FontWeight.bold,
               ),
@@ -622,7 +626,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      _foundUser?['name'] ?? 'Unknown',
+                      _foundUser?['name'] ?? 'chat_unknown'.tr,
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                     Text(
@@ -722,7 +726,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
       });
     } catch (e) {
       setState(() {
-        _searchError = '❌ មានបញ្ហា: $e';
+        _searchError = 'chat_error'.trParams({'error': '$e'});
         _isSearchLoading = false;
       });
     }
