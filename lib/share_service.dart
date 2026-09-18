@@ -47,7 +47,7 @@ https://sesanshop.com/shop/$sellerId
 
 📲 មិនទាន់មាន App? ទាញយកទីនេះ៖
 Android: https://play.google.com/store/apps/details?id=com.sesan.app
-iOS: https://apps.apple.com/app/sesan-app/id6789862316''';
+iOS: https://apps.apple.com/app/sesan-app/idXXXXXXXXXX''';
   }
 }
 
