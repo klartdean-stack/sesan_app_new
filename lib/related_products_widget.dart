@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart';
 import 'product_detail.dart';
+import 'localized_text.dart';
 
 
 class RelatedProductsWidget extends StatefulWidget {
@@ -67,7 +68,7 @@ class _RelatedProductsWidgetState extends State<RelatedProductsWidget> {
     try {
       await FirebaseFirestore.instance.collection('carts').add({
         'product_id': product['id'] ?? '',
-        'product_name': product['product_name'] ?? 'គ្មានឈ្មោះ',
+        'product_name': product['product_name'] ?? appText(context, km: 'គ្មានឈ្មោះ', en: 'Unnamed product'),
         'price': product['price'] ?? 0,
         'currency': product['currency'] ?? '៛',
         'image_url': finalImageUrl,
@@ -75,7 +76,7 @@ class _RelatedProductsWidgetState extends State<RelatedProductsWidget> {
         'customer_id': _currentUserId,
         'created_at': FieldValue.serverTimestamp(),
         'seller_id': product['seller_id'] ?? '',
-        'seller_name': product['seller_name'] ?? 'អាជីវករ សេសាន',
+        'seller_name': product['seller_name'] ?? appText(context, km: 'អាជីវករ សេសាន', en: 'Sesan seller'),
         'seller_phone': product['seller_phone'] ?? product['phone1'] ?? '',
         'seller_photo': product['seller_photo'] ?? '',
       });
@@ -83,8 +84,8 @@ class _RelatedProductsWidgetState extends State<RelatedProductsWidget> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("✅ បន្ថែមទៅកន្ត្រករួចរាល់!"),
+          SnackBar(
+            content: Text(appText(context, km: "✅ បន្ថែមទៅកន្ត្រករួចរាល់!", en: "✅ Added to cart!")),
             backgroundColor: Colors.green,
           ),
         );
@@ -94,15 +95,15 @@ class _RelatedProductsWidgetState extends State<RelatedProductsWidget> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text("❌ បរាជ័យ: $e")));
+        ).showSnackBar(SnackBar(content: Text(appText(context, km: "❌ បរាជ័យ: $e", en: "❌ Failed: $e"))));
       }
     }
   }
 
 
   // ── FORMAT TIME AGO ─────────────────────────────────────
-  String _formatTimeAgo(dynamic timestamp) {
-    if (timestamp == null) return "មុននេះបន្តិច";
+  String _formatTimeAgo(BuildContext context, dynamic timestamp) {
+    if (timestamp == null) return appText(context, km: "មុននេះបន្តិច", en: "Just now");
 
 
     DateTime date;
@@ -111,17 +112,17 @@ class _RelatedProductsWidgetState extends State<RelatedProductsWidget> {
     } else if (timestamp is DateTime) {
       date = timestamp;
     } else {
-      return "មុននេះបន្តិច";
+      return appText(context, km: "មុននេះបន្តិច", en: "Just now");
     }
 
 
     final Duration diff = DateTime.now().difference(date);
 
 
-    if (diff.inMinutes < 1) return "មុននេះបន្តិច";
-    if (diff.inMinutes < 60) return "${diff.inMinutes} នាទីមុន";
-    if (diff.inHours < 24) return "${diff.inHours} ម៉ោងមុន";
-    if (diff.inDays < 7) return "${diff.inDays} ថ្ងៃមុន";
+    if (diff.inMinutes < 1) return appText(context, km: "មុននេះបន្តិច", en: "Just now");
+    if (diff.inMinutes < 60) return appText(context, km: "${diff.inMinutes} នាទីមុន", en: "${diff.inMinutes} min ago");
+    if (diff.inHours < 24) return appText(context, km: "${diff.inHours} ម៉ោងមុន", en: "${diff.inHours} hr ago");
+    if (diff.inDays < 7) return appText(context, km: "${diff.inDays} ថ្ងៃមុន", en: "${diff.inDays} days ago");
     return "${date.day}/${date.month}/${date.year}";
   }
 
@@ -131,11 +132,11 @@ class _RelatedProductsWidgetState extends State<RelatedProductsWidget> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           child: Text(
-            "ទំនិញស្រដៀងគ្នា",
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            appText(context, km: "ទំនិញស្រដៀងគ្នា", en: "Similar products"),
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
         ),
         StreamBuilder<QuerySnapshot>(
@@ -175,10 +176,9 @@ class _RelatedProductsWidgetState extends State<RelatedProductsWidget> {
                 item['id'] = relatedItems[index].id;
 
 
-                final String name = item['product_name'] ?? 'គ្មានឈ្មោះ';
+                final String name = item['product_name'] ?? appText(context, km: 'គ្មានឈ្មោះ', en: 'Unnamed product');
                 final String price = (item['price'] ?? '0').toString();
-                final String location = (item['location'] ?? 'ភ្នំពេញ')
-                    .toString();
+                final String location = (item['location'] ?? appText(context, km: 'ភ្នំពេញ', en: 'Phnom Penh')).toString();
                 final dynamic timestamp = item['created_at'];
                 final bool isLocked =
                     (item['is_locked'] ?? false) || item['shop_closed'] == true;
@@ -326,7 +326,7 @@ class _RelatedProductsWidgetState extends State<RelatedProductsWidget> {
                                   ),
                                   const SizedBox(width: 3),
                                   Text(
-                                    _formatTimeAgo(timestamp),
+                                    _formatTimeAgo(context, timestamp),
                                     style: const TextStyle(
                                       fontSize: 9,
                                       color: Colors.grey,
