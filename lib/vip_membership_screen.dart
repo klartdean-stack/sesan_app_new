@@ -251,7 +251,7 @@ class _VipMembershipScreenState extends State<VipMembershipScreen> {
       _showTopMessage(_t('✅ បានរក្សាទុកក្នុង Gallery!', '✅ Saved to Gallery!'));
     } catch (e) {
       if (!mounted) return;
-      _showTopMessage('❌ មិនអាចរក្សាទុក: $e', isError: true);
+      _showTopMessage(_t('❌ មិនអាចរក្សាទុក: $e', '❌ Could not save: $e'), isError: true);
     }
   }
 
@@ -305,7 +305,7 @@ class _VipMembershipScreenState extends State<VipMembershipScreen> {
         _showSnack(_t('✅ សំណើ VIP ត្រូវបានបញ្ជូន!', '✅ VIP request submitted!'), isError: false);
       }
     } catch (e) {
-      if (mounted) _showSnack('❌ មានបញ្ហា: $e', isError: true);
+      if (mounted) _showSnack(_t('❌ មានបញ្ហា: $e', '❌ Error: $e'), isError: true);
     } finally {
       setModalState(() => _isSubmitting = false);
     }
@@ -544,10 +544,15 @@ class _VipMembershipScreenState extends State<VipMembershipScreen> {
       'newProducts': Colors.orangeAccent,
       'newAuctions': Colors.purpleAccent,
     };
-    const lineLabels = {
-      'newUsers': 'អ្នកថ្មី', 'logins': 'ចូលប្រើ', 'newProducts': 'ទំនិញផុស', 'newAuctions': 'ដេញថ្លៃ',
+    final lineLabels = {
+      'newUsers': _t('អ្នកថ្មី', 'New users'),
+      'logins': _t('ចូលប្រើ', 'Logins'),
+      'newProducts': _t('ទំនិញផុស', 'Products'),
+      'newAuctions': _t('ដេញថ្លៃ', 'Auctions'),
     };
-    const months = ['មក', 'កុម', 'មីនា', 'មេសា', 'ឧស', 'មិថុ', 'កក្ក', 'សីហា', 'កញ្ញា', 'តុលា', 'វិច', 'ធ្នូ'];
+    final months = Localizations.localeOf(context).languageCode == 'en'
+        ? const ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+        : const ['មក', 'កុម', 'មីនា', 'មេសា', 'ឧស', 'មិថុ', 'កក្ក', 'សីហា', 'កញ្ញា', 'តុលា', 'វិច', 'ធ្នូ'];
     List<LineChartBarData> bars = [];
     for (var key in ['newUsers', 'logins', 'newProducts', 'newAuctions']) {
       final values = data[key]!;
@@ -567,7 +572,7 @@ class _VipMembershipScreenState extends State<VipMembershipScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
             Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-          const Text("និន្នាការប្រចាំឆ្នាំ", style: TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.bold, fontFamily: 'Siemreap')),
+          Text(_t('និន្នាការប្រចាំឆ្នាំ', 'Annual trends'), style: const TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.bold, fontFamily: 'Siemreap')),
           Text(DateTime.now().year.toString(), style: TextStyle(color: Colors.white.withOpacity(0.3), fontSize: 12)),
         ]),
         const SizedBox(height: 14),
@@ -629,9 +634,9 @@ class _VipMembershipScreenState extends State<VipMembershipScreen> {
                     child: const Icon(Icons.lock_outline, color: amberColor, size: 36),
                   ),
                   const SizedBox(height: 16),
-                  const Text("ដោះសោទិន្នន័យពិសេស", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold, fontFamily: 'Siemreap')),
+                  Text(_t('ដោះសោទិន្នន័យពិសេស', 'Unlock exclusive data'), style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold, fontFamily: 'Siemreap')),
                   const SizedBox(height: 8),
-                  Text("ក្លាយជាសមាជិក VIP ដើម្បីមើលក្រាប\nស្ថិតិ Real-time និងទិន្នន័យពិសេស",
+                  Text(_t('ក្លាយជាសមាជិក VIP ដើម្បីមើលក្រាប\nស្ថិតិ Real-time និងទិន្នន័យពិសេស', 'Become a VIP member to view charts,\nreal-time stats and exclusive data'),
                       textAlign: TextAlign.center,
                       style: TextStyle(color: Colors.white.withOpacity(0.65), fontSize: 13, fontFamily: 'Siemreap', height: 1.6)),
                   const SizedBox(height: 20),
@@ -646,10 +651,10 @@ class _VipMembershipScreenState extends State<VipMembershipScreen> {
                     ),
                     onPressed: () => _showVipPurchaseDialog(context),
                     icon: const Icon(Icons.diamond, size: 18),
-                    label: const Text('ទិញ VIP ឥឡូវនេះ', style: TextStyle(fontFamily: 'Siemreap', fontWeight: FontWeight.bold, fontSize: 14)),
+                    label: Text(_t('ទិញ VIP ឥឡូវនេះ', 'Buy VIP now'), style: const TextStyle(fontFamily: 'Siemreap', fontWeight: FontWeight.bold, fontSize: 14)),
                   ),
                   const SizedBox(height: 10),
-                  Text("តម្លៃ ${formatter.format(vipPrice)} ៛ / ខែ", style: TextStyle(color: amberColor.withOpacity(0.7), fontSize: 12, fontFamily: 'Siemreap')),
+                  Text(_t('តម្លៃ ${formatter.format(vipPrice)} ៛ / ខែ', 'Price ${formatter.format(vipPrice)} KHR / month'), style: TextStyle(color: amberColor.withOpacity(0.7), fontSize: 12, fontFamily: 'Siemreap')),
                 ],
               ),
             ),
@@ -675,9 +680,9 @@ class _VipMembershipScreenState extends State<VipMembershipScreen> {
                   children: [
                   Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(2))),
               const SizedBox(height: 20),
-              const Text("ក្លាយជាសមាជិក VIP", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold, fontFamily: 'Siemreap')),
+              Text(_t('ក្លាយជាសមាជិក VIP', 'Become a VIP member'), style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold, fontFamily: 'Siemreap')),
               const SizedBox(height: 4),
-              Text("ជំហាន ${currentStep + 1}/3", style: TextStyle(color: Colors.white.withOpacity(0.45), fontSize: 12)),
+              Text(_t('ជំហាន ${currentStep + 1}/3', 'Step ${currentStep + 1}/3'), style: TextStyle(color: Colors.white.withOpacity(0.45), fontSize: 12)),
               const SizedBox(height: 20),
               Row(children: [
                 _stepDot(0, currentStep), _stepLine(0, currentStep),
@@ -702,7 +707,7 @@ class _VipMembershipScreenState extends State<VipMembershipScreen> {
           child: OutlinedButton(
           style: OutlinedButton.styleFrom(side: const BorderSide(color: Colors.white24), padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
       onPressed: () => setModalState(() => currentStep--),
-      child: const Text("ថយក្រោយ", style: TextStyle(color: Colors.white70)),
+      child: Text(_t('ថយក្រោយ', 'Back'), style: const TextStyle(color: Colors.white70)),
     ),
   ),
     const SizedBox(width: 10),
@@ -726,7 +731,7 @@ class _VipMembershipScreenState extends State<VipMembershipScreen> {
     }
     },
     child: _isSubmitting
-    ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)): Text(currentStep < 2 ? "បន្ត →" : "✓ បញ្ជូនសំណើ", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+    ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)): Text(currentStep < 2 ? _t('បន្ត →', 'Continue →') : _t('✓ បញ្ជូនសំណើ', '✓ Submit request'), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
     ),
     ),
                   ],
@@ -746,13 +751,13 @@ class _VipMembershipScreenState extends State<VipMembershipScreen> {
         Container(
           padding: const EdgeInsets.all(14), margin: const EdgeInsets.only(bottom: 20),
           decoration: BoxDecoration(color: accentColor.withOpacity(0.1), borderRadius: BorderRadius.circular(12), border: Border.all(color: accentColor.withOpacity(0.3))),
-          child: const Row(children: [
-            Icon(Icons.info_outline, color: Colors.blueAccent, size: 18), SizedBox(width: 10),
-            Expanded(child: Text("បំពេញព័ត៌មានដើម្បីបញ្ជាក់អត្តសញ្ញាណ", style: TextStyle(color: Colors.white70, fontSize: 12, fontFamily: 'Siemreap'))),
+          child: Row(children: [
+            const Icon(Icons.info_outline, color: Colors.blueAccent, size: 18), const SizedBox(width: 10),
+            Expanded(child: Text(_t('បំពេញព័ត៌មានដើម្បីបញ្ជាក់អត្តសញ្ញាណ', 'Enter your information to verify your identity'), style: const TextStyle(color: Colors.white70, fontSize: 12, fontFamily: 'Siemreap'))),
           ]),
         ),
-        _buildDarkInput("ឈ្មោះពេញ *", nameController, Icons.person),
-        _buildDarkInput("លេខទូរស័ព្ទ *", phoneController, Icons.phone, TextInputType.phone),
+        _buildDarkInput(_t('ឈ្មោះពេញ *', 'Full name *'), nameController, Icons.person),
+        _buildDarkInput(_t('លេខទូរស័ព្ទ *', 'Phone number *'), phoneController, Icons.phone, TextInputType.phone),
       ],
     );
   }
@@ -768,18 +773,18 @@ class _VipMembershipScreenState extends State<VipMembershipScreen> {
             border: Border.all(color: amberColor.withOpacity(0.4)),
           ),
           child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-            const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text("តម្លៃ VIP Membership", style: TextStyle(color: Colors.white60, fontSize: 11, fontFamily: 'Siemreap')),
-              SizedBox(height: 4),
-              Text("សមាជិកភាព ១ ខែ", style: TextStyle(color: Colors.white54, fontSize: 10)),
+            Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(_t('តម្លៃ VIP Membership', 'VIP Membership price'), style: const TextStyle(color: Colors.white60, fontSize: 11, fontFamily: 'Siemreap')),
+              const SizedBox(height: 4),
+              Text(_t('សមាជិកភាព ១ ខែ', '1-month membership'), style: const TextStyle(color: Colors.white54, fontSize: 10)),
             ]),
             Text("${formatter.format(vipPrice)} ៛", style: const TextStyle(color: Colors.amber, fontSize: 24, fontWeight: FontWeight.bold)),
           ]),
         ),
         const SizedBox(height: 20),
-        const Text("QR Code បង់ប្រាក់", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14, fontFamily: 'Siemreap')),
+        Text(_t('QR Code បង់ប្រាក់', 'Payment QR Code'), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14, fontFamily: 'Siemreap')),
         const SizedBox(height: 4),
-        Text("Long press ដើម្បីទាញ QR", style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 11)),
+        Text(_t('Long press ដើម្បីទាញ QR', 'Long press to save QR'), style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 11)),
         const SizedBox(height: 12),
         GestureDetector(
           onLongPress: _downloadQR,
@@ -795,7 +800,7 @@ class _VipMembershipScreenState extends State<VipMembershipScreen> {
           child: ElevatedButton.icon(
             onPressed: _launchABA,
             icon: const Icon(Icons.open_in_new, size: 18),
-            label: const Text("បើក App ABA", style: TextStyle(fontFamily: 'Siemreap')),
+            label: Text(_t('បើក App ABA', 'Open ABA App'), style: const TextStyle(fontFamily: 'Siemreap')),
             style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF005D7E), foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 13), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
           ),
         ),
@@ -808,9 +813,9 @@ class _VipMembershipScreenState extends State<VipMembershipScreen> {
       Container(
         padding: const EdgeInsets.all(14), margin: const EdgeInsets.only(bottom: 16),
         decoration: BoxDecoration(color: Colors.green.withOpacity(0.08), borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.greenAccent.withOpacity(0.3))),
-        child: const Row(children: [
-          Icon(Icons.check_circle_outline, color: Colors.greenAccent, size: 18), SizedBox(width: 10),
-          Expanded(child: Text("ភ្ជាប់រូបថតវិក្កយបត្របង់ប្រាក់", style: TextStyle(color: Colors.white70, fontSize: 12, fontFamily: 'Siemreap'))),
+        child: Row(children: [
+          const Icon(Icons.check_circle_outline, color: Colors.greenAccent, size: 18), const SizedBox(width: 10),
+          Expanded(child: Text(_t('ភ្ជាប់រូបថតវិក្កយបត្របង់ប្រាក់', 'Attach your payment receipt image'), style: const TextStyle(color: Colors.white70, fontSize: 12, fontFamily: 'Siemreap'))),
         ]),
       ),
       GestureDetector(
@@ -829,7 +834,7 @@ class _VipMembershipScreenState extends State<VipMembershipScreen> {
               ? Column(mainAxisAlignment: MainAxisAlignment.center, children: [
             Icon(Icons.add_a_photo_outlined, color: Colors.white.withOpacity(0.35), size: 44),
             const SizedBox(height: 10),
-            Text("ចុចដើម្បីជ្រើសរើស", style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 13, fontFamily: 'Siemreap')),
+            Text(_t('ចុចដើម្បីជ្រើសរើស', 'Tap to select'), style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 13, fontFamily: 'Siemreap')),
           ])
               : ClipRRect(borderRadius: BorderRadius.circular(14), child: Image.file(_receiptImage!, fit: BoxFit.cover)),
         ),
@@ -839,7 +844,7 @@ class _VipMembershipScreenState extends State<VipMembershipScreen> {
         TextButton.icon(
           onPressed: () => setModalState(() => _receiptImage = null),
           icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 18),
-          label: const Text("លុបចេញ", style: TextStyle(color: Colors.redAccent, fontFamily: 'Siemreap')),
+          label: Text(_t('លុបចេញ', 'Remove'), style: const TextStyle(color: Colors.redAccent, fontFamily: 'Siemreap')),
         ),
       ],
     ],
@@ -890,7 +895,7 @@ class _VipMembershipScreenState extends State<VipMembershipScreen> {
               focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: accentColor, width: 1.5)),
               errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Colors.redAccent)),
             ),
-          validator: (v) => (v == null || v.trim().isEmpty) ? 'សូមបំពេញ ${label.replaceAll(' *', '')}' : null,
+          validator: (v) => (v == null || v.trim().isEmpty) ? _t('សូមបំពេញ ${label.replaceAll(' *', '')}', 'Please enter ${label.replaceAll(' *', '')}') : null,
         ),
     );
   }
@@ -910,7 +915,7 @@ class _VipMembershipScreenState extends State<VipMembershipScreen> {
           if (!prefsSnap.hasData) return _buildShimmer();
           final uid = prefsSnap.data!.getString('user_uid') ?? '';
           if (uid.isEmpty) {
-            return const Center(child: Text("សូមចូលប្រើគណនីដើម្បីបន្ត", style: TextStyle(color: Colors.white70, fontFamily: 'Siemreap')));
+            return Center(child: Text(_t('សូមចូលប្រើគណនីដើម្បីបន្ត', 'Please log in to continue'), style: const TextStyle(color: Colors.white70, fontFamily: 'Siemreap')));
           }
           return StreamBuilder<DocumentSnapshot>(
             stream: FirebaseFirestore.instance.collection('users').doc(uid).snapshots(),
@@ -941,7 +946,7 @@ class _VipMembershipScreenState extends State<VipMembershipScreen> {
                           style: ElevatedButton.styleFrom(backgroundColor: amberColor, foregroundColor: Colors.black, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)), elevation: 6, shadowColor: amberColor.withOpacity(0.45)),
                           onPressed: () => _showVipPurchaseDialog(context),
                           icon: const Icon(Icons.diamond, size: 20),
-                          label: const Text("ចាប់ផ្ដើមជាសមាជិក VIP", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, fontFamily: 'Siemreap')),
+                          label: Text(_t('ចាប់ផ្ដើមជាសមាជិក VIP', 'Become a VIP member'), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, fontFamily: 'Siemreap')),
                         ),
                       ),
                   ]),
