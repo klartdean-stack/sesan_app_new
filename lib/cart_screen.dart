@@ -86,10 +86,11 @@ class _CartScreenState extends State<CartScreen>
       entry.value.cancel();
       final qty = _localQuantities[entry.key];
       if (qty != null) {
-        futures.add(FirebaseFirestore.instance
-            .collection('carts')
-            .doc(entry.key)
-            .update({'quantity': qty}));
+        futures.add(
+          FirebaseFirestore.instance.collection('carts').doc(entry.key).update({
+            'quantity': qty,
+          }),
+        );
       }
     }
     _debounceTimers.clear();
@@ -120,77 +121,113 @@ class _CartScreenState extends State<CartScreen>
       child: Scaffold(
         backgroundColor: const Color(0xFFF5F5F7),
         appBar: AppBar(
-          title: Text('កន្ត្រករបស់ខ្ញុំ'.tr,
-              style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+          title: Text(
+            'កន្ត្រករបស់ខ្ញុំ'.tr,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
           backgroundColor: Colors.green,
           elevation: 0,
           actions: [
             IconButton(
-              icon: const Icon(Icons.history_rounded, size: 28, color: Colors.white),
-              onPressed: () => Navigator.push(context,
-                  MaterialPageRoute(builder: (_) => const OrderHistoryScreen())),
+              icon: const Icon(
+                Icons.history_rounded,
+                size: 28,
+                color: Colors.white,
+              ),
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const OrderHistoryScreen()),
+              ),
             ),
             IconButton(
-              icon: const Icon(Icons.local_shipping_rounded, color: Colors.white),
-              onPressed: () => Navigator.push(context,
-                  MaterialPageRoute(builder: (_) => const OrderTrackingScreen())),
+              icon: const Icon(
+                Icons.local_shipping_rounded,
+                color: Colors.white,
+              ),
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const OrderTrackingScreen()),
+              ),
             ),
             const SizedBox(width: 8),
           ],
         ),
-        body: Column(children: [
-          _buildOrderTracking(),
-          Expanded(
-            child: _isLoadingUserId
-                ? const Center(child: CircularProgressIndicator(color: Colors.green))
-                : _currentUserId == null
-                    ? Center(child: Text('មិនអាចទាញព័ត៌មានអ្នកប្រើបាន'.tr))
-                    : StreamBuilder<QuerySnapshot>(
-                        stream: FirebaseFirestore.instance
-                            .collection('carts')
-                            .where('customer_id', isEqualTo: _currentUserId)
-                            .orderBy('created_at', descending: true)
-                            .snapshots(),
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState == ConnectionState.waiting &&
-                              _cachedDocs != null) {
-                            return _buildCartContent(_cachedDocs!, _cachedTotal);
-                          }
-                          if (snapshot.connectionState == ConnectionState.waiting) {
-                            return const Center(child: CircularProgressIndicator(color: Colors.green));
-                          }
-                          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                            _cachedDocs = null;
-                            _cachedTotal = 0.0;
-                            _localQuantities.clear();
-                            for (final timer in _debounceTimers.values) timer.cancel();
-                            _debounceTimers.clear();
-                            return _buildEmptyCart();
-                          }
-                          final docs = snapshot.data!.docs;
-                          for (final doc in docs) {
-                            _localQuantities.putIfAbsent(doc.id,
-                                () => int.tryParse(doc['quantity']?.toString() ?? '1') ?? 1);
-                          }
-                          _localQuantities.removeWhere((id, _) => !docs.any((d) => d.id == id));
-                          _debounceTimers.removeWhere((id, timer) {
-                            final remove = !docs.any((d) => d.id == id);
-                            if (remove) timer.cancel();
-                            return remove;
-                          });
-                          final total = _calculateTotal(docs);
-                          _cachedDocs = docs;
-                          _cachedTotal = total;
-                          return _buildCartContent(docs, total);
-                        },
-                      ),
-          ),
-        ]),
+        body: Column(
+          children: [
+            _buildOrderTracking(),
+            Expanded(
+              child: _isLoadingUserId
+                  ? const Center(
+                      child: CircularProgressIndicator(color: Colors.green),
+                    )
+                  : _currentUserId == null
+                  ? Center(child: Text('មិនអាចទាញព័ត៌មានអ្នកប្រើបាន'.tr))
+                  : StreamBuilder<QuerySnapshot>(
+                      stream: FirebaseFirestore.instance
+                          .collection('carts')
+                          .where('customer_id', isEqualTo: _currentUserId)
+                          .orderBy('created_at', descending: true)
+                          .snapshots(),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                                ConnectionState.waiting &&
+                            _cachedDocs != null) {
+                          return _buildCartContent(_cachedDocs!, _cachedTotal);
+                        }
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const Center(
+                            child: CircularProgressIndicator(
+                              color: Colors.green,
+                            ),
+                          );
+                        }
+                        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                          _cachedDocs = null;
+                          _cachedTotal = 0.0;
+                          _localQuantities.clear();
+                          for (final timer in _debounceTimers.values)
+                            timer.cancel();
+                          _debounceTimers.clear();
+                          return _buildEmptyCart();
+                        }
+                        final docs = snapshot.data!.docs;
+                        for (final doc in docs) {
+                          _localQuantities.putIfAbsent(
+                            doc.id,
+                            () =>
+                                int.tryParse(
+                                  doc['quantity']?.toString() ?? '1',
+                                ) ??
+                                1,
+                          );
+                        }
+                        _localQuantities.removeWhere(
+                          (id, _) => !docs.any((d) => d.id == id),
+                        );
+                        _debounceTimers.removeWhere((id, timer) {
+                          final remove = !docs.any((d) => d.id == id);
+                          if (remove) timer.cancel();
+                          return remove;
+                        });
+                        final total = _calculateTotal(docs);
+                        _cachedDocs = docs;
+                        _cachedTotal = total;
+                        return _buildCartContent(docs, total);
+                      },
+                    ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildCartContent(List<QueryDocumentSnapshot> docs, double total) => Column(
+  Widget _buildCartContent(List<QueryDocumentSnapshot> docs, double total) =>
+      Column(
         children: [
           Expanded(
             child: ListView.builder(
@@ -210,23 +247,34 @@ class _CartScreenState extends State<CartScreen>
         ? (data['stock_quantity'] as num).toInt()
         : int.tryParse(data['stock_quantity']?.toString() ?? '') ?? 0;
     final rawUnit = data['stock_unit']?.toString().trim() ?? '';
-    final stockUnit = ['item', 'items', 'item(s)'].contains(rawUnit.toLowerCase()) ? '' : rawUnit;
+    final stockUnit =
+        ['item', 'items', 'item(s)'].contains(rawUnit.toLowerCase())
+        ? ''
+        : rawUnit;
     final int maxQty = tracksStock ? stockQuantity.clamp(1, 999).toInt() : 999;
     int qty = _getQuantity(item);
     if (qty < 1) qty = 1;
     if (qty > maxQty) qty = maxQty;
-    final price = double.tryParse(item['price'].toString().replaceAll(',', '')) ?? 0.0;
+    final price =
+        double.tryParse(item['price'].toString().replaceAll(',', '')) ?? 0.0;
     final controller = _qtyControllers.putIfAbsent(
-        item.id, () => TextEditingController(text: '$qty'));
+      item.id,
+      () => TextEditingController(text: '$qty'),
+    );
     final focusNode = _qtyFocusNodes.putIfAbsent(item.id, () => FocusNode());
     if (!focusNode.hasListeners) {
       focusNode.addListener(() {
         if (mounted) {
-          setState(() => _isAnyFieldFocused = _qtyFocusNodes.values.any((n) => n.hasFocus));
+          setState(
+            () => _isAnyFieldFocused = _qtyFocusNodes.values.any(
+              (n) => n.hasFocus,
+            ),
+          );
         }
       });
     }
-    if (!focusNode.hasFocus && controller.text != '$qty') controller.text = '$qty';
+    if (!focusNode.hasFocus && controller.text != '$qty')
+      controller.text = '$qty';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -234,94 +282,165 @@ class _CartScreenState extends State<CartScreen>
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10),
+        ],
       ),
-      child: Row(children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(8),
-          child: (item['image_url'] ?? '').toString().isNotEmpty
-              ? Image.network(item['image_url'], width: 55, height: 55, fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Container(
-                      width: 55, height: 55, color: Colors.grey[300],
-                      child: const Icon(Icons.image_not_supported, size: 25, color: Colors.grey)))
-              : Container(width: 55, height: 55, color: Colors.grey[300],
-                  child: const Icon(Icons.image, size: 25, color: Colors.grey)),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(item['product_name'] ?? _t('គ្មានឈ្មោះ', 'Unnamed product'),
-                style: const TextStyle(fontWeight: FontWeight.bold)),
-            Text('${currencyFormat.format(price)} ៛',
-                style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
-            if (tracksStock)
-              Text(
-                stockQuantity <= 0
-                    ? 'អស់ពីស្តុក'.tr
-                    : '${'នៅសល់'.tr}: $stockQuantity${stockUnit.isEmpty ? '' : ' $stockUnit'}',
-                style: TextStyle(fontSize: 11,
-                    color: stockQuantity <= 0 ? Colors.red : Colors.green),
-              ),
-            const SizedBox(height: 8),
-            Row(children: [
-              _qtyBtn(Icons.remove, () => _updateQuantity(item.id, qty - 1, maxQty: maxQty)),
-              Container(
-                width: 60,
-                height: 35,
-                margin: const EdgeInsets.symmetric(horizontal: 8),
-                child: TextField(
-                  controller: controller,
-                  focusNode: focusNode,
-                  keyboardType: TextInputType.number,
-                  textAlign: TextAlign.center,
-                  inputFormatters: [
-                    LengthLimitingTextInputFormatter(3),
-                    FilteringTextInputFormatter.digitsOnly,
-                  ],
-                  decoration: InputDecoration(
-                    contentPadding: EdgeInsets.zero,
-                    counterText: '',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(5)),
+      child: Row(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: (item['image_url'] ?? '').toString().isNotEmpty
+                ? Image.network(
+                    item['image_url'],
+                    width: 55,
+                    height: 55,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Container(
+                      width: 55,
+                      height: 55,
+                      color: Colors.grey[300],
+                      child: const Icon(
+                        Icons.image_not_supported,
+                        size: 25,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  )
+                : Container(
+                    width: 55,
+                    height: 55,
+                    color: Colors.grey[300],
+                    child: const Icon(
+                      Icons.image,
+                      size: 25,
+                      color: Colors.grey,
+                    ),
                   ),
-                  onSubmitted: (value) {
-                    _validateAndUpdateQty(item.id, value, controller, maxQty: maxQty);
-                    _dismissKeyboard();
-                  },
-                  onTapOutside: (_) {
-                    _validateAndUpdateQty(item.id, controller.text, controller, maxQty: maxQty);
-                    _dismissKeyboard();
-                  },
-                  onEditingComplete: () =>
-                      _validateAndUpdateQty(item.id, controller.text, controller, maxQty: maxQty),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  item['product_name'] ?? _t('គ្មានឈ្មោះ', 'Unnamed product'),
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  '${currencyFormat.format(price)} ៛',
+                  style: const TextStyle(
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                if (tracksStock)
+                  Text(
+                    stockQuantity <= 0
+                        ? 'អស់ពីស្តុក'.tr
+                        : '${'នៅសល់'.tr}: $stockQuantity${stockUnit.isEmpty ? '' : ' $stockUnit'}',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: stockQuantity <= 0 ? Colors.red : Colors.green,
+                    ),
+                  ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    _qtyBtn(
+                      Icons.remove,
+                      () => _updateQuantity(item.id, qty - 1, maxQty: maxQty),
+                    ),
+                    Container(
+                      width: 60,
+                      height: 35,
+                      margin: const EdgeInsets.symmetric(horizontal: 8),
+                      child: TextField(
+                        controller: controller,
+                        focusNode: focusNode,
+                        keyboardType: TextInputType.number,
+                        textAlign: TextAlign.center,
+                        inputFormatters: [
+                          LengthLimitingTextInputFormatter(3),
+                          FilteringTextInputFormatter.digitsOnly,
+                        ],
+                        decoration: InputDecoration(
+                          contentPadding: EdgeInsets.zero,
+                          counterText: '',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(5),
+                          ),
+                        ),
+                        onSubmitted: (value) {
+                          _validateAndUpdateQty(
+                            item.id,
+                            value,
+                            controller,
+                            maxQty: maxQty,
+                          );
+                          _dismissKeyboard();
+                        },
+                        onTapOutside: (_) {
+                          _validateAndUpdateQty(
+                            item.id,
+                            controller.text,
+                            controller,
+                            maxQty: maxQty,
+                          );
+                          _dismissKeyboard();
+                        },
+                        onEditingComplete: () => _validateAndUpdateQty(
+                          item.id,
+                          controller.text,
+                          controller,
+                          maxQty: maxQty,
+                        ),
+                      ),
+                    ),
+                    _qtyBtn(
+                      Icons.add,
+                      () => _updateQuantity(item.id, qty + 1, maxQty: maxQty),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          Column(
+            children: [
+              Text(
+                '${currencyFormat.format(price * qty)} ៛',
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blue,
                 ),
               ),
-              _qtyBtn(Icons.add, () => _updateQuantity(item.id, qty + 1, maxQty: maxQty)),
-            ]),
-          ]),
-        ),
-        Column(children: [
-          Text('${currencyFormat.format(price * qty)} ៛',
-              style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blue)),
-          IconButton(
-            icon: const Icon(Icons.delete_outline, color: Colors.grey),
-            onPressed: () {
-              _qtyControllers[item.id]?.dispose();
-              _qtyControllers.remove(item.id);
-              _qtyFocusNodes[item.id]?.dispose();
-              _qtyFocusNodes.remove(item.id);
-              _debounceTimers[item.id]?.cancel();
-              _debounceTimers.remove(item.id);
-              _localQuantities.remove(item.id);
-              item.reference.delete();
-            },
+              IconButton(
+                icon: const Icon(Icons.delete_outline, color: Colors.grey),
+                onPressed: () {
+                  _qtyControllers[item.id]?.dispose();
+                  _qtyControllers.remove(item.id);
+                  _qtyFocusNodes[item.id]?.dispose();
+                  _qtyFocusNodes.remove(item.id);
+                  _debounceTimers[item.id]?.cancel();
+                  _debounceTimers.remove(item.id);
+                  _localQuantities.remove(item.id);
+                  item.reference.delete();
+                },
+              ),
+            ],
           ),
-        ]),
-      ]),
+        ],
+      ),
     );
   }
 
-  void _validateAndUpdateQty(String id, String value,
-      TextEditingController controller, {int maxQty = 999}) {
+  void _validateAndUpdateQty(
+    String id,
+    String value,
+    TextEditingController controller, {
+    int maxQty = 999,
+  }) {
     int qty = int.tryParse(value) ?? 1;
     if (qty < 1) qty = 1;
     if (qty > maxQty) qty = maxQty;
@@ -330,77 +449,110 @@ class _CartScreenState extends State<CartScreen>
   }
 
   Widget _qtyBtn(IconData icon, VoidCallback onTap) => InkWell(
-        onTap: () {
-          _dismissKeyboard();
-          onTap();
-        },
-        child: Container(
-          padding: const EdgeInsets.all(2),
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey.shade300),
-            borderRadius: BorderRadius.circular(5),
-          ),
-          child: Icon(icon, size: 16),
-        ),
-      );
+    onTap: () {
+      _dismissKeyboard();
+      onTap();
+    },
+    child: Container(
+      padding: const EdgeInsets.all(2),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(5),
+      ),
+      child: Icon(icon, size: 16),
+    ),
+  );
 
-  Widget _buildCheckoutButton(double total, List<QueryDocumentSnapshot> docs) => Container(
-        padding: const EdgeInsets.all(20),
-        color: Colors.white,
-        child: SafeArea(
-          child: ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: _isProcessingCheckout ? Colors.grey : Colors.green,
-              minimumSize: const Size(double.infinity, 55),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-            ),
-            onPressed: _isProcessingCheckout
-                ? null
-                : () async {
-                    setState(() => _isProcessingCheckout = true);
-                    try {
-                      final sellerIds = docs
-                          .map((d) => ((d.data() as Map<String, dynamic>)['seller_id'] ?? '').toString())
-                          .where((e) => e.isNotEmpty)
-                          .toSet()
-                          .toList();
-                      final productIds = docs
-                          .map((d) => ((d.data() as Map<String, dynamic>)['product_id'] ?? '').toString())
-                          .where((e) => e.isNotEmpty)
-                          .toList();
-                      await MarketplaceAnalyticsService.logEvent(
-                        type: 'checkout_started',
-                        buyerId: _currentUserId ?? FirebaseAuth.instance.currentUser?.uid ?? '',
-                        sellerId: sellerIds.length == 1
-                            ? sellerIds.first
-                            : (sellerIds.isEmpty ? '' : 'multiple'),
-                        productId: productIds.isEmpty ? '' : productIds.first,
-                        sellerIds: sellerIds,
-                        productIds: productIds,
-                        source: 'cart',
-                        totalAmount: total,
-                      );
-                      await _flushPendingUpdates();
-                      if (!mounted) return;
-                      Navigator.push(context,
-                          MaterialPageRoute(builder: (_) => ReceiptScreen(cartDocs: docs)));
-                    } finally {
-                      if (mounted) setState(() => _isProcessingCheckout = false);
-                    }
-                  },
-            child: _isProcessingCheckout
-                ? const SizedBox(width: 22, height: 22,
-                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
-                : FittedBox(
-                    child: Text(
-                      '${'បន្តទៅការទូទាត់'.tr} (${currencyFormat.format(total)} ៛)',
-                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white),
+  Widget _buildCheckoutButton(
+    double total,
+    List<QueryDocumentSnapshot> docs,
+  ) => Container(
+    padding: const EdgeInsets.all(20),
+    color: Colors.white,
+    child: SafeArea(
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: _isProcessingCheckout ? Colors.grey : Colors.green,
+          minimumSize: const Size(double.infinity, 55),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+        ),
+        onPressed: _isProcessingCheckout
+            ? null
+            : () async {
+                setState(() => _isProcessingCheckout = true);
+                try {
+                  final sellerIds = docs
+                      .map(
+                        (d) =>
+                            ((d.data() as Map<String, dynamic>)['seller_id'] ??
+                                    '')
+                                .toString(),
+                      )
+                      .where((e) => e.isNotEmpty)
+                      .toSet()
+                      .toList();
+                  final productIds = docs
+                      .map(
+                        (d) =>
+                            ((d.data() as Map<String, dynamic>)['product_id'] ??
+                                    '')
+                                .toString(),
+                      )
+                      .where((e) => e.isNotEmpty)
+                      .toList();
+                  await MarketplaceAnalyticsService.logEvent(
+                    type: 'checkout_started',
+                    buyerId:
+                        _currentUserId ??
+                        FirebaseAuth.instance.currentUser?.uid ??
+                        '',
+                    sellerId: sellerIds.length == 1
+                        ? sellerIds.first
+                        : (sellerIds.isEmpty ? '' : 'multiple'),
+                    productId: productIds.isEmpty ? '' : productIds.first,
+                    sellerIds: sellerIds,
+                    productIds: productIds,
+                    source: 'cart',
+                    totalAmount: total,
+                  );
+                  await _flushPendingUpdates();
+                  if (!mounted) return;
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ReceiptScreen(cartDocs: docs),
                     ),
+                  );
+                } finally {
+                  if (mounted) setState(() => _isProcessingCheckout = false);
+                }
+              },
+        child: _isProcessingCheckout
+            ? const SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2.5,
+                ),
+              )
+            : FittedBox(
+                child: Text(
+                  '${'បន្តទៅការទូទាត់'.tr} (${currencyFormat.format(total)} ៛)',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
                   ),
-          ),
-        ),
-      );
+                ),
+              ),
+      ),
+    ),
+  );
 
-  Widget _buildEmptyCart() => Center(child: Text('មិនទាន់មានទំនិញក្នុងកន្ត្រកទេ'.tr));
+  Widget _buildEmptyCart() =>
+      Center(child: Text('មិនទាន់មានទំនិញក្នុងកន្ត្រកទេ'.tr));
   Widget _buildOrderTracking() => const SizedBox();
 }

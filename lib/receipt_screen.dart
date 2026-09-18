@@ -100,33 +100,40 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
   Future<void> _confirmOrder() async {
     if (_isProcessing) return;
 
-    bool isLocationSelected = selectedProvince != null &&
+    bool isLocationSelected =
+        selectedProvince != null &&
         (isVireakBuntham
             ? selectedVireakBranch != null
             : selectedDistrict != null);
     bool isAddressTyped = _addressController.text.trim().isNotEmpty;
 
     if (_nameController.text.isEmpty || _phoneController.text.isEmpty) {
-      _showSnackBar(_t(
-        "សូមបំពេញឈ្មោះ និងលេខទូរស័ព្ទ!",
-        "Please enter the recipient name and phone number.",
-      ));
+      _showSnackBar(
+        _t(
+          "សូមបំពេញឈ្មោះ និងលេខទូរស័ព្ទ!",
+          "Please enter the recipient name and phone number.",
+        ),
+      );
       return;
     }
 
     if (!isLocationSelected && !isAddressTyped) {
-      _showSnackBar(_t(
-        "សូមជ្រើសរើសទីតាំង ឬបំពេញអាសយដ្ឋានដឹកជញ្ជូន!",
-        "Please select a location or enter a delivery address.",
-      ));
+      _showSnackBar(
+        _t(
+          "សូមជ្រើសរើសទីតាំង ឬបំពេញអាសយដ្ឋានដឹកជញ្ជូន!",
+          "Please select a location or enter a delivery address.",
+        ),
+      );
       return;
     }
 
     if (_paymentImageBytes == null || _paymentImageBytes!.isEmpty) {
-      _showSnackBar(_t(
-        "សូមជ្រើសរើសរូបភាពប្លង់ផ្ទេរលុយសិន!",
-        "Please attach the payment receipt.",
-      ));
+      _showSnackBar(
+        _t(
+          "សូមជ្រើសរើសរូបភាពប្លង់ផ្ទេរលុយសិន!",
+          "Please attach the payment receipt.",
+        ),
+      );
       return;
     }
 
@@ -152,17 +159,19 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
         final data = doc.data() as Map<String, dynamic>;
         double price =
             double.tryParse(data['price'].toString().replaceAll(',', '')) ??
-                0.0;
+            0.0;
         int quantity = int.tryParse(data['quantity'].toString()) ?? 1;
         exactTotal += (price * quantity);
         return {
           'product_id': data['product_id'] ?? doc.id,
-          'product_name': data['product_name'] ?? _t('គ្មានឈ្មោះ', 'Unnamed product'),
+          'product_name':
+              data['product_name'] ?? _t('គ្មានឈ្មោះ', 'Unnamed product'),
           'price': price,
           'quantity': quantity,
           'image_url': data['image_url'] ?? '',
           'seller_id': data['seller_id'] ?? 'UNKNOWN_ID',
-          'seller_name': data['seller_name'] ?? _t('អាជីវករ សេសាន', 'Sesan seller'),
+          'seller_name':
+              data['seller_name'] ?? _t('អាជីវករ សេសាន', 'Sesan seller'),
           'seller_photo': data['seller_photo'] ?? '',
           'seller_phone': data['seller_phone'] ?? '',
           'order_date': FieldValue.serverTimestamp(),
@@ -170,17 +179,18 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
       }).toList();
 
       String fileName = DateTime.now().millisecondsSinceEpoch.toString();
-      var storageRef =
-          FirebaseStorage.instance.ref().child('payments/$fileName.jpg');
+      var storageRef = FirebaseStorage.instance.ref().child(
+        'payments/$fileName.jpg',
+      );
       await storageRef
           .putData(
             _paymentImageBytes!,
             SettableMetadata(contentType: 'image/jpeg'),
           )
           .timeout(const Duration(seconds: 30));
-      String paymentImageUrl = await storageRef
-          .getDownloadURL()
-          .timeout(const Duration(seconds: 15));
+      String paymentImageUrl = await storageRef.getDownloadURL().timeout(
+        const Duration(seconds: 15),
+      );
 
       OrderService orderService = OrderService();
       bool success = await orderService
@@ -206,10 +216,9 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
         if (mounted) _showSuccessWaitingDialog();
       } else {
         if (mounted) {
-          _showSnackBar(_t(
-            "ការបង្កើតការបញ្ជាទិញមានបញ្ហា!",
-            "Could not create the order.",
-          ));
+          _showSnackBar(
+            _t("ការបង្កើតការបញ្ជាទិញមានបញ្ហា!", "Could not create the order."),
+          );
         }
       }
     } catch (e) {
@@ -323,18 +332,18 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
                   onLongPress: () async {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content:
-                            Text(_t("⌛️ កំពុងរក្សាទុក...", "⌛️ Saving...")),
+                        content: Text(
+                          _t("⌛️ កំពុងរក្សាទុក...", "⌛️ Saving..."),
+                        ),
                       ),
                     );
                     await _saveAssetQrToGallery();
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text(_t(
-                            "✅ រក្សាទុកជោគជ័យ!",
-                            "✅ Saved successfully!",
-                          )),
+                          content: Text(
+                            _t("✅ រក្សាទុកជោគជ័យ!", "✅ Saved successfully!"),
+                          ),
                           backgroundColor: Colors.green,
                         ),
                       );
@@ -497,10 +506,7 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
               vertical: 10,
             ),
             labelText: _t("ជ្រើសរើសខេត្ត/ក្រុង", "Select province/city"),
-            labelStyle: const TextStyle(
-              fontSize: 12,
-              fontFamily: 'Siemreap',
-            ),
+            labelStyle: const TextStyle(fontSize: 12, fontFamily: 'Siemreap'),
             prefixIcon: const Icon(Icons.map_outlined, size: 20),
             prefixIconConstraints: const BoxConstraints(minWidth: 38),
             border: const OutlineInputBorder(),
@@ -589,10 +595,7 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
                       horizontal: 10,
                       vertical: 10,
                     ),
-                    labelText: _t(
-                      "ជ្រើសរើសស្រុក/ខណ្ឌ",
-                      "Select district",
-                    ),
+                    labelText: _t("ជ្រើសរើសស្រុក/ខណ្ឌ", "Select district"),
                     labelStyle: const TextStyle(
                       fontSize: 12,
                       fontFamily: 'Siemreap',

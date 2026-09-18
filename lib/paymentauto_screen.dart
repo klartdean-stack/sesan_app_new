@@ -9,7 +9,11 @@ class PaymentScreen extends StatelessWidget {
   final double totalAmount;
   final String orderId;
 
-  const PaymentScreen({super.key, required this.totalAmount, required this.orderId});
+  const PaymentScreen({
+    super.key,
+    required this.totalAmount,
+    required this.orderId,
+  });
 
   String _generateManualKHQR() {
     String receiverId = "019311778@aba";
@@ -34,11 +38,31 @@ class PaymentScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text("${_t(context, 'ទឹកប្រាក់', 'Amount')}: $totalAmount ៛", style: const TextStyle(color: Colors.red, fontSize: 24, fontWeight: FontWeight.bold)),
+            Text(
+              "${_t(context, 'ទឹកប្រាក់', 'Amount')}: $totalAmount ៛",
+              style: const TextStyle(
+                color: Colors.red,
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
             const SizedBox(height: 20),
-            Container(color: Colors.white, padding: const EdgeInsets.all(10), child: QrImageView(data: _generateManualKHQR(), version: QrVersions.auto, size: 250.0)),
+            Container(
+              color: Colors.white,
+              padding: const EdgeInsets.all(10),
+              child: QrImageView(
+                data: _generateManualKHQR(),
+                version: QrVersions.auto,
+                size: 250.0,
+              ),
+            ),
             const SizedBox(height: 30),
-            ElevatedButton(onPressed: _launchABA, child: Text(_t(context, "បើក App ABA បង់លុយអូតូ", "Open ABA app to pay"))),
+            ElevatedButton(
+              onPressed: _launchABA,
+              child: Text(
+                _t(context, "បើក App ABA បង់លុយអូតូ", "Open ABA app to pay"),
+              ),
+            ),
           ],
         ),
       ),
