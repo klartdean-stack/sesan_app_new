@@ -15,6 +15,9 @@ class OrderHistoryScreen extends StatefulWidget {
 
 
 class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
+  String _t(String km, String en) =>
+      Localizations.localeOf(context).languageCode == 'en' ? en : km;
+
   String _userId = '';
   bool _isLoading = true;
   final currencyFormat = NumberFormat("#,###");
@@ -130,7 +133,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           _t('ប្រវត្តិកម្មង់របស់ខ្ញុំ', 'My order history'),
           style: TextStyle(
             fontWeight: FontWeight.bold,
@@ -338,7 +341,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       _t('តម្លៃសរុប', 'Total'),
                       style: TextStyle(
                         color: Colors.grey,
@@ -359,7 +362,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                 ElevatedButton.icon(
                   onPressed: () => _reOrderItems(context, items),
                   icon: const Icon(Icons.refresh, size: 18),
-                  label: const Text(
+                  label: Text(
                     _t('ទិញម្ដងទៀត', 'Buy again'),
                     style: TextStyle(fontFamily: 'Siemreap'),
                   ),
@@ -382,7 +385,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
 
   Widget _buildSellerName(String sellerId) {
     if (sellerId.isEmpty) {
-      return const Text(
+      return Text(
         _t('អ្នកលក់៖ មិនស្គាល់', 'Seller: Unknown'),
         style: TextStyle(fontSize: 11, color: Colors.grey),
         maxLines: 1,
@@ -494,7 +497,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
       }
       await batch.commit();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
             _t('🛒 បានថែមចូលកន្ត្រកហើយ!', '🛒 Added to cart!'),
             style: TextStyle(fontFamily: 'Siemreap'),
@@ -515,7 +518,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
         children: [
           Icon(Icons.receipt_long_outlined, size: 64, color: Colors.grey[400]),
           const SizedBox(height: 20),
-          const Text(
+          Text(
             _t('មិនទាន់មានប្រវត្តិកម្មង់', 'No order history yet'),
             style: TextStyle(
               color: Colors.grey,
