@@ -24,6 +24,7 @@ class WantedDetailScreen extends StatefulWidget {
 
 
 class _WantedDetailScreenState extends State<WantedDetailScreen> {
+  String _t(String km, String en) => Localizations.localeOf(context).languageCode == 'en' ? en : km;
   String? _currentUid;
   int _currentImageIndex = 0;
 // ✅ ពិនិត្យថាជាម្ចាស់ប្រកាសដែរឬទេ
@@ -35,7 +36,7 @@ class _WantedDetailScreenState extends State<WantedDetailScreen> {
 
 
   // ✅ ព័ត៌មានអ្នកប្រកាស
-  String _posterName = 'កំពុងផ្ទុក...';
+  String _posterName = '';
   String _posterPhotoUrl = '';
   String _posterSesanId = '';
   bool _isPosterLoading = true;
@@ -63,7 +64,7 @@ class _WantedDetailScreenState extends State<WantedDetailScreen> {
     if (userId == null || userId.isEmpty) {
       if (mounted) {
         setState(() {
-          _posterName = 'មិនស្គាល់អ្នកប្រកាស';
+          _posterName = _t('មិនស្គាល់អ្នកប្រកាស', 'Unknown poster');
           _isPosterLoading = false;
         });
       }
@@ -82,7 +83,7 @@ class _WantedDetailScreenState extends State<WantedDetailScreen> {
         final userData = doc.data() as Map<String, dynamic>;
         setState(() {
           _posterName =
-              userData['name'] ?? userData['displayName'] ?? 'គ្មានឈ្មោះ';
+              userData['name'] ?? userData['displayName'] ?? _t('គ្មានឈ្មោះ', 'Unnamed user');
           _posterPhotoUrl = userData['photoUrl'] ?? userData['photo'] ?? '';
           _posterSesanId = userData['sesan_id'] ?? '';
           _isPosterLoading = false;
@@ -90,7 +91,7 @@ class _WantedDetailScreenState extends State<WantedDetailScreen> {
       } else {
         if (mounted) {
           setState(() {
-            _posterName = 'មិនអាចរកឃើញអ្នកប្រកាស';
+            _posterName = _t('មិនអាចរកឃើញអ្នកប្រកាស', 'Poster not found');
             _isPosterLoading = false;
           });
         }
@@ -98,7 +99,7 @@ class _WantedDetailScreenState extends State<WantedDetailScreen> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _posterName = 'មានបញ្ហាក្នុងការផ្ទុក';
+          _posterName = _t('មានបញ្ហាក្នុងការផ្ទុក', 'Could not load poster');
           _isPosterLoading = false;
         });
       }
@@ -200,8 +201,8 @@ class _WantedDetailScreenState extends State<WantedDetailScreen> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) => AlertDialog(
-          title: const Text(
-            'ខ្ញុំមានលក់',
+          title: Text(
+            _t('ខ្ញុំមានលក់', 'I have this to sell'),
             style: TextStyle(fontFamily: 'Siemreap'),
           ),
           content: Column(
@@ -210,15 +211,15 @@ class _WantedDetailScreenState extends State<WantedDetailScreen> {
               TextField(
                 controller: priceController,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'តម្លៃ',
+                decoration: InputDecoration(
+                  labelText: _t('តម្លៃ', 'Price'),
                   border: OutlineInputBorder(),
                 ),
               ),
               const SizedBox(height: 10),
               Row(
                 children: [
-                  const Text('រូបិយប័ណ្ណ: '),
+                  Text(_t('រូបិយប័ណ្ណ: ', 'Currency: ')),
                   DropdownButton<String>(
                     value: currency,
                     items: const [
@@ -236,7 +237,7 @@ class _WantedDetailScreenState extends State<WantedDetailScreen> {
                     value: isNegotiable,
                     onChanged: (v) => setDialogState(() => isNegotiable = v!),
                   ),
-                  const Text('អាចចរចារបាន'),
+                  Text(_t('អាចចរចារបាន', 'Negotiable')),
                 ],
               ),
             ],
@@ -244,7 +245,7 @@ class _WantedDetailScreenState extends State<WantedDetailScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('បោះបង់'),
+              child: Text(_t('បោះបង់', 'Cancel')),
             ),
             ElevatedButton(
               onPressed: () {
@@ -254,7 +255,7 @@ class _WantedDetailScreenState extends State<WantedDetailScreen> {
                   'isNegotiable': isNegotiable,
                 });
               },
-              child: const Text('បញ្ជាក់'),
+              child: Text(_t('បញ្ជាក់', 'Confirm')),
             ),
           ],
         ),
@@ -271,8 +272,8 @@ class _WantedDetailScreenState extends State<WantedDetailScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          "លម្អិតការប្រកាសទិញ",
+        title: Text(
+          _t('លម្អិតការប្រកាសទិញ', 'Wanted listing details'),
           style: TextStyle(fontFamily: 'Siemreap'),
         ),
         backgroundColor: Colors.blue,
@@ -284,7 +285,7 @@ class _WantedDetailScreenState extends State<WantedDetailScreen> {
               String firstImg = images.isNotEmpty ? images[0] : "";
               Clipboard.setData(ClipboardData(text: firstImg));
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("ចម្លង Link រូបភាពរួចរាល់!")),
+                SnackBar(content: Text(_t('ចម្លង Link រូបភាពរួចរាល់!', 'Image link copied!'))),
               );
             },
           ),
@@ -292,11 +293,7 @@ class _WantedDetailScreenState extends State<WantedDetailScreen> {
             icon: const Icon(Icons.share),
             onPressed: () {
               String firstImg = images.isNotEmpty ? images[0] : "";
-              Share.share(
-                "ត្រូវការទិញ: ${d['productName']}\n"
-                    "តម្លៃ: ${d['price']} ${d['currency']}\n"
-                    "មើលរូបភាព: $firstImg",
-              );
+              Share.share(_t("ត្រូវការទិញ: ${d['productName']}\nតម្លៃ: ${d['price']} ${d['currency']}\nមើលរូបភាព: $firstImg", "Wanted: ${d['productName']}\nPrice: ${d['price']} ${d['currency']}\nView image: $firstImg"));
             },
           ),
           // ✅ ប៊ូតុងកែប្រែ (សម្រាប់តែម្ចាស់)
@@ -360,7 +357,7 @@ class _WantedDetailScreenState extends State<WantedDetailScreen> {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          'ប្រកាសនៅ: ${_formatDate(d['createdAt'])}',
+                          _t('ប្រកាសនៅ: ${_formatDate(d['createdAt'])}', 'Posted: ${_formatDate(d['createdAt'])}'),
                           style: const TextStyle(
                             fontSize: 12,
                             color: Colors.grey,
@@ -373,7 +370,7 @@ class _WantedDetailScreenState extends State<WantedDetailScreen> {
                   // ✅ ពិនិត្យថាតើតម្លៃជា "ចរចារ" ឬអត់
                   Text(
                   d['price'] == 'ចរចារ' || d['price'] == 'negotiable' || d['price'].toString().toLowerCase() == 'ចរចារ'
-                  ? 'ចរចារ'
+                  ? _t('ចរចារ', 'Negotiable')
                       : "${d['price']} ${d['currency']}",
                   style: TextStyle(
                   fontSize: 24,
@@ -384,23 +381,23 @@ class _WantedDetailScreenState extends State<WantedDetailScreen> {
                   const Divider(height: 30),
                   _infoTile(
                     Icons.shopping_bag,
-                    "ចំនួនត្រូវការ",
+                    _t('ចំនួនត្រូវការ', 'Quantity wanted'),
                     "${d['quantity']} ${d['unit']}",
                   ),
                   _infoTile(
                     Icons.location_on,
-                    "ទីតាំង",
-                    d['location'] ?? "មិនបញ្ជាក់",
+                    _t('ទីតាំង', 'Location'),
+                    d['location'] ?? _t('មិនបញ្ជាក់', 'Not specified'),
                   ),
-                  _infoTile(Icons.phone, "លេខទូរស័ព្ទ", d['phone'] ?? "មិនមាន"),
+                  _infoTile(Icons.phone, _t('លេខទូរស័ព្ទ', 'Phone number'), d['phone'] ?? _t('មិនមាន', 'Not available')),
                   const SizedBox(height: 20),
-                  const Text(
-                    "ការរៀបរាប់បន្ថែម:",
+                  Text(
+                    _t('ការរៀបរាប់បន្ថែម:', 'Additional description:'),
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    d['description'] ?? "មិនមានការរៀបរាប់...",
+                    d['description'] ?? _t('មិនមានការរៀបរាប់...', 'No description...'),
                     style: const TextStyle(fontSize: 15),
                   ),
                   const SizedBox(height: 30),
@@ -447,8 +444,8 @@ class _WantedDetailScreenState extends State<WantedDetailScreen> {
                   if (await canLaunchUrl(url)) await launchUrl(url);
                 },
                 icon: const Icon(Icons.phone),
-                label: const Text(
-                  "តេទៅភ្លាម",
+                label: Text(
+                  _t('តេទៅភ្លាម', 'Call now'),
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 style: ElevatedButton.styleFrom(
@@ -559,8 +556,8 @@ class _WantedDetailScreenState extends State<WantedDetailScreen> {
             children: [
               const Icon(Icons.handshake, color: Colors.green, size: 24),
               const SizedBox(width: 8),
-              const Text(
-                'អ្នកមានលក់',
+              Text(
+                _t('អ្នកមានលក់', 'Sellers with this product'),
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -578,7 +575,7 @@ class _WantedDetailScreenState extends State<WantedDetailScreen> {
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  '${_sellers.length} នាក់',
+                  _t('${_sellers.length} នាក់', '${_sellers.length} sellers'),
                   style: const TextStyle(
                     color: Colors.green,
                     fontWeight: FontWeight.bold,
@@ -594,8 +591,8 @@ class _WantedDetailScreenState extends State<WantedDetailScreen> {
               child: OutlinedButton.icon(
                 onPressed: _clickToSell,
                 icon: const Icon(Icons.add_business, color: Colors.green),
-                label: const Text(
-                  'ខ្ញុំមានលក់',
+                label: Text(
+                  _t('ខ្ញុំមានលក់', 'I have this to sell'),
                   style: TextStyle(
                     color: Colors.green,
                     fontWeight: FontWeight.bold,
@@ -618,13 +615,13 @@ class _WantedDetailScreenState extends State<WantedDetailScreen> {
                 color: Colors.green.withOpacity(0.05),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Row(
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.check_circle, color: Colors.green, size: 18),
-                  SizedBox(width: 8),
+                  const Icon(Icons.check_circle, color: Colors.green, size: 18),
+                  const SizedBox(width: 8),
                   Text(
-                    'អ្នកបានបញ្ជាក់ថាមានលក់',
+                    _t('អ្នកបានបញ្ជាក់ថាមានលក់', 'You confirmed that you have this to sell'),
                     style: TextStyle(color: Colors.green),
                   ),
                 ],
@@ -688,7 +685,7 @@ class _WantedDetailScreenState extends State<WantedDetailScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    seller['userName'] ?? 'អ្នកលក់',
+                    seller['userName'] ?? _t('អ្នកលក់', 'Seller'),
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 4),
@@ -712,8 +709,8 @@ class _WantedDetailScreenState extends State<WantedDetailScreen> {
                             color: Colors.orange.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(4),
                           ),
-                          child: const Text(
-                            'អាចចរចារ',
+                          child: Text(
+                            _t('អាចចរចារ', 'Negotiable'),
                             style: TextStyle(
                               color: Colors.orange,
                               fontSize: 10,
@@ -824,7 +821,7 @@ class _WantedDetailScreenState extends State<WantedDetailScreen> {
 
 
   String _formatDate(dynamic date) {
-    if (date == null) return 'មិនកំណត់';
+    if (date == null) return _t('មិនកំណត់', 'Not set');
     if (date is Timestamp) {
       final d = date.toDate();
       return DateFormat('dd/MM/yyyy').format(d);
@@ -836,15 +833,15 @@ class _WantedDetailScreenState extends State<WantedDetailScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text(
-          "លុបការប្រកាស?",
+        title: Text(
+          _t('លុបការប្រកាស?', 'Delete listing?'),
           style: TextStyle(fontFamily: 'Siemreap'),
         ),
-        content: const Text("តើអ្នកពិតជាចង់លុបការប្រកាសនេះមែនទេ?"),
+        content: Text(_t('តើអ្នកពិតជាចង់លុបការប្រកាសនេះមែនទេ?', 'Are you sure you want to delete this listing?')),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text("ទេ"),
+            child: Text(_t('ទេ', 'No')),
           ),
           TextButton(
             onPressed: () async {
@@ -855,7 +852,7 @@ class _WantedDetailScreenState extends State<WantedDetailScreen> {
               Navigator.pop(ctx);
               Navigator.pop(context);
             },
-            child: const Text("លុប", style: TextStyle(color: Colors.red)),
+            child: Text(_t('លុប', 'Delete'), style: const TextStyle(color: Colors.red)),
           ),
         ],
       ),
