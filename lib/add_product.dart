@@ -16,7 +16,6 @@ import 'dart:io';
 import 'main.dart'; // ដើម្បីឱ្យវាស្គាល់ navigatorKey
 import 'package:intl/intl.dart';
 import 'package:firebase_auth/firebase_auth.dart'; // ថែមជួរនេះចូលមេ!
-import 'auction_add_screen.dart';
 import 'location_data.dart' hide showLocationPicker;
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:video_compress/video_compress.dart';
@@ -789,56 +788,6 @@ class _AddProductPageState extends State<AddProductPage> {
           widget.productId != null ? _t('កែប្រែទំនិញ', 'Edit product') : _t('បន្ថែមទំនិញថ្មី', 'Add product'),
         ),
         backgroundColor: Colors.green,
-        // 🎯 ដាក់ក្នុង actions: [] របស់ AppBar ក្នុងទំព័រ Add Product
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 12, top: 10, bottom: 10),
-            child: InkWell(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => AuctionAddScreen()),
-                ); // 🎯 ដាក់ Navigator ទៅកាន់ទំព័រ Request Exhibition របស់មេនៅទីនេះ
-              },
-              borderRadius: BorderRadius.circular(15),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10),
-                decoration: BoxDecoration(
-                  // ✨ ពណ៌មាសដេញ (Gold Gradient) ឱ្យមើលទៅមានតម្លៃ
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(15),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.stars_rounded, color: Colors.black, size: 18),
-                    const SizedBox(width: 4),
-                    Text(
-                      _t('ដាក់ដេញថ្លៃ', 'Add auction'),
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontWeight: FontWeight.w900,
-                        fontSize: 11,
-                        fontFamily: 'Siemreap',
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
       ),
       body: GestureDetector(
         onTap: () => FocusScope.of(context).unfocus(),
