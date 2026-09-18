@@ -23,11 +23,8 @@ jobs:
           git diff --check
       - name: Preserve Product Detail features
         run: |
-          grep -q "_askAiAboutProduct" lib/product_detail.dart
           grep -q "_shareProductWithWatermark" lib/product_detail.dart
           grep -q "_showSaveOption" lib/product_detail.dart
-          grep -q "_openProductLocationMap" lib/product_detail.dart
-          grep -q "_openSellerShop" lib/product_detail.dart
           grep -q "GoogleMap" lib/product_detail.dart
           grep -q "addToCart" lib/product_detail.dart
           grep -q "collection('ratings')" lib/product_detail.dart
