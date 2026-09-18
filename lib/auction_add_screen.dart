@@ -125,7 +125,9 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: isError ? const Color(0xFFDA3633) : const Color(0xFF238636),
+              color: isError
+                  ? const Color(0xFFDA3633)
+                  : const Color(0xFF238636),
               borderRadius: BorderRadius.circular(14),
               boxShadow: const [
                 BoxShadow(
@@ -187,10 +189,15 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
       );
       await Gal.putImage(file.path);
       if (!mounted) return;
-      _showTopMessage(_t('✅ បានរក្សាទុកក្នុង Gallery រួចរាល់!', '✅ Saved to Gallery!'));
+      _showTopMessage(
+        _t('✅ បានរក្សាទុកក្នុង Gallery រួចរាល់!', '✅ Saved to Gallery!'),
+      );
     } catch (e) {
       if (!mounted) return;
-      _showTopMessage(_t('❌ មិនអាចរក្សាទុកបាន: $e', '❌ Could not save: $e'), isError: true);
+      _showTopMessage(
+        _t('❌ មិនអាចរក្សាទុកបាន: $e', '❌ Could not save: $e'),
+        isError: true,
+      );
     }
   }
 
@@ -232,7 +239,9 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
         _isVideoPreviewReady = false;
       });
       _initVideoPreview();
-      _showSuccessSnack(_t('បានជ្រើសរើសវីដេអូជោគជ័យ', 'Video selected successfully'));
+      _showSuccessSnack(
+        _t('បានជ្រើសរើសវីដេអូជោគជ័យ', 'Video selected successfully'),
+      );
     } finally {
       if (mounted) setState(() => _isPickingImage = false);
     }
@@ -277,7 +286,12 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
     if (_isProcessing) return;
 
     if (_productNameCtrl.text.isEmpty || _startPriceCtrl.text.isEmpty) {
-      _showErrorSnack(_t('❌ សូមបំពេញព័ត៌មានឱ្យបានគ្រប់គ្រាន់', '❌ Please complete the required information'));
+      _showErrorSnack(
+        _t(
+          '❌ សូមបំពេញព័ត៌មានឱ្យបានគ្រប់គ្រាន់',
+          '❌ Please complete the required information',
+        ),
+      );
       return;
     }
 
@@ -343,7 +357,12 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
       });
 
       _uploadController.uploadProgress.value = 1.0;
-      _showSuccessSnack(_t('🎉 បញ្ជូនការដេញថ្លៃជោគជ័យ!', '🎉 Auction request submitted successfully!'));
+      _showSuccessSnack(
+        _t(
+          '🎉 បញ្ជូនការដេញថ្លៃជោគជ័យ!',
+          '🎉 Auction request submitted successfully!',
+        ),
+      );
     } catch (e) {
       _uploadController.uploadProgress.value = 0.0;
       _showErrorSnack(_t('❌ មានបញ្ហា: $e', '❌ Error: $e'));
@@ -355,13 +374,16 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
     }
   }
 
-  String? _validateRequired(String? v) =>
-      (v == null || v.trim().isEmpty) ? _t('សូមបំពេញព័ត៌មាននេះ', 'Please fill in this field') : null;
+  String? _validateRequired(String? v) => (v == null || v.trim().isEmpty)
+      ? _t('សូមបំពេញព័ត៌មាននេះ', 'Please fill in this field')
+      : null;
 
   String? _validateNumber(String? v) {
-    if (v == null || v.trim().isEmpty) return _t('សូមបំពេញលេខ', 'Please enter a number');
+    if (v == null || v.trim().isEmpty)
+      return _t('សូមបំពេញលេខ', 'Please enter a number');
     final n = int.tryParse(v.replaceAll(',', ''));
-    if (n == null || n <= 0) return _t('សូមបញ្ចូលលេខត្រឹមត្រូវ', 'Please enter a valid number');
+    if (n == null || n <= 0)
+      return _t('សូមបញ្ចូលលេខត្រឹមត្រូវ', 'Please enter a valid number');
     return null;
   }
 
@@ -374,15 +396,27 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
 
   void _nextStep() {
     if (_currentStep == 0 && !_step0Valid) {
-      _showErrorSnack(_t('សូមបំពេញឈ្មោះទំនិញ និងរូបភាព', 'Please add a product name and photos'));
+      _showErrorSnack(
+        _t(
+          'សូមបំពេញឈ្មោះទំនិញ និងរូបភាព',
+          'Please add a product name and photos',
+        ),
+      );
       return;
     }
     if (_currentStep == 1 && !_step1Valid) {
-      _showErrorSnack(_t('សូមបំពេញតម្លៃ និងថ្ងៃបញ្ចប់', 'Please enter prices and an end date'));
+      _showErrorSnack(
+        _t(
+          'សូមបំពេញតម្លៃ និងថ្ងៃបញ្ចប់',
+          'Please enter prices and an end date',
+        ),
+      );
       return;
     }
     if (_currentStep == 1 && _selectedPackage == null) {
-      _showErrorSnack(_t('សូមជ្រើសរើសកញ្ចប់សេវា', 'Please select a service package'));
+      _showErrorSnack(
+        _t('សូមជ្រើសរើសកញ្ចប់សេវា', 'Please select a service package'),
+      );
       return;
     }
     if (_currentStep == 0) {
@@ -448,9 +482,7 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: const BoxDecoration(
               color: Color(0xFF1B5E20),
-              borderRadius: BorderRadius.vertical(
-                bottom: Radius.circular(12),
-              ),
+              borderRadius: BorderRadius.vertical(bottom: Radius.circular(12)),
             ),
             child: SafeArea(
               bottom: false,
@@ -592,7 +624,10 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
-                              _t('កំពុងបញ្ជូន... ${(_uploadController.uploadProgress.value * 100).toInt()}%', 'Uploading... ${(_uploadController.uploadProgress.value * 100).toInt()}%'),
+                              _t(
+                                'កំពុងបញ្ជូន... ${(_uploadController.uploadProgress.value * 100).toInt()}%',
+                                'Uploading... ${(_uploadController.uploadProgress.value * 100).toInt()}%',
+                              ),
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 12,
@@ -654,7 +689,10 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
   }
 
   Widget _buildStepIndicator() {
-    final steps = [_t('ទំនិញ', 'Product'), _t('តម្លៃ និងសេវា', 'Price & service')];
+    final steps = [
+      _t('ទំនិញ', 'Product'),
+      _t('តម្លៃ និងសេវា', 'Price & service'),
+    ];
     return Container(
       color: _bg,
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
@@ -688,14 +726,14 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
                   color: isDone
                       ? _accent
                       : isActive
-                          ? _accent
-                          : _card,
+                      ? _accent
+                      : _card,
                   border: Border.all(
                     color: isDone
                         ? _accent
                         : isActive
-                            ? _accent
-                            : _border,
+                        ? _accent
+                        : _border,
                     width: 2,
                   ),
                 ),
@@ -738,12 +776,7 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
       case 0:
         return _buildStep0();
       case 1:
-        return Column(
-          children: [
-            _buildStep1(),
-            _buildStep2(),
-          ],
-        );
+        return Column(children: [_buildStep1(), _buildStep2()]);
       default:
         return const SizedBox();
     }
@@ -753,13 +786,24 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _sectionHeader('📦', _t('ព័ត៌មានទំនិញ', 'Product information'), _t('បំពេញព័ត៌មានអំពីទំនិញ', 'Add details about your product')),
+        _sectionHeader(
+          '📦',
+          _t('ព័ត៌មានទំនិញ', 'Product information'),
+          _t('បំពេញព័ត៌មានអំពីទំនិញ', 'Add details about your product'),
+        ),
         const SizedBox(height: 20),
-        _buildLabel(_t('វីដេអូបង្ហាញទំនិញ (អតិបរមា ៩០វិនាទី) *', 'Product video (max 90 seconds) *')),
+        _buildLabel(
+          _t(
+            'វីដេអូបង្ហាញទំនិញ (អតិបរមា ៩០វិនាទី) *',
+            'Product video (max 90 seconds) *',
+          ),
+        ),
         const SizedBox(height: 8),
         _buildVideoPicker(),
         const SizedBox(height: 20),
-        _buildLabel(_t('រូបភាពទំនិញ (ដល់ ៨ សន្លឹក) *', 'Product photos (up to 8) *')),
+        _buildLabel(
+          _t('រូបភាពទំនិញ (ដល់ ៨ សន្លឹក) *', 'Product photos (up to 8) *'),
+        ),
         const SizedBox(height: 8),
         _buildImagePicker(),
         const SizedBox(height: 8),
@@ -779,7 +823,10 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
         const SizedBox(height: 8),
         _buildTextField(
           controller: _descriptionCtrl,
-          hint: _t('ពិព័រណ៍អំពីស្ថានភាព លក្ខណៈពិសេស...', 'Describe the condition and key features...'),
+          hint: _t(
+            'ពិព័រណ៍អំពីស្ថានភាព លក្ខណៈពិសេស...',
+            'Describe the condition and key features...',
+          ),
           icon: Icons.description_outlined,
           keyboard: TextInputType.multiline,
           textInputAction: TextInputAction.newline,
@@ -832,27 +879,27 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
                     borderRadius: BorderRadius.circular(14),
                     child:
                         _isVideoPreviewReady && _videoPreviewController != null
-                            ? SizedBox.expand(
-                                child: FittedBox(
-                                  fit: BoxFit.cover,
-                                  child: SizedBox(
-                                    width:
-                                        _videoPreviewController!.value.size.width,
-                                    height:
-                                        _videoPreviewController!.value.size.height,
-                                    child: VideoPlayer(_videoPreviewController!),
-                                  ),
-                                ),
-                              )
-                            : Container(
-                                color: Colors.black,
-                                child: const Center(
-                                  child: CircularProgressIndicator(
-                                    color: Colors.white,
-                                    strokeWidth: 2,
-                                  ),
-                                ),
+                        ? SizedBox.expand(
+                            child: FittedBox(
+                              fit: BoxFit.cover,
+                              child: SizedBox(
+                                width:
+                                    _videoPreviewController!.value.size.width,
+                                height:
+                                    _videoPreviewController!.value.size.height,
+                                child: VideoPlayer(_videoPreviewController!),
                               ),
+                            ),
+                          )
+                        : Container(
+                            color: Colors.black,
+                            child: const Center(
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            ),
+                          ),
                   ),
                   if (_isVideoPreviewReady)
                     Positioned.fill(
@@ -1013,7 +1060,11 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _sectionHeader('💰', _t('តម្លៃ & ពេលវេលា', 'Price & time'), _t('កំណត់តម្លៃ និងពេលបញ្ចប់', 'Set the starting price and end time')),
+        _sectionHeader(
+          '💰',
+          _t('តម្លៃ & ពេលវេលា', 'Price & time'),
+          _t('កំណត់តម្លៃ និងពេលបញ្ចប់', 'Set the starting price and end time'),
+        ),
         const SizedBox(height: 20),
         _buildLabel(_t('តម្លៃចាប់ផ្តើម (រៀល) *', 'Starting price (KHR) *')),
         const SizedBox(height: 8),
@@ -1068,9 +1119,17 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _miniStat(_t('ដំបូង', 'Start'), '${fmt.format(start)} ៛', _accentBlue),
+          _miniStat(
+            _t('ដំបូង', 'Start'),
+            '${fmt.format(start)} ៛',
+            _accentBlue,
+          ),
           Container(width: 1, height: 30, color: _border),
-          _miniStat(_t('ដេញទី១', 'First bid'), '${fmt.format(start + step)} ៛', _accent),
+          _miniStat(
+            _t('ដេញទី១', 'First bid'),
+            '${fmt.format(start + step)} ៛',
+            _accent,
+          ),
           Container(width: 1, height: 30, color: _border),
           _miniStat('Step', '+${fmt.format(step)} ៛', const Color(0xFFFFB300)),
         ],
@@ -1173,7 +1232,10 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
         _sectionHeader(
           '⭐',
           _t('ជ្រើសកញ្ចប់សេវា', 'Choose a service package'),
-          _t('ជ្រើសរើសកញ្ចប់ដែលស្របតាមការចង់បាន', 'Choose the package that fits your needs'),
+          _t(
+            'ជ្រើសរើសកញ្ចប់ដែលស្របតាមការចង់បាន',
+            'Choose the package that fits your needs',
+          ),
         ),
         const SizedBox(height: 20),
         ...List.generate(_packages.length, (i) {
@@ -1345,7 +1407,10 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
                 ),
                 const Divider(color: _border, height: 40),
                 Text(
-                  _t('ស្កេនបង់ប្រាក់មកកាន់ QR ខាងក្រោម', 'Scan the QR below to pay'),
+                  _t(
+                    'ស្កេនបង់ប្រាក់មកកាន់ QR ខាងក្រោម',
+                    'Scan the QR below to pay',
+                  ),
                   style: TextStyle(color: _textMuted, fontFamily: 'Siemreap'),
                 ),
                 const SizedBox(height: 15),
@@ -1390,7 +1455,10 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
                     color: Colors.white,
                   ),
                   label: Text(
-                    _t('ចុចដើម្បីបង់ប្រាក់តាម App ABA', 'Tap to pay with ABA App'),
+                    _t(
+                      'ចុចដើម្បីបង់ប្រាក់តាម App ABA',
+                      'Tap to pay with ABA App',
+                    ),
                     style: TextStyle(color: Colors.white),
                   ),
                   style: ElevatedButton.styleFrom(
@@ -1403,7 +1471,10 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
                 ),
                 const SizedBox(height: 15),
                 Text(
-                  _t('បញ្ជាក់៖ សូមចុចសង្កត់លើ QR ដើម្បីរក្សាទុក រួចថតរូបវិក្កយបត្របញ្ចូលខាងក្រោម', 'Note: Long press the QR to save it, then attach your payment receipt below'),
+                  _t(
+                    'បញ្ជាក់៖ សូមចុចសង្កត់លើ QR ដើម្បីរក្សាទុក រួចថតរូបវិក្កយបត្របញ្ចូលខាងក្រោម',
+                    'Note: Long press the QR to save it, then attach your payment receipt below',
+                  ),
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 11,
@@ -1477,7 +1548,9 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
                             if (ctx.mounted) {
                               setSheet(() => isLoader = false);
                             }
-                            _showErrorSnack(_t('បញ្ហាបច្ចេកទេស៖ $e', 'Technical error: $e'));
+                            _showErrorSnack(
+                              _t('បញ្ហាបច្ចេកទេស៖ $e', 'Technical error: $e'),
+                            );
                           } finally {
                             if (ctx.mounted) {
                               setSheet(() => isLoader = false);
