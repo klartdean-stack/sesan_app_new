@@ -7,6 +7,9 @@ class WantedGridView extends StatelessWidget {
   final String searchQuery; // ✅ បន្ថែម
   const WantedGridView({super.key, this.searchQuery = ""}); // ✅ បន្ថែម
 
+  String _t(BuildContext context, String km, String en) =>
+      Localizations.localeOf(context).languageCode == 'en' ? en : km;
+
   @override
   Widget build(BuildContext context) {
     // 🎯 Filter យកតែផុសក្នុងរង្វង់ ១៥ ថ្ងៃ
@@ -20,7 +23,7 @@ class WantedGridView extends StatelessWidget {
           .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.hasError)
-          return const Center(child: Text("មានបញ្ហាភ្ជាប់ទិន្នន័យ"));
+          return Center(child: Text(_t(context, "មានបញ្ហាភ្ជាប់ទិន្នន័យ", "Data connection error")));
         if (snapshot.connectionState == ConnectionState.waiting)
           return const Center(child: CircularProgressIndicator());
 
@@ -41,8 +44,8 @@ class WantedGridView extends StatelessWidget {
           return Center(
             child: Text(
               searchQuery.isNotEmpty
-                  ? "រកមិនឃើញការប្រកាសទិញដែលត្រូវនឹង '$searchQuery'"
-                  : "មិនទាន់មានការប្រកាសទិញទេ",
+                  ? _t(context, "រកមិនឃើញការប្រកាសទិញដែលត្រូវនឹង '$searchQuery'", "No wanted listings match '$searchQuery'")
+                  : _t(context, "មិនទាន់មានការប្រកាសទិញទេ", "No wanted listings yet"),
               style: const TextStyle(
                 color: Colors.grey,
                 fontFamily: 'Siemreap',
@@ -79,8 +82,8 @@ class WantedGridView extends StatelessWidget {
     Duration remaining = expiryDate.difference(DateTime.now());
     int daysLeft = remaining.inDays;
     String countdownText = daysLeft > 0
-        ? "នៅសល់ $daysLeft ថ្ងៃ"
-        : "ជិតផុតកំណត់";
+        ? _t(context, "នៅសល់ $daysLeft ថ្ងៃ", "$daysLeft days left")
+        : _t(context, "ជិតផុតកំណត់", "Expiring soon");
 
     return InkWell(
         onTap: () {
@@ -162,7 +165,7 @@ class WantedGridView extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        "ត្រូវការ៖ ${data['quantity']} ${data['unit']}",
+                        _t(context, "ត្រូវការ៖ ${data['quantity']} ${data['unit']}", "Wanted: ${data['quantity']} ${data['unit']}"),
                         style: const TextStyle(
                           color: Colors.red,
                           fontSize: 12,
@@ -170,7 +173,7 @@ class WantedGridView extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        "តម្លៃ៖ ${data['price']} ${data['currency']}",
+                        _t(context, "តម្លៃ៖ ${data['price']} ${data['currency']}", "Price: ${data['price']} ${data['currency']}"),
                         style: const TextStyle(
                           color: Colors.green,
                           fontWeight: FontWeight.bold,
