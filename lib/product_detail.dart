@@ -2091,9 +2091,9 @@ Android: $androidPlayStoreLink
                               const Divider(
                                 height: 18,
                               ), // ៤. ចំនួនកម្ម៉ង់ និង តម្លៃសរុប
-                              const Text(
+                              Text(
                                 _t('ជ្រើសរើសចំនួន៖', 'Select quantity:'),
-                                style: TextStyle(
+                                style: const TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -2195,9 +2195,9 @@ Android: $androidPlayStoreLink
                                             }
                                           }),
                                           const SizedBox(width: 6),
-                                          const Text(
+                                          Text(
                                             _t('ចំនួន', 'Quantity'),
-                                            style: TextStyle(
+                                            style: const TextStyle(
                                               color: Colors.grey,
                                               fontSize: 12,
                                               fontFamily: 'Siemreap',
@@ -2280,9 +2280,9 @@ Android: $androidPlayStoreLink
                               ),
 
                               const Divider(height: 30),
-                              const Text(
+                              Text(
                                 _t('ការពិពណ៌នា៖', 'Description:'),
-                                style: TextStyle(
+                                style: const TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
                                 ),
