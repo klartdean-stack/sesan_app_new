@@ -10,6 +10,24 @@ import 'package:intl/intl.dart';
 import 'dart:io';
 
 import 'package:shared_preferences/shared_preferences.dart';
+import 'localized_text.dart';
+
+String stockValueLabel(BuildContext context, String value) {
+  if (Localizations.localeOf(context).languageCode != 'en') return value;
+  const labels = <String, String>{
+    'ទូទៅ': 'General', 'គ្រឿង': 'unit', 'គ្រាប់': 'piece', 'កញ្ចប់': 'pack',
+    'បាវ': 'bag', 'ដប': 'bottle', 'ដើម': 'plant', 'ដុំ': 'piece',
+    'គីឡូ': 'kg', 'ធុង': 'container', 'ឡូ': 'lot', 'កេះ': 'case',
+    'យួរ': 'bundle', 'ផ្សេង': 'Other', 'ផ្សេងៗ': 'Other',
+    'គ្រឿងចក្រ': 'Machinery', 'ម៉ាស៊ីន': 'Machine', 'ឧបករណ៍': 'Equipment',
+    'ដំណាំ': 'Crops', 'ជី': 'Fertilizer', 'ថ្នាំ': 'Agrochemicals',
+    'គ្រឿងអេឡិចត្រូនិច': 'Electronics', 'សម្ភារះប្រើប្រាស់': 'Supplies',
+    'ទិញបន្ថែម': 'Restock purchase', 'ទទួលពីបរទេស': 'Received from supplier',
+    'ត្រឡប់ពីអតិថិជន': 'Customer return', 'លក់': 'Sale',
+    'ខូច/បាត់': 'Damaged/lost', 'ប្រើប្រាស់': 'Used', 'បន្ថែម': 'Added', 'កាត់': 'Removed',
+  };
+  return labels[value] ?? value;
+}
 
 class StockManagementScreen extends StatefulWidget {
   const StockManagementScreen({super.key});
@@ -67,18 +85,18 @@ class _StockManagementScreenState extends State<StockManagementScreen>
       appBar: AppBar(
         backgroundColor: Colors.green[700],
         foregroundColor: Colors.white,
-        title: const Text(
-          'គ្រប់គ្រងស្តុកទំនិញ',
-          style: TextStyle(fontFamily: 'Siemreap', fontSize: 18),
+        title: Text(
+          appText(context, km: 'គ្រប់គ្រងស្តុកទំនិញ', en: 'Stock Management'),
+          style: const TextStyle(fontFamily: 'Siemreap', fontSize: 18),
         ),
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: Colors.white,
           labelColor: Colors.white,
           unselectedLabelColor: Colors.white60,
-          tabs: const [
-            Tab(icon: Icon(Icons.inventory_2_outlined), text: 'ស្តុក'),
-            Tab(icon: Icon(Icons.history), text: 'ប្រវត្តិ'),
+          tabs: [
+            Tab(icon: const Icon(Icons.inventory_2_outlined), text: appText(context, km: 'ស្តុក', en: 'Stock')),
+            Tab(icon: const Icon(Icons.history), text: appText(context, km: 'ប្រវត្តិ', en: 'History')),
           ],
         ),
         actions: [
@@ -103,7 +121,7 @@ class _StockManagementScreenState extends State<StockManagementScreen>
           child: TextField(
             onChanged: (v) => setState(() => _searchQuery = v.toLowerCase()),
             decoration: InputDecoration(
-              hintText: 'ស្វែងរកទំនិញ...',
+              hintText: appText(context, km: 'ស្វែងរកទំនិញ...', en: 'Search products...'),
               hintStyle: const TextStyle(fontFamily: 'Siemreap'),
               prefixIcon: const Icon(Icons.search, color: Colors.grey),
               filled: true,
@@ -145,7 +163,7 @@ class _StockManagementScreenState extends State<StockManagementScreen>
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        'មិនទាន់មានទំនិញ\nចុច + ដើម្បីបន្ថែម',
+                        appText(context, km: 'មិនទាន់មានទំនិញ\nចុច + ដើម្បីបន្ថែម', en: 'No products yet\nTap + to add one'),
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           color: Colors.grey[400],
@@ -285,10 +303,10 @@ class _StockManagementScreenState extends State<StockManagementScreen>
                           ),
                           child: Text(
                             isOut
-                                ? '❌ អស់ស្តុក'
+                                ? appText(context, km: '❌ អស់ស្តុក', en: '❌ Out of stock')
                                 : isLow
-                                ? '⚠️ ជិតអស់'
-                                : '✅ មាន',
+                                ? appText(context, km: '⚠️ ជិតអស់', en: '⚠️ Low stock')
+                                : appText(context, km: '✅ មាន', en: '✅ In stock'),
                             style: TextStyle(
                               fontSize: 11,
                               color: statusColor,
@@ -407,7 +425,7 @@ class _StockManagementScreenState extends State<StockManagementScreen>
                 Icon(Icons.history, size: 64, color: Colors.grey[300]),
                 const SizedBox(height: 16),
                 Text(
-                  'មិនទាន់មានប្រវត្តិ',
+                  appText(context, km: 'មិនទាន់មានប្រវត្តិ', en: 'No history yet'),
                   style: TextStyle(
                     color: Colors.grey[400],
                     fontFamily: 'Siemreap',
@@ -583,8 +601,8 @@ class _StockManagementScreenState extends State<StockManagementScreen>
                   ),
                 ),
                 const SizedBox(height: 16),
-                const Text(
-                  'បន្ថែមទំនិញថ្មី',
+                Text(
+                  appText(context, km: 'បន្ថែមទំនិញថ្មី', en: 'Add new product'),
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -630,7 +648,7 @@ class _StockManagementScreenState extends State<StockManagementScreen>
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'រូបភាព',
+                            appText(context, km: 'រូបភាព', en: 'Image'),
                             style: TextStyle(
                               color: Colors.grey[400],
                               fontSize: 12,
@@ -647,7 +665,7 @@ class _StockManagementScreenState extends State<StockManagementScreen>
                 // ឈ្មោះ
                 _buildTextField(
                   nameCtrl,
-                  'ឈ្មោះទំនិញ *',
+                  appText(context, km: 'ឈ្មោះទំនិញ *', en: 'Product name *'),
                   Icons.inventory_2_outlined,
                 ),
                 const SizedBox(height: 12),
@@ -658,7 +676,7 @@ class _StockManagementScreenState extends State<StockManagementScreen>
                     Expanded(
                       child: _buildTextField(
                         qtyCtrl,
-                        'ចំនួន',
+                        appText(context, km: 'ចំនួន', en: 'Quantity'),
                         Icons.numbers,
                         isNumber: true,
                       ),
@@ -669,7 +687,7 @@ class _StockManagementScreenState extends State<StockManagementScreen>
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'ឯកតា',
+                            appText(context, km: 'ឯកតា', en: 'Unit'),
                             style: TextStyle(
                               fontFamily: 'Siemreap',
                               fontSize: 13,
@@ -690,7 +708,7 @@ class _StockManagementScreenState extends State<StockManagementScreen>
                                     : null,
                                 isExpanded: true,
                                 hint: Text(
-                                  selectedUnit,
+                                  stockValueLabel(context, selectedUnit),
                                   style: const TextStyle(
                                     fontFamily: 'Siemreap',
                                     fontSize: 13,
@@ -701,7 +719,7 @@ class _StockManagementScreenState extends State<StockManagementScreen>
                                         (u) => DropdownMenuItem(
                                       value: u,
                                       child: Text(
-                                        u,
+                                        stockValueLabel(context, u),
                                         style: const TextStyle(
                                           fontFamily: 'Siemreap',
                                           fontSize: 13,
@@ -709,11 +727,11 @@ class _StockManagementScreenState extends State<StockManagementScreen>
                                       ),
                                     ),
                                   ),
-                                  const DropdownMenuItem(
+                                  DropdownMenuItem(
                                     value: 'custom',
                                     child: Text(
-                                      '✏️ សរសេរដោយដៃ',
-                                      style: TextStyle(
+                                      appText(context, km: '✏️ សរសេរដោយដៃ', en: '✏️ Enter manually'),
+                                      style: const TextStyle(
                                         fontFamily: 'Siemreap',
                                         fontSize: 13,
                                         color: Colors.green,
@@ -728,8 +746,8 @@ class _StockManagementScreenState extends State<StockManagementScreen>
                                       builder: (_) {
                                         final ctrl = TextEditingController();
                                         return AlertDialog(
-                                          title: const Text(
-                                            'ឯកតាផ្សេង',
+                                          title: Text(
+                                            appText(context, km: 'ឯកតាផ្សេង', en: 'Other unit'),
                                             style: TextStyle(
                                               fontFamily: 'Siemreap',
                                             ),
@@ -737,15 +755,15 @@ class _StockManagementScreenState extends State<StockManagementScreen>
                                           content: TextField(
                                             controller: ctrl,
                                             autofocus: true,
-                                            decoration: const InputDecoration(
-                                              hintText: 'សរសេរឯកតា...',
+                                            decoration: InputDecoration(
+                                              hintText: appText(context, km: 'សរសេរឯកតា...', en: 'Enter unit...'),
                                             ),
                                           ),
                                           actions: [
                                             TextButton(
                                               onPressed: () =>
                                                   Navigator.pop(context),
-                                              child: const Text('បោះបង់'),
+                                              child: Text(appText(context, km: 'បោះបង់', en: 'Cancel')),
                                             ),
                                             ElevatedButton(
                                               onPressed: () {
@@ -757,7 +775,7 @@ class _StockManagementScreenState extends State<StockManagementScreen>
                                                   );
                                                 Navigator.pop(context);
                                               },
-                                              child: const Text('យល់ព្រម'),
+                                              child: Text(appText(context, km: 'យល់ព្រម', en: 'OK')),
                                             ),
                                           ],
                                         );
@@ -783,7 +801,7 @@ class _StockManagementScreenState extends State<StockManagementScreen>
                         controller: priceCtrl,
                         keyboardType: const TextInputType.numberWithOptions(decimal: true),
                         decoration: InputDecoration(
-                          labelText: 'តម្លៃ',
+                          labelText: appText(context, km: 'តម្លៃ', en: 'Price'),
                           labelStyle: const TextStyle(
                             fontFamily: 'Siemreap',
                             fontSize: 13,
@@ -821,7 +839,7 @@ class _StockManagementScreenState extends State<StockManagementScreen>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'រូបិយប័ណ្ណ',
+                          appText(context, km: 'រូបិយប័ណ្ណ', en: 'Currency'),
                           style: TextStyle(
                             fontFamily: 'Siemreap',
                             fontSize: 13,
@@ -902,7 +920,7 @@ class _StockManagementScreenState extends State<StockManagementScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'ប្រភេទ',
+                      appText(context, km: 'ប្រភេទ', en: 'Category'),
                       style: TextStyle(
                         fontFamily: 'Siemreap',
                         fontSize: 13,
@@ -923,7 +941,7 @@ class _StockManagementScreenState extends State<StockManagementScreen>
                               : null,
                           isExpanded: true,
                           hint: Text(
-                            selectedCategory,
+                            stockValueLabel(context, selectedCategory),
                             style: const TextStyle(
                               fontFamily: 'Siemreap',
                               fontSize: 13,
@@ -934,7 +952,7 @@ class _StockManagementScreenState extends State<StockManagementScreen>
                                   (c) => DropdownMenuItem(
                                 value: c,
                                 child: Text(
-                                  c,
+                                  stockValueLabel(context, c),
                                   style: const TextStyle(
                                     fontFamily: 'Siemreap',
                                     fontSize: 13,
@@ -942,11 +960,11 @@ class _StockManagementScreenState extends State<StockManagementScreen>
                                 ),
                               ),
                             ),
-                            const DropdownMenuItem(
+                            DropdownMenuItem(
                               value: 'custom',
                               child: Text(
-                                '✏️ សរសេរដោយដៃ',
-                                style: TextStyle(
+                                appText(context, km: '✏️ សរសេរដោយដៃ', en: '✏️ Enter manually'),
+                                style: const TextStyle(
                                   fontFamily: 'Siemreap',
                                   fontSize: 13,
                                   color: Colors.green,
@@ -961,15 +979,15 @@ class _StockManagementScreenState extends State<StockManagementScreen>
                                 builder: (_) {
                                   final ctrl = TextEditingController();
                                   return AlertDialog(
-                                    title: const Text(
-                                      'ប្រភេទផ្សេង',
+                                    title: Text(
+                                      appText(context, km: 'ប្រភេទផ្សេង', en: 'Other category'),
                                       style: TextStyle(fontFamily: 'Siemreap'),
                                     ),
                                     content: TextField(
                                       controller: ctrl,
                                       autofocus: true,
-                                      decoration: const InputDecoration(
-                                        hintText: 'សរសេរប្រភេទ...',
+                                      decoration: InputDecoration(
+                                        hintText: appText(context, km: 'សរសេរប្រភេទ...', en: 'Enter category...'),
                                       ),
                                     ),
                                     actions: [
@@ -1005,7 +1023,7 @@ class _StockManagementScreenState extends State<StockManagementScreen>
 
                 _buildTextField(
                   minAlertCtrl,
-                  'ព្រមានបើស្តុកដល់',
+                  appText(context, km: 'ព្រមានបើស្តុកដល់', en: 'Low-stock alert at'),
                   Icons.warning_amber_outlined,
                   isNumber: true,
                 ),
@@ -1025,7 +1043,7 @@ class _StockManagementScreenState extends State<StockManagementScreen>
                         ? null
                         : () async {
                       if (nameCtrl.text.trim().isEmpty) {
-                        _showSnack('សូមបញ្ចូលឈ្មោះទំនិញ', Colors.red);
+                        _showSnack(appText(context, km: 'សូមបញ្ចូលឈ្មោះទំនិញ', en: 'Please enter a product name'), Colors.red);
                         return;
                       }
                       setModalState(() => isSaving = true);
@@ -1082,10 +1100,10 @@ class _StockManagementScreenState extends State<StockManagementScreen>
                           'updatedAt': FieldValue.serverTimestamp(),
                         });
                         if (context.mounted) Navigator.pop(context);
-                        _showSnack('✅ បានបន្ថែមទំនិញ', Colors.green);
+                        _showSnack(appText(context, km: '✅ បានបន្ថែមទំនិញ', en: '✅ Product added'), Colors.green);
                       } catch (e) {
                         setModalState(() => isSaving = false);
-                        _showSnack('❌ មានបញ្ហា: $e', Colors.red);
+                        _showSnack(appText(context, km: '❌ មានបញ្ហា: $e', en: '❌ Error: $e'), Colors.red);
                       }
                     },
                     child: isSaving
@@ -1097,8 +1115,8 @@ class _StockManagementScreenState extends State<StockManagementScreen>
                         strokeWidth: 2.5,
                       ),
                     )
-                        : const Text(
-                      'រក្សាទុក',
+                        : Text(
+                      appText(context, km: 'រក្សាទុក', en: 'Save'),
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 16,
@@ -1166,7 +1184,7 @@ class _StockManagementScreenState extends State<StockManagementScreen>
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      isAdd ? 'បន្ថែមស្តុក' : 'កាត់ស្តុក',
+                      isAdd ? appText(context, km: 'បន្ថែមស្តុក', en: 'Add stock') : appText(context, km: 'កាត់ស្តុក', en: 'Remove stock'),
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -1192,7 +1210,7 @@ class _StockManagementScreenState extends State<StockManagementScreen>
                   autofocus: true,
                   enabled: !isSaving,
                   decoration: InputDecoration(
-                    labelText: 'ចំនួន',
+                    labelText: appText(context, km: 'ចំនួន', en: 'Quantity'),
                     labelStyle: const TextStyle(fontFamily: 'Siemreap'),
                     prefixIcon: Icon(
                       Icons.numbers,
@@ -1211,8 +1229,8 @@ class _StockManagementScreenState extends State<StockManagementScreen>
                   ),
                 ),
                 const SizedBox(height: 12),
-                const Text(
-                  'មូលហេតុ',
+                Text(
+                  appText(context, km: 'មូលហេតុ', en: 'Reason'),
                   style: TextStyle(fontFamily: 'Siemreap', fontSize: 13),
                 ),
                 const SizedBox(height: 8),
@@ -1236,7 +1254,7 @@ class _StockManagementScreenState extends State<StockManagementScreen>
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
-                          r,
+                          stockValueLabel(context, r),
                           style: TextStyle(
                             fontFamily: 'Siemreap',
                             fontSize: 13,
@@ -1252,7 +1270,7 @@ class _StockManagementScreenState extends State<StockManagementScreen>
                   controller: reasonCtrl,
                   enabled: !isSaving,
                   decoration: InputDecoration(
-                    labelText: 'ចំណាំបន្ថែម (ជម្រើស)',
+                    labelText: appText(context, km: 'ចំណាំបន្ថែម (ជម្រើស)', en: 'Additional note (optional)'),
                     labelStyle: const TextStyle(fontFamily: 'Siemreap'),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -1277,7 +1295,7 @@ class _StockManagementScreenState extends State<StockManagementScreen>
                         : () async {
                       int amount = int.tryParse(amountCtrl.text) ?? 0;
                       if (amount <= 0) {
-                        _showSnack('សូមបញ្ចូលចំនួន', Colors.orange);
+                        _showSnack(appText(context, km: 'សូមបញ្ចូលចំនួន', en: 'Please enter a quantity'), Colors.orange);
                         return;
                       }
                       int currentQty = (data['quantity'] ?? 0).toInt();
@@ -1285,7 +1303,7 @@ class _StockManagementScreenState extends State<StockManagementScreen>
                           ? currentQty + amount
                           : currentQty - amount;
                       if (newQty < 0) {
-                        _showSnack('ស្តុកមិនគ្រប់គ្រាន់!', Colors.red);
+                        _showSnack(appText(context, km: 'ស្តុកមិនគ្រប់គ្រាន់!', en: 'Not enough stock!'), Colors.red);
                         return;
                       }
                       setModalState(() => isSaving = true);
@@ -1324,7 +1342,7 @@ class _StockManagementScreenState extends State<StockManagementScreen>
                         );
                       } catch (e) {
                         setModalState(() => isSaving = false);
-                        _showSnack('❌ មានបញ្ហា: $e', Colors.red);
+                        _showSnack(appText(context, km: '❌ មានបញ្ហា: $e', en: '❌ Error: $e'), Colors.red);
                       }
                     },
                     child: isSaving
@@ -1337,7 +1355,7 @@ class _StockManagementScreenState extends State<StockManagementScreen>
                       ),
                     )
                         : Text(
-                      isAdd ? 'បន្ថែមស្តុក' : 'កាត់ស្តុក',
+                      isAdd ? appText(context, km: 'បន្ថែមស្តុក', en: 'Add stock') : appText(context, km: 'កាត់ស្តុក', en: 'Remove stock'),
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 16,
@@ -1390,8 +1408,8 @@ class _StockManagementScreenState extends State<StockManagementScreen>
                     size: 20,
                   ),
                 ),
-                title: const Text(
-                  'កែប្រែ',
+                title: Text(
+                  appText(context, km: 'កែប្រែ', en: 'Edit'),
                   style: TextStyle(fontFamily: 'Siemreap'),
                 ),
                 onTap: () {
@@ -1412,8 +1430,8 @@ class _StockManagementScreenState extends State<StockManagementScreen>
                     size: 20,
                   ),
                 ),
-                title: const Text(
-                  'លុបទំនិញ',
+                title: Text(
+                  appText(context, km: 'លុបទំនិញ', en: 'Delete product'),
                   style: TextStyle(fontFamily: 'Siemreap', color: Colors.red),
                 ),
                 onTap: () {
@@ -1467,8 +1485,8 @@ class _StockManagementScreenState extends State<StockManagementScreen>
                   ),
                 ),
                 const SizedBox(height: 16),
-                const Text(
-                  'កែប្រែទំនិញ',
+                Text(
+                  appText(context, km: 'កែប្រែទំនិញ', en: 'Edit product'),
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -1478,7 +1496,7 @@ class _StockManagementScreenState extends State<StockManagementScreen>
                 const SizedBox(height: 16),
                 _buildTextField(
                   nameCtrl,
-                  'ឈ្មោះទំនិញ',
+                  appText(context, km: 'ឈ្មោះទំនិញ', en: 'Product name'),
                   Icons.inventory_2_outlined,
                 ),
                 const SizedBox(height: 12),
@@ -1487,7 +1505,7 @@ class _StockManagementScreenState extends State<StockManagementScreen>
                     Expanded(
                       child: _buildTextField(
                         unitCtrl,
-                        'ឯកតា',
+                        appText(context, km: 'ឯកតា', en: 'Unit'),
                         Icons.straighten,
                       ),
                     ),
@@ -1495,7 +1513,7 @@ class _StockManagementScreenState extends State<StockManagementScreen>
                     Expanded(
                       child: _buildTextField(
                         categoryCtrl,
-                        'ប្រភេទ',
+                        appText(context, km: 'ប្រភេទ', en: 'Category'),
                         Icons.category_outlined,
                       ),
                     ),
@@ -1509,7 +1527,7 @@ class _StockManagementScreenState extends State<StockManagementScreen>
                 controller: priceCtrl,
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   decoration: InputDecoration(
-                    labelText: 'តម្លៃ (៛)',
+                    labelText: appText(context, km: 'តម្លៃ (៛)', en: 'Price (៛)'),
                     labelStyle: const TextStyle(fontFamily: 'Siemreap', fontSize: 13),
                     prefixIcon: const Icon(Icons.monetization_on_outlined, size: 20, color: Colors.grey),
                     border: OutlineInputBorder(
@@ -1532,7 +1550,7 @@ class _StockManagementScreenState extends State<StockManagementScreen>
                     Expanded(
                       child: _buildTextField(
                         minAlertCtrl,
-                        'ព្រមានបើស្តុកដល់',
+                        appText(context, km: 'ព្រមានបើស្តុកដល់', en: 'Low-stock alert at'),
                         Icons.warning_amber_outlined,
                         isNumber: true,
                       ),
@@ -1570,10 +1588,10 @@ class _StockManagementScreenState extends State<StockManagementScreen>
                           'updatedAt': FieldValue.serverTimestamp(),
                         });
                         if (context.mounted) Navigator.pop(context);
-                        _showSnack('✅ បានកែប្រែ', Colors.blue);
+                        _showSnack(appText(context, km: '✅ បានកែប្រែ', en: '✅ Updated'), Colors.blue);
                       } catch (e) {
                         setModalState(() => isSaving = false);
-                        _showSnack('❌ មានបញ្ហា: $e', Colors.red);
+                        _showSnack(appText(context, km: '❌ មានបញ្ហា: $e', en: '❌ Error: $e'), Colors.red);
                       }
                     },
                     child: isSaving
@@ -1585,8 +1603,8 @@ class _StockManagementScreenState extends State<StockManagementScreen>
                         strokeWidth: 2.5,
                       ),
                     )
-                        : const Text(
-                      'រក្សាទុក',
+                        : Text(
+                      appText(context, km: 'រក្សាទុក', en: 'Save'),
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 16,
@@ -1610,19 +1628,19 @@ class _StockManagementScreenState extends State<StockManagementScreen>
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text(
-          'លុបទំនិញ?',
+        title: Text(
+          appText(context, km: 'លុបទំនិញ?', en: 'Delete product?'),
           style: TextStyle(fontFamily: 'Siemreap'),
         ),
         content: Text(
-          'តើអ្នកចង់លុប "$name" ចេញ?',
+          appText(context, km: 'តើអ្នកចង់លុប "$name" ចេញ?', en: 'Do you want to delete "$name"?'),
           style: const TextStyle(fontFamily: 'Siemreap'),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text(
-              'បោះបង់',
+            child: Text(
+              appText(context, km: 'បោះបង់', en: 'Cancel'),
               style: TextStyle(fontFamily: 'Siemreap'),
             ),
           ),
@@ -1636,10 +1654,10 @@ class _StockManagementScreenState extends State<StockManagementScreen>
                   .collection('stock_items')
                   .doc(docId)
                   .delete();
-              _showSnack('បានលុប "$name"', Colors.red);
+              _showSnack(appText(context, km: 'បានលុប "$name"', en: 'Deleted "$name"'), Colors.red);
             },
-            child: const Text(
-              'លុប',
+            child: Text(
+              appText(context, km: 'លុប', en: 'Delete'),
               style: TextStyle(color: Colors.white, fontFamily: 'Siemreap'),
             ),
           ),
@@ -2154,7 +2172,7 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
                             ),
                             const SizedBox(width: 8),
                             Text(
-                              isAdd ? 'បន្ថែមស្តុក' : 'កាត់ស្តុក',
+                              isAdd ? appText(context, km: 'បន្ថែមស្តុក', en: 'Add stock') : appText(context, km: 'កាត់ស្តុក', en: 'Remove stock'),
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
@@ -2180,7 +2198,7 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
                           autofocus: true,
                           enabled: !isSaving,
                           decoration: InputDecoration(
-                            labelText: 'ចំនួន',
+                            labelText: appText(context, km: 'ចំនួន', en: 'Quantity'),
                             labelStyle: const TextStyle(fontFamily: 'Siemreap'),
                             prefixIcon: Icon(
                               Icons.numbers,
@@ -2226,7 +2244,7 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
                                   borderRadius: BorderRadius.circular(20),
                                 ),
                                 child: Text(
-                                  r,
+                                  stockValueLabel(context, r),
                                   style: TextStyle(
                                     fontFamily: 'Siemreap',
                                     fontSize: 13,
@@ -2243,7 +2261,7 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
                           controller: reasonCtrl,
                           enabled: !isSaving,
                           decoration: InputDecoration(
-                            labelText: 'ចំណាំបន្ថែម (ជម្រើស)',
+                            labelText: appText(context, km: 'ចំណាំបន្ថែម (ជម្រើស)', en: 'Additional note (optional)'),
                             labelStyle: const TextStyle(fontFamily: 'Siemreap'),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -2269,7 +2287,7 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
                                 : () async {
                               int amount = int.tryParse(amountCtrl.text) ?? 0;
                               if (amount <= 0) {
-                                _showSnack('សូមបញ្ចូលចំនួន', Colors.orange);
+                                _showSnack(appText(context, km: 'សូមបញ្ចូលចំនួន', en: 'Please enter a quantity'), Colors.orange);
                                 return;
                               }
                               int currentQty = (data['quantity'] ?? 0).toInt();
@@ -2277,7 +2295,7 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
                                   ? currentQty + amount
                                   : currentQty - amount;
                               if (newQty < 0) {
-                                _showSnack('ស្តុកមិនគ្រប់គ្រាន់!', Colors.red);
+                                _showSnack(appText(context, km: 'ស្តុកមិនគ្រប់គ្រាន់!', en: 'Not enough stock!'), Colors.red);
                                 return;
                               }
                               setModalState(() => isSaving = true);
@@ -2323,7 +2341,7 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
                                 }
                               } catch (e) {
                                 setModalState(() => isSaving = false);
-                                _showSnack('❌ មានបញ្ហា: $e', Colors.red);
+                                _showSnack(appText(context, km: '❌ មានបញ្ហា: $e', en: '❌ Error: $e'), Colors.red);
                               }
                             },
                             child: isSaving
@@ -2336,7 +2354,7 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
                               ),
                             )
                                 : Text(
-                              isAdd ? 'បន្ថែមស្តុក' : 'កាត់ស្តុក',
+                              isAdd ? appText(context, km: 'បន្ថែមស្តុក', en: 'Add stock') : appText(context, km: 'កាត់ស្តុក', en: 'Remove stock'),
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 16,
