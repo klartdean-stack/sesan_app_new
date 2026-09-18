@@ -2,7 +2,7 @@ name: Product Detail localization verification
 on:
   push:
     branches: [ios-sync-android46]
-    paths: ['.github/workflows/localization-batch.yml']
+    paths: ['.github/workflows/localization-batch.yml', 'lib/product_detail.dart']
 permissions:
   contents: write
 jobs:
