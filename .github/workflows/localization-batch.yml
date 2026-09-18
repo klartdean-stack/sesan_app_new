@@ -1,4 +1,4 @@
-name: Pre-order localization verification
+name: Wanted localization verification
 on:
   push:
     branches: [ios-sync-android46]
@@ -6,7 +6,7 @@ on:
 permissions:
   contents: write
 jobs:
-  verify-preorder:
+  verify-wanted:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -14,28 +14,29 @@ jobs:
       - uses: subosito/flutter-action@v2
         with: {flutter-version: '3.38.8', channel: stable, cache: true}
       - name: Format
-        run: dart format lib/pre_order_grid_view.dart lib/pre_order_detail_screen.dart
-      - name: Preserve Pre-order behavior
+        run: dart format lib/wanted_grid_view.dart lib/wanted_detail_screen.dart
+      - name: Preserve Wanted behavior
         run: |
-          grep -q "collection('pre_orders')" lib/pre_order_grid_view.dart
-          grep -q "PreOrderDetailScreen" lib/pre_order_grid_view.dart
-          grep -q "collection('pre_orders')" lib/pre_order_detail_screen.dart
-          grep -q "ChatScreen" lib/pre_order_detail_screen.dart
-          grep -q "UserProfileScreen" lib/pre_order_detail_screen.dart
-          grep -q "_revealPhoneTemporarily" lib/pre_order_detail_screen.dart
-          grep -q "Share.share" lib/pre_order_detail_screen.dart
+          grep -q "collection('wanted_products')" lib/wanted_grid_view.dart
+          grep -q "WantedDetailScreen" lib/wanted_grid_view.dart
+          grep -q "collection('wanted_products')" lib/wanted_detail_screen.dart
+          grep -q "ChatScreen" lib/wanted_detail_screen.dart
+          grep -q "EditWantedScreen" lib/wanted_detail_screen.dart
+          grep -q "_clickToSell" lib/wanted_detail_screen.dart
+          grep -q "Share.share" lib/wanted_detail_screen.dart
+          grep -q "UserProfileScreen" lib/wanted_detail_screen.dart
       - name: Analyze
         run: |
           flutter pub get
-          flutter analyze lib/pre_order_grid_view.dart lib/pre_order_detail_screen.dart --no-fatal-infos --no-fatal-warnings
+          flutter analyze lib/wanted_grid_view.dart lib/wanted_detail_screen.dart --no-fatal-infos --no-fatal-warnings
       - name: Compile check
         run: flutter build bundle --debug
       - name: Commit formatting if needed
         run: |
-          if ! git diff --quiet -- lib/pre_order_grid_view.dart lib/pre_order_detail_screen.dart; then
+          if ! git diff --quiet -- lib/wanted_grid_view.dart lib/wanted_detail_screen.dart; then
             git config user.name github-actions[bot]
             git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-            git add lib/pre_order_grid_view.dart lib/pre_order_detail_screen.dart
-            git commit -m "Format Pre-order localization"
+            git add lib/wanted_grid_view.dart lib/wanted_detail_screen.dart
+            git commit -m "Format Wanted localization"
             git push origin HEAD:ios-sync-android46
           fi
