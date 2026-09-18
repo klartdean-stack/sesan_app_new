@@ -61,15 +61,19 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
   static const _textMuted = Color(0xFF6B7280);
   static const _red = Color(0xFFD32F2F);
 
-  final List<Map<String, dynamic>> _packages = [
+  List<Map<String, dynamic>> get _packages => [
     {
       'key': 'basic',
-      'label': 'កញ្ចប់ធម្មតា',
+      'label': _t('កញ្ចប់ធម្មតា', 'Basic package'),
       'price': 10000,
-      'duration': '24 ម៉ោង',
+      'duration': _t('24 ម៉ោង', '24 hours'),
       'icon': Icons.local_offer_outlined,
       'color': _accent,
-      'features': ['បង្ហាញក្នុង Feed', 'រូបភាព ៤ សន្លឹក', 'Support ជាមូលដ្ឋាន'],
+      'features': [
+        _t('បង្ហាញក្នុង Feed', 'Shown in Feed'),
+        _t('រូបភាព ៤ សន្លឹក', '4 photos'),
+        _t('Support ជាមូលដ្ឋាន', 'Basic support'),
+      ],
     },
   ];
 
@@ -183,17 +187,17 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
       );
       await Gal.putImage(file.path);
       if (!mounted) return;
-      _showTopMessage('✅ បានរក្សាទុកក្នុង Gallery រួចរាល់!');
+      _showTopMessage(_t('✅ បានរក្សាទុកក្នុង Gallery រួចរាល់!', '✅ Saved to Gallery!'));
     } catch (e) {
       if (!mounted) return;
-      _showTopMessage('❌ មិនអាចរក្សាទុកបាន: $e', isError: true);
+      _showTopMessage(_t('❌ មិនអាចរក្សាទុកបាន: $e', '❌ Could not save: $e'), isError: true);
     }
   }
 
   Future<void> _pickProductImages() async {
     if (_isPickingImage) return;
     if (_productImages.length >= 8) {
-      _showErrorSnack('គ្រប់ 8 សន្លឹកហើយ!');
+      _showErrorSnack(_t('គ្រប់ 8 សន្លឹកហើយ!', 'Maximum 8 photos reached!'));
       return;
     }
     try {
@@ -207,7 +211,7 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
         _productImages.addAll(toAdd.map((f) => File(f.path)));
       });
       if (_productImages.length >= 8) {
-        _showErrorSnack('គ្រប់ 8 សន្លឹកហើយ!');
+        _showErrorSnack(_t('គ្រប់ 8 សន្លឹកហើយ!', 'Maximum 8 photos reached!'));
       }
     } finally {
       if (mounted) setState(() => _isPickingImage = false);
@@ -228,7 +232,7 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
         _isVideoPreviewReady = false;
       });
       _initVideoPreview();
-      _showSuccessSnack('បានជ្រើសរើសវីដេអូជោគជ័យ');
+      _showSuccessSnack(_t('បានជ្រើសរើសវីដេអូជោគជ័យ', 'Video selected successfully'));
     } finally {
       if (mounted) setState(() => _isPickingImage = false);
     }
@@ -273,7 +277,7 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
     if (_isProcessing) return;
 
     if (_productNameCtrl.text.isEmpty || _startPriceCtrl.text.isEmpty) {
-      _showErrorSnack('❌ សូមបំពេញព័ត៌មានឱ្យបានគ្រប់គ្រាន់');
+      _showErrorSnack(_t('❌ សូមបំពេញព័ត៌មានឱ្យបានគ្រប់គ្រាន់', '❌ Please complete the required information'));
       return;
     }
 
@@ -339,10 +343,10 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
       });
 
       _uploadController.uploadProgress.value = 1.0;
-      _showSuccessSnack('🎉 បញ្ជូនការដេញថ្លៃជោគជ័យ!');
+      _showSuccessSnack(_t('🎉 បញ្ជូនការដេញថ្លៃជោគជ័យ!', '🎉 Auction request submitted successfully!'));
     } catch (e) {
       _uploadController.uploadProgress.value = 0.0;
-      _showErrorSnack('❌ មានបញ្ហា: $e');
+      _showErrorSnack(_t('❌ មានបញ្ហា: $e', '❌ Error: $e'));
     } finally {
       _uploadController.isUploading.value = false;
       Future.delayed(const Duration(seconds: 3), () {
@@ -352,12 +356,12 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
   }
 
   String? _validateRequired(String? v) =>
-      (v == null || v.trim().isEmpty) ? 'សូមបំពេញព័ត៌មាននេះ' : null;
+      (v == null || v.trim().isEmpty) ? _t('សូមបំពេញព័ត៌មាននេះ', 'Please fill in this field') : null;
 
   String? _validateNumber(String? v) {
-    if (v == null || v.trim().isEmpty) return 'សូមបំពេញលេខ';
+    if (v == null || v.trim().isEmpty) return _t('សូមបំពេញលេខ', 'Please enter a number');
     final n = int.tryParse(v.replaceAll(',', ''));
-    if (n == null || n <= 0) return 'សូមបញ្ចូលលេខត្រឹមត្រូវ';
+    if (n == null || n <= 0) return _t('សូមបញ្ចូលលេខត្រឹមត្រូវ', 'Please enter a valid number');
     return null;
   }
 
@@ -370,15 +374,15 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
 
   void _nextStep() {
     if (_currentStep == 0 && !_step0Valid) {
-      _showErrorSnack('សូមបំពេញឈ្មោះទំនិញ និងរូបភាព');
+      _showErrorSnack(_t('សូមបំពេញឈ្មោះទំនិញ និងរូបភាព', 'Please add a product name and photos'));
       return;
     }
     if (_currentStep == 1 && !_step1Valid) {
-      _showErrorSnack('សូមបំពេញតម្លៃ និងថ្ងៃបញ្ចប់');
+      _showErrorSnack(_t('សូមបំពេញតម្លៃ និងថ្ងៃបញ្ចប់', 'Please enter prices and an end date'));
       return;
     }
     if (_currentStep == 1 && _selectedPackage == null) {
-      _showErrorSnack('សូមជ្រើសរើសកញ្ចប់សេវា');
+      _showErrorSnack(_t('សូមជ្រើសរើសកញ្ចប់សេវា', 'Please select a service package'));
       return;
     }
     if (_currentStep == 0) {
@@ -976,7 +980,7 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
                             ),
                             SizedBox(height: 4),
                             Text(
-                              'បន្ថែម',
+                              _t('បន្ថែម', 'Add'),
                               style: TextStyle(
                                 color: _accentBlue,
                                 fontSize: 11,
@@ -1015,7 +1019,7 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
         const SizedBox(height: 8),
         _buildTextField(
           controller: _startPriceCtrl,
-          hint: 'ឧ. 50,000',
+          hint: _t('ឧ. 50,000', 'e.g. 50,000'),
           icon: Icons.account_balance_wallet_rounded,
           keyboard: TextInputType.number,
           inputFormatters: [
@@ -1031,7 +1035,7 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
         const SizedBox(height: 8),
         _buildTextField(
           controller: _bidStepCtrl,
-          hint: 'ឧ. 5000',
+          hint: _t('ឧ. 5000', 'e.g. 5,000'),
           icon: Icons.trending_up_rounded,
           keyboard: TextInputType.number,
           suffix: '៛',
@@ -1139,7 +1143,7 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
             Expanded(
               child: Text(
                 _endDate == null
-                    ? 'ជ្រើសរើសថ្ងៃ និងម៉ោង'
+                    ? _t('ជ្រើសរើសថ្ងៃ និងម៉ោង', 'Select date and time')
                     : DateFormat('dd MMM yyyy · HH:mm').format(_endDate!),
                 style: TextStyle(
                   color: _endDate == null ? _textMuted : _text,
@@ -1168,8 +1172,8 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
       children: [
         _sectionHeader(
           '⭐',
-          'ជ្រើសកញ្ចប់សេវា',
-          'ជ្រើសរើសកញ្ចប់ដែលស្របតាមការចង់បាន',
+          _t('ជ្រើសកញ្ចប់សេវា', 'Choose a service package'),
+          _t('ជ្រើសរើសកញ្ចប់ដែលស្របតាមការចង់បាន', 'Choose the package that fits your needs'),
         ),
         const SizedBox(height: 20),
         ...List.generate(_packages.length, (i) {
@@ -1275,8 +1279,8 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
                           fontWeight: FontWeight.w800,
                         ),
                       ),
-                      const Text(
-                        'រៀល',
+                      Text(
+                        _t('រៀល', 'KHR'),
                         style: TextStyle(
                           color: _textMuted,
                           fontSize: 11,
@@ -1330,8 +1334,8 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
                   ),
                 ),
                 const SizedBox(height: 20),
-                const Text(
-                  'បង់សេវាដាក់ដេញថ្លៃ',
+                Text(
+                  _t('បង់សេវាដាក់ដេញថ្លៃ', 'Pay auction listing fee'),
                   style: TextStyle(
                     color: _text,
                     fontSize: 18,
@@ -1340,8 +1344,8 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
                   ),
                 ),
                 const Divider(color: _border, height: 40),
-                const Text(
-                  'ស្កេនបង់ប្រាក់មកកាន់ QR ខាងក្រោម',
+                Text(
+                  _t('ស្កេនបង់ប្រាក់មកកាន់ QR ខាងក្រោម', 'Scan the QR below to pay'),
                   style: TextStyle(color: _textMuted, fontFamily: 'Siemreap'),
                 ),
                 const SizedBox(height: 15),
@@ -1385,8 +1389,8 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
                     Icons.account_balance_wallet,
                     color: Colors.white,
                   ),
-                  label: const Text(
-                    'ចុចដើម្បីបង់ប្រាក់តាម App ABA',
+                  label: Text(
+                    _t('ចុចដើម្បីបង់ប្រាក់តាម App ABA', 'Tap to pay with ABA App'),
                     style: TextStyle(color: Colors.white),
                   ),
                   style: ElevatedButton.styleFrom(
@@ -1398,8 +1402,8 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
                   ),
                 ),
                 const SizedBox(height: 15),
-                const Text(
-                  'បញ្ជាក់៖ សូមចុចសង្កត់លើ QR ដើម្បីរក្សាទុក រួចថតរូបវិក្កយបត្របញ្ចូលខាងក្រោម',
+                Text(
+                  _t('បញ្ជាក់៖ សូមចុចសង្កត់លើ QR ដើម្បីរក្សាទុក រួចថតរូបវិក្កយបត្របញ្ចូលខាងក្រោម', 'Note: Long press the QR to save it, then attach your payment receipt below'),
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 11,
@@ -1424,17 +1428,17 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
                       ),
                     ),
                     child: _paymentImage == null
-                        ? const Column(
+                        ? Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(
+                              const Icon(
                                 Icons.add_a_photo_rounded,
                                 size: 40,
                                 color: _textMuted,
                               ),
-                              SizedBox(height: 8),
+                              const SizedBox(height: 8),
                               Text(
-                                'ដាក់រូបវិក្កយបត្រ',
+                                _t('ដាក់រូបវិក្កយបត្រ', 'Attach receipt'),
                                 style: TextStyle(
                                   color: _textMuted,
                                   fontSize: 12,
@@ -1473,7 +1477,7 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
                             if (ctx.mounted) {
                               setSheet(() => isLoader = false);
                             }
-                            _showErrorSnack('បញ្ហាបច្ចេកទេស៖ $e');
+                            _showErrorSnack(_t('បញ្ហាបច្ចេកទេស៖ $e', 'Technical error: $e'));
                           } finally {
                             if (ctx.mounted) {
                               setSheet(() => isLoader = false);
@@ -1489,8 +1493,8 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
                             strokeWidth: 2,
                           ),
                         )
-                      : const Text(
-                          'បញ្ជាក់ និងបញ្ជូនសំណើ',
+                      : Text(
+                          _t('បញ្ជាក់ និងបញ្ជូនសំណើ', 'Confirm and submit'),
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 16,
@@ -1530,7 +1534,9 @@ class _AuctionAddScreenState extends State<AuctionAddScreen>
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                _currentStep == 1 ? 'បន្តការបង់ប្រាក់' : 'បន្ទាប់',
+                _currentStep == 1
+                    ? _t('បន្តការបង់ប្រាក់', 'Continue to payment')
+                    : _t('បន្ទាប់', 'Next'),
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 15,
