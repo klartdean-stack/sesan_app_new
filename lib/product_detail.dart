@@ -1992,7 +1992,7 @@ Android: $androidPlayStoreLink
                                             const SizedBox(width: 4),
                                             Text(
                                               '${avgRating.toStringAsFixed(1)} '
-                                              Localizations.localeOf(context).languageCode == 'en' ? '($totalReviews reviews)' : '($totalReviews នាក់)',
+                                              '${Localizations.localeOf(context).languageCode == 'en' ? '($totalReviews reviews)' : '($totalReviews នាក់)'}',
                                               style: const TextStyle(
                                                 fontSize: 11,
                                                 fontWeight: FontWeight.bold,
