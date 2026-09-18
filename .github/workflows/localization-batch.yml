@@ -2,7 +2,7 @@ name: Order History localization verification
 on:
   push:
     branches: [ios-sync-android46]
-    paths: ['.github/workflows/localization-batch.yml']
+    paths: ['.github/workflows/localization-batch.yml', 'lib/order_history_screen.dart']
 permissions:
   contents: write
 jobs:
