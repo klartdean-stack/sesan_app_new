@@ -1349,7 +1349,7 @@ class _ChatScreenState extends State<ChatScreen> {
             size: 18,
           ),
           label: Text(
-            'មើលហាង'.tr,
+            'chat_view_shop'.tr,
             style: const TextStyle(
               color: Colors.white,
               fontSize: 12,
@@ -1411,7 +1411,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       Icon(Icons.store, color: Colors.green[700], size: 20),
                       const SizedBox(width: 10),
                       Text(
-                        'មើលហាង'.tr,
+                        'chat_view_shop'.tr,
                         style: const TextStyle(fontFamily: 'Siemreap', fontSize: 11),
                       ),
                     ],
