@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:gal/gal.dart';
 import 'package:my_app/create_invoice_sheet.dart';
+import 'localized_text.dart';
 
 class InvoiceCaptureHelper {
   /// ថតវិក្កយបត្រទាំងមូល (បំបែកជាច្រើនសន្លឹកបើចាំបាច់)
@@ -61,6 +62,7 @@ class InvoiceCaptureHelper {
                           children: [
                           if (i == 0)
                       _buildCaptureHeader(
+                      context: context,
                       sellerName: sellerName,
                       sellerPhone: sellerPhone,
                       sellerSesanId: sellerSesanId,
@@ -68,7 +70,7 @@ class InvoiceCaptureHelper {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      "បញ្ជីទំនិញ (សន្លឹកទី ${i + 1})",
+                      appText(context, km: "បញ្ជីទំនិញ (សន្លឹកទី ${i + 1})", en: "Items (page ${i + 1})"),
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 13,
@@ -85,6 +87,7 @@ class InvoiceCaptureHelper {
                 if (i == totalPages - 1) ...[
             const Divider(thickness: 1, color: Colors.black),
             _buildCaptureTotalAndQR(
+        context: context,
         subtotal: subtotal,
         shipPrice: shipPrice,
         totalWithShipping: totalWithShipping,
@@ -115,7 +118,7 @@ class InvoiceCaptureHelper {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text("✅ បានថតបំបែកជា $totalPages សន្លឹកក្នុង Gallery"),
+            content: Text(appText(context, km: "✅ បានថតបំបែកជា $totalPages សន្លឹកក្នុង Gallery", en: "✅ Saved $totalPages invoice image(s) to Gallery")),
             backgroundColor: Colors.green,
           ),
         );
@@ -125,7 +128,7 @@ class InvoiceCaptureHelper {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text("❌ ថតមិនបាន៖ $e"),
+            content: Text(appText(context, km: "❌ ថតមិនបាន៖ $e", en: "❌ Could not save invoice: $e")),
             backgroundColor: Colors.red,
           ),
         );
@@ -136,6 +139,7 @@ class InvoiceCaptureHelper {
   // ─── Widgets សម្រាប់បង្កើតរូបភាពវិក្កយបត្រ ──────────────
 
   static Widget _buildCaptureHeader({
+    required BuildContext context,
     required String sellerName,
     required String sellerPhone,
     required String sellerSesanId,
@@ -144,9 +148,9 @@ class InvoiceCaptureHelper {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Center(
+        Center(
           child: Text(
-            "វិក្កយបត្រ / INVOICE",
+            appText(context, km: "វិក្កយបត្រ", en: "INVOICE"),
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
@@ -169,7 +173,7 @@ class InvoiceCaptureHelper {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '🏪 អ្នកលក់៖ $sellerName',
+                appText(context, km: '🏪 អ្នកលក់៖ $sellerName', en: '🏪 Seller: $sellerName'),
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 11,
@@ -179,7 +183,7 @@ class InvoiceCaptureHelper {
               if (sellerPhone.isNotEmpty) ...[
                 const SizedBox(height: 1),
                 Text(
-                  '📞 លេខទូរស័ព្ទ៖ $sellerPhone',
+                  appText(context, km: '📞 លេខទូរស័ព្ទ៖ $sellerPhone', en: '📞 Phone: $sellerPhone'),
                   style: const TextStyle(fontSize: 10, color: Colors.black87),
                 ),
               ],
@@ -193,7 +197,7 @@ class InvoiceCaptureHelper {
               if (sellerLocation.isNotEmpty) ...[
                 const SizedBox(height: 1),
                 Text(
-                  '📍 ទីតាំង៖ $sellerLocation',
+                  appText(context, km: '📍 ទីតាំង៖ $sellerLocation', en: '📍 Location: $sellerLocation'),
                   style: const TextStyle(fontSize: 10, color: Colors.black87),
                 ),
               ],
@@ -207,7 +211,7 @@ class InvoiceCaptureHelper {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                "👤 អ្នកទិញ៖ ${CreateInvoiceSheet.cusName.text}",
+                appText(context, km: "👤 អ្នកទិញ៖ ${CreateInvoiceSheet.cusName.text}", en: "👤 Buyer: ${CreateInvoiceSheet.cusName.text}"),
                 style: const TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.bold,
@@ -216,12 +220,12 @@ class InvoiceCaptureHelper {
               ),
               const SizedBox(height: 1),
               Text(
-                "📞 លេខទូរស័ព្ទ៖ ${CreateInvoiceSheet.cusPhone.text}",
+                appText(context, km: "📞 លេខទូរស័ព្ទ៖ ${CreateInvoiceSheet.cusPhone.text}", en: "📞 Phone: ${CreateInvoiceSheet.cusPhone.text}"),
                 style: const TextStyle(fontSize: 10, color: Colors.black87),
               ),
               const SizedBox(height: 1),
               Text(
-                "🏠 អាសយដ្ឋាន៖ ${CreateInvoiceSheet.cusAddress.text}",
+                appText(context, km: "🏠 អាសយដ្ឋាន៖ ${CreateInvoiceSheet.cusAddress.text}", en: "🏠 Address: ${CreateInvoiceSheet.cusAddress.text}"),
                 style: const TextStyle(fontSize: 10, color: Colors.black87),
               ),
             ],
@@ -264,6 +268,7 @@ class InvoiceCaptureHelper {
   }
 
   static Widget _buildCaptureTotalAndQR({
+    required BuildContext context,
     required double subtotal,
     required double shipPrice,
     required double totalWithShipping,
@@ -274,9 +279,9 @@ class InvoiceCaptureHelper {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
-              "ថ្លៃដឹកជញ្ជូន៖",
-              style: TextStyle(fontSize: 14, color: Colors.black87),
+            Text(
+              appText(context, km: "ថ្លៃដឹកជញ្ជូន៖", en: "Shipping:"),
+              style: const TextStyle(fontSize: 14, color: Colors.black87),
             ),
             Text(
               "${NumberFormat('#,###').format(shipPrice)} ៛",
@@ -289,9 +294,9 @@ class InvoiceCaptureHelper {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
-              "សរុបចុងក្រោយ៖",
-              style: TextStyle(
+            Text(
+              appText(context, km: "សរុបចុងក្រោយ៖", en: "Grand total:"),
+              style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
                 color: Colors.black,
@@ -309,10 +314,10 @@ class InvoiceCaptureHelper {
         ),
         if (CreateInvoiceSheet.qrFile != null) ...[
           const SizedBox(height: 20),
-          const Center(
+          Center(
             child: Text(
-              "Scan ដើម្បីបង់ប្រាក់",
-              style: TextStyle(fontSize: 12, color: Colors.black),
+              appText(context, km: "Scan ដើម្បីបង់ប្រាក់", en: "Scan to pay"),
+              style: const TextStyle(fontSize: 12, color: Colors.black),
             ),
           ),
           const SizedBox(height: 10),
