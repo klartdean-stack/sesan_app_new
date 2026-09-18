@@ -993,7 +993,7 @@ class _StockManagementScreenState extends State<StockManagementScreen>
                                     actions: [
                                       TextButton(
                                         onPressed: () => Navigator.pop(context),
-                                        child: const Text('បោះបង់'),
+                                        child: Text(appText(context, km: 'បោះបង់', en: 'Cancel')),
                                       ),
                                       ElevatedButton(
                                         onPressed: () {
@@ -1004,7 +1004,7 @@ class _StockManagementScreenState extends State<StockManagementScreen>
                                             );
                                           Navigator.pop(context);
                                         },
-                                        child: const Text('យល់ព្រម'),
+                                        child: Text(appText(context, km: 'យល់ព្រម', en: 'OK')),
                                       ),
                                     ],
                                   );
@@ -1758,7 +1758,7 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
         backgroundColor: Colors.green[700],
         foregroundColor: Colors.white,
         title: Text(
-          data['name'] ?? 'ប្រវត្តិស្តុក',
+          data['name'] ?? appText(context, km: 'ប្រវត្តិស្តុក', en: 'Stock history'),
           style: const TextStyle(fontFamily: 'Siemreap', fontSize: 18),
         ),
         actions: [
@@ -1813,7 +1813,7 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            data['name'] ?? 'គ្មានឈ្មោះ',
+                            data['name'] ?? appText(context, km: 'គ្មានឈ្មោះ', en: 'Unnamed product'),
                             style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -1860,10 +1860,10 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
                                 ),
                                 child: Text(
                                   isOut
-                                      ? '❌ អស់ស្តុក'
+                                      ? appText(context, km: '❌ អស់ស្តុក', en: '❌ Out of stock')
                                       : isLow
-                                      ? '⚠️ ជិតអស់'
-                                      : '✅ មាន',
+                                      ? appText(context, km: '⚠️ ជិតអស់', en: '⚠️ Low stock')
+                                      : appText(context, km: '✅ មាន', en: '✅ In stock'),
                                   style: TextStyle(
                                     fontSize: 11,
                                     color: statusColor,
@@ -1890,10 +1890,10 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
                                 ),
                                 child: Text(
                                   isOut
-                                      ? 'អស់'
+                                      ? appText(context, km: 'អស់', en: 'Out')
                                       : isLow
-                                      ? 'ជិតអស់'
-                                      : 'មាន',
+                                      ? appText(context, km: 'ជិតអស់', en: 'Low')
+                                      : appText(context, km: 'មាន', en: 'Available'),
                                   style: TextStyle(
                                     fontSize: 10,
                                     color: statusColor,
@@ -1906,7 +1906,7 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
                               Flexible(
                                 // ✅ រុំដោយ Flexible
                                 child: Text(
-                                  '$quantity ${data['unit'] ?? ''}',
+                                  '$quantity ${stockValueLabel(context, (data['unit'] ?? '').toString())}',
                                   style: TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.bold,
@@ -1943,8 +1943,8 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
                     onPressed: () =>
                         _showAdjustDialog(data, widget.docId, true),
                     icon: const Icon(Icons.add, color: Colors.white),
-                    label: const Text(
-                      'បន្ថែមស្តុក',
+                    label: Text(
+                      appText(context, km: 'បន្ថែមស្តុក', en: 'Add stock'),
                       style: TextStyle(
                         color: Colors.white,
                         fontFamily: 'Siemreap',
@@ -1965,8 +1965,8 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
                     onPressed: () =>
                         _showAdjustDialog(data, widget.docId, false),
                     icon: const Icon(Icons.remove, color: Colors.white),
-                    label: const Text(
-                      'កាត់ស្តុក',
+                    label: Text(
+                      appText(context, km: 'កាត់ស្តុក', en: 'Remove stock'),
                       style: TextStyle(
                         color: Colors.white,
                         fontFamily: 'Siemreap',
@@ -1979,8 +1979,8 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
             const SizedBox(height: 24),
 
             // --- ប្រវត្តិស្តុក ---
-            const Text(
-              'ប្រវត្តិស្តុក',
+            Text(
+              appText(context, km: 'ប្រវត្តិស្តុក', en: 'Stock history'),
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -2015,7 +2015,7 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
                     ),
                     child: Center(
                       child: Text(
-                        'មិនទាន់មានប្រវត្តិស្តុក',
+                        appText(context, km: 'មិនទាន់មានប្រវត្តិស្តុក', en: 'No stock history yet'),
                         style: TextStyle(
                           color: Colors.grey[400],
                           fontFamily: 'Siemreap',
@@ -2088,7 +2088,7 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  data['reason'] ?? (isAdd ? 'បន្ថែម' : 'កាត់'),
+                  stockValueLabel(context, (data['reason'] ?? (isAdd ? 'បន្ថែម' : 'កាត់')).toString()),
                   style: const TextStyle(
                     fontFamily: 'Siemreap',
                     fontWeight: FontWeight.w500,
@@ -2217,8 +2217,8 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
                           ),
                         ),
                         const SizedBox(height: 12),
-                        const Text(
-                          'មូលហេតុ',
+                        Text(
+                          appText(context, km: 'មូលហេតុ', en: 'Reason'),
                           style: TextStyle(
                               fontFamily: 'Siemreap', fontSize: 13),
                         ),
