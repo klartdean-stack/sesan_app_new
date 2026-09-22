@@ -57,6 +57,6 @@
     <string>Sesan App uses location access to support location-based features when permitted by you.</string>
     <!-- Build/release automation injects the real key here. Never commit the secret. -->
     <key>GOOGLE_MAPS_API_KEY</key>
-    <string></string>
+    <string>$(GOOGLE_MAPS_API_KEY)</string>
 </dict>
 </plist>
