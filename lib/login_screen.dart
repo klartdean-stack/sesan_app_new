@@ -453,12 +453,21 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
+
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       backgroundColor: Colors.white,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 30),
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+            padding: EdgeInsets.fromLTRB(
+              24,
+              keyboardOpen ? 6 : 12,
+              24,
+              keyboardOpen ? 12 : 20,
+            ),
             child: Form(
               key: _formKey,
               child: Column(
@@ -468,21 +477,22 @@ class _LoginScreenState extends State<LoginScreen> {
                     alignment: Alignment.centerRight,
                     child: LanguageSwitcher(),
                   ),
-                  const SizedBox(height: 20),
+                  SizedBox(height: keyboardOpen ? 4 : 10),
 
                   // ── Logo ──────────────────────────────────
                   // 🎯 ស្វែងរកកន្លែងបង្ហាញ Icon រូបកាបូប ហើយជំនួសដោយកូដនេះ
-                  Container(
-                    width: 130, // ទំហំមេអាចសារ៉េតាមចិត្ត
-                    height: 130,
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
+                    width: keyboardOpen ? 66 : 96,
+                    height: keyboardOpen ? 66 : 96,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: Colors.white,
                       boxShadow: [
                         BoxShadow(
                           color: Colors.black.withOpacity(0.05),
-                          blurRadius: 15,
-                          spreadRadius: 2,
+                          blurRadius: 10,
+                          spreadRadius: 1,
                         ),
                       ],
                       // 🎯 ប្រើ AssetImage ដើម្បីទាញយក sesan_icon.jpg
@@ -492,28 +502,30 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  const Text(
+                  SizedBox(height: keyboardOpen ? 6 : 10),
+                  Text(
                     'SESAN APP',
                     style: TextStyle(
-                      fontSize: 28,
+                      fontSize: keyboardOpen ? 21 : 25,
                       fontWeight: FontWeight.bold,
                       color: Colors.green,
-                      letterSpacing: 2,
+                      letterSpacing: 1.6,
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'login_subtitle'.tr,
-                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                  ),
-                  const SizedBox(height: 40),
+                  if (!keyboardOpen) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      'login_subtitle'.tr,
+                      style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+                    ),
+                  ],
+                  SizedBox(height: keyboardOpen ? 12 : 22),
 
                   Container(
-                    padding: const EdgeInsets.all(4),
+                    padding: const EdgeInsets.all(3),
                     decoration: BoxDecoration(
                       color: Colors.grey.shade100,
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
                       children: [
@@ -527,6 +539,8 @@ class _LoginScreenState extends State<LoginScreen> {
                               _accountText(km: 'លេខទូរស័ព្ទ', en: 'Phone'),
                             ),
                             style: TextButton.styleFrom(
+                              minimumSize: const Size(0, 42),
+                              padding: const EdgeInsets.symmetric(horizontal: 8),
                               backgroundColor: !_useEmailLogin
                                   ? Colors.white
                                   : Colors.transparent,
@@ -544,6 +558,8 @@ class _LoginScreenState extends State<LoginScreen> {
                             icon: const Icon(Icons.email_outlined),
                             label: const Text('Email'),
                             style: TextButton.styleFrom(
+                              minimumSize: const Size(0, 42),
+                              padding: const EdgeInsets.symmetric(horizontal: 8),
                               backgroundColor: _useEmailLogin
                                   ? Colors.white
                                   : Colors.transparent,
@@ -556,7 +572,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 12),
 
                   if (_useEmailLogin)
                     _buildTextField(
@@ -565,6 +581,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       hint: 'example@gmail.com',
                       icon: Icons.email_outlined,
                       keyboardType: TextInputType.emailAddress,
+                      textInputAction: TextInputAction.next,
                       validator: (v) {
                         final value = v?.trim() ?? '';
                         if (value.isEmpty) {
@@ -592,6 +609,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       hint: 'phone_hint'.tr,
                       icon: Icons.phone_android,
                       isNumber: true,
+                      textInputAction: TextInputAction.next,
                       validator: (v) {
                         if (v == null || v.isEmpty) return 'phone_required'.tr;
                         if (!RegExp(r'^(0|\+855)[0-9]{8,9}$').hasMatch(v)) {
@@ -610,6 +628,11 @@ class _LoginScreenState extends State<LoginScreen> {
                     icon: Icons.lock_outline,
                     isPassword: true,
                     keyboardType: TextInputType.number,
+                    textInputAction: TextInputAction.done,
+                    onFieldSubmitted: (_) {
+                      if (_isLoading) return;
+                      _useEmailLogin ? _handleEmailLogin() : _handleLogin();
+                    },
                     validator: (v) {
                       if (v == null || v.isEmpty) return 'password_required'.tr;
                       if (v.length < 6)
@@ -686,12 +709,12 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 24),
+                  SizedBox(height: keyboardOpen ? 10 : 16),
 
                   // ── ប៊ូតុងចូល ─────────────────────────────
                   SizedBox(
                     width: double.infinity,
-                    height: 55,
+                    height: 50,
                     child: ElevatedButton(
                       onPressed: _isLoading
                           ? null
@@ -703,7 +726,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         foregroundColor: Colors.white,
                         elevation: 2,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15),
+                          borderRadius: BorderRadius.circular(13),
                         ),
                       ),
                       child: _isLoading
@@ -724,7 +747,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                     ),
                   ),
-                  const SizedBox(height: 18),
+                  SizedBox(height: keyboardOpen ? 10 : 14),
                   Row(
                     children: [
                       Expanded(child: Divider(color: Colors.grey.shade300)),
@@ -741,10 +764,10 @@ class _LoginScreenState extends State<LoginScreen> {
                       Expanded(child: Divider(color: Colors.grey.shade300)),
                     ],
                   ),
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 12),
                   SizedBox(
                     width: double.infinity,
-                    height: 52,
+                    height: 48,
                     child: OutlinedButton.icon(
                       onPressed: _isLoading ? null : _handleGoogleLogin,
                       icon: const Text(
@@ -769,13 +792,13 @@ class _LoginScreenState extends State<LoginScreen> {
                       style: OutlinedButton.styleFrom(
                         side: BorderSide(color: Colors.grey.shade300),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15),
+                          borderRadius: BorderRadius.circular(13),
                         ),
                         backgroundColor: Colors.white,
                       ),
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 16),
 
                   // ── ចុះឈ្មោះ ──────────────────────────────
                   Row(
@@ -797,7 +820,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 14),
                   // ── ប៊ូតុងចូលមើលសិន ─────────────────────────
                   // ── ប៊ូតុងចូលមើលសិន ─────────────────────────
                   OutlinedButton.icon(
@@ -829,7 +852,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ), // ពណ៌ផ្ទៃថ្លាបៃតងខ្ចី
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 12),
                 ],
               ),
             ),
@@ -847,6 +870,8 @@ class _LoginScreenState extends State<LoginScreen> {
     bool isNumber = false,
     bool isPassword = false,
     TextInputType? keyboardType,
+    TextInputAction? textInputAction,
+    ValueChanged<String>? onFieldSubmitted,
     String? Function(String?)? validator,
   }) {
     return TextFormField(
@@ -856,6 +881,11 @@ class _LoginScreenState extends State<LoginScreen> {
           keyboardType ?? (isNumber ? TextInputType.phone : TextInputType.text),
       autocorrect: false,
       textCapitalization: TextCapitalization.none,
+      textInputAction: textInputAction,
+      onFieldSubmitted: onFieldSubmitted ??
+          (textInputAction == TextInputAction.next
+              ? (_) => FocusScope.of(context).nextFocus()
+              : null),
       validator: validator,
       style: const TextStyle(fontSize: 15),
       decoration: InputDecoration(
@@ -875,27 +905,27 @@ class _LoginScreenState extends State<LoginScreen> {
         filled: true,
         fillColor: Colors.grey[50],
         contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 16,
+          horizontal: 14,
+          vertical: 13,
         ),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(15),
+          borderRadius: BorderRadius.circular(13),
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(15),
+          borderRadius: BorderRadius.circular(13),
           borderSide: BorderSide(color: Colors.grey.shade200),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(15),
+          borderRadius: BorderRadius.circular(13),
           borderSide: const BorderSide(color: Colors.green, width: 2),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(15),
+          borderRadius: BorderRadius.circular(13),
           borderSide: const BorderSide(color: Colors.red, width: 1),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(15),
+          borderRadius: BorderRadius.circular(13),
           borderSide: const BorderSide(color: Colors.red, width: 2),
         ),
       ),
