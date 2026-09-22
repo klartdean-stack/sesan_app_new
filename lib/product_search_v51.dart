@@ -60,6 +60,43 @@ class ProductSearchV51Controller {
     return <String>{query, ...keywords}.join(' | ');
   }
 
+  Future<String?> searchSelectedImage(XFile image) async {
+    if (busy || !_signedIn()) return null;
+    busy = true;
+    try {
+      final bytes = await image.readAsBytes();
+      if (bytes.isEmpty || bytes.length > 3300000) {
+        throw StateError('Image is too large');
+      }
+      final mime = image.mimeType == 'image/png' || image.mimeType == 'image/webp'
+          ? image.mimeType!
+          : 'image/jpeg';
+      final data = await _analyze(
+        image: 'data:$mime;base64,${base64Encode(bytes)}',
+      );
+      final result = _combined(data);
+      _message(
+        _t('ស្វែងរកតាមរូបបានសម្រេច', 'Image search ready'),
+        color: Colors.green,
+      );
+      return result;
+    } on FirebaseFunctionsException catch (e) {
+      _message(
+        e.message ??
+            _t('មិនអាចស្វែងរកតាមរូបបានទេ', 'Image search failed'),
+      );
+      return null;
+    } catch (e) {
+      debugPrint('Product selected-image search: $e');
+      _message(
+        _t('រូបធំពេក ឬមិនអាចអានបាន', 'The image is too large or unreadable'),
+      );
+      return null;
+    } finally {
+      busy = false;
+    }
+  }
+
   Future<String?> searchByImage() async {
     if (busy || !_signedIn()) return null;
     final image = await _imagePicker.pickImage(
