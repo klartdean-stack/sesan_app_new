@@ -273,6 +273,29 @@ jobs:
       - name: Get Flutter packages
         run: flutter pub get
 
+      - name: Validate iOS app identity
+        run: |
+          set -e
+
+          echo "===== VERIFY iOS BUNDLE ID CONSISTENCY ====="
+
+          if grep -R --line-number --fixed-string "sesan.agri.app"             lib ios .github/workflows; then
+            echo "ERROR: Legacy iOS bundle id sesan.agri.app is still present."
+            exit 1
+          fi
+
+          grep -q "iosBundleId: 'com.sesan.app'" lib/firebase_options.dart || {
+            echo "ERROR: firebase_options.dart is not configured for com.sesan.app"
+            exit 1
+          }
+
+          grep -q "PRODUCT_BUNDLE_IDENTIFIER = com.sesan.app;"             ios/Runner.xcodeproj/project.pbxproj || {
+            echo "ERROR: Xcode Runner bundle id is not com.sesan.app"
+            exit 1
+          }
+
+          echo "Firebase, Xcode and workflow bundle id: com.sesan.app"
+
       # =====================================================
       # 7A. INJECT GOOGLE MAPS API KEY
       # Prevents Product/Shop map screens from rendering blank white tiles.
