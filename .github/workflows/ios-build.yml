@@ -273,6 +273,31 @@ jobs:
       - name: Get Flutter packages
         run: flutter pub get
 
+      # =====================================================
+      # 7A. INJECT GOOGLE MAPS API KEY
+      # Prevents Product/Shop map screens from rendering blank white tiles.
+      # =====================================================
+      - name: Configure Google Maps for iOS
+        env:
+          GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
+        run: |
+          set -e
+
+          if [ -z "$GOOGLE_MAPS_API_KEY" ]; then
+            echo "ERROR: GitHub Secret GOOGLE_MAPS_API_KEY is missing."
+            echo "Add an iOS Maps SDK key restricted to bundle id com.sesan.app."
+            exit 1
+          fi
+
+          /usr/libexec/PlistBuddy             -c "Set :GOOGLE_MAPS_API_KEY $GOOGLE_MAPS_API_KEY"             ios/Runner/Info.plist
+
+          KEY_LENGTH=${#GOOGLE_MAPS_API_KEY}
+          echo "Google Maps API key injected successfully (length: $KEY_LENGTH)."
+
+          if [ "$(/usr/libexec/PlistBuddy -c 'Print :GOOGLE_MAPS_API_KEY' ios/Runner/Info.plist)" = "\$(GOOGLE_MAPS_API_KEY)" ]; then
+            echo "ERROR: Google Maps API key placeholder was not replaced."
+            exit 1
+          fi
 
       - name: Set iOS deployment target
         run: |
