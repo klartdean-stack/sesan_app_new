@@ -366,7 +366,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   // ២. ប្រអប់ Search Bar (ប្រើ Expanded ដើម្បីឱ្យវារីកពេញលំហដែលនៅសល់)
                   Expanded(
                     child: Container(
-                      height: 38,
+                      height: 44,
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(8),
@@ -385,17 +385,17 @@ class _HomeScreenState extends State<HomeScreen> {
                           prefixIcon: const Icon(Icons.search, size: 20),
                           suffixIconConstraints:
                               const BoxConstraints.tightFor(
-                            width: 58,
-                            height: 36,
+                            width: 88,
+                            height: 44,
                           ),
                           suffixIcon: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               SizedBox(
-                                width: 29,
-                                height: 36,
+                                width: 44,
+                                height: 44,
                                 child: InkResponse(
-                                  radius: 18,
+                                  radius: 22,
                                   onTap: _searchAiController?.busy == true
                                       ? null
                                       : _smartScanSearch,
@@ -417,10 +417,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                               ),
                               SizedBox(
-                                width: 29,
-                                height: 36,
+                                width: 44,
+                                height: 44,
                                 child: InkResponse(
-                                  radius: 18,
+                                  radius: 22,
                                   onTap: _searchAiController?.busy == true
                                       ? null
                                       : _voiceSearch,
@@ -453,24 +453,30 @@ class _HomeScreenState extends State<HomeScreen> {
                   Stack(
                     alignment: Alignment.center,
                     children: [
-                      IconButton(
-                        // 💡 កាត់បន្ថយ Padding ដើម្បីកុំឱ្យទើស Search Bar
-                        padding: const EdgeInsets.only(left: 8),
-                        constraints: const BoxConstraints(),
-                        icon: const Icon(
-                          Icons.notifications_none_rounded,
-                          color: Colors.white,
-                          size: 26,
+                      SizedBox(
+                        width: 48,
+                        height: 48,
+                        child: IconButton(
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints.tightFor(
+                            width: 48,
+                            height: 48,
+                          ),
+                          icon: const Icon(
+                            Icons.notifications_none_rounded,
+                            color: Colors.white,
+                            size: 26,
+                          ),
+                          onPressed: () {
+                            _markAsRead(); // ✅ សម្គាល់ថាអានរួច
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => UserNotificationScreen(),
+                              ),
+                            );
+                          },
                         ),
-                        onPressed: () {
-                          _markAsRead(); // ✅ សម្គាល់ថាអានរួច
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => UserNotificationScreen(),
-                            ),
-                          );
-                        },
                       ),
                       // 🎯 ផ្នែករាប់លេខ Noti ក្រហម
                       StreamBuilder<QuerySnapshot>(
