@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:my_app/add_pre_order_screen.dart';
 import 'package:my_app/add_wanted_screen.dart';
 import 'package:my_app/admin_confirm.dart';
@@ -8,7 +9,7 @@ import 'package:my_app/chat_list_screen.dart';
 import 'package:my_app/auction_main_screen.dart';
 import 'package:my_app/notification_service.dart';
 import 'package:my_app/pre_order_grid_view.dart';
-import 'package:my_app/qr_scanner_screen.dart';
+import 'package:my_app/smart_scan_screen.dart';
 import 'product_search_v51.dart';
 import 'package:my_app/upload_controller.dart';
 import 'package:my_app/user_notification_list.dart';
@@ -64,6 +65,22 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _imageSearch() async {
     final result = await _searchAi.searchByImage();
+    if (result != null) {
+      await _applyAiSearch(result);
+    }
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _smartScanSearch() async {
+    if (_searchAiController?.busy == true) return;
+
+    final image = await Navigator.push<XFile?>(
+      context,
+      MaterialPageRoute(builder: (_) => const SmartScanScreen()),
+    );
+    if (image == null || !mounted) return;
+
+    final result = await _searchAi.searchSelectedImage(image);
     if (result != null) {
       await _applyAiSearch(result);
     }
@@ -331,61 +348,58 @@ class _HomeScreenState extends State<HomeScreen> {
                             fontSize: 13,
                           ),
                           prefixIcon: const Icon(Icons.search, size: 20),
-                          // ✅ ប៊ូតុងស្កែន QR
-                          suffixIconConstraints: const BoxConstraints.tightFor(
-                            width: 96,
+                          suffixIconConstraints:
+                              const BoxConstraints.tightFor(
+                            width: 58,
+                            height: 36,
                           ),
                           suffixIcon: Row(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
                               SizedBox(
-                                width: 32,
-                                child: IconButton(
-                                  padding: EdgeInsets.zero,
-                                  onPressed: _searchAiController?.busy == true
+                                width: 29,
+                                height: 36,
+                                child: InkResponse(
+                                  radius: 18,
+                                  onTap: _searchAiController?.busy == true
                                       ? null
-                                      : _imageSearch,
-                                  icon: const Icon(
-                                    Icons.image_search,
-                                    color: Colors.purple,
-                                    size: 21,
+                                      : _smartScanSearch,
+                                  child: Center(
+                                    child: _searchAiController?.busy == true
+                                        ? const SizedBox(
+                                            width: 16,
+                                            height: 16,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                            ),
+                                          )
+                                        : const Icon(
+                                            Icons.center_focus_strong_rounded,
+                                            color: Colors.blue,
+                                            size: 20,
+                                          ),
                                   ),
                                 ),
                               ),
                               SizedBox(
-                                width: 32,
-                                child: IconButton(
-                                  padding: EdgeInsets.zero,
-                                  onPressed: _searchAiController?.busy == true
+                                width: 29,
+                                height: 36,
+                                child: InkResponse(
+                                  radius: 18,
+                                  onTap: _searchAiController?.busy == true
                                       ? null
                                       : _voiceSearch,
-                                  icon: Icon(
-                                    _searchAiController?.recording == true
-                                        ? Icons.stop_circle
-                                        : Icons.mic,
-                                    color:
-                                        _searchAiController?.recording == true
-                                        ? Colors.red
-                                        : Colors.green,
-                                    size: 21,
-                                  ),
-                                ),
-                              ),
-                              SizedBox(
-                                width: 32,
-                                child: IconButton(
-                                  padding: EdgeInsets.zero,
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) => const QrScannerScreen(),
-                                      ),
-                                    );
-                                  },
-                                  icon: const Icon(
-                                    Icons.qr_code_scanner,
-                                    color: Colors.blue,
-                                    size: 21,
+                                  child: Center(
+                                    child: Icon(
+                                      _searchAiController?.recording == true
+                                          ? Icons.stop_circle_rounded
+                                          : Icons.mic_rounded,
+                                      color:
+                                          _searchAiController?.recording == true
+                                              ? Colors.red
+                                              : Colors.green,
+                                      size: 20,
+                                    ),
                                   ),
                                 ),
                               ),
