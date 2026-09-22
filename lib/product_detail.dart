@@ -593,13 +593,10 @@ Product ID៖ $productId
     // 3. Link សម្រាប់ចែករំលែក
     final String webLink = "https://sesanshop.com/product/$productId";
 
-    // 4. Link ទាញយក App
-    final String iosAppStoreLink =
-        "https://apps.apple.com/kh/app/sesan-app/id6789862316";
-    final String androidPlayStoreLink =
-        "https://play.google.com/store/apps/details?id=com.sesan.app";
+    // 4. Smart download link: iOS -> App Store, Android -> Google Play
+    const String appDownloadLink = "https://sesanshop.com/download";
 
-    // 5. បង្កើតសារចែករំលែក (ប្រើតែ Web Link ដើម្បីឲ្យចុចបានគ្រប់កម្មវិធី)
+    // 5. Share one product link + one smart app download link.
     final String shareMessage =
         '''
 🛍️ $productName
@@ -610,8 +607,7 @@ Product ID៖ $productId
 $webLink
 
 📲 ${_t('ទាញយក Sesan App', 'Download Sesan App')}:
-iOS: $iosAppStoreLink
-Android: $androidPlayStoreLink
+$appDownloadLink
 ''';
 
     // 6. បើគ្មានរូប ចែករំលែកតែ Link
