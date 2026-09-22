@@ -11,14 +11,23 @@ import 'package:record/record.dart';
 
 /// Android V51-compatible AI search controller used by the iOS product list.
 class ProductSearchV51Controller {
-  ProductSearchV51Controller(this.context);
+  ProductSearchV51Controller(this.context, {this.onStateChanged});
 
   final BuildContext context;
+  final VoidCallback? onStateChanged;
   final ImagePicker _imagePicker = ImagePicker();
   final AudioRecorder _audioRecorder = AudioRecorder();
   Timer? _voiceTimer;
+  Timer? _voiceSilenceTimer;
+  StreamSubscription<Amplitude>? _voiceAmplitudeSubscription;
+  DateTime? _voiceStartedAt;
   bool busy = false;
   bool recording = false;
+
+  static const double _speechThresholdDb = -38;
+  static const Duration _silenceAfterSpeech = Duration(milliseconds: 1200);
+  static const Duration _noSpeechTimeout = Duration(seconds: 4);
+  static const Duration _maximumRecordingTime = Duration(seconds: 12);
 
   String _t(String km, String en) =>
       Localizations.localeOf(context).languageCode == 'en' ? en : km;
@@ -152,15 +161,52 @@ class ProductSearchV51Controller {
       path: path,
     );
     recording = true;
+    _voiceStartedAt = DateTime.now();
+    onStateChanged?.call();
+
     _voiceTimer?.cancel();
-    _voiceTimer = Timer(const Duration(seconds: 5), () => finishVoice(onResult: onResult));
+    _voiceTimer = Timer(
+      kIsWeb ? const Duration(seconds: 5) : _maximumRecordingTime,
+      () => unawaited(finishVoice(onResult: onResult)),
+    );
+
+    _voiceSilenceTimer?.cancel();
+    if (!kIsWeb) {
+      _voiceSilenceTimer = Timer(
+        _noSpeechTimeout,
+        () => unawaited(finishVoice(onResult: onResult)),
+      );
+      await _voiceAmplitudeSubscription?.cancel();
+      _voiceAmplitudeSubscription = _audioRecorder
+          .onAmplitudeChanged(const Duration(milliseconds: 180))
+          .listen((amplitude) {
+        if (!recording) return;
+        final startedAt = _voiceStartedAt;
+        if (startedAt == null ||
+            DateTime.now().difference(startedAt) <
+                const Duration(milliseconds: 600)) {
+          return;
+        }
+        if (amplitude.current > _speechThresholdDb) {
+          _voiceSilenceTimer?.cancel();
+          _voiceSilenceTimer = Timer(
+            _silenceAfterSpeech,
+            () => unawaited(finishVoice(onResult: onResult)),
+          );
+        }
+      });
+    }
   }
 
   Future<void> finishVoice({required Future<void> Function(String query) onResult}) async {
     if (!recording) return;
-    _voiceTimer?.cancel();
     recording = false;
     busy = true;
+    _voiceTimer?.cancel();
+    _voiceSilenceTimer?.cancel();
+    await _voiceAmplitudeSubscription?.cancel();
+    _voiceAmplitudeSubscription = null;
+    onStateChanged?.call();
     try {
       final path = await _audioRecorder.stop();
       if (path == null || path.isEmpty) throw StateError('Empty recording');
@@ -185,11 +231,14 @@ class ProductSearchV51Controller {
       _message(_t('ការស្វែងរកតាមសម្លេងបរាជ័យ', 'Voice search failed'));
     } finally {
       busy = false;
+      onStateChanged?.call();
     }
   }
 
   Future<void> dispose() async {
     _voiceTimer?.cancel();
+    _voiceSilenceTimer?.cancel();
+    await _voiceAmplitudeSubscription?.cancel();
     await _audioRecorder.dispose();
   }
 }

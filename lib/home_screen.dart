@@ -49,7 +49,12 @@ class _HomeScreenState extends State<HomeScreen> {
   ProductSearchV51Controller? _searchAiController;
 
   ProductSearchV51Controller get _searchAi =>
-      _searchAiController ??= ProductSearchV51Controller(context);
+      _searchAiController ??= ProductSearchV51Controller(
+        context,
+        onStateChanged: () {
+          if (mounted) setState(() {});
+        },
+      );
 
   Future<void> _applyAiSearch(String value) async {
     if (!mounted || value.trim().isEmpty) return;
@@ -89,13 +94,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _voiceSearch() async {
     final ai = _searchAi;
+    if (ai.recording || ai.busy) return;
 
-    if (ai.recording) {
-      await ai.finishVoice(onResult: _applyAiSearch);
-    } else {
-      await ai.startVoice(onResult: _applyAiSearch);
-    }
-
+    await ai.startVoice(onResult: _applyAiSearch);
     if (mounted) setState(() {});
   }
 
@@ -421,14 +422,14 @@ class _HomeScreenState extends State<HomeScreen> {
                                 height: 48,
                                 child: InkResponse(
                                   radius: 24,
-                                  onTap: _searchAiController?.busy == true
+                                  onTap:
+                                      (_searchAiController?.busy == true ||
+                                          _searchAiController?.recording == true)
                                       ? null
                                       : _voiceSearch,
                                   child: Center(
                                     child: Icon(
-                                      _searchAiController?.recording == true
-                                          ? Icons.stop_circle_rounded
-                                          : Icons.mic_rounded,
+                                      Icons.mic_rounded,
                                       color:
                                           _searchAiController?.recording == true
                                               ? Colors.red

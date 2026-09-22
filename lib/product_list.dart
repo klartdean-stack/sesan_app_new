@@ -65,8 +65,16 @@ class _ProductListScreenState extends State<ProductListScreen> {
   final TextEditingController _searchController = TextEditingController();
   final AudioRecorder _searchAudioRecorder = AudioRecorder();
   Timer? _voiceSearchTimer;
+  Timer? _voiceSilenceTimer;
+  StreamSubscription<Amplitude>? _voiceAmplitudeSubscription;
+  DateTime? _voiceStartedAt;
   bool _isSearchBusy = false;
   bool _isVoiceSearching = false;
+
+  static const double _speechThresholdDb = -38;
+  static const Duration _silenceAfterSpeech = Duration(milliseconds: 1200);
+  static const Duration _noSpeechTimeout = Duration(seconds: 4);
+  static const Duration _maximumRecordingTime = Duration(seconds: 12);
   bool _voiceSheetOpen = false;
   String? _selectedProvince;
   String? _selectedDistrict;
@@ -465,8 +473,40 @@ autoGain: true,
       );
       if (!mounted) return;
       setState(() => _isVoiceSearching = true);
+      _voiceStartedAt = DateTime.now();
+
       _voiceSearchTimer?.cancel();
-      _voiceSearchTimer = Timer(const Duration(seconds: 5), _finishVoiceSearch);
+      _voiceSearchTimer = Timer(
+        kIsWeb ? const Duration(seconds: 5) : _maximumRecordingTime,
+        () => unawaited(_finishVoiceSearch()),
+      );
+
+      _voiceSilenceTimer?.cancel();
+      if (!kIsWeb) {
+        _voiceSilenceTimer = Timer(
+          _noSpeechTimeout,
+          () => unawaited(_finishVoiceSearch()),
+        );
+        await _voiceAmplitudeSubscription?.cancel();
+        _voiceAmplitudeSubscription = _searchAudioRecorder
+            .onAmplitudeChanged(const Duration(milliseconds: 180))
+            .listen((amplitude) {
+          if (!_isVoiceSearching) return;
+          final startedAt = _voiceStartedAt;
+          if (startedAt == null ||
+              DateTime.now().difference(startedAt) <
+                  const Duration(milliseconds: 600)) {
+            return;
+          }
+          if (amplitude.current > _speechThresholdDb) {
+            _voiceSilenceTimer?.cancel();
+            _voiceSilenceTimer = Timer(
+              _silenceAfterSpeech,
+              () => unawaited(_finishVoiceSearch()),
+            );
+          }
+        });
+      }
       _showVoiceListeningSheet();
     } catch (error) {
       debugPrint('Start voice search error: $error');
@@ -514,16 +554,17 @@ child: Column(
 
   Future<void> _finishVoiceSearch() async {
     if (!_isVoiceSearching) return;
+    _isVoiceSearching = false;
     _voiceSearchTimer?.cancel();
+    _voiceSilenceTimer?.cancel();
+    await _voiceAmplitudeSubscription?.cancel();
+    _voiceAmplitudeSubscription = null;
     if (_voiceSheetOpen && mounted) {
       Navigator.of(context).pop();
       _voiceSheetOpen = false;
     }
     if (mounted) {
-      setState(() {
-        _isVoiceSearching = false;
-        _isSearchBusy = true;
-      });
+      setState(() => _isSearchBusy = true);
     }
     try {
       final path = await _searchAudioRecorder.stop();
@@ -674,12 +715,12 @@ if (candidate.isNotEmpty) { bytes = candidate; break; }
                             height: 48,
                             child: InkResponse(
                               radius: 24,
-                              onTap: _isSearchBusy ? null : _toggleVoiceSearch,
+                              onTap: (_isSearchBusy || _isVoiceSearching)
+                                  ? null
+                                  : _toggleVoiceSearch,
                               child: Center(
                                 child: Icon(
-                                  _isVoiceSearching
-                                      ? Icons.stop_circle_rounded
-                                      : Icons.mic_rounded,
+                                  Icons.mic_rounded,
                                   size: 20,
                                   color: _isVoiceSearching
                                       ? Colors.red
@@ -748,6 +789,8 @@ if (candidate.isNotEmpty) { bytes = candidate; break; }
   @override
   void dispose() {
     _voiceSearchTimer?.cancel();
+    _voiceSilenceTimer?.cancel();
+    _voiceAmplitudeSubscription?.cancel();
     _searchController.dispose();
     _searchAudioRecorder.dispose();
     super.dispose();
