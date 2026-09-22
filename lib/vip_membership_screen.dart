@@ -819,6 +819,34 @@ class _VipMembershipScreenState extends State<VipMembershipScreen> {
         ),
       );
     }
+    Widget legendItem(String key) {
+      return Row(
+        children: [
+          Container(
+            width: 24,
+            height: 3,
+            decoration: BoxDecoration(
+              color: lineColors[key]!,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(width: 7),
+          Expanded(
+            child: Text(
+              lineLabels[key]!,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 12,
+                fontFamily: 'Siemreap',
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -910,34 +938,44 @@ class _VipMembershipScreenState extends State<VipMembershipScreen> {
             ),
           ),
           const SizedBox(height: 14),
-          Wrap(
-            spacing: 16,
-            runSpacing: 6,
-            children: lineLabels.entries
-                .map(
-                  (e) => Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 10,
-                        height: 10,
-                        decoration: BoxDecoration(
-                          color: lineColors[e.key]!,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 5),
-                      Text(
-                        e.value,
-                        style: const TextStyle(
-                          color: Colors.white60,
-                          fontSize: 10,
-                        ),
-                      ),
-                    ],
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.04),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.white.withOpacity(0.08)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _t('សញ្ញាពណ៌នៃខ្សែក្រាប', 'Chart line guide'),
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'Siemreap',
                   ),
-                )
-                .toList(),
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(child: legendItem('newUsers')),
+                    const SizedBox(width: 12),
+                    Expanded(child: legendItem('logins')),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(child: legendItem('newProducts')),
+                    const SizedBox(width: 12),
+                    Expanded(child: legendItem('newAuctions')),
+                  ],
+                ),
+              ],
+            ),
           ),
         ],
       ),
