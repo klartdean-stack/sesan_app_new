@@ -1818,43 +1818,137 @@ $appDownloadLink
                                 ),
                               ),
 
-                              const SizedBox(height: 8),
+                              const SizedBox(height: 6),
                               Align(
-                                alignment: Alignment.centerLeft,
-                                child: OutlinedButton.icon(
-                                  onPressed: _isTranslatingProduct
-                                      ? null
-                                      : _toggleProductTranslation,
-                                  icon: _isTranslatingProduct
-                                      ? const SizedBox(
-                                          width: 15,
-                                          height: 15,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
+                                alignment: Alignment.centerRight,
+                                child: Wrap(
+                                  alignment: WrapAlignment.end,
+                                  spacing: 6,
+                                  runSpacing: 6,
+                                  children: [
+                                    Material(
+                                      color: Colors.transparent,
+                                      child: InkWell(
+                                        onTap: _isTranslatingProduct
+                                            ? null
+                                            : _toggleProductTranslation,
+                                        borderRadius: BorderRadius.circular(16),
+                                        child: Container(
+                                          constraints: const BoxConstraints(
+                                            minHeight: 34,
                                           ),
-                                        )
-                                      : Icon(
-                                          _showTranslatedProduct
-                                              ? Icons.undo_rounded
-                                              : Icons.translate_rounded,
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 10,
+                                            vertical: 6,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: Colors.green.withOpacity(0.06),
+                                            borderRadius:
+                                                BorderRadius.circular(16),
+                                            border: Border.all(
+                                              color: Colors.green.withOpacity(0.28),
+                                            ),
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              if (_isTranslatingProduct)
+                                                const SizedBox(
+                                                  width: 15,
+                                                  height: 15,
+                                                  child:
+                                                      CircularProgressIndicator(
+                                                    strokeWidth: 2,
+                                                  ),
+                                                )
+                                              else
+                                                Icon(
+                                                  _showTranslatedProduct
+                                                      ? Icons.undo_rounded
+                                                      : Icons.translate_rounded,
+                                                  color: Colors.green.shade700,
+                                                  size: 16,
+                                                ),
+                                              const SizedBox(width: 5),
+                                              Text(
+                                                _showTranslatedProduct
+                                                    ? (Localizations.localeOf(
+                                                                context,
+                                                              ).languageCode ==
+                                                              'en'
+                                                          ? 'Original'
+                                                          : 'អត្ថបទដើម')
+                                                    : (Localizations.localeOf(
+                                                                context,
+                                                              ).languageCode ==
+                                                              'en'
+                                                          ? 'Translate'
+                                                          : 'បកប្រែ'),
+                                                style: TextStyle(
+                                                  fontSize: 11,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: Colors.green.shade700,
+                                                  fontFamily: 'Siemreap',
+                                                ),
+                                              ),
+                                            ],
+                                          ),
                                         ),
-                                  label: Text(
-                                    _showTranslatedProduct
-                                        ? (Localizations.localeOf(
-                                                    context,
-                                                  ).languageCode ==
-                                                  'en'
-                                              ? 'Original'
-                                              : 'អត្ថបទដើម')
-                                        : (Localizations.localeOf(
-                                                    context,
-                                                  ).languageCode ==
-                                                  'en'
-                                              ? 'Translate Product'
-                                              : 'បកប្រែទំនិញ'),
-                                  ),
+                                      ),
+                                    ),
+                                    Material(
+                                      color: Colors.transparent,
+                                      child: InkWell(
+                                        onTap: _openProductAssistant,
+                                        borderRadius: BorderRadius.circular(16),
+                                        child: Container(
+                                          constraints: const BoxConstraints(
+                                            minHeight: 34,
+                                          ),
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 10,
+                                            vertical: 6,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: Colors.purple.withOpacity(0.06),
+                                            borderRadius:
+                                                BorderRadius.circular(16),
+                                            border: Border.all(
+                                              color:
+                                                  Colors.purple.withOpacity(0.22),
+                                            ),
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              const Icon(
+                                                Icons.auto_awesome,
+                                                color: Colors.purple,
+                                                size: 16,
+                                              ),
+                                              const SizedBox(width: 5),
+                                              Text(
+                                                Localizations.localeOf(context)
+                                                            .languageCode ==
+                                                        'en'
+                                                    ? 'Ask Sesan AI'
+                                                    : 'សួរ Sesan AI',
+                                                style: const TextStyle(
+                                                  fontSize: 11,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: Colors.purple,
+                                                  fontFamily: 'Siemreap',
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
+                              const SizedBox(height: 6),
 
                               // ✅ បន្ថែមពីទីនេះ - បង្ហាញ Category និង Sub Category
                               const SizedBox(height: 6),
@@ -2381,31 +2475,7 @@ $appDownloadLink
                                 style: const TextStyle(fontSize: 16),
                               ),
 
-                              const SizedBox(height: 12),
-                              SizedBox(
-                                width: double.infinity,
-                                child: OutlinedButton.icon(
-                                  onPressed: _openProductAssistant,
-                                  icon: const Icon(Icons.auto_awesome_rounded),
-                                  label: Text(
-                                    Localizations.localeOf(
-                                              context,
-                                            ).languageCode ==
-                                            'en'
-                                        ? 'Ask Sesan AI about this product'
-                                        : 'សួរ Sesan AI អំពីទំនិញនេះ',
-                                  ),
-                                  style: OutlinedButton.styleFrom(
-                                    foregroundColor: Colors.green.shade700,
-                                    side: BorderSide(
-                                      color: Colors.green.shade300,
-                                    ),
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 12,
-                                    ),
-                                  ),
-                                ),
-                              ),
+                              const SizedBox(height: 8),
 
                               // --- ផ្នែកព័ត៌មានអ្នកលក់ (Update ថ្មី អាចចុចចូលមើល Profile បាន) ---
                               Container(
