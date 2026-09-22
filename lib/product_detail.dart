@@ -73,6 +73,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   String? _currentUserId;
   double _myRating = 0.0;
   bool _isSubmittingRating = false;
+  bool _isOpeningChat = false;
   int _quantity = 1;
   bool _wasPaused = false; // ✅ បន្ថែម
   bool _showTranslatedProduct = false;
@@ -1405,6 +1406,41 @@ Android: $androidPlayStoreLink
     );
   }
 
+  Future<void> _openSellerChat() async {
+    if (_isOpeningChat) return;
+
+    setState(() => _isOpeningChat = true);
+
+    final productId = (widget.product['id'] ?? '').toString();
+    final productName = (widget.product['product_name'] ?? '').toString();
+    final sellerId = (widget.product['seller_id'] ?? '').toString();
+
+    unawaited(
+      ProductDetailMarketplaceActions(
+        product: widget.product,
+        currentUserId: _currentUserId,
+      ).logSellerChat().catchError((error) {
+        debugPrint('Chat analytics error: $error');
+      }),
+    );
+
+    try {
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ChatScreen(
+            productId: productId,
+            productName: productName,
+            seller_id: sellerId,
+            receiver_id: '',
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isOpeningChat = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final bool tracksStock = widget.product['track_stock'] == true;
@@ -2697,24 +2733,12 @@ Android: $androidPlayStoreLink
         ),
         child: Row(
           children: [
-            _actionIcon(Icons.chat, Colors.orange, () async {
-              await ProductDetailMarketplaceActions(
-                product: widget.product,
-                currentUserId: _currentUserId,
-              ).logSellerChat();
-              if (!context.mounted) return;
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ChatScreen(
-                    productId: widget.product['id'] ?? '',
-                    productName: widget.product['product_name'] ?? '',
-                    seller_id: widget.product['seller_id'] ?? '',
-                    receiver_id: '',
-                  ),
-                ),
-              );
-            }),
+            _actionIcon(
+              Icons.chat,
+              Colors.orange,
+              _isOpeningChat ? null : _openSellerChat,
+              isBusy: _isOpeningChat,
+            ),
             const SizedBox(width: 15),
 
             // 🎯 ឆែកមើលស្ថានភាព Lock
@@ -2866,16 +2890,37 @@ Android: $androidPlayStoreLink
     );
   }
 
-  Widget _actionIcon(IconData icon, Color color, VoidCallback onTap) {
+  Widget _actionIcon(
+    IconData icon,
+    Color color,
+    VoidCallback? onTap, {
+    bool isBusy = false,
+  }) {
     return InkWell(
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(10),
+      child: AnimatedOpacity(
+        duration: const Duration(milliseconds: 120),
+        opacity: onTap == null ? 0.55 : 1.0,
+        child: Container(
+          width: 48,
+          height: 48,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: isBusy
+              ? SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: color,
+                  ),
+                )
+              : Icon(icon, color: color),
         ),
-        child: Icon(icon, color: color),
       ),
     );
   }
