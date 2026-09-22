@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>220834653903-hfsa3bbo1qkra91uobcj762uu7t2cf10.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.220834653903-hfsa3bbo1qkra91uobcj762uu7t2cf10</string>
+	<key>ANDROID_CLIENT_ID</key>
+	<string>220834653903-386rmkiuvdnaqokp7o77v64fp09htiva.apps.googleusercontent.com</string>
+	<key>API_KEY</key>
+	<string>AIzaSyBGiBJzxDpuFwoyOB40Mis9u8z10bQ4LkE</string>
+	<key>GCM_SENDER_ID</key>
+	<string>220834653903</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.sesan.app</string>
+	<key>PROJECT_ID</key>
+	<string>sesan-my-app</string>
+	<key>STORAGE_BUCKET</key>
+	<string>sesan-my-app.firebasestorage.app</string>
+	<key>IS_ADS_ENABLED</key>
+	<false/>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false/>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true/>
+	<key>IS_GCM_ENABLED</key>
+	<true/>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true/>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:220834653903:ios:b41bc208a328feab6a39ba</string>
+</dict>
+</plist>
