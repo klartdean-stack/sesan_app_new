@@ -27,6 +27,9 @@ class _LoginScreenState extends State<LoginScreen> {
   final _phoneController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _phoneFocusNode = FocusNode();
+  final _emailFocusNode = FocusNode();
+  final _passwordFocusNode = FocusNode();
   final _formKey = GlobalKey<FormState>();
 
   bool _isLoading = false;
@@ -45,7 +48,23 @@ class _LoginScreenState extends State<LoginScreen> {
     _phoneController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+    _phoneFocusNode.dispose();
+    _emailFocusNode.dispose();
+    _passwordFocusNode.dispose();
     super.dispose();
+  }
+
+  void _switchLoginMode(bool useEmail) {
+    if (_useEmailLogin == useEmail || _isLoading) return;
+
+    FocusScope.of(context).unfocus();
+    setState(() => _useEmailLogin = useEmail);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final node = useEmail ? _emailFocusNode : _phoneFocusNode;
+      node.requestFocus();
+    });
   }
 
   Future<void> _loadSavedPhone() async {
@@ -533,7 +552,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: TextButton.icon(
                             onPressed: _isLoading
                                 ? null
-                                : () => setState(() => _useEmailLogin = false),
+                                : () => _switchLoginMode(false),
                             icon: const Icon(Icons.phone_android),
                             label: Text(
                               _accountText(km: 'លេខទូរស័ព្ទ', en: 'Phone'),
@@ -554,7 +573,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: TextButton.icon(
                             onPressed: _isLoading
                                 ? null
-                                : () => setState(() => _useEmailLogin = true),
+                                : () => _switchLoginMode(true),
                             icon: const Icon(Icons.email_outlined),
                             label: const Text('Email'),
                             style: TextButton.styleFrom(
@@ -577,6 +596,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   if (_useEmailLogin)
                     _buildTextField(
                       controller: _emailController,
+                      focusNode: _emailFocusNode,
                       label: 'Email',
                       hint: 'example@gmail.com',
                       icon: Icons.email_outlined,
@@ -605,6 +625,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   else
                     _buildTextField(
                       controller: _phoneController,
+                      focusNode: _phoneFocusNode,
                       label: 'phone'.tr,
                       hint: 'phone_hint'.tr,
                       icon: Icons.phone_android,
@@ -623,6 +644,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   // ── លេខសម្ងាត់ ────────────────────────────
                   _buildTextField(
                     controller: _passwordController,
+                    focusNode: _passwordFocusNode,
                     label: 'password'.tr,
                     hint: 'password_hint'.tr,
                     icon: Icons.lock_outline,
@@ -864,6 +886,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Widget _buildTextField({
     required TextEditingController controller,
+    FocusNode? focusNode,
     required String label,
     required String hint,
     required IconData icon,
@@ -875,7 +898,9 @@ class _LoginScreenState extends State<LoginScreen> {
     String? Function(String?)? validator,
   }) {
     return TextFormField(
+      key: ValueKey('${label}_${keyboardType?.index}_$isNumber'),
       controller: controller,
+      focusNode: focusNode,
       obscureText: isPassword ? !_isPasswordVisible : false,
       keyboardType:
           keyboardType ?? (isNumber ? TextInputType.phone : TextInputType.text),
@@ -884,7 +909,7 @@ class _LoginScreenState extends State<LoginScreen> {
       textInputAction: textInputAction,
       onFieldSubmitted: onFieldSubmitted ??
           (textInputAction == TextInputAction.next
-              ? (_) => FocusScope.of(context).nextFocus()
+              ? (_) => _passwordFocusNode.requestFocus()
               : null),
       validator: validator,
       style: const TextStyle(fontSize: 15),
