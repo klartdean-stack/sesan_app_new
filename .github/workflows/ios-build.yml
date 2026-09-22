@@ -279,8 +279,8 @@ jobs:
 
           echo "===== VERIFY iOS BUNDLE ID CONSISTENCY ====="
 
-          if grep -R --line-number --fixed-string "sesan.agri.app"             lib ios .github/workflows; then
-            echo "ERROR: Legacy iOS bundle id sesan.agri.app is still present."
+          if grep -R --line-number --fixed-string "sesan.agri.app" lib ios; then
+            echo "ERROR: Legacy iOS bundle id is still present in app source."
             exit 1
           fi
 
