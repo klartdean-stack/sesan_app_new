@@ -1951,7 +1951,6 @@ $appDownloadLink
                               const SizedBox(height: 6),
 
                               // ✅ បន្ថែមពីទីនេះ - បង្ហាញ Category និង Sub Category
-                              const SizedBox(height: 6),
                               Row(
                                 children: [
                                   // Category មេ
