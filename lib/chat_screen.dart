@@ -110,11 +110,20 @@ class _ChatScreenState extends State<ChatScreen> {
             final blockedByMe = myBlocked.contains(peerUserId);
             final blockedByThem = theirBlocked.contains(_currentUserId);
 
-            if (blockedByMe || blockedByThem) {
+            if (blockedByMe) {
+              return legacy.ChatScreen(
+                productId: widget.productId,
+                productName: widget.productName,
+                seller_id: widget.seller_id,
+                receiver_id: widget.receiver_id,
+              );
+            }
+
+            if (blockedByThem) {
               return _buildBlockedChat(
                 context,
-                blockedByMe: blockedByMe,
-                blockedByThem: blockedByThem,
+                blockedByMe: false,
+                blockedByThem: true,
               );
             }
 
