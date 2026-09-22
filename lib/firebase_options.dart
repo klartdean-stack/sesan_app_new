@@ -16,13 +16,13 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyDLsDlVcQY9ZIb-MjHjwYG-hwikWQ1sXwc',
-    appId: '1:220834653903:ios:7fdc09b89f188a716a39ba',
+    apiKey: 'AIzaSyBGiBJzxDpuFwoyOB40Mis9u8z10bQ4LkE',
+    appId: '1:220834653903:ios:b41bc208a328feab6a39ba',
     messagingSenderId: '220834653903',
     projectId: 'sesan-my-app',
     storageBucket: 'sesan-my-app.firebasestorage.app',
     iosBundleId: 'com.sesan.app',
-    iosClientId: '220834653903-mq8ch6u003cotj74f5nqvfer4of6f6qs.apps.googleusercontent.com',
+    iosClientId: '220834653903-hfsa3bbo1qkra91uobcj762uu7t2cf10.apps.googleusercontent.com',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
