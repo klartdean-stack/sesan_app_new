@@ -10,7 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:my_app/auction_main_screen.dart';
-import 'package:my_app/qr_scanner_screen.dart';
+import 'package:my_app/smart_scan_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart';
@@ -63,7 +63,6 @@ class ProductListScreen extends StatefulWidget {
 class _ProductListScreenState extends State<ProductListScreen> {
   String _currentSearch = "";
   final TextEditingController _searchController = TextEditingController();
-  final ImagePicker _searchImagePicker = ImagePicker();
   final AudioRecorder _searchAudioRecorder = AudioRecorder();
   Timer? _voiceSearchTimer;
   bool _isSearchBusy = false;
@@ -87,51 +86,281 @@ class _ProductListScreenState extends State<ProductListScreen> {
     return parts.join(' › ');
   }
 
+  Future<void> _showLocationFilter() async {
+    await CambodiaLocationService.load();
+    if (!mounted) return;
+
+    String? province = _selectedProvince;
+    String? district = _selectedDistrict;
+    String? commune = _selectedCommune;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            final provinces = CambodiaLocationService.getProvinces();
+            final districts = province == null
+                ? <String>[]
+                : CambodiaLocationService.getDistricts(province!);
+            final communes = province == null || district == null
+                ? <String>[]
+                : CambodiaLocationService.getCommunes(province!, district!);
+
+            Widget selector({
+              required String label,
+              required String hint,
+              required String? value,
+              required List<String> items,
+              required ValueChanged<String?> onChanged,
+              required bool enabled,
+            }) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      fontFamily: 'Siemreap',
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  DropdownButtonFormField<String>(
+                    value: value,
+                    isExpanded: true,
+                    decoration: InputDecoration(
+                      hintText: hint,
+                      filled: true,
+                      fillColor: enabled ? Colors.white : Colors.grey.shade100,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 11,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Colors.grey.shade300),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Colors.grey.shade300),
+                      ),
+                    ),
+                    items: items
+                        .map((item) => DropdownMenuItem<String>(
+                              value: item,
+                              child: Text(
+                                item,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontFamily: 'Siemreap',
+                                ),
+                              ),
+                            ))
+                        .toList(),
+                    onChanged: enabled ? onChanged : null,
+                  ),
+                ],
+              );
+            }
+
+            return SafeArea(
+              child: Container(
+                padding: EdgeInsets.only(
+                  left: 18,
+                  right: 18,
+                  top: 12,
+                  bottom: 18 + MediaQuery.of(context).viewInsets.bottom,
+                ),
+                decoration: const BoxDecoration(
+                  color: Color(0xFFF8FAF8),
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                ),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Center(
+                        child: Container(
+                          width: 42,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade300,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          const CircleAvatar(
+                            radius: 19,
+                            backgroundColor: Color(0xFFE6F4EA),
+                            child: Icon(Icons.location_on_outlined, color: Colors.green),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  appText(context, km: 'ចម្រុះតាមទីតាំង', en: 'Filter by location'),
+                                  style: const TextStyle(
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.bold,
+                                    fontFamily: 'Siemreap',
+                                  ),
+                                ),
+                                Text(
+                                  appText(
+                                    context,
+                                    km: 'ជ្រើសត្រឹមខេត្ត ស្រុក ឬឃុំ/សង្កាត់បាន',
+                                    en: 'Choose a province, district, or commune',
+                                  ),
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.grey.shade600,
+                                    fontFamily: 'Siemreap',
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: () => Navigator.pop(sheetContext),
+                            icon: const Icon(Icons.close),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 18),
+                      selector(
+                        label: appText(context, km: 'ខេត្ត/រាជធានី', en: 'Province / City'),
+                        hint: appText(context, km: 'ជ្រើសខេត្ត', en: 'Select province'),
+                        value: province,
+                        items: provinces,
+                        enabled: true,
+                        onChanged: (value) => setSheetState(() {
+                          province = value;
+                          district = null;
+                          commune = null;
+                        }),
+                      ),
+                      const SizedBox(height: 12),
+                      selector(
+                        label: appText(context, km: 'ស្រុក/ខណ្ឌ', en: 'District'),
+                        hint: appText(context, km: 'ជ្រើសស្រុក', en: 'Select district'),
+                        value: district,
+                        items: districts,
+                        enabled: province != null,
+                        onChanged: (value) => setSheetState(() {
+                          district = value;
+                          commune = null;
+                        }),
+                      ),
+                      const SizedBox(height: 12),
+                      selector(
+                        label: appText(context, km: 'ឃុំ/សង្កាត់', en: 'Commune'),
+                        hint: appText(context, km: 'ជ្រើសឃុំ/សង្កាត់', en: 'Select commune'),
+                        value: commune,
+                        items: communes,
+                        enabled: district != null,
+                        onChanged: (value) => setSheetState(() => commune = value),
+                      ),
+                      const SizedBox(height: 20),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: () {
+                                setState(() {
+                                  _selectedProvince = null;
+                                  _selectedDistrict = null;
+                                  _selectedCommune = null;
+                                });
+                                Navigator.pop(sheetContext);
+                              },
+                              icon: const Icon(Icons.refresh, size: 18),
+                              label: Text(
+                                appText(context, km: 'ទាំងអស់', en: 'All locations'),
+                                style: const TextStyle(fontFamily: 'Siemreap'),
+                              ),
+                              style: OutlinedButton.styleFrom(
+                                minimumSize: const Size(0, 48),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: province == null
+                                  ? null
+                                  : () {
+                                      setState(() {
+                                        _selectedProvince = province;
+                                        _selectedDistrict = district;
+                                        _selectedCommune = commune;
+                                      });
+                                      Navigator.pop(sheetContext);
+                                    },
+                              icon: const Icon(Icons.check, size: 18),
+                              label: Text(
+                                appText(context, km: 'អនុវត្ត', en: 'Apply'),
+                                style: const TextStyle(fontFamily: 'Siemreap'),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.green.shade700,
+                                foregroundColor: Colors.white,
+                                minimumSize: const Size(0, 48),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+
   String _searchLabel(String km, String en) =>
       Localizations.localeOf(context).languageCode == 'en' ? en : km;
 
   void _showSearchMessage(String message, {Color color = Colors.red}) {
     if (!mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message), backgroundColor: color));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: color),
+    );
   }
 
   bool _canUseAiSearch() {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid != null && uid.isNotEmpty) return true;
-    _showSearchMessage(
-      _searchLabel(
-        'សូមចូលគណនីជាមុន ដើម្បីស្វែងរកតាមរូប ឬសម្លេង',
-        'Please sign in to search with a photo or voice',
-      ),
-    );
+    _showSearchMessage(_searchLabel(
+      'សូមចូលគណនីជាមុន ដើម្បីស្វែងរកតាមរូប ឬសម្លេង',
+      'Please sign in to search with a photo or voice',
+    ));
     return false;
-  }
-
-  Future<Map<String, dynamic>> _callAiSearch({
-    String? image,
-    String? audio,
-  }) async {
-    final callable = FirebaseFunctions.instanceFor(
-      region: 'asia-southeast1',
-    ).httpsCallable('analyzeProductSearch');
-    final response = await callable.call(<String, dynamic>{
-      'locale': Localizations.localeOf(context).languageCode,
-      if (image != null) 'image': image,
-      if (audio != null) 'audio': audio,
-    });
-    return Map<String, dynamic>.from(response.data as Map);
   }
 
   void _applyAiSearch(Map<String, dynamic> data) {
     final query = (data['query'] ?? '').toString().trim();
     if (query.isEmpty) throw StateError('Empty AI search query');
-    final keywords =
-        (data['keywords'] as List?)
-            ?.map((value) => value.toString().trim())
-            .where((value) => value.isNotEmpty)
-            .toList() ??
+    final keywords = (data['keywords'] as List?)
+  ?.map((value) => value.toString().trim())
+  .where((value) => value.isNotEmpty)
+  .toList() ??
         const <String>[];
     final combinedQuery = <String>{query, ...keywords}.join(' | ');
     _searchController.text = query;
@@ -143,21 +372,26 @@ class _ProductListScreenState extends State<ProductListScreen> {
     );
   }
 
+  Future<Map<String, dynamic>> _callAiSearch({String? image, String? audio}) async {
+    final callable = FirebaseFunctions.instanceFor(region: 'asia-southeast1')
+        .httpsCallable('analyzeProductSearch');
+    final response = await callable.call(<String, dynamic>{
+      'locale': Localizations.localeOf(context).languageCode,
+      if (image != null) 'image': image,
+      if (audio != null) 'audio': audio,
+    });
+    return Map<String, dynamic>.from(response.data as Map);
+  }
+
   String _pickedImageMime(XFile image) {
     final mime = image.mimeType?.toLowerCase();
     if (mime == 'image/png' || mime == 'image/webp') return mime!;
     return 'image/jpeg';
   }
 
-  Future<void> _searchByImage() async {
-    if (_isSearchBusy || !_canUseAiSearch()) return;
-    final image = await _searchImagePicker.pickImage(
-      source: ImageSource.gallery,
-      maxWidth: 1024,
-      maxHeight: 1024,
-      imageQuality: 72,
-    );
-    if (image == null || !mounted) return;
+  Future<void> _searchWithImage(XFile image) async {
+    if (_isSearchBusy || !_canUseAiSearch() || !mounted) return;
+
     setState(() => _isSearchBusy = true);
     try {
       final bytes = await image.readAsBytes();
@@ -188,16 +422,27 @@ class _ProductListScreenState extends State<ProductListScreen> {
     }
   }
 
+  Future<void> _startSmartScan() async {
+    if (_isSearchBusy) return;
+
+    final image = await Navigator.push<XFile?>(
+      context,
+      MaterialPageRoute(builder: (_) => const SmartScanScreen()),
+    );
+
+    if (image != null && mounted) {
+      await _searchWithImage(image);
+    }
+  }
+
   Future<void> _toggleVoiceSearch() async {
     if (_isSearchBusy || _isVoiceSearching || !_canUseAiSearch()) return;
     try {
       if (!await _searchAudioRecorder.hasPermission()) {
-        _showSearchMessage(
-          _searchLabel(
-            'សូមអនុញ្ញាត Microphone ជាមុន',
-            'Please allow microphone access first',
-          ),
-        );
+        _showSearchMessage(_searchLabel(
+'សូមអនុញ្ញាត Microphone ជាមុន',
+'Please allow microphone access first',
+        ));
         return;
       }
       final String path;
@@ -205,17 +450,16 @@ class _ProductListScreenState extends State<ProductListScreen> {
         path = '';
       } else {
         final directory = await getTemporaryDirectory();
-        path =
-            '${directory.path}/sesan_category_search_${DateTime.now().millisecondsSinceEpoch}.m4a';
+        path = '${directory.path}/sesan_category_search_${DateTime.now().millisecondsSinceEpoch}.m4a';
       }
       await _searchAudioRecorder.start(
         RecordConfig(
-          encoder: kIsWeb ? AudioEncoder.wav : AudioEncoder.aacLc,
-          bitRate: 48000,
-          sampleRate: 22050,
-          echoCancel: true,
-          noiseSuppress: true,
-          autoGain: true,
+encoder: kIsWeb ? AudioEncoder.wav : AudioEncoder.aacLc,
+bitRate: 48000,
+sampleRate: 22050,
+echoCancel: true,
+noiseSuppress: true,
+autoGain: true,
         ),
         path: path,
       );
@@ -223,49 +467,49 @@ class _ProductListScreenState extends State<ProductListScreen> {
       setState(() => _isVoiceSearching = true);
       _voiceSearchTimer?.cancel();
       _voiceSearchTimer = Timer(const Duration(seconds: 5), _finishVoiceSearch);
-      _voiceSheetOpen = true;
-      showModalBottomSheet<void>(
-        context: context,
-        isDismissible: false,
-        enableDrag: false,
-        backgroundColor: Colors.transparent,
-        builder: (_) => SafeArea(
-          child: Container(
-            margin: const EdgeInsets.all(16),
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(28),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.mic_rounded, color: Colors.red, size: 44),
-                const SizedBox(height: 14),
-                Text(
-                  _searchLabel('កំពុងស្តាប់...', 'Listening...'),
-                  style: const TextStyle(
-                    fontFamily: 'Siemreap',
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20,
-                  ),
-                ),
-                const SizedBox(height: 14),
-                const LinearProgressIndicator(minHeight: 4),
-              ],
-            ),
-          ),
-        ),
-      ).whenComplete(() => _voiceSheetOpen = false);
+      _showVoiceListeningSheet();
     } catch (error) {
       debugPrint('Start voice search error: $error');
-      _showSearchMessage(
-        _searchLabel(
-          'មិនអាចចាប់ផ្តើមថតសម្លេងបានទេ',
-          'Could not start voice recording',
-        ),
-      );
+      _showSearchMessage(_searchLabel(
+        'មិនអាចចាប់ផ្តើមថតសម្លេងបានទេ',
+        'Could not start voice recording',
+      ));
     }
+  }
+
+  void _showVoiceListeningSheet() {
+    _voiceSheetOpen = true;
+    showModalBottomSheet<void>(
+      context: context,
+      isDismissible: false,
+      enableDrag: false,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) => SafeArea(
+        child: Container(
+margin: const EdgeInsets.all(16),
+padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
+decoration: BoxDecoration(
+  color: Colors.white,
+  borderRadius: BorderRadius.circular(28),
+),
+child: Column(
+  mainAxisSize: MainAxisSize.min,
+  children: [
+    const Icon(Icons.mic_rounded, color: Colors.red, size: 44),
+    const SizedBox(height: 14),
+    Text(
+      _searchLabel('កំពុងស្តាប់...', 'Listening...'),
+      style: const TextStyle(
+        fontFamily: 'Siemreap', fontWeight: FontWeight.bold, fontSize: 20,
+      ),
+    ),
+    const SizedBox(height: 14),
+    const LinearProgressIndicator(minHeight: 4),
+  ],
+),
+        ),
+      ),
+    ).whenComplete(() => _voiceSheetOpen = false);
   }
 
   Future<void> _finishVoiceSearch() async {
@@ -283,200 +527,34 @@ class _ProductListScreenState extends State<ProductListScreen> {
     }
     try {
       final path = await _searchAudioRecorder.stop();
-      if (path == null || path.isEmpty)
-        throw StateError('Empty recording path');
+      if (path == null || path.isEmpty) throw StateError('Empty recording path');
       Uint8List? bytes;
       for (var attempt = 0; attempt < 4; attempt++) {
-        await Future<void>.delayed(
-          Duration(milliseconds: attempt == 0 ? 250 : 400),
-        );
+        await Future<void>.delayed(Duration(milliseconds: attempt == 0 ? 250 : 400));
         try {
-          final candidate = await XFile(path).readAsBytes();
-          if (candidate.isNotEmpty) {
-            bytes = candidate;
-            break;
-          }
+final candidate = await XFile(path).readAsBytes();
+if (candidate.isNotEmpty) { bytes = candidate; break; }
         } catch (_) {}
       }
       if (bytes == null || bytes.isEmpty || bytes.length > 7500000) {
         throw StateError('Recorded audio could not be read');
       }
       final mime = kIsWeb ? 'audio/wav' : 'audio/m4a';
-      _applyAiSearch(
-        await _callAiSearch(audio: 'data:$mime;base64,${base64Encode(bytes)}'),
-      );
+      _applyAiSearch(await _callAiSearch(audio: 'data:$mime;base64,${base64Encode(bytes)}'));
     } on FirebaseFunctionsException catch (error) {
-      _showSearchMessage(
-        error.message ??
-            _searchLabel(
-              'មិនអាចយល់សម្លេងនេះបានទេ',
-              'Could not understand this recording',
-            ),
-      );
+      _showSearchMessage(error.message ?? _searchLabel(
+        'មិនអាចយល់សម្លេងនេះបានទេ',
+        'Could not understand this recording',
+      ));
     } catch (error) {
       debugPrint('Voice search error: $error');
-      _showSearchMessage(
-        _searchLabel('ការស្វែងរកតាមសម្លេងបរាជ័យ', 'Voice search failed'),
-      );
+      _showSearchMessage(_searchLabel(
+        'ការស្វែងរកតាមសម្លេងបរាជ័យ',
+        'Voice search failed',
+      ));
     } finally {
       if (mounted) setState(() => _isSearchBusy = false);
     }
-  }
-
-  Future<void> _showLocationFilter() async {
-    await CambodiaLocationService.load();
-    if (!mounted) return;
-    String? province = _selectedProvince;
-    String? district = _selectedDistrict;
-    String? commune = _selectedCommune;
-    await showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (sheetContext) => StatefulBuilder(
-        builder: (context, setSheetState) {
-          final provinces = CambodiaLocationService.getProvinces();
-          final districts = province == null
-              ? <String>[]
-              : CambodiaLocationService.getDistricts(province!);
-          final communes = province == null || district == null
-              ? <String>[]
-              : CambodiaLocationService.getCommunes(province!, district!);
-
-          Widget selector({
-            required String label,
-            required String? value,
-            required List<String> items,
-            required bool enabled,
-            required ValueChanged<String?> onChanged,
-          }) {
-            return DropdownButtonFormField<String>(
-              value: value,
-              isExpanded: true,
-              decoration: InputDecoration(
-                labelText: label,
-                border: const OutlineInputBorder(),
-              ),
-              items: items
-                  .map(
-                    (item) => DropdownMenuItem(value: item, child: Text(item)),
-                  )
-                  .toList(),
-              onChanged: enabled ? onChanged : null,
-            );
-          }
-
-          return SafeArea(
-            child: Container(
-              padding: EdgeInsets.only(
-                left: 18,
-                right: 18,
-                top: 18,
-                bottom: 18 + MediaQuery.of(context).viewInsets.bottom,
-              ),
-              decoration: const BoxDecoration(
-                color: Color(0xFFF8FAF8),
-                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    appText(
-                      context,
-                      km: 'ចម្រុះតាមទីតាំង',
-                      en: 'Filter by location',
-                    ),
-                    style: const TextStyle(
-                      fontFamily: 'Siemreap',
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  selector(
-                    label: appText(
-                      context,
-                      km: 'ខេត្ត/រាជធានី',
-                      en: 'Province / City',
-                    ),
-                    value: province,
-                    items: provinces,
-                    enabled: true,
-                    onChanged: (value) => setSheetState(() {
-                      province = value;
-                      district = null;
-                      commune = null;
-                    }),
-                  ),
-                  const SizedBox(height: 10),
-                  selector(
-                    label: appText(context, km: 'ស្រុក/ខណ្ឌ', en: 'District'),
-                    value: district,
-                    items: districts,
-                    enabled: province != null,
-                    onChanged: (value) => setSheetState(() {
-                      district = value;
-                      commune = null;
-                    }),
-                  ),
-                  const SizedBox(height: 10),
-                  selector(
-                    label: appText(context, km: 'ឃុំ/សង្កាត់', en: 'Commune'),
-                    value: commune,
-                    items: communes,
-                    enabled: district != null,
-                    onChanged: (value) => setSheetState(() => commune = value),
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () {
-                            setState(() {
-                              _selectedProvince = null;
-                              _selectedDistrict = null;
-                              _selectedCommune = null;
-                            });
-                            Navigator.pop(sheetContext);
-                          },
-                          child: Text(
-                            appText(
-                              context,
-                              km: 'ទាំងអស់',
-                              en: 'All locations',
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: province == null
-                              ? null
-                              : () {
-                                  setState(() {
-                                    _selectedProvince = province;
-                                    _selectedDistrict = district;
-                                    _selectedCommune = commune;
-                                  });
-                                  Navigator.pop(sheetContext);
-                                },
-                          child: Text(
-                            appText(context, km: 'អនុវត្ត', en: 'Apply'),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
   }
 
   @override
@@ -504,28 +582,30 @@ class _ProductListScreenState extends State<ProductListScreen> {
             alignment: Alignment.center,
             children: [
               IconButton(
+                tooltip: appText(context, km: 'ចម្រុះតាមទីតាំង', en: 'Filter by location'),
                 onPressed: _showLocationFilter,
                 icon: Icon(
-                  _hasLocationFilter
-                      ? Icons.filter_alt
-                      : Icons.filter_alt_outlined,
+                  _hasLocationFilter ? Icons.filter_alt : Icons.filter_alt_outlined,
                   color: Colors.white,
+                  size: 25,
                 ),
               ),
               if (_hasLocationFilter)
-                const Positioned(
+                Positioned(
                   right: 8,
                   top: 8,
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
+                  child: Container(
+                    width: 8,
+                    height: 8,
+                    decoration: const BoxDecoration(
                       color: Colors.amber,
                       shape: BoxShape.circle,
                     ),
-                    child: SizedBox(width: 8, height: 8),
                   ),
                 ),
             ],
           ),
+          const SizedBox(width: 4),
         ],
         bottom: PreferredSize(
           preferredSize: Size.fromHeight(_hasLocationFilter ? 88 : 60),
@@ -535,95 +615,118 @@ class _ProductListScreenState extends State<ProductListScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
-                  height: 45,
+                  height: 38,
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(8),
                   ),
                   child: TextField(
                     controller: _searchController,
-                    onChanged: (value) => setState(
-                      () => _currentSearch = value.trim().toLowerCase(),
-                    ),
+                    onChanged: (value) {
+                      setState(() => _currentSearch = value.trim().toLowerCase());
+                    },
                     decoration: InputDecoration(
-                      hintText: appText(
-                        context,
-                        km: 'ស្វែងរកទំនិញក្នុងប្រភេទនេះ...',
-                        en: 'Search products in this category...',
+                      hintText: appText(context, km: 'ស្វែងរកទំនិញ...', en: 'Search products...'),
+                      hintStyle: const TextStyle(fontFamily: 'Siemreap', fontSize: 13),
+                      prefixIcon: const Icon(Icons.search, color: Colors.grey, size: 20),
+                      prefixIconConstraints: const BoxConstraints.tightFor(
+                        width: 34,
+                        height: 36,
                       ),
-                      prefixIcon: const Icon(Icons.search, color: Colors.grey),
                       suffixIconConstraints: const BoxConstraints.tightFor(
-                        width: 94,
+                        width: 58,
                         height: 45,
                       ),
                       suffixIcon: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          SizedBox(
-                            width: 30,
-                            child: InkResponse(
-                              onTap: _isSearchBusy ? null : _searchByImage,
-                              child: _isSearchBusy
-                                  ? const Padding(
-                                      padding: EdgeInsets.all(7),
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                      ),
-                                    )
-                                  : const Icon(
-                                      Icons.image_search_rounded,
-                                      color: Colors.purple,
-                                      size: 21,
-                                    ),
+                          Tooltip(
+                            message: _searchLabel(
+                              'Smart Scan — QR ឬទំនិញ',
+                              'Smart Scan — QR or product',
                             ),
-                          ),
-                          SizedBox(
-                            width: 30,
-                            child: InkResponse(
-                              onTap: _isSearchBusy ? null : _toggleVoiceSearch,
-                              child: Icon(
-                                _isVoiceSearching
-                                    ? Icons.stop_circle_rounded
-                                    : Icons.mic_rounded,
-                                color: _isVoiceSearching
-                                    ? Colors.red
-                                    : Colors.green,
-                                size: 21,
-                              ),
-                            ),
-                          ),
-                          SizedBox(
-                            width: 30,
-                            child: InkResponse(
-                              onTap: () => Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => const QrScannerScreen(),
+                            child: SizedBox(
+                              width: 29,
+                              height: 45,
+                              child: InkResponse(
+                                radius: 18,
+                                onTap: _isSearchBusy ? null : _startSmartScan,
+                                child: Center(
+                                  child: _isSearchBusy
+                                      ? const SizedBox(
+                                          width: 16,
+                                          height: 16,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                          ),
+                                        )
+                                      : const Icon(
+                                          Icons.center_focus_strong_rounded,
+                                          size: 20,
+                                          color: Colors.blue,
+                                        ),
                                 ),
                               ),
-                              child: const Icon(
-                                Icons.qr_code_scanner,
-                                color: Colors.blue,
-                                size: 21,
+                            ),
+                          ),
+                          SizedBox(
+                            width: 29,
+                            height: 45,
+                            child: InkResponse(
+                              radius: 18,
+                              onTap: _isSearchBusy ? null : _toggleVoiceSearch,
+                              child: Center(
+                                child: Icon(
+                                  _isVoiceSearching
+                                      ? Icons.stop_circle_rounded
+                                      : Icons.mic_rounded,
+                                  size: 20,
+                                  color: _isVoiceSearching
+                                      ? Colors.red
+                                      : Colors.green,
+                                ),
                               ),
                             ),
                           ),
                         ],
                       ),
                       border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(vertical: 9),
                     ),
                   ),
                 ),
                 if (_hasLocationFilter) ...[
                   const SizedBox(height: 7),
-                  Text(
-                    _locationFilterLabel,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontFamily: 'Siemreap',
-                      fontSize: 11,
+                  InkWell(
+                    onTap: _showLocationFilter,
+                    borderRadius: BorderRadius.circular(20),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.16),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.location_on, size: 14, color: Colors.white),
+                          const SizedBox(width: 5),
+                          Expanded(
+                            child: Text(
+                              _locationFilterLabel,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                fontFamily: 'Siemreap',
+                              ),
+                            ),
+                          ),
+                          const Icon(Icons.keyboard_arrow_down, size: 17, color: Colors.white),
+                        ],
+                      ),
                     ),
                   ),
                 ],
