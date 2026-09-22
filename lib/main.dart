@@ -281,15 +281,41 @@ Future<void> _setupDeepLinks() async {
 void _handleDeepLink(Uri deepLink) {
   debugPrint('Deep Link received: $deepLink');
   final segments = deepLink.pathSegments;
-  if (segments.isEmpty) return;
+  final route = deepLink.host.toLowerCase();
+  if (segments.isEmpty && route.isEmpty) return;
 
-  Future.delayed(const Duration(milliseconds: 500), () {
-    if (segments.contains('product')) {
-      _navigateToProduct(segments.last);
-    } else if (segments.contains('shop')) {
-      _navigateToShop(segments.last);
+  String? productId;
+  String? sellerId;
+
+  if (route == 'product' && segments.isNotEmpty) {
+    productId = segments.last;
+  } else if (route == 'shop' && segments.isNotEmpty) {
+    sellerId = segments.last;
+  } else if (segments.contains('product')) {
+    productId = segments.last;
+  } else if (segments.contains('shop')) {
+    sellerId = segments.last;
+  }
+
+  Future.delayed(const Duration(milliseconds: 300), () {
+    if (productId != null && productId!.isNotEmpty) {
+      _navigateToProduct(productId!);
+    } else if (sellerId != null && sellerId!.isNotEmpty) {
+      _navigateToShop(sellerId!);
     }
   });
+}
+
+Future<void> _pushDeepLinkPage(Widget page) async {
+  for (var attempt = 0; attempt < 80; attempt++) {
+    final navigator = navigatorKey.currentState;
+    if (navigator != null && navigator.mounted) {
+      navigator.push(MaterialPageRoute(builder: (_) => page));
+      return;
+    }
+    await Future<void>.delayed(const Duration(milliseconds: 250));
+  }
+  debugPrint('Deep link navigation timed out before Navigator became ready.');
 }
 
 Future<void> _navigateToProduct(String productId) async {
@@ -302,11 +328,7 @@ Future<void> _navigateToProduct(String productId) async {
 
     final product = Map<String, dynamic>.from(doc.data()!);
     product['id'] = productId;
-    navigatorKey.currentState?.push(
-      MaterialPageRoute(
-        builder: (_) => ProductDetailScreen(product: product),
-      ),
-    );
+    await _pushDeepLinkPage(ProductDetailScreen(product: product));
   } catch (e) {
     debugPrint('Navigate to product error: $e');
   }
@@ -321,12 +343,10 @@ Future<void> _navigateToShop(String sellerId) async {
     if (!doc.exists) return;
 
     final userData = Map<String, dynamic>.from(doc.data()!);
-    navigatorKey.currentState?.push(
-      MaterialPageRoute(
-        builder: (_) => SellerProfileScreen(
-          sellerId: sellerId,
-          sellerName: (userData['name'] ?? 'មិនស្គាល់').toString(),
-        ),
+    await _pushDeepLinkPage(
+      SellerProfileScreen(
+        sellerId: sellerId,
+        sellerName: (userData['name'] ?? 'មិនស្គាល់').toString(),
       ),
     );
   } catch (e) {

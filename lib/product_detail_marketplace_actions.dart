@@ -100,46 +100,76 @@ class _SellerPhonePrivacyTileState extends State<SellerPhonePrivacyTile> {
         ? (isEnglish ? 'No phone number' : 'អត់មានលេខ')
         : (_revealed ? phone : _mask(phone));
 
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      leading: Icon(
-        widget.secondary ? Icons.phone_android : Icons.phone,
-        color: Colors.orange,
-      ),
-      title: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 220),
-        child: Text(
-          shown,
-          key: ValueKey<String>(shown),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-      ),
-      subtitle: phone.isEmpty
-          ? null
-          : Text(
-              _revealed
-                  ? (isEnglish
-                      ? 'Hidden again automatically in 5 seconds'
-                      : 'លេខនឹងលាក់វិញដោយស្វ័យប្រវត្តិក្នុង 5 វិនាទី')
-                  : (isEnglish
-                      ? 'Chat or order through the Sesan cart'
-                      : 'សូមឆាត ឬទិញតាមកន្ត្រកក្នុង Sesan'),
-              style: const TextStyle(fontSize: 11, fontFamily: 'Siemreap'),
-            ),
-      trailing: phone.isEmpty
-          ? null
-          : IconButton(
-              onPressed: _revealed ? _hide : _reveal,
-              icon: Icon(
-                _revealed ? Icons.visibility_off : Icons.visibility,
-                size: 18,
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          SizedBox(
+            width: 34,
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Icon(
+                widget.secondary ? Icons.phone_android : Icons.phone,
+                color: Colors.orange,
+                size: 24,
               ),
-              tooltip: _revealed
-                  ? (isEnglish ? 'Hide' : 'លាក់លេខ')
-                  : (isEnglish ? 'Show number' : 'បង្ហាញលេខ'),
-              visualDensity: VisualDensity.compact,
             ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 220),
+                  child: Text(
+                    shown,
+                    key: ValueKey<String>(shown),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.left,
+                    style: const TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                if (phone.isNotEmpty)
+                  Text(
+                    _revealed
+                        ? (isEnglish
+                            ? 'Hidden again automatically in 5 seconds'
+                            : 'លេខនឹងលាក់វិញដោយស្វ័យប្រវត្តិក្នុង 5 វិនាទី')
+                        : (isEnglish
+                            ? 'Chat or order through the Sesan cart'
+                            : 'សូមឆាត ឬទិញតាមកន្ត្រកក្នុង Sesan'),
+                    textAlign: TextAlign.left,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontFamily: 'Siemreap',
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          if (phone.isNotEmpty)
+            SizedBox(
+              width: 44,
+              height: 44,
+              child: IconButton(
+                onPressed: _revealed ? _hide : _reveal,
+                icon: Icon(
+                  _revealed ? Icons.visibility_off : Icons.visibility,
+                  size: 20,
+                ),
+                tooltip: _revealed
+                    ? (isEnglish ? 'Hide' : 'លាក់លេខ')
+                    : (isEnglish ? 'Show number' : 'បង្ហាញលេខ'),
+              ),
+            ),
+        ],
+      ),
     );
   }
 }

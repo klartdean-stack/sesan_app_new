@@ -2,10 +2,7 @@
 import 'package:intl/intl.dart';
 
 class ShareService {
-  static const String _androidDownloadUrl =
-      'https://play.google.com/store/apps/details?id=com.sesan.app';
-  static const String _iosDownloadUrl =
-      'https://apps.apple.com/kh/app/sesan-app/id6789862316';
+  static const String appDownloadUrl = 'https://sesanshop.com/download';
 
   static Future<String> shareProduct(Map<String, dynamic> product) async {
     final String productId = product['id'] ?? '';
@@ -29,8 +26,7 @@ class ShareService {
 https://sesanshop.com/product/$productId
 
 📲 មិនទាន់មាន App? ទាញយកទីនេះ៖
-Android: $_androidDownloadUrl
-iOS: $_iosDownloadUrl''';
+$appDownloadUrl''';
   }
 
   static Future<String> shareShop({
@@ -45,7 +41,6 @@ ${sesanId != null ? '🆔 Sesan ID: $sesanId\n' : ''}
 https://sesanshop.com/shop/$sellerId
 
 📲 មិនទាន់មាន App? ទាញយកទីនេះ៖
-Android: $_androidDownloadUrl
-iOS: $_iosDownloadUrl''';
+$appDownloadUrl''';
   }
 }

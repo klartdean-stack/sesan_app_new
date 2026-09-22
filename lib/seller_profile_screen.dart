@@ -505,22 +505,21 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
       debugPrint('Error fetching shop data: $e');
     }
     final sellerShopUrl = 'https://sesanshop.com/shop/${widget.sellerId}';
+    const appDownloadUrl = 'https://sesanshop.com/download';
     final englishShareMessage = '''
  🛍️ Discover a great shop on Sesan App!
  🏪 $shopName
  🔗 View this shop in the app: $sellerShopUrl
  📲 Don't have the app yet? Download it here:
- Android: https://play.google.com/store/apps/details?id=com.sesan.app
- iOS: https://apps.apple.com/kh/app/sesan-app/id6789862316''';
+ $appDownloadUrl''';
     final shareMessage = Localizations.localeOf(context).languageCode == 'en'
         ? englishShareMessage
         : '''
  🛍️ រកឃើញហាងល្អៗនៅក្នុង Sesan App!
  🏪 $shopName ${sesanId.isNotEmpty ? '🆔 Sesan ID: $sesanId\n' : ''}
- 🔗 មើលហាងក្នុង App៖ https://sesanshop.com/shop/${widget.sellerId}
+ 🔗 មើលហាងក្នុង App៖ $sellerShopUrl
  📲 មិនទាន់មាន App? ទាញយកទីនេះ៖
- Android: https://play.google.com/store/apps/details?id=com.sesan.app
- iOS: https://apps.apple.com/kh/app/sesan-app/id6789862316''';
+ $appDownloadUrl''';
     try {
       if (mounted) Get.dialog(const Center(child: CircularProgressIndicator(color: Colors.white)), barrierDismissible: false);
       final image = await _screenshotController.captureFromWidget(_buildShopWatermarkWidget(coverUrl: coverUrl, photoUrl: photoUrl, shopName: shopName, sesanId: sesanId, sellerId: widget.sellerId, phone: phone, productCount: productCount), delay: const Duration(milliseconds: 1500), pixelRatio: 2.0);
@@ -618,9 +617,9 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
           Container(width: 4, height: 24, decoration: BoxDecoration(color: Colors.green[700], borderRadius: BorderRadius.circular(2))),
           const SizedBox(width: 8),
           Expanded(child: Text(appText(context, km: 'ទំនិញដាក់លក់', en: 'Products for sale'), maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black87))),
-          IconButton(icon: Icon(Icons.filter_list_rounded, color: _filterMainCategory != null ? Colors.green[700] : Colors.grey[600]), onPressed: _showFilterSheet),
-          const SizedBox(width: 4),
           Flexible(child: StreamBuilder<QuerySnapshot>(stream: FirebaseFirestore.instance.collection('products').where('seller_id', isEqualTo: widget.sellerId).snapshots(), builder: (context, snapshot) { final count = snapshot.hasData ? snapshot.data!.docs.length : 0; return Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6), decoration: BoxDecoration(color: Colors.green[50], borderRadius: BorderRadius.circular(20)), child: Text(appText(context, km: '$count ទំនិញ', en: '$count products'), maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center, style: TextStyle(fontSize: 11, color: Colors.green[700], fontWeight: FontWeight.w600))); })),
+          const SizedBox(width: 4),
+          IconButton(icon: Icon(Icons.filter_list_rounded, color: _filterMainCategory != null ? Colors.green[700] : Colors.grey[600]), onPressed: _showFilterSheet),
         ]))),
         _buildProductsGrid(context),
       ]),
@@ -677,7 +676,7 @@ class _SellerProfileScreenState extends State<SellerProfileScreen> {
           Text('📅 ${DateFormat('dd/MM/yyyy').format(DateTime.now())}', style: const TextStyle(fontSize: 12, color: Colors.black54, fontFamily: 'Siemreap')),
         ])),
         const SizedBox(height: 16),
-        Container(padding: const EdgeInsets.all(16), margin: const EdgeInsets.symmetric(horizontal: 16), decoration: BoxDecoration(border: Border.all(color: Colors.grey[300]!), borderRadius: BorderRadius.circular(12)), child: Row(children: [QrImageView(data: 'shop_id_$sellerId', size: 80), const SizedBox(width: 16), Expanded(child: Text(appText(context, km: 'ស្កេនដើម្បីមើលហាងនេះក្នុង Sesan App', en: 'Scan to view this shop in Sesan App'), style: TextStyle(fontSize: 13, color: Colors.grey[600], fontFamily: 'Siemreap'))), ClipRRect(borderRadius: BorderRadius.circular(8), child: Image.asset('assets/sesan_icon.jpg', width: 45, height: 45, fit: BoxFit.cover))])),
+        Container(padding: const EdgeInsets.all(16), margin: const EdgeInsets.symmetric(horizontal: 16), decoration: BoxDecoration(border: Border.all(color: Colors.grey[300]!), borderRadius: BorderRadius.circular(12)), child: Row(children: [QrImageView(data: 'https://sesanshop.com/shop/$sellerId', size: 80), const SizedBox(width: 16), Expanded(child: Text(appText(context, km: 'ស្កេនដើម្បីមើលហាងនេះក្នុង Sesan App', en: 'Scan to view this shop in Sesan App'), style: TextStyle(fontSize: 13, color: Colors.grey[600], fontFamily: 'Siemreap'))), ClipRRect(borderRadius: BorderRadius.circular(8), child: Image.asset('assets/sesan_icon.jpg', width: 45, height: 45, fit: BoxFit.cover))])),
         const SizedBox(height: 20),
       ]),
     );
