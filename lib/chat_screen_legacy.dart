@@ -11,6 +11,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/services.dart';
 import 'package:gal/gal.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:intl/intl.dart';
 import 'package:my_app/audio_bubble_.dart';
 import 'package:my_app/chat_video_bubble.dart';
@@ -698,6 +699,36 @@ class _ChatScreenState extends State<ChatScreen> {
   // ─── Pick Media (optimized) ──────────────────────────────────────
   Future<void> _pickMedia(ImageSource source, bool isVideo) async {
     try {
+      if (source == ImageSource.camera) {
+        var permission = await Permission.camera.status;
+        if (!permission.isGranted) {
+          permission = await Permission.camera.request();
+        }
+
+        if (!permission.isGranted) {
+          if (mounted) {
+            _showSnack(
+              permission.isPermanentlyDenied
+                  ? appText(
+                      context,
+                      km: 'Camera ត្រូវបានបិទ។ សូមបើកនៅ Settings > Sesan App > Camera',
+                      en: 'Camera access is off. Enable it in Settings > Sesan App > Camera',
+                    )
+                  : appText(
+                      context,
+                      km: 'ត្រូវអនុញ្ញាត Camera ដើម្បីថតរូប ឬវីដេអូ',
+                      en: 'Camera permission is required to take photos or videos',
+                    ),
+              Colors.red,
+            );
+          }
+          if (permission.isPermanentlyDenied) {
+            await openAppSettings();
+          }
+          return;
+        }
+      }
+
       final XFile? file = isVideo
           ? await _picker.pickVideo(
               source: source,
