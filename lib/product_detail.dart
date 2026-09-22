@@ -1835,11 +1835,11 @@ $appDownloadLink
                                         borderRadius: BorderRadius.circular(16),
                                         child: Container(
                                           constraints: const BoxConstraints(
-                                            minHeight: 34,
+                                            minHeight: 32,
                                           ),
                                           padding: const EdgeInsets.symmetric(
-                                            horizontal: 10,
-                                            vertical: 6,
+                                            horizontal: 8,
+                                            vertical: 4,
                                           ),
                                           decoration: BoxDecoration(
                                             color: Colors.green.withOpacity(0.06),
@@ -1867,9 +1867,9 @@ $appDownloadLink
                                                       ? Icons.undo_rounded
                                                       : Icons.translate_rounded,
                                                   color: Colors.green.shade700,
-                                                  size: 16,
+                                                  size: 15,
                                                 ),
-                                              const SizedBox(width: 5),
+                                              const SizedBox(width: 4),
                                               Text(
                                                 _showTranslatedProduct
                                                     ? (Localizations.localeOf(
@@ -1885,7 +1885,7 @@ $appDownloadLink
                                                           ? 'Translate'
                                                           : 'បកប្រែ'),
                                                 style: TextStyle(
-                                                  fontSize: 11,
+                                                  fontSize: 10.5,
                                                   fontWeight: FontWeight.w600,
                                                   color: Colors.green.shade700,
                                                   fontFamily: 'Siemreap',
@@ -1903,11 +1903,11 @@ $appDownloadLink
                                         borderRadius: BorderRadius.circular(16),
                                         child: Container(
                                           constraints: const BoxConstraints(
-                                            minHeight: 34,
+                                            minHeight: 32,
                                           ),
                                           padding: const EdgeInsets.symmetric(
-                                            horizontal: 10,
-                                            vertical: 6,
+                                            horizontal: 8,
+                                            vertical: 4,
                                           ),
                                           decoration: BoxDecoration(
                                             color: Colors.purple.withOpacity(0.06),
@@ -1924,9 +1924,9 @@ $appDownloadLink
                                               const Icon(
                                                 Icons.auto_awesome,
                                                 color: Colors.purple,
-                                                size: 16,
+                                                size: 15,
                                               ),
-                                              const SizedBox(width: 5),
+                                              const SizedBox(width: 4),
                                               Text(
                                                 Localizations.localeOf(context)
                                                             .languageCode ==
@@ -1934,7 +1934,7 @@ $appDownloadLink
                                                     ? 'Ask Sesan AI'
                                                     : 'សួរ Sesan AI',
                                                 style: const TextStyle(
-                                                  fontSize: 11,
+                                                  fontSize: 10.5,
                                                   fontWeight: FontWeight.w600,
                                                   color: Colors.purple,
                                                   fontFamily: 'Siemreap',

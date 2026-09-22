@@ -366,7 +366,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   // ២. ប្រអប់ Search Bar (ប្រើ Expanded ដើម្បីឱ្យវារីកពេញលំហដែលនៅសល់)
                   Expanded(
                     child: Container(
-                      height: 44,
+                      height: 48,
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(8),
@@ -385,17 +385,17 @@ class _HomeScreenState extends State<HomeScreen> {
                           prefixIcon: const Icon(Icons.search, size: 20),
                           suffixIconConstraints:
                               const BoxConstraints.tightFor(
-                            width: 88,
-                            height: 44,
+                            width: 96,
+                            height: 48,
                           ),
                           suffixIcon: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               SizedBox(
-                                width: 44,
-                                height: 44,
+                                width: 48,
+                                height: 48,
                                 child: InkResponse(
-                                  radius: 22,
+                                  radius: 24,
                                   onTap: _searchAiController?.busy == true
                                       ? null
                                       : _smartScanSearch,
@@ -417,10 +417,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                               ),
                               SizedBox(
-                                width: 44,
-                                height: 44,
+                                width: 48,
+                                height: 48,
                                 child: InkResponse(
-                                  radius: 22,
+                                  radius: 24,
                                   onTap: _searchAiController?.busy == true
                                       ? null
                                       : _voiceSearch,
@@ -454,13 +454,13 @@ class _HomeScreenState extends State<HomeScreen> {
                     alignment: Alignment.center,
                     children: [
                       SizedBox(
-                        width: 48,
-                        height: 48,
+                        width: 52,
+                        height: 52,
                         child: IconButton(
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints.tightFor(
-                            width: 48,
-                            height: 48,
+                            width: 52,
+                            height: 52,
                           ),
                           icon: const Icon(
                             Icons.notifications_none_rounded,
