@@ -6,6 +6,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'otp_screen.dart';
+import 'package:my_app/controllers/auth_controller.dart';
+import 'google_auth_service.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -52,6 +54,54 @@ class _SignUpScreenState extends State<SignUpScreen> {
           ),
         ),
       );
+    }
+  }
+
+  Future<void> _handleGoogleSignUp() async {
+    if (_isLoading) return;
+    setState(() => _isLoading = true);
+
+    try {
+      final result = await GoogleAuthService.signIn();
+      if (result == null) {
+        if (mounted) setState(() => _isLoading = false);
+        return;
+      }
+
+      await Get.find<AuthController>().loginWithUid(result.uid);
+
+      if (!mounted) return;
+      _showSnackBar(
+        result.isNewUser
+            ? (Localizations.localeOf(context).languageCode == 'en'
+                ? '✅ Account created with Google'
+                : '✅ បានបង្កើតគណនីតាម Google រួចរាល់')
+            : (Localizations.localeOf(context).languageCode == 'en'
+                ? '✅ Signed in with Google'
+                : '✅ ចូលគណនី Google បានជោគជ័យ'),
+      );
+      Get.offAllNamed('/home');
+    } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
+      final isEnglish =
+          Localizations.localeOf(context).languageCode == 'en';
+      final message = e.code == 'account-pending-deletion'
+          ? (isEnglish
+              ? 'This account is pending deletion. Restore it with your existing sign-in method first.'
+              : 'គណនីនេះកំពុងរង់ចាំការលុប។ សូមប្រើវិធីចូលគណនីចាស់ដើម្បីស្ដារវិញសិន។')
+          : (e.message ?? e.code);
+      _showSnackBar('⚠️ $message', isError: true);
+    } catch (e) {
+      if (mounted) {
+        _showSnackBar(
+          Localizations.localeOf(context).languageCode == 'en'
+              ? 'Could not continue with Google: $e'
+              : 'មិនអាចបន្តជាមួយ Google បាន៖ $e',
+          isError: true,
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -204,7 +254,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
             key: _formKey,
             child: Column(
               children: [
-                Align(
+                const Align(
                   alignment: Alignment.centerRight,
                   child: LanguageSwitcher(),
                 ),
@@ -269,7 +319,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   validator: (value) {
                     if (value == null || value.isEmpty)
                       return 'password_required'.tr;
-                    if (value.length != 6) return 'password_exact_6'.tr;
+                    if (value.length != 6)
+                      return 'password_exact_6'.tr;
                     return null;
                   },
                   decoration: _inputDecoration(
@@ -345,9 +396,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           ),
                         ),
                         InkWell(
-                          onTap: () => _openLegalPage(
-                            'https://about.sesanshop.com/terms',
-                          ),
+                          onTap: () =>
+                              _openLegalPage('https://about.sesanshop.com/terms'),
                           child: const Padding(
                             padding: EdgeInsets.symmetric(vertical: 4),
                             child: Text(
@@ -414,6 +464,58 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               fontWeight: FontWeight.bold,
                             ),
                           ),
+                  ),
+                ),
+                const SizedBox(height: 18),
+                Row(
+                  children: [
+                    Expanded(child: Divider(color: Colors.grey.shade300)),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: Text(
+                        Localizations.localeOf(context).languageCode == 'en'
+                            ? 'OR'
+                            : 'ឬ',
+                        style: TextStyle(
+                          color: Colors.grey.shade600,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                    Expanded(child: Divider(color: Colors.grey.shade300)),
+                  ],
+                ),
+                const SizedBox(height: 18),
+                SizedBox(
+                  width: double.infinity,
+                  height: 52,
+                  child: OutlinedButton.icon(
+                    onPressed: _isLoading ? null : _handleGoogleSignUp,
+                    icon: const Text(
+                      'G',
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF4285F4),
+                      ),
+                    ),
+                    label: Text(
+                      Localizations.localeOf(context).languageCode == 'en'
+                          ? 'Continue with Google'
+                          : 'បន្តជាមួយ Google',
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      side: BorderSide(color: Colors.grey.shade300),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      backgroundColor: Colors.white,
+                    ),
                   ),
                 ),
               ],
