@@ -608,14 +608,14 @@ if (candidate.isNotEmpty) { bytes = candidate; break; }
           const SizedBox(width: 4),
         ],
         bottom: PreferredSize(
-          preferredSize: Size.fromHeight(_hasLocationFilter ? 88 : 60),
+          preferredSize: Size.fromHeight(_hasLocationFilter ? 94 : 66),
           child: Padding(
             padding: const EdgeInsets.only(left: 15, right: 15, bottom: 10),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
-                  height: 38,
+                  height: 44,
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(8),
@@ -634,8 +634,8 @@ if (candidate.isNotEmpty) { bytes = candidate; break; }
                         height: 36,
                       ),
                       suffixIconConstraints: const BoxConstraints.tightFor(
-                        width: 58,
-                        height: 45,
+                        width: 88,
+                        height: 44,
                       ),
                       suffixIcon: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -646,10 +646,10 @@ if (candidate.isNotEmpty) { bytes = candidate; break; }
                               'Smart Scan — QR or product',
                             ),
                             child: SizedBox(
-                              width: 29,
-                              height: 45,
+                              width: 44,
+                              height: 44,
                               child: InkResponse(
-                                radius: 18,
+                                radius: 22,
                                 onTap: _isSearchBusy ? null : _startSmartScan,
                                 child: Center(
                                   child: _isSearchBusy
@@ -670,10 +670,10 @@ if (candidate.isNotEmpty) { bytes = candidate; break; }
                             ),
                           ),
                           SizedBox(
-                            width: 29,
-                            height: 45,
+                            width: 44,
+                              height: 44,
                             child: InkResponse(
-                              radius: 18,
+                              radius: 22,
                               onTap: _isSearchBusy ? null : _toggleVoiceSearch,
                               child: Center(
                                 child: Icon(
