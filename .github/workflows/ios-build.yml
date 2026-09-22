@@ -449,17 +449,22 @@ jobs:
 
       # =====================================================
       # 11. PREPARE FLUTTER BUILD CONFIGURATION
-      # Build number follows the GitHub run number offset and must stay above the latest App Store build.
+      # Use the build number declared in pubspec.yaml (currently 61).
       # =====================================================
       - name: Prepare Flutter iOS configuration
         run: |
-          BUILD_NUMBER=$((GITHUB_RUN_NUMBER + 20))
-          if [ "$BUILD_NUMBER" -le 58 ]; then
-            BUILD_NUMBER=59
+          set -e
+
+          APP_VERSION=$(awk '/^version:/ {print $2}' pubspec.yaml)
+          BUILD_NUMBER="${APP_VERSION##*+}"
+
+          if ! [[ "$BUILD_NUMBER" =~ ^[0-9]+$ ]]; then
+            echo "ERROR: Could not read numeric build number from pubspec.yaml"
+            exit 1
           fi
 
           echo "BUILD_NUMBER=$BUILD_NUMBER" >> "$GITHUB_ENV"
-          echo "Using App Store build number: $BUILD_NUMBER"
+          echo "Using App Store build number from pubspec.yaml: $BUILD_NUMBER"
 
           flutter build ios \
             --release \
