@@ -102,6 +102,7 @@ class _HomeScreenState extends State<HomeScreen> {
   // ១. ថែមជួរនេះដើម្បីឱ្យស្គាល់ UID (បាត់ក្រហម build)
   String? _loggedUid;
   String? name;
+  bool _isAuthReady = false;
 
   @override
   void initState() {
@@ -118,34 +119,68 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> loadUser() async {
     try {
+      // Explicit guest mode is already a resolved auth state.
       if (widget.guestMode) {
-        if (mounted) setState(() => _loggedUid = null);
+        if (mounted) {
+          setState(() {
+            _loggedUid = null;
+            _isAuthReady = true;
+          });
+        }
         return;
       }
 
       final prefs = await SharedPreferences.getInstance();
       final userId = prefs.getString('user_uid');
 
+      // No saved account: resolved as guest. Do not redirect from Home.
       if (userId == null || userId.isEmpty) {
-        // ✅ កុំ redirect — គ្រាន់តែទុកជា guest
-        if (mounted) setState(() => _loggedUid = null);
+        if (mounted) {
+          setState(() {
+            _loggedUid = null;
+            _isAuthReady = true;
+          });
+        }
         return;
       }
 
       _setupFcmToken(userId);
+
+      // While this network read is pending, Cart/Chat/Account/+ stay visually
+      // normal but taps are ignored so a slow connection cannot misclassify
+      // a signed-in user as a guest and send them to Login.
       final doc = await FirebaseFirestore.instance
           .collection('users')
           .doc(userId)
           .get();
 
-      if (doc.exists && mounted) {
+      if (!mounted) return;
+
+      if (doc.exists) {
         setState(() {
-          name = doc['name'];
+          name = doc.data()?['name']?.toString();
           _loggedUid = userId;
+          _isAuthReady = true;
+        });
+      } else {
+        setState(() {
+          _loggedUid = null;
+          _isAuthReady = true;
         });
       }
     } catch (e) {
-      print("❌ loadUser Error: $e");
+      debugPrint('Home auth check failed: $e');
+      if (mounted) {
+        // The check has finished (even if it failed). Release the silent lock.
+        // Keep any saved UID if available rather than forcing a false guest.
+        final prefs = await SharedPreferences.getInstance();
+        final savedUid = prefs.getString('user_uid');
+        setState(() {
+          _loggedUid =
+              (savedUid != null && savedUid.isNotEmpty) ? savedUid : null;
+          _isAuthReady = true;
+        });
+      }
     }
   }
 
@@ -554,6 +589,11 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
+          if (!_isAuthReady) {
+            // Keep the button looking normal, but ignore taps until auth is known.
+            return;
+          }
+
           // ២. កែសម្រួលការឆែកត្រង់ប៊ូតុង (+) ផុសលក់
           if (isGuest) {
             _showLoginRequiredDialog(
@@ -629,6 +669,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return InkWell(
       onTap: () {
+        if (!_isAuthReady) {
+          // Auth state is still resolving: silently ignore the tap.
+          return;
+        }
+
         // បើមិនទាន់ Login ហើយចុចប៊ូតុងផ្សេងក្រៅពីទំព័រដើម ឱ្យលោត Dialog
         if (index != 0 && isGuest) {
           _showLoginRequiredDialog(
