@@ -366,11 +366,22 @@ jobs:
       - name: Set iOS deployment target
         run: |
           sed -i '' \
-            's/IPHONEOS_DEPLOYMENT_TARGET = 14.0;/IPHONEOS_DEPLOYMENT_TARGET = 15.0;/g' \
+            -e 's/IPHONEOS_DEPLOYMENT_TARGET = 13.0;/IPHONEOS_DEPLOYMENT_TARGET = 15.0;/g' \
+            -e 's/IPHONEOS_DEPLOYMENT_TARGET = 14.0;/IPHONEOS_DEPLOYMENT_TARGET = 15.0;/g' \
             ios/Runner.xcodeproj/project.pbxproj
+
+          /usr/libexec/PlistBuddy \
+            -c "Set :MinimumOSVersion 15.0" \
+            ios/Flutter/AppFrameworkInfo.plist
 
           grep -n "IPHONEOS_DEPLOYMENT_TARGET" \
             ios/Runner.xcodeproj/project.pbxproj
+
+          if grep -q "IPHONEOS_DEPLOYMENT_TARGET = 13.0;" \
+            ios/Runner.xcodeproj/project.pbxproj; then
+            echo "ERROR: iOS 13 deployment target still present"
+            exit 1
+          fi
 
       # =====================================================
       # 8. COCOAPODS + gRPC FIX
@@ -464,6 +475,7 @@ jobs:
           flutter build ios \
             --release \
             --config-only \
+            --build-name="1.1.1" \
             --build-number="$BUILD_NUMBER"
 
       # =====================================================
