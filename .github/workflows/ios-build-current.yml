@@ -556,6 +556,17 @@ jobs:
 
           echo "===== ARCHIVE SUCCEEDED ====="
           tail -30 "$LOG_FILE"
+      - name: Verify archive version and build
+        run: |
+          INFO_PLIST="$PWD/build/ios/archive/Runner.xcarchive/Info.plist"
+          APP_INFO_PLIST="$PWD/build/ios/archive/Runner.xcarchive/Products/Applications/Runner.app/Info.plist"
+          echo "Marketing version:"
+          /usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$APP_INFO_PLIST"
+          echo "Build number:"
+          /usr/libexec/PlistBuddy -c "Print :CFBundleVersion" "$APP_INFO_PLIST"
+          echo "Minimum OS:"
+          /usr/libexec/PlistBuddy -c "Print :MinimumOSVersion" "$APP_INFO_PLIST" || true
+
       # =====================================================
       # 13. EXPORT SIGNED IPA
       # =====================================================
