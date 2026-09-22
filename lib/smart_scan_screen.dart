@@ -2,6 +2,7 @@ import 'package:camera/camera.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart'
     as ml;
 import 'package:my_app/product_detail.dart';
@@ -31,6 +32,21 @@ class _SmartScanScreenState extends State<SmartScanScreen> {
 
   Future<void> _initCamera() async {
     try {
+      var permission = await Permission.camera.status;
+      if (!permission.isGranted) {
+        permission = await Permission.camera.request();
+      }
+
+      if (!permission.isGranted) {
+        if (!mounted) return;
+        setState(() {
+          _status = permission.isPermanentlyDenied
+              ? 'Camera permission is off. Enable it in Settings.'
+              : 'Camera permission is required.';
+        });
+        return;
+      }
+
       final cameras = await availableCameras();
       if (cameras.isEmpty) throw StateError('No camera available');
 
@@ -51,6 +67,7 @@ class _SmartScanScreenState extends State<SmartScanScreen> {
       if (!mounted) return;
       setState(() => _isReady = true);
     } catch (e) {
+      debugPrint('Smart Scan camera init error: $e');
       if (!mounted) return;
       setState(() {
         _status = 'មិនអាចបើកកាមេរ៉ាបាន';
