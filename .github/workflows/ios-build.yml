@@ -289,12 +289,28 @@ jobs:
             exit 1
           }
 
-          grep -q "PRODUCT_BUNDLE_IDENTIFIER = com.sesan.app;"             ios/Runner.xcodeproj/project.pbxproj || {
+          grep -q "PRODUCT_BUNDLE_IDENTIFIER = com.sesan.app;" \
+            ios/Runner.xcodeproj/project.pbxproj || {
             echo "ERROR: Xcode Runner bundle id is not com.sesan.app"
             exit 1
           }
 
-          echo "Firebase, Xcode and workflow bundle id: com.sesan.app"
+          grep -q "<key>GIDClientID</key>" ios/Runner/Info.plist || {
+            echo "ERROR: Google Sign-In client id is missing from Info.plist"
+            exit 1
+          }
+
+          grep -q "com.googleusercontent.apps." ios/Runner/Info.plist || {
+            echo "ERROR: Google Sign-In callback URL scheme is missing"
+            exit 1
+          }
+
+          grep -q "<key>GOOGLE_MAPS_API_KEY</key>" ios/Runner/Info.plist || {
+            echo "ERROR: Google Maps key placeholder is missing from Info.plist"
+            exit 1
+          }
+
+          echo "Firebase, Xcode, Google Sign-In and Maps iOS identity checks passed."
 
       # =====================================================
       # 7A. INJECT GOOGLE MAPS API KEY
@@ -408,7 +424,7 @@ jobs:
 
       # =====================================================
       # 11. PREPARE FLUTTER BUILD CONFIGURATION
-      # Build number is automatically higher than old build 2.
+      # Build number follows the GitHub run number offset and must stay above the latest App Store build.
       # =====================================================
       - name: Prepare Flutter iOS configuration
         run: |
