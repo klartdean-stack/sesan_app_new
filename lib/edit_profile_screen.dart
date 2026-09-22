@@ -1,4 +1,3 @@
-import 'package:get/get.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -599,8 +598,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('ប្ដូរលេខសម្ងាត់ ៦ ខ្ទង់'.tr,
-          style: TextStyle(fontFamily: 'KHMEROS'),
+        title: Text(
+          appText(
+            context,
+            km: 'ប្ដូរលេខសម្ងាត់ ៦ ខ្ទង់',
+            en: 'Change 6-digit password',
+          ),
+          style: const TextStyle(fontFamily: 'KHMEROS'),
         ),
         content: Form(
           key: formKeyDialog,
@@ -625,7 +629,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('បោះបង់'.tr),
+            child: Text(appText(context, km: 'បោះបង់', en: 'Cancel')),
           ),
           ElevatedButton(
             onPressed: () {
@@ -638,8 +642,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               }
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.green[700]),
-            child: Text('រក្សាទុក'.tr,
-              style: TextStyle(color: Colors.white),
+            child: Text(
+              appText(context, km: 'រក្សាទុក', en: 'Save'),
+              style: const TextStyle(color: Colors.white),
             ),
           ),
         ],
@@ -742,7 +747,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'កែប្រែព័ត៌មានផ្ទាល់ខ្លួន'.tr,
+          appText(
+            context,
+            km: 'កែប្រែព័ត៌មានផ្ទាល់ខ្លួន',
+            en: 'Edit profile',
+          ),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: const TextStyle(fontFamily: 'KHMEROS', fontSize: 16),
@@ -830,8 +839,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                             borderRadius: BorderRadius.circular(10),
                           ),
                         ),
-                        child: Text('រក្សាទុក Profile'.tr,
-                          style: TextStyle(color: Colors.white, fontSize: 16),
+                        child: Text(
+                          appText(
+                            context,
+                            km: 'រក្សាទុក Profile',
+                            en: 'Save profile',
+                          ),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                          ),
                         ),
                       ),
                     ),
@@ -841,8 +858,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     const SizedBox(height: 15),
 
                     // Withdrawal info section
-                    Text('ព័ត៌មានសម្រាប់ដកប្រាក់ (បំពេញម្តងគត់)'.tr,
-                      style: TextStyle(
+                    Text(
+                      appText(
+                        context,
+                        km: 'ព័ត៌មានសម្រាប់ដកប្រាក់ (បំពេញម្តងគត់)',
+                        en: 'Withdrawal information (complete once)',
+                      ),
+                      style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         color: Colors.blueGrey,
                       ),
@@ -916,8 +938,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     ),
 
                     const SizedBox(height: 20),
-                    Text('លេខអត្តសញ្ញាណ (សម្រាប់សុវត្ថិភាព)'.tr,
-                      style: TextStyle(fontWeight: FontWeight.bold),
+                    Text(
+                      appText(
+                        context,
+                        km: 'លេខអត្តសញ្ញាណ (សម្រាប់សុវត្ថិភាព)',
+                        en: 'Identification number (for security)',
+                      ),
+                      style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 10),
                     // National ID field
@@ -1019,7 +1046,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     ],
 
                     const SizedBox(height: 20),
-                    Text('រូបភាព KHQR សម្រាប់ទទួលលុយ'.tr),
+                    Text(
+                      appText(
+                        context,
+                        km: 'រូបភាព KHQR សម្រាប់ទទួលលុយ',
+                        en: 'KHQR image for receiving payments',
+                      ),
+                    ),
                     const SizedBox(height: 10),
                     GestureDetector(
                       onTap: () async {
@@ -1066,8 +1099,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                             borderRadius: BorderRadius.circular(10),
                           ),
                         ),
-                        child: Text('រក្សាទុកព័ត៌មានដកប្រាក់'.tr,
-                          style: TextStyle(color: Colors.white, fontSize: 16),
+                        child: Text(
+                          appText(
+                            context,
+                            km: 'រក្សាទុកព័ត៌មានដកប្រាក់',
+                            en: 'Save withdrawal information',
+                          ),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                          ),
                         ),
                       ),
                     ),
@@ -1179,8 +1220,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           codeAutoRetrievalTimeout: (String verificationId) {},
                         );
                       },
-                      child: Text('ភ្លេចលេខសម្ងាត់? កំណត់ឡើងវិញតាម OTP'.tr,
-                        style: TextStyle(
+                      child: Text(
+                        appText(
+                          context,
+                          km: 'ភ្លេចលេខសម្ងាត់? កំណត់ឡើងវិញតាម OTP',
+                          en: 'Forgot password? Reset it with OTP',
+                        ),
+                        style: const TextStyle(
                           color: Colors.grey,
                           fontSize: 14,
                           fontFamily: 'KHMEROS',
