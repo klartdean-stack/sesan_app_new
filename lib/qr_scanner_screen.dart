@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:mobile_scanner/mobile_scanner.dart' as ms; // ✅ កែត្រង់នេះ
 import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart'
 as ml; // ✅ កែត្រង់នេះ
@@ -22,8 +23,44 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
   final ms.MobileScannerController _controller =
   ms.MobileScannerController(); // ✅ ថែម ms.
   bool _isProcessing = false;
+  bool _cameraPermissionReady = false;
   String _statusMsg = '';
 
+
+  @override
+  void initState() {
+    super.initState();
+    _prepareCameraPermission();
+  }
+
+  Future<void> _prepareCameraPermission() async {
+    var permission = await Permission.camera.status;
+    if (!permission.isGranted) {
+      permission = await Permission.camera.request();
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _cameraPermissionReady = permission.isGranted;
+      if (!permission.isGranted) {
+        _statusMsg = permission.isPermanentlyDenied
+            ? appText(
+                context,
+                km: 'Camera ត្រូវបានបិទ។ សូមបើកនៅ Settings',
+                en: 'Camera access is off. Enable it in Settings',
+              )
+            : appText(
+                context,
+                km: 'ត្រូវអនុញ្ញាត Camera ដើម្បីស្កែន QR',
+                en: 'Camera permission is required to scan QR codes',
+              );
+      }
+    });
+
+    if (permission.isPermanentlyDenied) {
+      await openAppSettings();
+    }
+  }
 
   // ── Scan from Gallery ──────────────────────────────────
   Future<void> _pickAndScanImage() async {
@@ -188,9 +225,10 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
       ),
       body: Stack(
         children: [
-          ms.MobileScanner(
-            // ✅ ថែម ms.
-            controller: _controller,
+          if (_cameraPermissionReady)
+            ms.MobileScanner(
+              // ✅ ថែម ms.
+              controller: _controller,
             onDetect: (capture) {
               if (_isProcessing) return;
               final code = capture.barcodes.firstOrNull?.rawValue;
