@@ -465,8 +465,8 @@ jobs:
       - name: Prepare Flutter iOS configuration
         run: |
           BUILD_NUMBER=$((GITHUB_RUN_NUMBER + 20))
-          if [ "$BUILD_NUMBER" -le 59 ]; then
-            BUILD_NUMBER=60
+          if [ "$BUILD_NUMBER" -le 60 ]; then
+            BUILD_NUMBER=61
           fi
 
           echo "BUILD_NUMBER=$BUILD_NUMBER" >> "$GITHUB_ENV"
