@@ -310,6 +310,31 @@ jobs:
             exit 1
           }
 
+          test -s ios/Runner/GoogleService-Info.plist || {
+            echo "ERROR: GoogleService-Info.plist is missing from Runner"
+            exit 1
+          }
+
+          grep -q "<string>com.sesan.app</string>"             ios/Runner/GoogleService-Info.plist || {
+            echo "ERROR: Firebase plist bundle id is not com.sesan.app"
+            exit 1
+          }
+
+          grep -q "1:220834653903:ios:b41bc208a328feab6a39ba"             ios/Runner/GoogleService-Info.plist || {
+            echo "ERROR: Firebase plist GOOGLE_APP_ID is not the com.sesan.app client"
+            exit 1
+          }
+
+          grep -q "220834653903-hfsa3bbo1qkra91uobcj762uu7t2cf10.apps.googleusercontent.com"             ios/Runner/GoogleService-Info.plist || {
+            echo "ERROR: Firebase plist Google client id is incorrect"
+            exit 1
+          }
+
+          grep -q "GoogleService-Info.plist in Resources"             ios/Runner.xcodeproj/project.pbxproj || {
+            echo "ERROR: GoogleService-Info.plist is not included in Runner resources"
+            exit 1
+          }
+
           echo "Firebase, Xcode, Google Sign-In and Maps iOS identity checks passed."
 
       # =====================================================
@@ -429,6 +454,9 @@ jobs:
       - name: Prepare Flutter iOS configuration
         run: |
           BUILD_NUMBER=$((GITHUB_RUN_NUMBER + 20))
+          if [ "$BUILD_NUMBER" -le 58 ]; then
+            BUILD_NUMBER=59
+          fi
 
           echo "BUILD_NUMBER=$BUILD_NUMBER" >> "$GITHUB_ENV"
           echo "Using App Store build number: $BUILD_NUMBER"
