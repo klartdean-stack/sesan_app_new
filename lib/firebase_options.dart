@@ -16,7 +16,7 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyBGiBJzxDpuFwoyOB40Mis9u8z10bQ4LkE',
+    apiKey: 'AIzaSyDLsDlVcQY9ZIb-MjHjwYG-hwikWQ1sXwc',
     appId: '1:220834653903:ios:b41bc208a328feab6a39ba',
     messagingSenderId: '220834653903',
     projectId: 'sesan-my-app',

@@ -105,6 +105,41 @@ class _SignUpScreenState extends State<SignUpScreen> {
     }
   }
 
+  String _friendlyOtpError(Object error) {
+    final isEnglish = Localizations.localeOf(context).languageCode == 'en';
+    final raw = error.toString();
+    final normalized = raw.toLowerCase();
+
+    if (normalized.contains('api_key_ios_app_blocked') ||
+        normalized.contains('requests from this ios client application')) {
+      return isEnglish
+          ? 'OTP verification is temporarily unavailable. Please try again shortly.'
+          : 'ប្រព័ន្ធផ្ទៀងផ្ទាត់ OTP មិនទាន់អាចប្រើបានទេ។ សូមសាកល្បងម្ដងទៀតបន្តិចក្រោយ។';
+    }
+
+    if (error is FirebaseAuthException) {
+      switch (error.code) {
+        case 'invalid-phone-number':
+          return isEnglish
+              ? 'Please enter a valid phone number.'
+              : 'សូមបញ្ចូលលេខទូរស័ព្ទឱ្យបានត្រឹមត្រូវ។';
+        case 'too-many-requests':
+          return isEnglish
+              ? 'Too many OTP requests. Please wait and try again.'
+              : 'បានស្នើ OTP ច្រើនដងពេក។ សូមរង់ចាំហើយសាកល្បងម្ដងទៀត។';
+        case 'quota-exceeded':
+          return isEnglish
+              ? 'The OTP sending limit has been reached. Please try again later.'
+              : 'ដល់កំណត់ផ្ញើ OTP ហើយ។ សូមសាកល្បងម្ដងទៀតពេលក្រោយ។';
+      }
+      return error.message ?? error.code;
+    }
+
+    return isEnglish
+        ? 'Could not send OTP. Please try again.'
+        : 'មិនអាចផ្ញើ OTP បានទេ។ សូមសាកល្បងម្ដងទៀត។';
+  }
+
   // OTP សម្រាប់ verify phone ប៉ុណ្ណោះ
   Future<void> _sendOTP() async {
     if (!_formKey.currentState!.validate()) return;
@@ -136,7 +171,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         verificationFailed: (FirebaseAuthException e) {
           if (mounted) {
             setState(() => _isLoading = false);
-            _showSnackBar("❌ ${'error'.tr}: ${e.message}", isError: true);
+            _showSnackBar('❌ ${_friendlyOtpError(e)}', isError: true);
           }
         },
         codeSent: (String verificationId, int? resendToken) {
@@ -160,7 +195,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        _showSnackBar("⚠️ ${'problem'.tr}: $e", isError: true);
+        _showSnackBar('⚠️ ${_friendlyOtpError(e)}', isError: true);
       }
     }
   }
