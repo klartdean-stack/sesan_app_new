@@ -564,6 +564,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       label: 'Email',
                       hint: 'example@gmail.com',
                       icon: Icons.email_outlined,
+                      keyboardType: TextInputType.emailAddress,
                       validator: (v) {
                         final value = v?.trim() ?? '';
                         if (value.isEmpty) {
@@ -608,6 +609,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     hint: 'password_hint'.tr,
                     icon: Icons.lock_outline,
                     isPassword: true,
+                    keyboardType: TextInputType.number,
                     validator: (v) {
                       if (v == null || v.isEmpty) return 'password_required'.tr;
                       if (v.length < 6)
@@ -844,12 +846,16 @@ class _LoginScreenState extends State<LoginScreen> {
     required IconData icon,
     bool isNumber = false,
     bool isPassword = false,
+    TextInputType? keyboardType,
     String? Function(String?)? validator,
   }) {
     return TextFormField(
       controller: controller,
       obscureText: isPassword ? !_isPasswordVisible : false,
-      keyboardType: isNumber ? TextInputType.phone : TextInputType.text,
+      keyboardType:
+          keyboardType ?? (isNumber ? TextInputType.phone : TextInputType.text),
+      autocorrect: false,
+      textCapitalization: TextCapitalization.none,
       validator: validator,
       style: const TextStyle(fontSize: 15),
       decoration: InputDecoration(
