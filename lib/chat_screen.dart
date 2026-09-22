@@ -3,14 +3,13 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'chat_moderation_menu.dart';
 import 'chat_screen_legacy.dart' as legacy;
 import 'localized_text.dart';
 
 export 'chat_screen_legacy.dart' hide ChatScreen;
 
 /// iOS chat entry point that preserves the existing chat implementation while
-/// enforcing Sesan block privacy and exposing direct Block/Report actions.
+/// enforcing Sesan block privacy.
 class ChatScreen extends StatefulWidget {
   final String productId;
   final String productName;
@@ -48,8 +47,7 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   /// Resolve the other participant instead of assuming seller_id is always
-  /// the moderation target. This makes Block/Report work in both directions:
-  /// buyer -> seller and seller -> buyer.
+  /// the peer account. This keeps block privacy working in both directions.
   String get _peerUserId {
     if (_currentUserId.isEmpty) return '';
 
@@ -115,34 +113,16 @@ class _ChatScreenState extends State<ChatScreen> {
             if (blockedByMe || blockedByThem) {
               return _buildBlockedChat(
                 context,
-                peerUserId: peerUserId,
                 blockedByMe: blockedByMe,
                 blockedByThem: blockedByThem,
               );
             }
 
-            return Stack(
-              children: [
-                legacy.ChatScreen(
-                  productId: widget.productId,
-                  productName: widget.productName,
-                  seller_id: widget.seller_id,
-                  receiver_id: widget.receiver_id,
-                ),
-                Positioned(
-                  top: MediaQuery.paddingOf(context).top + 4,
-                  right: 8,
-                  child: Material(
-                    color: Colors.green.shade700,
-                    elevation: 3,
-                    shape: const CircleBorder(),
-                    child: ChatModerationMenu(
-                      currentUserId: _currentUserId,
-                      targetUserId: peerUserId,
-                    ),
-                  ),
-                ),
-              ],
+            return legacy.ChatScreen(
+              productId: widget.productId,
+              productName: widget.productName,
+              seller_id: widget.seller_id,
+              receiver_id: widget.receiver_id,
             );
           },
         );
@@ -152,7 +132,6 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Widget _buildBlockedChat(
     BuildContext context, {
-    required String peerUserId,
     required bool blockedByMe,
     required bool blockedByThem,
   }) {
@@ -164,12 +143,6 @@ class _ChatScreenState extends State<ChatScreen> {
           appText(context, km: 'ឆាត', en: 'Chat'),
           style: const TextStyle(fontFamily: 'Siemreap'),
         ),
-        actions: [
-          ChatModerationMenu(
-            currentUserId: _currentUserId,
-            targetUserId: peerUserId,
-          ),
-        ],
       ),
       body: Center(
         child: Padding(
@@ -201,8 +174,8 @@ class _ChatScreenState extends State<ChatScreen> {
                 blockedByMe
                     ? appText(
                         context,
-                        km: 'អ្នកបាន Block អ្នកប្រើនេះ។ សារ និង Content រវាងគ្នាត្រូវបានលាក់។ អ្នកអាចដោះ Block តាមម៉ឺនុយខាងលើ។',
-                        en: 'You blocked this user. Messages and content between you are hidden. You can unblock from the menu above.',
+                        km: 'អ្នកបាន Block អ្នកប្រើនេះ។ សារ និង Content រវាងគ្នាត្រូវបានលាក់។ អ្នកអាចដោះ Block នៅ User Profile។',
+                        en: 'You blocked this user. Messages and content between you are hidden. You can unblock from the user profile.',
                       )
                     : appText(
                         context,

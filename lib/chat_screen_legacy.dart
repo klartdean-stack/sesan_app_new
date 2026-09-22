@@ -1203,29 +1203,6 @@ class _ChatScreenState extends State<ChatScreen> {
         backgroundColor: Colors.green[700],
         foregroundColor: Colors.white,
         title: Text(widget.productName),
-        actions: [
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert, color: Colors.white),
-            onSelected: (value) {
-              if (value == 'unblock') _showUnblockConfirmDialog();
-            },
-            itemBuilder: (context) => [
-              PopupMenuItem<String>(
-                value: 'unblock',
-                child: Row(
-                  children: [
-                    const Icon(Icons.check_circle, color: Colors.green),
-                    const SizedBox(width: 8),
-                    Text(
-                      'chat_unblock'.tr,
-                      style: const TextStyle(color: Colors.green),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
       ),
       body: Center(
         child: Column(
@@ -1251,32 +1228,18 @@ class _ChatScreenState extends State<ChatScreen> {
                 fontFamily: 'Siemreap',
               ),
             ),
-            const SizedBox(height: 30),
-            ElevatedButton.icon(
-              onPressed: _isLoadingBlock ? null : _showUnblockConfirmDialog,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 30,
-                  vertical: 14,
-                ),
+            const SizedBox(height: 12),
+            Text(
+              appText(
+                context,
+                km: 'អាចដោះ Block នៅ User Profile។',
+                en: 'You can unblock from the user profile.',
               ),
-              icon: _isLoadingBlock
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : const Icon(Icons.check_circle, color: Colors.white),
-              label: Text(
-                _isLoadingBlock ? 'chat_loading'.tr : 'chat_unblock'.tr,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontFamily: 'Siemreap',
-                ),
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey.shade500,
+                fontFamily: 'Siemreap',
               ),
             ),
           ],
@@ -1411,22 +1374,6 @@ class _ChatScreenState extends State<ChatScreen> {
         },
       ),
       actions: [
-        TextButton.icon(
-          onPressed: _openSellerShop,
-          icon: const Icon(
-            Icons.storefront_outlined,
-            color: Colors.white,
-            size: 18,
-          ),
-          label: Text(
-            'chat_view_shop'.tr,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 12,
-              fontFamily: 'Siemreap',
-            ),
-          ),
-        ),
         _buildPopupMenu(),
       ],
     );
@@ -1465,12 +1412,6 @@ class _ChatScreenState extends State<ChatScreen> {
                       ),
                     );
                     break;
-                  case 'block':
-                    _showBlockConfirmDialog();
-                    break;
-                  case 'unblock':
-                    _showUnblockConfirmDialog();
-                    break;
                 }
               },
               itemBuilder: (context) => [
@@ -1506,45 +1447,6 @@ class _ChatScreenState extends State<ChatScreen> {
                     ],
                   ),
                 ),
-                const PopupMenuDivider(),
-                if (!_isBlocked)
-                  PopupMenuItem<String>(
-                    value: 'block',
-                    child: Row(
-                      children: [
-                        const Icon(Icons.block, color: Colors.red, size: 20),
-                        const SizedBox(width: 10),
-                        Text(
-                          'chat_block'.tr,
-                          style: const TextStyle(
-                            color: Colors.red,
-                            fontFamily: 'Siemreap',
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                if (_isBlocked)
-                  PopupMenuItem<String>(
-                    value: 'unblock',
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.check_circle,
-                          color: Colors.green,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 10),
-                        Text(
-                          'chat_unblock'.tr,
-                          style: const TextStyle(
-                            color: Colors.green,
-                            fontFamily: 'Siemreap',
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
               ],
             ),
             if (orderCount > 0)
