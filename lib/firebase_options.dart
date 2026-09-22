@@ -21,7 +21,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '220834653903',
     projectId: 'sesan-my-app',
     storageBucket: 'sesan-my-app.firebasestorage.app',
-    iosBundleId: 'sesan.agri.app', // ✅ កែត្រង់នេះ!
+    iosBundleId: 'com.sesan.app',
     iosClientId: '220834653903-mq8ch6u003cotj74f5nqvfer4of6f6qs.apps.googleusercontent.com',
   );
 
