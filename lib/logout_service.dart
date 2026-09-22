@@ -4,40 +4,37 @@ import 'package:my_app/login_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'user_service.dart'; // បើមាន
 import 'auth_session_store.dart';
-
+import 'google_auth_service.dart';
 
 /// 🔥 Service សម្រាប់ Logout - ប្រើគ្រប់ទីកន្លែងក្នុង App
 class LogoutService {
   /// ✅ Logout ពិតប្រាកដ - លុបទាំងអស់
   static Future<void> performLogout(BuildContext context) async {
-    // ១. Logout Firebase
+    // ១. Logout Firebase + Google session (if this account used Google).
     try {
-      await FirebaseAuth.instance.signOut();
+      await GoogleAuthService.signOut();
     } catch (e) {
-      debugPrint("Firebase logout error: $e");
+      debugPrint("Firebase/Google logout error: $e");
+      await FirebaseAuth.instance.signOut();
+      await AuthSessionStore.clear();
     }
-
-    await AuthSessionStore.clear();
 
     // ២. លុប SharedPreferences ទាំងអស់
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
 
-
     // ៣. សម្អាត cache (បើមាន UserService)
     UserService.clearCache();
-
 
     // ៤. បញ្ជូនទៅ Login Screen
     if (context.mounted) {
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (context) => const LoginScreen()),
-            (route) => false, // លុប stack ទាំងអស់
+        (route) => false, // លុប stack ទាំងអស់
       );
     }
   }
-
 
   /// ⚠️ បង្ហាញ Dialog បញ្ជាក់មុន logout
   static void showLogoutConfirm(BuildContext context) {
