@@ -26,6 +26,8 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>GIDClientID</key>
 	<string>220834653903-hfsa3bbo1qkra91uobcj762uu7t2cf10.apps.googleusercontent.com</string>
 	<key>CFBundleURLTypes</key>
