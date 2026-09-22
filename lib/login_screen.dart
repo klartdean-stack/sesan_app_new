@@ -14,6 +14,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'user_service.dart' hide UserService;
 import 'account_deletion_service.dart';
 import 'auth_session_store.dart';
+import 'google_auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -24,12 +25,14 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _phoneController = TextEditingController();
+  final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
   bool _isLoading = false;
   bool _isPasswordVisible = false;
   bool _rememberPhone = false;
+  bool _useEmailLogin = false;
 
   @override
   void initState() {
@@ -40,6 +43,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void dispose() {
     _phoneController.dispose();
+    _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -55,6 +59,170 @@ class _LoginScreenState extends State<LoginScreen> {
           _rememberPhone = true;
         });
       }
+    }
+  }
+
+  Future<void> _handleGoogleLogin() async {
+    if (_isLoading) return;
+    setState(() => _isLoading = true);
+
+    try {
+      final result = await GoogleAuthService.signIn();
+      if (result == null) {
+        if (mounted) setState(() => _isLoading = false);
+        return;
+      }
+
+      await Get.find<AuthController>().loginWithUid(result.uid);
+
+      if (!mounted) return;
+      _showSnackBar(
+        result.isNewUser
+            ? _accountText(
+                km: '✅ បានបង្កើតគណនី Google រួចរាល់',
+                en: '✅ Google account created',
+              )
+            : _accountText(
+                km: '✅ ចូលដោយ Google បានជោគជ័យ',
+                en: '✅ Signed in with Google',
+              ),
+      );
+      Get.offAllNamed('/home');
+    } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
+      final message = e.code == 'account-pending-deletion'
+          ? _accountText(
+              km: 'គណនីនេះកំពុងរង់ចាំការលុប។ សូមប្រើវិធីចូលគណនីចាស់ដើម្បីស្ដារវិញសិន។',
+              en: 'This account is pending deletion. Restore it with your existing sign-in method first.',
+            )
+          : (e.message ?? e.code);
+      _showSnackBar('⚠️ $message', isError: true);
+    } catch (e) {
+      if (mounted) {
+        _showSnackBar(
+          _accountText(
+            km: 'មិនអាចចូលដោយ Google បាន៖ $e',
+            en: 'Could not sign in with Google: $e',
+          ),
+          isError: true,
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _handleEmailLogin() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    final email = _emailController.text.trim().toLowerCase();
+    final password = _passwordController.text.trim();
+
+    UserService.clearCache();
+    setState(() => _isLoading = true);
+
+    try {
+      final authResult = await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      final firebaseUser = authResult.user;
+      if (firebaseUser == null) {
+        throw FirebaseAuthException(
+          code: 'user-not-found',
+          message: 'Account not found.',
+        );
+      }
+
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(firebaseUser.uid)
+          .get();
+
+      if (!userDoc.exists) {
+        await FirebaseAuth.instance.signOut();
+        throw FirebaseAuthException(
+          code: 'account-data-missing',
+          message: 'Sesan account data was not found.',
+        );
+      }
+
+      final userData = userDoc.data()!;
+      if (userData['isDeleted'] == true ||
+          userData['accountStatus'] == 'pending_deletion') {
+        final canContinue = await _handleDeletedAccount(userDoc.id, userData);
+        if (!canContinue) {
+          await FirebaseAuth.instance.signOut();
+          if (mounted) setState(() => _isLoading = false);
+          return;
+        }
+      }
+
+      await AuthSessionStore.save(
+        email: email,
+        password: password,
+        uid: firebaseUser.uid,
+      );
+
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(firebaseUser.uid)
+          .set({
+        'email': email,
+        'lastLogin': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('user_uid', firebaseUser.uid);
+      await prefs.setString(
+        'user_name',
+        (userData['name'] ?? firebaseUser.displayName ?? '').toString(),
+      );
+      await prefs.setString('user_phone', (userData['phone'] ?? '').toString());
+      await prefs.setString(
+        'user_photo',
+        (userData['photoUrl'] ?? firebaseUser.photoURL ?? '').toString(),
+      );
+      await prefs.setString(
+        'user_role',
+        (userData['role'] ?? 'user').toString(),
+      );
+      await prefs.setBool('is_logged_in', true);
+      await prefs.setBool('is_guest', false);
+
+      await Get.find<AuthController>().loginWithUid(firebaseUser.uid);
+
+      if (!mounted) return;
+      _showSnackBar(
+        _accountText(
+          km: '✅ ចូលដោយ Email បានជោគជ័យ',
+          en: '✅ Signed in with Email',
+        ),
+      );
+      Get.offAllNamed('/home');
+    } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
+      final message = (e.code == 'user-not-found' ||
+              e.code == 'invalid-credential' ||
+              e.code == 'wrong-password')
+          ? _accountText(
+              km: 'Email ឬលេខសម្ងាត់មិនត្រឹមត្រូវ',
+              en: 'Incorrect email or password',
+            )
+          : (e.message ?? e.code);
+      _showSnackBar('⚠️ $message', isError: true);
+    } catch (e) {
+      if (mounted) {
+        _showSnackBar(
+          _accountText(
+            km: 'មិនអាចចូលដោយ Email បាន៖ $e',
+            en: 'Could not sign in with Email: $e',
+          ),
+          isError: true,
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -191,8 +359,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   String _accountText({required String km, required String en}) {
-    final code =
-        Get.locale?.languageCode ??
+    final code = Get.locale?.languageCode ??
         Localizations.maybeLocaleOf(context)?.languageCode ??
         'km';
     return code == 'en' ? en : km;
@@ -227,9 +394,7 @@ class _LoginScreenState extends State<LoginScreen> {
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) => AlertDialog(
-        title: Text(
-          _accountText(km: 'ស្ដារគណនីវិញ?', en: 'Restore your account?'),
-        ),
+        title: Text(_accountText(km: 'ស្ដារគណនីវិញ?', en: 'Restore your account?')),
         content: Text(
           _accountText(
             km: 'គណនីនេះកំពុងរង់ចាំការលុប។ នៅសល់ប្រហែល $remaining ថ្ងៃសម្រាប់ស្ដារគណនី និង Content ទាំងអស់វិញ។',
@@ -299,7 +464,7 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Align(
+                  const Align(
                     alignment: Alignment.centerRight,
                     child: LanguageSwitcher(),
                   ),
@@ -344,21 +509,96 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 40),
 
-                  // ── លេខទូរសព្ទ ───────────────────────────
-                  _buildTextField(
-                    controller: _phoneController,
-                    label: 'phone'.tr,
-                    hint: 'phone_hint'.tr,
-                    icon: Icons.phone_android,
-                    isNumber: true,
-                    validator: (v) {
-                      if (v == null || v.isEmpty) return 'phone_required'.tr;
-                      if (!RegExp(r'^(0|\+855)[0-9]{8,9}$').hasMatch(v)) {
-                        return 'phone_invalid'.tr;
-                      }
-                      return null;
-                    },
+                  Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade100,
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: TextButton.icon(
+                            onPressed: _isLoading
+                                ? null
+                                : () => setState(() => _useEmailLogin = false),
+                            icon: const Icon(Icons.phone_android),
+                            label: Text(
+                              _accountText(km: 'លេខទូរស័ព្ទ', en: 'Phone'),
+                            ),
+                            style: TextButton.styleFrom(
+                              backgroundColor: !_useEmailLogin
+                                  ? Colors.white
+                                  : Colors.transparent,
+                              foregroundColor: !_useEmailLogin
+                                  ? Colors.green[700]
+                                  : Colors.grey[700],
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: TextButton.icon(
+                            onPressed: _isLoading
+                                ? null
+                                : () => setState(() => _useEmailLogin = true),
+                            icon: const Icon(Icons.email_outlined),
+                            label: const Text('Email'),
+                            style: TextButton.styleFrom(
+                              backgroundColor: _useEmailLogin
+                                  ? Colors.white
+                                  : Colors.transparent,
+                              foregroundColor: _useEmailLogin
+                                  ? Colors.green[700]
+                                  : Colors.grey[700],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
+                  const SizedBox(height: 18),
+
+                  if (_useEmailLogin)
+                    _buildTextField(
+                      controller: _emailController,
+                      label: 'Email',
+                      hint: 'example@gmail.com',
+                      icon: Icons.email_outlined,
+                      validator: (v) {
+                        final value = v?.trim() ?? '';
+                        if (value.isEmpty) {
+                          return _accountText(
+                            km: 'សូមបញ្ចូល Email',
+                            en: 'Email is required',
+                          );
+                        }
+                        if (!value.contains('@') ||
+                            !value.contains('.') ||
+                            value.startsWith('@') ||
+                            value.endsWith('@')) {
+                          return _accountText(
+                            km: 'Email មិនត្រឹមត្រូវ',
+                            en: 'Invalid email',
+                          );
+                        }
+                        return null;
+                      },
+                    )
+                  else
+                    _buildTextField(
+                      controller: _phoneController,
+                      label: 'phone'.tr,
+                      hint: 'phone_hint'.tr,
+                      icon: Icons.phone_android,
+                      isNumber: true,
+                      validator: (v) {
+                        if (v == null || v.isEmpty) return 'phone_required'.tr;
+                        if (!RegExp(r'^(0|\+855)[0-9]{8,9}$').hasMatch(v)) {
+                          return 'phone_invalid'.tr;
+                        }
+                        return null;
+                      },
+                    ),
                   const SizedBox(height: 16),
 
                   // ── លេខសម្ងាត់ ────────────────────────────
@@ -370,28 +610,32 @@ class _LoginScreenState extends State<LoginScreen> {
                     isPassword: true,
                     validator: (v) {
                       if (v == null || v.isEmpty) return 'password_required'.tr;
-                      if (v.length < 6) return 'password_min_6'.tr;
+                      if (v.length < 6)
+                        return 'password_min_6'.tr;
                       return null;
                     },
                   ),
                   const SizedBox(height: 8),
 
                   // ── Remember + Forgot ─────────────────────
-                  Row(
+                  if (!_useEmailLogin)
+                    Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Expanded(
                         flex: 3,
                         child: InkWell(
-                          onTap: () =>
-                              setState(() => _rememberPhone = !_rememberPhone),
+                          onTap: () => setState(
+                            () => _rememberPhone = !_rememberPhone,
+                          ),
                           borderRadius: BorderRadius.circular(10),
                           child: Row(
                             children: [
                               Checkbox(
                                 value: _rememberPhone,
-                                onChanged: (v) =>
-                                    setState(() => _rememberPhone = v ?? false),
+                                onChanged: (v) => setState(
+                                  () => _rememberPhone = v ?? false,
+                                ),
                                 activeColor: Colors.green,
                                 visualDensity: VisualDensity.compact,
                               ),
@@ -447,7 +691,11 @@ class _LoginScreenState extends State<LoginScreen> {
                     width: double.infinity,
                     height: 55,
                     child: ElevatedButton(
-                      onPressed: _isLoading ? null : _handleLogin,
+                      onPressed: _isLoading
+                          ? null
+                          : (_useEmailLogin
+                              ? _handleEmailLogin
+                              : _handleLogin),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.green,
                         foregroundColor: Colors.white,
@@ -474,7 +722,58 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                     ),
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 18),
+                  Row(
+                    children: [
+                      Expanded(child: Divider(color: Colors.grey.shade300)),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: Text(
+                          _accountText(km: 'ឬ', en: 'OR'),
+                          style: TextStyle(
+                            color: Colors.grey.shade600,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                      Expanded(child: Divider(color: Colors.grey.shade300)),
+                    ],
+                  ),
+                  const SizedBox(height: 18),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: OutlinedButton.icon(
+                      onPressed: _isLoading ? null : _handleGoogleLogin,
+                      icon: const Text(
+                        'G',
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF4285F4),
+                        ),
+                      ),
+                      label: Text(
+                        _accountText(
+                          km: 'បន្តជាមួយ Google',
+                          en: 'Continue with Google',
+                        ),
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(color: Colors.grey.shade300),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        backgroundColor: Colors.white,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
 
                   // ── ចុះឈ្មោះ ──────────────────────────────
                   Row(
