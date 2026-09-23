@@ -40,6 +40,14 @@
 				<string>com.googleusercontent.apps.220834653903-hfsa3bbo1qkra91uobcj762uu7t2cf10</string>
 			</array>
 		</dict>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>app-1-220834653903-ios-b41bc208a328feab6a39ba</string>
+			</array>
+		</dict>
 	</array>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
