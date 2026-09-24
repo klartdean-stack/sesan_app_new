@@ -4,5 +4,10 @@
 <dict>
 	<key>aps-environment</key>
 	<string>$(APS_ENVIRONMENT)</string>
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>applinks:sesanshop.com</string>
+		<string>applinks:www.sesanshop.com</string>
+	</array>
 </dict>
 </plist>
