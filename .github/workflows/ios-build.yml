@@ -1,5 +1,5 @@
 name: Build and Upload iOS IPA
-# Build 63 trigger
+# Build 1.1.2+63 trigger
 
 on:
   workflow_dispatch:
