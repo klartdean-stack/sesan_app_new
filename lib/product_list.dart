@@ -11,6 +11,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:my_app/auction_main_screen.dart';
 import 'package:my_app/smart_scan_screen.dart';
+import 'package:my_app/qr_scanner_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart';
@@ -64,6 +65,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
   String _currentSearch = "";
   final TextEditingController _searchController = TextEditingController();
   final AudioRecorder _searchAudioRecorder = AudioRecorder();
+  final ImagePicker _searchImagePicker = ImagePicker();
   Timer? _voiceSearchTimer;
   Timer? _voiceSilenceTimer;
   StreamSubscription<Amplitude>? _voiceAmplitudeSubscription;
@@ -430,6 +432,18 @@ class _ProductListScreenState extends State<ProductListScreen> {
     }
   }
 
+  Future<void> _searchByImage() async {
+    if (_isSearchBusy || !_canUseAiSearch()) return;
+    final image = await _searchImagePicker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 1024,
+      maxHeight: 1024,
+      imageQuality: 72,
+    );
+    if (image == null || !mounted) return;
+    await _searchWithImage(image);
+  }
+
   Future<void> _startSmartScan() async {
     if (_isSearchBusy) return;
 
@@ -656,10 +670,10 @@ if (candidate.isNotEmpty) { bytes = candidate; break; }
               mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
-                  height: 48,
+                  height: 45,
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(10),
                   ),
                   child: TextField(
                     controller: _searchController,
@@ -667,72 +681,52 @@ if (candidate.isNotEmpty) { bytes = candidate; break; }
                       setState(() => _currentSearch = value.trim().toLowerCase());
                     },
                     decoration: InputDecoration(
-                      hintText: appText(context, km: 'ស្វែងរកទំនិញ...', en: 'Search products...'),
-                      hintStyle: const TextStyle(fontFamily: 'Siemreap', fontSize: 13),
-                      prefixIcon: const Icon(Icons.search, color: Colors.grey, size: 20),
-                      prefixIconConstraints: const BoxConstraints.tightFor(
-                        width: 48,
-                        height: 48,
-                      ),
-                      suffixIconConstraints: const BoxConstraints.tightFor(
-                        width: 96,
-                        height: 48,
-                      ),
+                      hintText: appText(context, km: 'ស្វែងរកទំនិញក្នុងប្រភេទនេះ...', en: 'Search products in this category...'),
+                      hintStyle: const TextStyle(fontFamily: 'Siemreap', fontSize: 12),
+                      prefixIcon: const Icon(Icons.search, color: Colors.grey, size: 21),
+                      suffixIconConstraints: const BoxConstraints.tightFor(width: 94, height: 45),
                       suffixIcon: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Tooltip(
-                            message: _searchLabel(
-                              'Smart Scan — QR ឬទំនិញ',
-                              'Smart Scan — QR or product',
+                          SizedBox(
+                            width: 30,
+                            child: InkResponse(
+                              onTap: _isSearchBusy ? null : _searchByImage,
+                              child: _isSearchBusy
+                                  ? const Padding(
+                                      padding: EdgeInsets.all(7),
+                                      child: CircularProgressIndicator(strokeWidth: 2),
+                                    )
+                                  : const Icon(Icons.image_search_rounded, color: Colors.purple, size: 21),
                             ),
-                            child: SizedBox(
-                              width: 48,
-                              height: 48,
-                              child: InkResponse(
-                                radius: 24,
-                                onTap: _isSearchBusy ? null : _startSmartScan,
-                                child: Center(
-                                  child: _isSearchBusy
-                                      ? const SizedBox(
-                                          width: 16,
-                                          height: 16,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                          ),
-                                        )
-                                      : const Icon(
-                                          Icons.center_focus_strong_rounded,
-                                          size: 20,
-                                          color: Colors.blue,
-                                        ),
-                                ),
+                          ),
+                          SizedBox(
+                            width: 30,
+                            child: InkResponse(
+                              onTap: _isSearchBusy ? null : _toggleVoiceSearch,
+                              child: Icon(
+                                _isVoiceSearching ? Icons.stop_circle_rounded : Icons.mic_rounded,
+                                color: _isVoiceSearching ? Colors.red : Colors.green,
+                                size: 21,
                               ),
                             ),
                           ),
                           SizedBox(
-                            width: 48,
-                            height: 48,
+                            width: 30,
                             child: InkResponse(
-                              radius: 24,
-                              onTap: (_isSearchBusy || _isVoiceSearching)
-                                  ? null
-                                  : _toggleVoiceSearch,
-                              child: Center(
-                                child: Icon(
-                                  Icons.mic_rounded,
-                                  size: 20,
-                                  color: _isVoiceSearching
-                                      ? Colors.red
-                                      : Colors.green,
-                                ),
-                              ),
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (_) => const QrScannerScreen()),
+                                );
+                              },
+                              child: const Icon(Icons.qr_code_scanner, color: Colors.blue, size: 21),
                             ),
                           ),
                         ],
                       ),
                       border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(vertical: 9),
+                      contentPadding: const EdgeInsets.symmetric(vertical: 10),
                     ),
                   ),
                 ),
