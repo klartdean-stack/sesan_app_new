@@ -48,6 +48,15 @@
 				<string>app-1-220834653903-ios-b41bc208a328feab6a39ba</string>
 			</array>
 		</dict>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>sesanapp</string>
+				<string>sesan</string>
+			</array>
+		</dict>
 	</array>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
