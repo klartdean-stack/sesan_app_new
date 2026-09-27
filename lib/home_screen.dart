@@ -1062,7 +1062,7 @@ class _HomeScreenState extends State<HomeScreen> {
               context,
               CupertinoPageRoute(
                 builder: (context) =>
-                    ProductListV51Screen(category: item['name']),
+                    ProductListScreen(category: item['name']),
               ),
             );
           },
