@@ -537,30 +537,93 @@ autoGain: true,
       context: context,
       isDismissible: false,
       enableDrag: false,
+      barrierColor: Colors.black54,
       backgroundColor: Colors.transparent,
       builder: (sheetContext) => SafeArea(
         child: Container(
-margin: const EdgeInsets.all(16),
-padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
-decoration: BoxDecoration(
-  color: Colors.white,
-  borderRadius: BorderRadius.circular(28),
-),
-child: Column(
-  mainAxisSize: MainAxisSize.min,
-  children: [
-    const Icon(Icons.mic_rounded, color: Colors.red, size: 44),
-    const SizedBox(height: 14),
-    Text(
-      _searchLabel('កំពុងស្តាប់...', 'Listening...'),
-      style: const TextStyle(
-        fontFamily: 'Siemreap', fontWeight: FontWeight.bold, fontSize: 20,
-      ),
-    ),
-    const SizedBox(height: 14),
-    const LinearProgressIndicator(minHeight: 4),
-  ],
-),
+          margin: const EdgeInsets.fromLTRB(18, 0, 18, 24),
+          padding: const EdgeInsets.fromLTRB(24, 30, 24, 26),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(28),
+            boxShadow: const [
+              BoxShadow(
+                color: Colors.black26,
+                blurRadius: 24,
+                offset: Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 106,
+                height: 106,
+                decoration: BoxDecoration(
+                  color: Colors.red.withOpacity(0.10),
+                  shape: BoxShape.circle,
+                ),
+                alignment: Alignment.center,
+                child: Container(
+                  width: 76,
+                  height: 76,
+                  decoration: const BoxDecoration(
+                    color: Colors.red,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.mic_rounded,
+                    color: Colors.white,
+                    size: 40,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                _searchLabel('កំពុងស្តាប់...', 'Listening...'),
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontFamily: 'Siemreap',
+                  fontWeight: FontWeight.w800,
+                  fontSize: 21,
+                ),
+              ),
+              const SizedBox(height: 7),
+              Text(
+                _searchLabel(
+                  'សូមនិយាយឈ្មោះទំនិញដែលអ្នកចង់ស្វែងរក',
+                  'Say the product you want to search for',
+                ),
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontFamily: 'Siemreap',
+                  fontSize: 13,
+                  color: Colors.grey.shade600,
+                ),
+              ),
+              const SizedBox(height: 20),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: const LinearProgressIndicator(
+                  minHeight: 5,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                _searchLabel(
+                  'វានឹងឈប់ស្តាប់ដោយស្វ័យប្រវត្តិ',
+                  'Stops listening automatically',
+                ),
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontFamily: 'Siemreap',
+                  fontSize: 11,
+                  color: Colors.grey.shade500,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     ).whenComplete(() => _voiceSheetOpen = false);
@@ -705,7 +768,7 @@ if (candidate.isNotEmpty) { bytes = candidate; break; }
                             child: InkResponse(
                               onTap: _isSearchBusy ? null : _toggleVoiceSearch,
                               child: Icon(
-                                _isVoiceSearching ? Icons.stop_circle_rounded : Icons.mic_rounded,
+                                Icons.mic_rounded,
                                 color: _isVoiceSearching ? Colors.red : Colors.green,
                                 size: 21,
                               ),
