@@ -26,9 +26,9 @@ class ProductSearchV51Controller {
   bool _voiceSheetOpen = false;
 
   static const double _speechThresholdDb = -38;
-  static const Duration _silenceAfterSpeech = Duration(milliseconds: 1200);
-  static const Duration _noSpeechTimeout = Duration(seconds: 4);
-  static const Duration _maximumRecordingTime = Duration(seconds: 12);
+  static const Duration _silenceAfterSpeech = Duration(milliseconds: 800);
+  static const Duration _noSpeechTimeout = Duration(seconds: 3);
+  static const Duration _maximumRecordingTime = Duration(seconds: 7);
 
   String _t(String km, String en) =>
       Localizations.localeOf(context).languageCode == 'en' ? en : km;
@@ -75,14 +75,16 @@ class ProductSearchV51Controller {
   Future<String?> searchSelectedImage(XFile image) async {
     if (busy || !_signedIn()) return null;
     busy = true;
+    onStateChanged?.call();
     try {
       final bytes = await image.readAsBytes();
       if (bytes.isEmpty || bytes.length > 3300000) {
         throw StateError('Image is too large');
       }
-      final mime = image.mimeType == 'image/png' || image.mimeType == 'image/webp'
-          ? image.mimeType!
-          : 'image/jpeg';
+      final mime =
+          image.mimeType == 'image/png' || image.mimeType == 'image/webp'
+              ? image.mimeType!
+              : 'image/jpeg';
       final data = await _analyze(
         image: 'data:$mime;base64,${base64Encode(bytes)}',
       );
@@ -94,8 +96,7 @@ class ProductSearchV51Controller {
       return result;
     } on FirebaseFunctionsException catch (e) {
       _message(
-        e.message ??
-            _t('មិនអាចស្វែងរកតាមរូបបានទេ', 'Image search failed'),
+        e.message ?? _t('មិនអាចស្វែងរកតាមរូបបានទេ', 'Image search failed'),
       );
       return null;
     } catch (e) {
@@ -120,14 +121,16 @@ class ProductSearchV51Controller {
     );
     if (image == null) return null;
     busy = true;
+    onStateChanged?.call();
     try {
       final bytes = await image.readAsBytes();
       if (bytes.isEmpty || bytes.length > 3300000) {
         throw StateError('Image is too large');
       }
-      final mime = image.mimeType == 'image/png' || image.mimeType == 'image/webp'
-          ? image.mimeType!
-          : 'image/jpeg';
+      final mime =
+          image.mimeType == 'image/png' || image.mimeType == 'image/webp'
+              ? image.mimeType!
+              : 'image/jpeg';
       final data = await _analyze(
         image: 'data:$mime;base64,${base64Encode(bytes)}',
       );
@@ -139,8 +142,7 @@ class ProductSearchV51Controller {
       return result;
     } on FirebaseFunctionsException catch (e) {
       _message(
-        e.message ??
-            _t('មិនអាចស្វែងរកតាមរូបបានទេ', 'Image search failed'),
+        e.message ?? _t('មិនអាចស្វែងរកតាមរូបបានទេ', 'Image search failed'),
       );
       return null;
     } catch (e) {
