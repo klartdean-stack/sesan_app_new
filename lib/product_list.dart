@@ -18,6 +18,7 @@ import 'package:intl/intl.dart';
 import 'package:my_app/wanted_detail_screen.dart';
 import 'main.dart';
 import 'product_detail.dart';
+import 'product_search_v51.dart';
 import 'pre_order_detail_screen.dart';
 import 'edit_product.dart';
 import 'location_picker.dart';
@@ -39,8 +40,7 @@ class UserService {
     }
 
     final prefs = await SharedPreferences.getInstance();
-    _cachedUserId =
-        prefs.getString('user_uid') ??
+    _cachedUserId = prefs.getString('user_uid') ??
         prefs.getString('uid') ??
         prefs.getString('user_id');
 
@@ -64,6 +64,15 @@ class ProductListScreen extends StatefulWidget {
 class _ProductListScreenState extends State<ProductListScreen> {
   String _currentSearch = "";
   final TextEditingController _searchController = TextEditingController();
+  ProductSearchV51Controller? _searchAiController;
+
+  ProductSearchV51Controller get _searchAi =>
+      _searchAiController ??= ProductSearchV51Controller(
+        context,
+        onStateChanged: () {
+          if (mounted) setState(() {});
+        },
+      );
   final AudioRecorder _searchAudioRecorder = AudioRecorder();
   final ImagePicker _searchImagePicker = ImagePicker();
   Timer? _voiceSearchTimer;
@@ -94,6 +103,39 @@ class _ProductListScreenState extends State<ProductListScreen> {
       if (_selectedCommune?.isNotEmpty ?? false) _selectedCommune!,
     ];
     return parts.join(' › ');
+  }
+
+  Future<void> _applyHomeStyleSearchResult(String value) async {
+    if (!mounted || value.trim().isEmpty) return;
+    final primary = value.split('|').first.trim();
+    _searchController.text = primary;
+    _searchController.selection =
+        TextSelection.collapsed(offset: primary.length);
+    setState(() => _currentSearch = value.toLowerCase());
+  }
+
+  Future<void> _smartScanLikeHome() async {
+    if (_searchAiController?.busy == true) return;
+
+    final image = await Navigator.push<XFile?>(
+      context,
+      MaterialPageRoute(builder: (_) => const SmartScanScreen()),
+    );
+    if (image == null || !mounted) return;
+
+    final result = await _searchAi.searchSelectedImage(image);
+    if (result != null) {
+      await _applyHomeStyleSearchResult(result);
+    }
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _voiceSearchLikeHome() async {
+    final ai = _searchAi;
+    if (ai.recording || ai.busy) return;
+
+    await ai.startVoice(onResult: _applyHomeStyleSearchResult);
+    if (mounted) setState(() {});
   }
 
   Future<void> _showLocationFilter() async {
@@ -212,7 +254,8 @@ class _ProductListScreenState extends State<ProductListScreen> {
                           const CircleAvatar(
                             radius: 19,
                             backgroundColor: Color(0xFFE6F4EA),
-                            child: Icon(Icons.location_on_outlined, color: Colors.green),
+                            child: Icon(Icons.location_on_outlined,
+                                color: Colors.green),
                           ),
                           const SizedBox(width: 10),
                           Expanded(
@@ -220,7 +263,9 @@ class _ProductListScreenState extends State<ProductListScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  appText(context, km: 'ចម្រុះតាមទីតាំង', en: 'Filter by location'),
+                                  appText(context,
+                                      km: 'ចម្រុះតាមទីតាំង',
+                                      en: 'Filter by location'),
                                   style: const TextStyle(
                                     fontSize: 17,
                                     fontWeight: FontWeight.bold,
@@ -250,8 +295,10 @@ class _ProductListScreenState extends State<ProductListScreen> {
                       ),
                       const SizedBox(height: 18),
                       selector(
-                        label: appText(context, km: 'ខេត្ត/រាជធានី', en: 'Province / City'),
-                        hint: appText(context, km: 'ជ្រើសខេត្ត', en: 'Select province'),
+                        label: appText(context,
+                            km: 'ខេត្ត/រាជធានី', en: 'Province / City'),
+                        hint: appText(context,
+                            km: 'ជ្រើសខេត្ត', en: 'Select province'),
                         value: province,
                         items: provinces,
                         enabled: true,
@@ -263,8 +310,10 @@ class _ProductListScreenState extends State<ProductListScreen> {
                       ),
                       const SizedBox(height: 12),
                       selector(
-                        label: appText(context, km: 'ស្រុក/ខណ្ឌ', en: 'District'),
-                        hint: appText(context, km: 'ជ្រើសស្រុក', en: 'Select district'),
+                        label:
+                            appText(context, km: 'ស្រុក/ខណ្ឌ', en: 'District'),
+                        hint: appText(context,
+                            km: 'ជ្រើសស្រុក', en: 'Select district'),
                         value: district,
                         items: districts,
                         enabled: province != null,
@@ -275,12 +324,15 @@ class _ProductListScreenState extends State<ProductListScreen> {
                       ),
                       const SizedBox(height: 12),
                       selector(
-                        label: appText(context, km: 'ឃុំ/សង្កាត់', en: 'Commune'),
-                        hint: appText(context, km: 'ជ្រើសឃុំ/សង្កាត់', en: 'Select commune'),
+                        label:
+                            appText(context, km: 'ឃុំ/សង្កាត់', en: 'Commune'),
+                        hint: appText(context,
+                            km: 'ជ្រើសឃុំ/សង្កាត់', en: 'Select commune'),
                         value: commune,
                         items: communes,
                         enabled: district != null,
-                        onChanged: (value) => setSheetState(() => commune = value),
+                        onChanged: (value) =>
+                            setSheetState(() => commune = value),
                       ),
                       const SizedBox(height: 20),
                       Row(
@@ -297,7 +349,8 @@ class _ProductListScreenState extends State<ProductListScreen> {
                               },
                               icon: const Icon(Icons.refresh, size: 18),
                               label: Text(
-                                appText(context, km: 'ទាំងអស់', en: 'All locations'),
+                                appText(context,
+                                    km: 'ទាំងអស់', en: 'All locations'),
                                 style: const TextStyle(fontFamily: 'Siemreap'),
                               ),
                               style: OutlinedButton.styleFrom(
@@ -343,7 +396,6 @@ class _ProductListScreenState extends State<ProductListScreen> {
     );
   }
 
-
   String _searchLabel(String km, String en) =>
       Localizations.localeOf(context).languageCode == 'en' ? en : km;
 
@@ -368,9 +420,9 @@ class _ProductListScreenState extends State<ProductListScreen> {
     final query = (data['query'] ?? '').toString().trim();
     if (query.isEmpty) throw StateError('Empty AI search query');
     final keywords = (data['keywords'] as List?)
-  ?.map((value) => value.toString().trim())
-  .where((value) => value.isNotEmpty)
-  .toList() ??
+            ?.map((value) => value.toString().trim())
+            .where((value) => value.isNotEmpty)
+            .toList() ??
         const <String>[];
     final combinedQuery = <String>{query, ...keywords}.join(' | ');
     _searchController.text = query;
@@ -382,7 +434,8 @@ class _ProductListScreenState extends State<ProductListScreen> {
     );
   }
 
-  Future<Map<String, dynamic>> _callAiSearch({String? image, String? audio}) async {
+  Future<Map<String, dynamic>> _callAiSearch(
+      {String? image, String? audio}) async {
     final callable = FirebaseFunctions.instanceFor(region: 'asia-southeast1')
         .httpsCallable('analyzeProductSearch');
     final response = await callable.call(<String, dynamic>{
@@ -462,8 +515,8 @@ class _ProductListScreenState extends State<ProductListScreen> {
     try {
       if (!await _searchAudioRecorder.hasPermission()) {
         _showSearchMessage(_searchLabel(
-'សូមអនុញ្ញាត Microphone ជាមុន',
-'Please allow microphone access first',
+          'សូមអនុញ្ញាត Microphone ជាមុន',
+          'Please allow microphone access first',
         ));
         return;
       }
@@ -472,16 +525,17 @@ class _ProductListScreenState extends State<ProductListScreen> {
         path = '';
       } else {
         final directory = await getTemporaryDirectory();
-        path = '${directory.path}/sesan_category_search_${DateTime.now().millisecondsSinceEpoch}.m4a';
+        path =
+            '${directory.path}/sesan_category_search_${DateTime.now().millisecondsSinceEpoch}.m4a';
       }
       await _searchAudioRecorder.start(
         RecordConfig(
-encoder: kIsWeb ? AudioEncoder.wav : AudioEncoder.aacLc,
-bitRate: 48000,
-sampleRate: 22050,
-echoCancel: true,
-noiseSuppress: true,
-autoGain: true,
+          encoder: kIsWeb ? AudioEncoder.wav : AudioEncoder.aacLc,
+          bitRate: 48000,
+          sampleRate: 22050,
+          echoCancel: true,
+          noiseSuppress: true,
+          autoGain: true,
         ),
         path: path,
       );
@@ -645,25 +699,32 @@ autoGain: true,
     }
     try {
       final path = await _searchAudioRecorder.stop();
-      if (path == null || path.isEmpty) throw StateError('Empty recording path');
+      if (path == null || path.isEmpty)
+        throw StateError('Empty recording path');
       Uint8List? bytes;
       for (var attempt = 0; attempt < 4; attempt++) {
-        await Future<void>.delayed(Duration(milliseconds: attempt == 0 ? 250 : 400));
+        await Future<void>.delayed(
+            Duration(milliseconds: attempt == 0 ? 250 : 400));
         try {
-final candidate = await XFile(path).readAsBytes();
-if (candidate.isNotEmpty) { bytes = candidate; break; }
+          final candidate = await XFile(path).readAsBytes();
+          if (candidate.isNotEmpty) {
+            bytes = candidate;
+            break;
+          }
         } catch (_) {}
       }
       if (bytes == null || bytes.isEmpty || bytes.length > 7500000) {
         throw StateError('Recorded audio could not be read');
       }
       final mime = kIsWeb ? 'audio/wav' : 'audio/m4a';
-      _applyAiSearch(await _callAiSearch(audio: 'data:$mime;base64,${base64Encode(bytes)}'));
+      _applyAiSearch(await _callAiSearch(
+          audio: 'data:$mime;base64,${base64Encode(bytes)}'));
     } on FirebaseFunctionsException catch (error) {
-      _showSearchMessage(error.message ?? _searchLabel(
-        'មិនអាចយល់សម្លេងនេះបានទេ',
-        'Could not understand this recording',
-      ));
+      _showSearchMessage(error.message ??
+          _searchLabel(
+            'មិនអាចយល់សម្លេងនេះបានទេ',
+            'Could not understand this recording',
+          ));
     } catch (error) {
       debugPrint('Voice search error: $error');
       _showSearchMessage(_searchLabel(
@@ -700,10 +761,13 @@ if (candidate.isNotEmpty) { bytes = candidate; break; }
             alignment: Alignment.center,
             children: [
               IconButton(
-                tooltip: appText(context, km: 'ចម្រុះតាមទីតាំង', en: 'Filter by location'),
+                tooltip: appText(context,
+                    km: 'ចម្រុះតាមទីតាំង', en: 'Filter by location'),
                 onPressed: _showLocationFilter,
                 icon: Icon(
-                  _hasLocationFilter ? Icons.filter_alt : Icons.filter_alt_outlined,
+                  _hasLocationFilter
+                      ? Icons.filter_alt
+                      : Icons.filter_alt_outlined,
                   color: Colors.white,
                   size: 25,
                 ),
@@ -733,63 +797,78 @@ if (candidate.isNotEmpty) { bytes = candidate; break; }
               mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
-                  height: 45,
+                  height: 48,
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(8),
                   ),
                   child: TextField(
                     controller: _searchController,
                     onChanged: (value) {
-                      setState(() => _currentSearch = value.trim().toLowerCase());
+                      setState(
+                          () => _currentSearch = value.trim().toLowerCase());
                     },
                     decoration: InputDecoration(
-                      hintText: appText(context, km: 'ស្វែងរកទំនិញក្នុងប្រភេទនេះ...', en: 'Search products in this category...'),
-                      hintStyle: const TextStyle(fontFamily: 'Siemreap', fontSize: 12),
-                      prefixIcon: const Icon(Icons.search, color: Colors.grey, size: 21),
-                      suffixIconConstraints: const BoxConstraints.tightFor(width: 94, height: 45),
+                      hintText: appText(context,
+                          km: 'ស្វែងរកទំនិញក្នុងប្រភេទនេះ...',
+                          en: 'Search products in this category...'),
+                      hintStyle:
+                          const TextStyle(fontFamily: 'Siemreap', fontSize: 13),
+                      prefixIcon: const Icon(Icons.search,
+                          color: Colors.grey, size: 21),
+                      suffixIconConstraints:
+                          const BoxConstraints.tightFor(width: 96, height: 48),
                       suffixIcon: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           SizedBox(
-                            width: 30,
+                            width: 48,
+                            height: 48,
                             child: InkResponse(
-                              onTap: _isSearchBusy ? null : _searchByImage,
-                              child: _isSearchBusy
-                                  ? const Padding(
-                                      padding: EdgeInsets.all(7),
-                                      child: CircularProgressIndicator(strokeWidth: 2),
-                                    )
-                                  : const Icon(Icons.image_search_rounded, color: Colors.purple, size: 21),
-                            ),
-                          ),
-                          SizedBox(
-                            width: 30,
-                            child: InkResponse(
-                              onTap: _isSearchBusy ? null : _toggleVoiceSearch,
-                              child: Icon(
-                                Icons.mic_rounded,
-                                color: _isVoiceSearching ? Colors.red : Colors.green,
-                                size: 21,
+                              radius: 24,
+                              onTap: _searchAiController?.busy == true
+                                  ? null
+                                  : _smartScanLikeHome,
+                              child: Center(
+                                child: _searchAiController?.busy == true
+                                    ? const SizedBox(
+                                        width: 16,
+                                        height: 16,
+                                        child: CircularProgressIndicator(
+                                            strokeWidth: 2),
+                                      )
+                                    : const Icon(
+                                        Icons.center_focus_strong_rounded,
+                                        color: Colors.blue,
+                                        size: 20,
+                                      ),
                               ),
                             ),
                           ),
                           SizedBox(
-                            width: 30,
+                            width: 48,
+                            height: 48,
                             child: InkResponse(
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(builder: (_) => const QrScannerScreen()),
-                                );
-                              },
-                              child: const Icon(Icons.qr_code_scanner, color: Colors.blue, size: 21),
+                              radius: 24,
+                              onTap: (_searchAiController?.busy == true ||
+                                      _searchAiController?.recording == true)
+                                  ? null
+                                  : _voiceSearchLikeHome,
+                              child: Center(
+                                child: Icon(
+                                  Icons.mic_rounded,
+                                  color: _searchAiController?.recording == true
+                                      ? Colors.red
+                                      : Colors.green,
+                                  size: 20,
+                                ),
+                              ),
                             ),
                           ),
                         ],
                       ),
                       border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                      contentPadding: const EdgeInsets.symmetric(vertical: 9),
                     ),
                   ),
                 ),
@@ -800,14 +879,16 @@ if (candidate.isNotEmpty) { bytes = candidate; break; }
                     borderRadius: BorderRadius.circular(20),
                     child: Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.16),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.location_on, size: 14, color: Colors.white),
+                          const Icon(Icons.location_on,
+                              size: 14, color: Colors.white),
                           const SizedBox(width: 5),
                           Expanded(
                             child: Text(
@@ -822,7 +903,8 @@ if (candidate.isNotEmpty) { bytes = candidate; break; }
                               ),
                             ),
                           ),
-                          const Icon(Icons.keyboard_arrow_down, size: 17, color: Colors.white),
+                          const Icon(Icons.keyboard_arrow_down,
+                              size: 17, color: Colors.white),
                         ],
                       ),
                     ),
@@ -849,6 +931,7 @@ if (candidate.isNotEmpty) { bytes = candidate; break; }
     _voiceSilenceTimer?.cancel();
     _voiceAmplitudeSubscription?.cancel();
     _searchController.dispose();
+    _searchAiController?.dispose();
     _searchAudioRecorder.dispose();
     super.dispose();
   }
@@ -913,8 +996,7 @@ class _ProductGridViewState extends State<ProductGridView>
     super.didUpdateWidget(oldWidget);
     final oldSearch = oldWidget.searchQuery.trim();
     final newSearch = widget.searchQuery.trim();
-    final locationChanged =
-        oldWidget.filterProvince != widget.filterProvince ||
+    final locationChanged = oldWidget.filterProvince != widget.filterProvince ||
         oldWidget.filterDistrict != widget.filterDistrict ||
         oldWidget.filterCommune != widget.filterCommune;
     if ((oldSearch != newSearch && newSearch.isNotEmpty) || locationChanged) {
@@ -959,23 +1041,23 @@ class _ProductGridViewState extends State<ProductGridView>
         .where('customer_id', isEqualTo: uid)
         .snapshots()
         .listen(
-          (snapshot) {
-            final ids = snapshot.docs
-                .map((doc) => (doc.data()['product_id'] ?? '').toString())
-                .where((id) => id.isNotEmpty)
-                .toSet();
-            if (!mounted) return;
-            setState(() {
-              _cartProductIds
-                ..clear()
-                ..addAll(ids);
-              _cartAddingIds.removeWhere(ids.contains);
-            });
-          },
-          onError: (error) {
-            debugPrint('Cart state listener error: $error');
-          },
-        );
+      (snapshot) {
+        final ids = snapshot.docs
+            .map((doc) => (doc.data()['product_id'] ?? '').toString())
+            .where((id) => id.isNotEmpty)
+            .toSet();
+        if (!mounted) return;
+        setState(() {
+          _cartProductIds
+            ..clear()
+            ..addAll(ids);
+          _cartAddingIds.removeWhere(ids.contains);
+        });
+      },
+      onError: (error) {
+        debugPrint('Cart state listener error: $error');
+      },
+    );
   }
 
   void _onScroll() {
@@ -1045,13 +1127,11 @@ class _ProductGridViewState extends State<ProductGridView>
     combined.sort((a, b) {
       final dataA = a.data() as Map<String, dynamic>;
       final dataB = b.data() as Map<String, dynamic>;
-      final timeA =
-          dataA['created_at'] ??
+      final timeA = dataA['created_at'] ??
           dataA['createdAt'] ??
           dataA['savedAt'] ??
           Timestamp.now();
-      final timeB =
-          dataB['created_at'] ??
+      final timeB = dataB['created_at'] ??
           dataB['createdAt'] ??
           dataB['savedAt'] ??
           Timestamp.now();
@@ -1071,9 +1151,8 @@ class _ProductGridViewState extends State<ProductGridView>
     if (!mounted) return;
 
     // 🎯 ១. រើស Collection តាមកុងតាក់ (បើ true ទៅ auction_products បើ false ទៅ products ធម្មតា)
-    String targetCollection = widget.isAuction
-        ? 'auction_products'
-        : 'products';
+    String targetCollection =
+        widget.isAuction ? 'auction_products' : 'products';
     Query query = FirebaseFirestore.instance.collection(targetCollection);
 
     bool isCategoryAll =
@@ -1084,8 +1163,7 @@ class _ProductGridViewState extends State<ProductGridView>
     }
 
     // 🎯 ២. តម្រៀបតាមថ្ងៃខែបង្កើត និងកំណត់ចំនួនទាញទិន្នន័យ (លែងមានការប្រើ status នាំឱ្យទាក់កូដទៀតហើយ)
-    final hasLocationFilter =
-        (widget.filterProvince?.isNotEmpty ?? false) ||
+    final hasLocationFilter = (widget.filterProvince?.isNotEmpty ?? false) ||
         (widget.filterDistrict?.isNotEmpty ?? false) ||
         (widget.filterCommune?.isNotEmpty ?? false);
     final fetchLimit = hasLocationFilter
@@ -1198,19 +1276,16 @@ class _ProductGridViewState extends State<ProductGridView>
       final query = widget.searchQuery;
 
       final postType = _managePostType(doc);
-      final matchesManageType =
-          widget.category != 'ទំនិញរបស់ខ្ញុំ' ||
+      final matchesManageType = widget.category != 'ទំនិញរបស់ខ្ញុំ' ||
           postType == _selectedManageType;
 
       final subCategory = (data['sub_category'] ?? '').toString();
       final subSubCategory = (data['sub_sub_category'] ?? '').toString();
 
-      final matchesSub =
-          _selectedSubCategory == 'ទាំងអស់' ||
+      final matchesSub = _selectedSubCategory == 'ទាំងអស់' ||
           subCategory == _selectedSubCategory;
 
-      final matchesSubSub =
-          _selectedSubSubCategory == 'ទាំងអស់' ||
+      final matchesSubSub = _selectedSubSubCategory == 'ទាំងអស់' ||
           subSubCategory == _selectedSubSubCategory;
 
       return matchesManageType &&
@@ -1256,14 +1331,12 @@ class _ProductGridViewState extends State<ProductGridView>
             padding: const EdgeInsets.all(12),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: MediaQuery.of(context).size.width > 800 ? 4 : 2,
-              childAspectRatio: MediaQuery.of(context).size.width > 800
-                  ? 0.75
-                  : 0.68,
+              childAspectRatio:
+                  MediaQuery.of(context).size.width > 800 ? 0.75 : 0.68,
               crossAxisSpacing: 10,
               mainAxisSpacing: 10,
             ),
-            itemCount:
-                filtered.length +
+            itemCount: filtered.length +
                 ((_hasMore && _isLoading && !widget.isHome) ? 1 : 0),
             itemBuilder: (context, index) {
               if (!widget.isHome && _isLoading && index >= filtered.length) {
@@ -1383,7 +1456,6 @@ class _ProductGridViewState extends State<ProductGridView>
         'ផ្សេងៗ',
       ],
       'ជីនិងថ្នាំ': ['ទាំងអស់', 'ជី', 'ថ្នាំ', 'វីតាមីន', 'ចំណីសត្វ', 'ផ្សេងៗ'],
-
       'បន្លែផ្លែឈើ': [
         'ទាំងអស់',
         'បន្លែ',
@@ -1393,7 +1465,6 @@ class _ProductGridViewState extends State<ProductGridView>
         'ស៊ុត',
         'ផ្សេងៗ',
       ],
-
       'ត្រីសាច់': [
         'ទាំងអស់',
         'ត្រី',
@@ -1432,8 +1503,7 @@ class _ProductGridViewState extends State<ProductGridView>
     // ✅ បើជា Map (មាន 3 ជាន់)
     if (subData is Map) {
       final subList = subData.keys.cast<String>().toList();
-      final subSubList =
-          _selectedSubCategory != 'ទាំងអស់' &&
+      final subSubList = _selectedSubCategory != 'ទាំងអស់' &&
               subData.containsKey(_selectedSubCategory)
           ? subData[_selectedSubCategory] as List<String>?
           : null;
@@ -1585,8 +1655,7 @@ class _ProductGridViewState extends State<ProductGridView>
     int delta,
   ) async {
     if (_stockUpdatingIds.contains(productId)) return;
-    final previous =
-        _stockQuantityOverrides[productId] ??
+    final previous = _stockQuantityOverrides[productId] ??
         _stockQuantityValue(data['stock_quantity']);
     final optimistic = (previous + delta).clamp(0, 999999999).toInt();
     setState(() {
@@ -1594,9 +1663,8 @@ class _ProductGridViewState extends State<ProductGridView>
       _stockUpdatingIds.add(productId);
     });
 
-    final ref = FirebaseFirestore.instance
-        .collection('products')
-        .doc(productId);
+    final ref =
+        FirebaseFirestore.instance.collection('products').doc(productId);
     try {
       final newQuantity = await FirebaseFirestore.instance.runTransaction<int>((
         transaction,
@@ -1650,22 +1718,20 @@ class _ProductGridViewState extends State<ProductGridView>
     int amount,
   ) async {
     if (_stockUpdatingIds.contains(productId)) return;
-    final previous =
-        _stockQuantityOverrides[productId] ??
+    final previous = _stockQuantityOverrides[productId] ??
         _stockQuantityValue(data['stock_quantity']);
     final optimistic = mode == 'add'
         ? previous + amount
         : mode == 'deduct'
-        ? (previous - amount).clamp(0, previous).toInt()
-        : amount;
+            ? (previous - amount).clamp(0, previous).toInt()
+            : amount;
     setState(() {
       _stockQuantityOverrides[productId] = optimistic;
       _stockUpdatingIds.add(productId);
     });
 
-    final ref = FirebaseFirestore.instance
-        .collection('products')
-        .doc(productId);
+    final ref =
+        FirebaseFirestore.instance.collection('products').doc(productId);
     try {
       final newQuantity = await FirebaseFirestore.instance.runTransaction<int>((
         transaction,
@@ -1739,8 +1805,7 @@ class _ProductGridViewState extends State<ProductGridView>
     String productId,
     Map<String, dynamic> data,
   ) async {
-    final current =
-        _stockQuantityOverrides[productId] ??
+    final current = _stockQuantityOverrides[productId] ??
         _stockQuantityValue(data['stock_quantity']);
     final amountController = TextEditingController();
     var mode = 'deduct';
@@ -1755,8 +1820,8 @@ class _ProductGridViewState extends State<ProductGridView>
           final preview = mode == 'add'
               ? current + amount
               : mode == 'deduct'
-              ? (current - amount).clamp(0, current)
-              : amount;
+                  ? (current - amount).clamp(0, current)
+                  : amount;
           return AlertDialog(
             title: Text(
               appText(context, km: 'កែចំនួនស្តុក', en: 'Adjust stock'),
@@ -1838,8 +1903,8 @@ class _ProductGridViewState extends State<ProductGridView>
                       mode == 'deduct'
                           ? '${formatter.format(current)} − ${formatter.format(amount)} = ${formatter.format(preview)}'
                           : mode == 'add'
-                          ? '${formatter.format(current)} + ${formatter.format(amount)} = ${formatter.format(preview)}'
-                          : '${appText(context, km: 'ស្តុកថ្មី', en: 'New stock')}: ${formatter.format(preview)}',
+                              ? '${formatter.format(current)} + ${formatter.format(amount)} = ${formatter.format(preview)}'
+                              : '${appText(context, km: 'ស្តុកថ្មី', en: 'New stock')}: ${formatter.format(preview)}',
                       textAlign: TextAlign.center,
                       style: const TextStyle(
                         fontSize: 16,
@@ -1955,12 +2020,12 @@ class _ProductGridViewState extends State<ProductGridView>
           .collection('products')
           .doc(productId)
           .update({
-            'track_stock': true,
-            'stock_quantity': quantity,
-            'stock_unit': unit,
-            'is_available': quantity > 0,
-            'updatedAt': FieldValue.serverTimestamp(),
-          });
+        'track_stock': true,
+        'stock_quantity': quantity,
+        'stock_unit': unit,
+        'is_available': quantity > 0,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
       if (!mounted) return;
       setState(() {
         _stockQuantityOverrides[productId] = quantity;
@@ -1975,8 +2040,7 @@ class _ProductGridViewState extends State<ProductGridView>
   }
 
   Widget _buildInlineStockControl(String productId, Map<String, dynamic> data) {
-    final tracksStock =
-        _stockQuantityOverrides.containsKey(productId) ||
+    final tracksStock = _stockQuantityOverrides.containsKey(productId) ||
         data['track_stock'] == true ||
         data['stock_quantity'] != null;
     if (!tracksStock) {
@@ -1998,8 +2062,7 @@ class _ProductGridViewState extends State<ProductGridView>
         ),
       );
     }
-    final quantity =
-        _stockQuantityOverrides[productId] ??
+    final quantity = _stockQuantityOverrides[productId] ??
         _stockQuantityValue(data['stock_quantity']);
     final isUpdating = _stockUpdatingIds.contains(productId);
     Widget stockButton(IconData icon, VoidCallback? onPressed) =>
@@ -2034,9 +2097,8 @@ class _ProductGridViewState extends State<ProductGridView>
         Expanded(
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
-            onTap: isUpdating
-                ? null
-                : () => _showBulkStockDialog(productId, data),
+            onTap:
+                isUpdating ? null : () => _showBulkStockDialog(productId, data),
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 7),
               child: Row(
@@ -2084,8 +2146,10 @@ class _ProductGridViewState extends State<ProductGridView>
     final bool? shippingIncluded = data['shipping_included'];
 
     final String name = isWanted
-        ? (data['productName'] ?? appText(context, km: 'គ្មានឈ្មោះ', en: 'Unnamed product'))
-        : (data['product_name'] ?? appText(context, km: 'គ្មានឈ្មោះ', en: 'Unnamed product'));
+        ? (data['productName'] ??
+            appText(context, km: 'គ្មានឈ្មោះ', en: 'Unnamed product'))
+        : (data['product_name'] ??
+            appText(context, km: 'គ្មានឈ្មោះ', en: 'Unnamed product'));
     final String price = (data['price'] ?? '0').toString();
     final String location = (data['location'] ?? 'ភ្នំពេញ').toString();
     final dynamic timestamp =
@@ -2143,9 +2207,9 @@ class _ProductGridViewState extends State<ProductGridView>
                                         Container(color: Colors.grey[100]),
                                     errorWidget: (context, url, error) =>
                                         const Icon(
-                                          Icons.broken_image,
-                                          color: Colors.grey,
-                                        ),
+                                      Icons.broken_image,
+                                      color: Colors.grey,
+                                    ),
                                   )
                                 : Container(
                                     color: Colors.grey[100],
@@ -2282,7 +2346,6 @@ class _ProductGridViewState extends State<ProductGridView>
                                 ),
                             ],
                           ),
-
                           if (widget.category == 'ទំនិញរបស់ខ្ញុំ' &&
                               postType == 'sale') ...[
                             const SizedBox(height: 6),
@@ -2468,10 +2531,10 @@ class _ProductGridViewState extends State<ProductGridView>
       onTap: isAdding
           ? null
           : alreadyInCart
-          ? () => _removeFromCart(docId)
-          : disabled
-          ? null
-          : () => _fastAddToCart(data, docId),
+              ? () => _removeFromCart(docId)
+              : disabled
+                  ? null
+                  : () => _fastAddToCart(data, docId),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.all(4),
@@ -2479,8 +2542,8 @@ class _ProductGridViewState extends State<ProductGridView>
           color: alreadyInCart
               ? Colors.green.shade100
               : disabled
-              ? Colors.grey[200]
-              : Colors.green[50],
+                  ? Colors.grey[200]
+                  : Colors.green[50],
           borderRadius: BorderRadius.circular(8),
         ),
         child: isAdding
@@ -2497,8 +2560,8 @@ class _ProductGridViewState extends State<ProductGridView>
                 color: alreadyInCart
                     ? Colors.green.shade700
                     : disabled
-                    ? Colors.grey
-                    : Colors.green,
+                        ? Colors.grey
+                        : Colors.green,
                 size: 22,
               ),
       ),
@@ -2653,8 +2716,8 @@ class _ProductGridViewState extends State<ProductGridView>
         builder: (context) => isPreOrder
             ? PreOrderDetailScreen(documentId: docId, data: productWithId)
             : isWanted
-            ? WantedDetailScreen(data: productWithId)
-            : ProductDetailScreen(product: productWithId),
+                ? WantedDetailScreen(data: productWithId)
+                : ProductDetailScreen(product: productWithId),
       ),
     );
   }
@@ -2681,8 +2744,8 @@ class _ProductGridViewState extends State<ProductGridView>
                     isPreOrder
                         ? 'pre_orders'
                         : isWanted
-                        ? 'wanted_products'
-                        : 'products',
+                            ? 'wanted_products'
+                            : 'products',
                   )
                   .doc(docId)
                   .delete();
@@ -2705,13 +2768,11 @@ class _ProductGridViewState extends State<ProductGridView>
   ) async {
     if (_currentUserId == null || productId.isEmpty) return;
     if (_cartProductIds.contains(productId) ||
-        _cartAddingIds.contains(productId))
-      return;
+        _cartAddingIds.contains(productId)) return;
     if (mounted) setState(() => _cartAddingIds.add(productId));
 
     final urls = product['image_urls'] ?? product['imageUrls'];
-    final String finalImageUrl =
-        product['image_url']?.toString() ??
+    final String finalImageUrl = product['image_url']?.toString() ??
         (urls is List && urls.isNotEmpty ? urls.first.toString() : '');
     try {
       final existing = await FirebaseFirestore.instance
@@ -2733,7 +2794,8 @@ class _ProductGridViewState extends State<ProductGridView>
 
       await FirebaseFirestore.instance.collection('carts').add({
         'product_id': productId,
-        'product_name': product['product_name'] ?? appText(context, km: 'គ្មានឈ្មោះ', en: 'Unnamed product'),
+        'product_name': product['product_name'] ??
+            appText(context, km: 'គ្មានឈ្មោះ', en: 'Unnamed product'),
         'price': product['price'] ?? 0,
         'currency': product['currency'] ?? '៛',
         'image_url': finalImageUrl,
@@ -2792,8 +2854,7 @@ class _ProductGridViewState extends State<ProductGridView>
     if (uid == null ||
         uid.isEmpty ||
         productId.isEmpty ||
-        _cartAddingIds.contains(productId))
-      return;
+        _cartAddingIds.contains(productId)) return;
     if (mounted) setState(() => _cartAddingIds.add(productId));
     try {
       final snapshot = await FirebaseFirestore.instance

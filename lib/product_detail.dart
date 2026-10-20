@@ -59,9 +59,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
   String _maskSellerPhone(dynamic value) {
     final phone = (value ?? '').toString().trim().replaceAll(
-      RegExp(r'\s+'),
-      '',
-    );
+          RegExp(r'\s+'),
+          '',
+        );
     if (phone.isEmpty) return '';
     if (phone.length <= 3) return 'XXX';
     return '${phone.substring(0, phone.length - 3)}XXX';
@@ -117,13 +117,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     final videoUrl = widget.product['video_url'];
     if (videoUrl != null && videoUrl.toString().isNotEmpty) {
       _videoController = VideoPlayerController.networkUrl(Uri.parse(videoUrl))
-        ..initialize()
-            .then((_) {
-              if (mounted) setState(() => _isVideoInitialized = true);
-            })
-            .catchError((error) {
-              debugPrint('Product video initialization error: $error');
-            });
+        ..initialize().then((_) {
+          if (mounted) setState(() => _isVideoInitialized = true);
+        }).catchError((error) {
+          debugPrint('Product video initialization error: $error');
+        });
     }
   }
 
@@ -239,9 +237,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     }
     if (_isTranslatingProduct) return;
     setState(() => _isTranslatingProduct = true);
-    final locale = Localizations.localeOf(context).languageCode == 'en'
-        ? 'en'
-        : 'km';
+    final locale =
+        Localizations.localeOf(context).languageCode == 'en' ? 'en' : 'km';
     try {
       final callable = FirebaseFunctions.instanceFor(
         region: 'asia-southeast1',
@@ -287,12 +284,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     final price = (widget.product['price'] ?? '').toString();
     final currency = (widget.product['currency'] ?? '៛').toString();
     final category = (widget.product['category'] ?? '').toString();
-    final seller =
-        (widget.product['seller_name'] ??
-                widget.product['shop_name'] ??
-                widget.product['seller_id'] ??
-                '')
-            .toString();
+    final seller = (widget.product['seller_name'] ??
+            widget.product['shop_name'] ??
+            widget.product['seller_id'] ??
+            '')
+        .toString();
     final prompt = english
         ? '''I am considering buying this product on Sesan App.
 Product ID: $productId
@@ -360,7 +356,7 @@ Product ID៖ $productId
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: // ✅ កូដថ្មី (ត្រូវទិសសម្រាប់ Sesan App)
-                  QrImageView(
+                      QrImageView(
                     data: "product_id_${productId}",
                     size: 180.0,
                   ),
@@ -564,63 +560,38 @@ Product ID៖ $productId
     }
   }
 
-  Future<void> _shareProductWithWatermark() async {
-    // 1. ទាញរូបភាពទីមួយ
-    String firstImage = "";
-    if (widget.product['image_urls'] != null &&
-        widget.product['image_urls'] is List &&
-        (widget.product['image_urls'] as List).isNotEmpty) {
-      firstImage = (widget.product['image_urls'] as List).first.toString();
-    } else if (widget.product['image_url'] != null &&
-        widget.product['image_url'].toString().isNotEmpty) {
-      firstImage = widget.product['image_url'].toString();
+  Rect _sharePositionOrigin() {
+    final renderObject = context.findRenderObject();
+    if (renderObject is RenderBox &&
+        renderObject.hasSize &&
+        renderObject.size.width > 0 &&
+        renderObject.size.height > 0) {
+      final topLeft = renderObject.localToGlobal(Offset.zero);
+      return topLeft & renderObject.size;
     }
 
-    // 2. ទាញទិន្នន័យផលិតផល
-    final String productId = widget.product['id'] ?? '';
-    final String productName =
-        widget.product['product_name'] ?? _t('ទំនិញថ្មី', 'New product');
-
-    String priceString = (widget.product['price'] ?? '0').toString().replaceAll(
-      ',',
-      '',
+    final size = MediaQuery.sizeOf(context);
+    return Rect.fromLTWH(
+      size.width / 2,
+      size.height / 2,
+      1,
+      1,
     );
-    double priceValue = double.tryParse(priceString) ?? 0;
-    String price = NumberFormat('#,###').format(priceValue);
-    String currency = widget.product['currency']?.toString() ?? '៛';
-    String location = widget.product['location'] ?? _t('ភ្នំពេញ', 'Phnom Penh');
+  }
 
-    // 3. Link សម្រាប់ចែករំលែក
-    final String webLink = "https://sesanshop.com/product/$productId";
+  Future<void> _shareProduct() async {
+    final String productId = (widget.product['id'] ?? '').toString().trim();
+    if (productId.isEmpty) return;
 
-    // 4. Smart download link: iOS -> App Store, Android -> Google Play
-    const String appDownloadLink = "https://sesanshop.com/download";
+    final Uri productUri = Uri.parse(
+      'https://sesanshop.com/product/$productId',
+    );
 
-    // 5. Share one product link + one smart app download link.
-    final String shareMessage =
-        '''
-🛍️ $productName
-💰 ${_t('តម្លៃ', 'Price')}: $price $currency
-📍 $location
-
-🔗 ${_t('មើលទំនិញ', 'View product')}:
-$webLink
-
-📲 ${_t('ទាញយក Sesan App', 'Download Sesan App')}:
-$appDownloadLink
-''';
-
-    // 6. បើគ្មានរូប ចែករំលែកតែ Link
-    if (firstImage.isEmpty) {
-      await Share.share(shareMessage);
-      return;
-    }
-
-    // 7. មានរូប ចែករំលែកជាមួយ Watermark
-    await _processWatermarkAction(
-      firstImage,
-      isShare: true,
-      shareText: shareMessage,
+    // Share one canonical product URL so Facebook/Messenger can build the
+    // Open Graph preview. iOS also needs a valid non-zero source rectangle.
+    await Share.shareUri(
+      productUri,
+      sharePositionOrigin: _sharePositionOrigin(),
     );
   }
 
@@ -672,12 +643,12 @@ $appDownloadLink
                   color: Colors.blue[700]!,
                   title: _t('ចែករំលែក Link ទំនិញ', 'Share product link'),
                   subtitle: _t(
-                    'ផ្ញើរូបភាពមាន QR Code និង Link',
-                    'Send an image with QR code and link',
+                    'ចែករំលែក Link ទំនិញ',
+                    'Share the product link',
                   ),
                   onTap: () {
                     Navigator.pop(context);
-                    _shareProductWithWatermark(); // ✅ ហៅ method ថ្មី
+                    _shareProduct();
                   },
                 ),
                 const SizedBox(height: 12),
@@ -944,11 +915,14 @@ $appDownloadLink
           final oldTotalScore = oldAverage * newCount;
           newAverage = (oldTotalScore - oldUserRating + rating) / newCount;
 
-          transaction.set(ratingRef, {
-            'userId': uid,
-            'rating': rating,
-            'updatedAt': FieldValue.serverTimestamp(),
-          }, SetOptions(merge: true));
+          transaction.set(
+              ratingRef,
+              {
+                'userId': uid,
+                'rating': rating,
+                'updatedAt': FieldValue.serverTimestamp(),
+              },
+              SetOptions(merge: true));
         } else {
           // User ថ្មី៖ បន្ថែម Review ១ និងគណនា Average ថ្មី
           newCount = oldCount + 1;
@@ -1110,10 +1084,9 @@ $appDownloadLink
     required bool hasVideo,
   }) {
     final sellerId = (widget.product['seller_id'] ?? '').toString();
-    final sellerName =
-        (widget.product['seller_name'] ??
-                appText(context, km: _t('អ្នកលក់', 'Seller'), en: 'Seller'))
-            .toString();
+    final sellerName = (widget.product['seller_name'] ??
+            appText(context, km: _t('អ្នកលក់', 'Seller'), en: 'Seller'))
+        .toString();
     final sellerPhoto = (widget.product['seller_photo'] ?? '').toString();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1127,18 +1100,17 @@ $appDownloadLink
             onTap: sellerId.isEmpty
                 ? null
                 : () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => SellerProfileScreen(
-                        sellerId: sellerId,
-                        sellerName: sellerName,
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => SellerProfileScreen(
+                          sellerId: sellerId,
+                          sellerName: sellerName,
+                        ),
                       ),
                     ),
-                  ),
             leading: CircleAvatar(
-              backgroundImage: sellerPhoto.isNotEmpty
-                  ? NetworkImage(sellerPhoto)
-                  : null,
+              backgroundImage:
+                  sellerPhoto.isNotEmpty ? NetworkImage(sellerPhoto) : null,
               child: sellerPhoto.isEmpty ? const Icon(Icons.storefront) : null,
             ),
             title: Text(
@@ -1446,11 +1418,10 @@ $appDownloadLink
     final rawStockUnit = widget.product['stock_unit']?.toString().trim() ?? '';
     final stockUnit =
         const {'item', 'items', 'item(s)'}.contains(rawStockUnit.toLowerCase())
-        ? ''
-        : rawStockUnit;
+            ? ''
+            : rawStockUnit;
     final bool isOutOfStock = tracksStock && stockQuantity <= 0;
-    final bool isAddToCartDisabled =
-        widget.product['is_locked'] == true ||
+    final bool isAddToCartDisabled = widget.product['is_locked'] == true ||
         widget.product['shop_closed'] == true ||
         widget.product['shipping_included'] == false ||
         isOutOfStock;
@@ -1464,8 +1435,7 @@ $appDownloadLink
       displayImages = [widget.product['image_url']];
     }
 
-    final bool hasVideo =
-        widget.product['video_url'] != null &&
+    final bool hasVideo = widget.product['video_url'] != null &&
         widget.product['video_url'].toString().isNotEmpty;
     final int imageCount = displayImages.length;
     final int totalSlides = imageCount + (hasVideo ? 1 : 0);
@@ -1575,7 +1545,7 @@ $appDownloadLink
                                       if (hasVideo && index == imageCount) {
                                         final isPlaying =
                                             _videoController?.value.isPlaying ??
-                                            false;
+                                                false;
                                         return GestureDetector(
                                           onTap: _toggleVideoPlayback,
                                           child: Container(
@@ -1589,8 +1559,7 @@ $appDownloadLink
                                                   AspectRatio(
                                                     aspectRatio:
                                                         _videoController!
-                                                            .value
-                                                            .aspectRatio,
+                                                            .value.aspectRatio,
                                                     child: VideoPlayer(
                                                       _videoController!,
                                                     ),
@@ -1599,8 +1568,8 @@ $appDownloadLink
                                                   const Center(
                                                     child:
                                                         CircularProgressIndicator(
-                                                          color: Colors.white,
-                                                        ),
+                                                      color: Colors.white,
+                                                    ),
                                                   ),
 
                                                 // ប៊ូតុង Play/Pause (បង្ហាញលុះត្រាតែបានផ្ទុករួច)
@@ -1612,27 +1581,25 @@ $appDownloadLink
                                                       duration: const Duration(
                                                         milliseconds: 300,
                                                       ),
-                                                      opacity: isPlaying
-                                                          ? 0.0
-                                                          : 1.0,
+                                                      opacity:
+                                                          isPlaying ? 0.0 : 1.0,
                                                       child: Container(
                                                         width: 64,
                                                         height: 64,
                                                         decoration:
                                                             BoxDecoration(
-                                                              shape: BoxShape
-                                                                  .circle,
-                                                              color: Colors
-                                                                  .black
-                                                                  .withOpacity(
-                                                                    0.5,
-                                                                  ),
-                                                            ),
+                                                          shape:
+                                                              BoxShape.circle,
+                                                          color: Colors.black
+                                                              .withOpacity(
+                                                            0.5,
+                                                          ),
+                                                        ),
                                                         child: Icon(
                                                           isPlaying
                                                               ? Icons.pause
                                                               : Icons
-                                                                    .play_arrow_rounded,
+                                                                  .play_arrow_rounded,
                                                           color: Colors.white,
                                                           size: 48,
                                                         ),
@@ -1664,14 +1631,14 @@ $appDownloadLink
                                           maxWidthDiskCache: 1000,
                                           placeholder: (context, url) =>
                                               Container(
-                                                color: Colors.grey[200],
-                                              ),
+                                            color: Colors.grey[200],
+                                          ),
                                           errorWidget: (context, url, error) =>
                                               const Icon(
-                                                Icons.broken_image,
-                                                size: 50,
-                                                color: Colors.grey,
-                                              ),
+                                            Icons.broken_image,
+                                            size: 50,
+                                            color: Colors.grey,
+                                          ),
                                         ),
                                       );
                                     },
@@ -1749,17 +1716,17 @@ $appDownloadLink
                                   decoration: BoxDecoration(
                                     color:
                                         widget.product['shipping_included'] ==
-                                            true
-                                        ? Colors.green.shade50
-                                        : Colors.orange.shade50,
+                                                true
+                                            ? Colors.green.shade50
+                                            : Colors.orange.shade50,
                                     borderRadius: BorderRadius.circular(8),
                                     border: Border.all(
-                                      color:
-                                          (widget.product['shipping_included'] ==
-                                                      true
-                                                  ? Colors.green.shade700
-                                                  : Colors.orange.shade700)
-                                              .withOpacity(0.3),
+                                      color: (widget.product[
+                                                      'shipping_included'] ==
+                                                  true
+                                              ? Colors.green.shade700
+                                              : Colors.orange.shade700)
+                                          .withOpacity(0.3),
                                     ),
                                   ),
                                   child: Row(
@@ -1771,8 +1738,8 @@ $appDownloadLink
                                                 true
                                             ? Icons.check_circle_outline
                                             : Icons.local_shipping_outlined,
-                                        color:
-                                            widget.product['shipping_included'] ==
+                                        color: widget.product[
+                                                    'shipping_included'] ==
                                                 true
                                             ? Colors.green.shade700
                                             : Colors.orange.shade700,
@@ -1792,8 +1759,8 @@ $appDownloadLink
                                                   'Shipping not included',
                                                 ),
                                           style: TextStyle(
-                                            color:
-                                                widget.product['shipping_included'] ==
+                                            color: widget.product[
+                                                        'shipping_included'] ==
                                                     true
                                                 ? Colors.green.shade700
                                                 : Colors.orange.shade700,
@@ -1956,7 +1923,7 @@ $appDownloadLink
                                     builder: (context, bookmarkSnapshot) {
                                       final saveCount =
                                           bookmarkSnapshot.data?.docs.length ??
-                                          0;
+                                              0;
                                       return Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
@@ -1987,8 +1954,7 @@ $appDownloadLink
 
                               // ✅ Average រួម + Rating ផ្ទាល់របស់គណនីនេះ
                               StreamBuilder<
-                                DocumentSnapshot<Map<String, dynamic>>
-                              >(
+                                  DocumentSnapshot<Map<String, dynamic>>>(
                                 stream: FirebaseFirestore.instance
                                     .collection('products')
                                     .doc(widget.product['id'])
@@ -1996,24 +1962,23 @@ $appDownloadLink
                                 builder: (context, productSnapshot) {
                                   double avgRating =
                                       (widget.product['avgRating'] as num?)
-                                          ?.toDouble() ??
-                                      0.0;
+                                              ?.toDouble() ??
+                                          0.0;
                                   int totalReviews =
                                       (widget.product['totalReviews'] as num?)
-                                          ?.toInt() ??
-                                      0;
+                                              ?.toInt() ??
+                                          0;
 
                                   if (productSnapshot.hasData &&
                                       productSnapshot.data!.exists) {
                                     final data = productSnapshot.data!.data();
-                                    avgRating =
-                                        (data?['avgRating'] as num?)
+                                    avgRating = (data?['avgRating'] as num?)
                                             ?.toDouble() ??
                                         0.0;
                                     totalReviews =
                                         (data?['totalReviews'] as num?)
-                                            ?.toInt() ??
-                                        0;
+                                                ?.toInt() ??
+                                            0;
                                   }
 
                                   final uid = _currentUserId;
@@ -2062,9 +2027,8 @@ $appDownloadLink
                                         IgnorePointer(
                                           ignoring: _isSubmittingRating,
                                           child: Opacity(
-                                            opacity: _isSubmittingRating
-                                                ? 0.5
-                                                : 1.0,
+                                            opacity:
+                                                _isSubmittingRating ? 0.5 : 1.0,
                                             child: RatingBar.builder(
                                               initialRating: myRating,
                                               minRating: 1,
@@ -2074,13 +2038,13 @@ $appDownloadLink
                                               itemSize: 22,
                                               itemPadding:
                                                   const EdgeInsets.symmetric(
-                                                    horizontal: 2,
-                                                  ),
+                                                horizontal: 2,
+                                              ),
                                               itemBuilder: (context, _) =>
                                                   const Icon(
-                                                    Icons.star,
-                                                    color: Colors.amber,
-                                                  ),
+                                                Icons.star,
+                                                color: Colors.amber,
+                                              ),
                                               onRatingUpdate: _submitRating,
                                             ),
                                           ),
@@ -2105,8 +2069,7 @@ $appDownloadLink
                                   }
 
                                   return StreamBuilder<
-                                    DocumentSnapshot<Map<String, dynamic>>
-                                  >(
+                                      DocumentSnapshot<Map<String, dynamic>>>(
                                     stream: FirebaseFirestore.instance
                                         .collection('products')
                                         .doc(widget.product['id'])
@@ -2118,10 +2081,8 @@ $appDownloadLink
 
                                       if (ratingSnapshot.hasData &&
                                           ratingSnapshot.data!.exists) {
-                                        myRating =
-                                            (ratingSnapshot.data!
-                                                        .data()?['rating']
-                                                    as num?)
+                                        myRating = (ratingSnapshot.data!
+                                                    .data()?['rating'] as num?)
                                                 ?.toDouble() ??
                                             0.0;
                                       }
@@ -2146,8 +2107,7 @@ $appDownloadLink
                               // --- ផ្នែកជ្រើសរើសចំនួន និង តម្លៃសរុប (កូដដែលកែរួច) ---
                               StatefulBuilder(
                                 builder: (context, setState) {
-                                  double unitPrice =
-                                      double.tryParse(
+                                  double unitPrice = double.tryParse(
                                         widget.product['price']
                                             .toString()
                                             .replaceAll(',', ''),
@@ -2189,8 +2149,8 @@ $appDownloadLink
                                               decoration: InputDecoration(
                                                 contentPadding:
                                                     const EdgeInsets.symmetric(
-                                                      vertical: 4,
-                                                    ),
+                                                  vertical: 4,
+                                                ),
                                                 border: OutlineInputBorder(
                                                   borderRadius:
                                                       BorderRadius.circular(8),
@@ -2198,22 +2158,19 @@ $appDownloadLink
                                                 counterText:
                                                     "", // បិទអក្សររាប់ខ្ទង់ខាងក្រោម
                                               ),
-                                              controller:
-                                                  TextEditingController(
-                                                      text: "$_tempQty",
-                                                    )
-                                                    ..selection =
-                                                        TextSelection.collapsed(
-                                                          offset: "$_tempQty"
-                                                              .length,
-                                                        ),
+                                              controller: TextEditingController(
+                                                text: "$_tempQty",
+                                              )..selection =
+                                                    TextSelection.collapsed(
+                                                  offset: "$_tempQty".length,
+                                                ),
                                               onChanged: (value) {
                                                 final val = int.tryParse(value);
                                                 if (val != null) {
                                                   final maxQty = tracksStock
                                                       ? stockQuantity
-                                                            .clamp(1, 999)
-                                                            .toInt()
+                                                          .clamp(1, 999)
+                                                          .toInt()
                                                       : 999;
                                                   if (val > maxQty) {
                                                     setState(
@@ -2231,8 +2188,8 @@ $appDownloadLink
                                           _qtyActionBtn(Icons.add, () {
                                             final maxQty = tracksStock
                                                 ? stockQuantity
-                                                      .clamp(1, 999)
-                                                      .toInt()
+                                                    .clamp(1, 999)
+                                                    .toInt()
                                                 : 999;
                                             if (_tempQty < maxQty) {
                                               setState(() => _tempQty++);
@@ -2346,7 +2303,8 @@ $appDownloadLink
                                         ? const SizedBox(
                                             width: 15,
                                             height: 15,
-                                            child: CircularProgressIndicator(strokeWidth: 2),
+                                            child: CircularProgressIndicator(
+                                                strokeWidth: 2),
                                           )
                                         : Icon(
                                             _showTranslatedProduct
@@ -2356,10 +2314,14 @@ $appDownloadLink
                                           ),
                                     label: Text(
                                       _showTranslatedProduct
-                                          ? (Localizations.localeOf(context).languageCode == 'en'
+                                          ? (Localizations.localeOf(context)
+                                                      .languageCode ==
+                                                  'en'
                                               ? 'Original'
                                               : 'អត្ថបទដើម')
-                                          : (Localizations.localeOf(context).languageCode == 'en'
+                                          : (Localizations.localeOf(context)
+                                                      .languageCode ==
+                                                  'en'
                                               ? 'Translate'
                                               : 'បកប្រែ'),
                                       style: const TextStyle(
@@ -2399,7 +2361,8 @@ $appDownloadLink
                                         color: Colors.purple.withOpacity(0.06),
                                         borderRadius: BorderRadius.circular(18),
                                         border: Border.all(
-                                          color: Colors.purple.withOpacity(0.22),
+                                          color:
+                                              Colors.purple.withOpacity(0.22),
                                         ),
                                       ),
                                       child: Row(
@@ -2412,7 +2375,9 @@ $appDownloadLink
                                           ),
                                           const SizedBox(width: 6),
                                           Text(
-                                            Localizations.localeOf(context).languageCode == 'en'
+                                            Localizations.localeOf(context)
+                                                        .languageCode ==
+                                                    'en'
                                                 ? 'Ask Sesan AI'
                                                 : 'សួរ Sesan AI',
                                             style: const TextStyle(
@@ -2480,18 +2445,16 @@ $appDownloadLink
                                               MaterialPageRoute(
                                                 builder: (context) =>
                                                     SellerProfileScreen(
-                                                      sellerId:
-                                                          widget
-                                                              .product['seller_id'] ??
-                                                          '',
-                                                      sellerName:
-                                                          widget
-                                                              .product['seller_name'] ??
-                                                          _t(
-                                                            'អ្នកលក់',
-                                                            'Seller',
-                                                          ),
-                                                    ),
+                                                  sellerId: widget.product[
+                                                          'seller_id'] ??
+                                                      '',
+                                                  sellerName: widget.product[
+                                                          'seller_name'] ??
+                                                      _t(
+                                                        'អ្នកលក់',
+                                                        'Seller',
+                                                      ),
+                                                ),
                                               ),
                                             );
                                           },
@@ -2519,12 +2482,12 @@ $appDownloadLink
                                         Navigator.push(
                                           context,
                                           MaterialPageRoute(
-                                            builder: (context) => SellerProfileScreen(
+                                            builder: (context) =>
+                                                SellerProfileScreen(
                                               sellerId:
                                                   widget.product['seller_id'] ??
-                                                  '',
-                                              sellerName:
-                                                  widget
+                                                      '',
+                                              sellerName: widget
                                                       .product['seller_name'] ??
                                                   _t('អ្នកលក់', 'Seller'),
                                             ),
@@ -2544,25 +2507,27 @@ $appDownloadLink
                                               Colors.green.shade100,
                                           backgroundImage:
                                               (widget.product['seller_photo'] !=
-                                                      null &&
-                                                  widget.product['seller_photo'] !=
-                                                      '')
-                                              ? NetworkImage(
-                                                  widget
-                                                      .product['seller_photo'],
-                                                )
-                                              : null,
+                                                          null &&
+                                                      widget.product[
+                                                              'seller_photo'] !=
+                                                          '')
+                                                  ? NetworkImage(
+                                                      widget.product[
+                                                          'seller_photo'],
+                                                    )
+                                                  : null,
                                           child:
                                               (widget.product['seller_photo'] ==
-                                                      null ||
-                                                  widget.product['seller_photo'] ==
-                                                      '')
-                                              ? const Icon(
-                                                  Icons.person,
-                                                  color: Colors.green,
-                                                  size: 22,
-                                                )
-                                              : null,
+                                                          null ||
+                                                      widget.product[
+                                                              'seller_photo'] ==
+                                                          '')
+                                                  ? const Icon(
+                                                      Icons.person,
+                                                      color: Colors.green,
+                                                      size: 22,
+                                                    )
+                                                  : null,
                                         ),
                                         title: Row(
                                           mainAxisSize: MainAxisSize.min,
@@ -2587,7 +2552,8 @@ $appDownloadLink
                                                     null &&
                                                 (widget.product['shop_tier'] ==
                                                         'basic' ||
-                                                    widget.product['shop_tier'] ==
+                                                    widget.product[
+                                                            'shop_tier'] ==
                                                         'premium'))
                                               Container(
                                                 margin: const EdgeInsets.only(
@@ -2597,13 +2563,13 @@ $appDownloadLink
                                                   2,
                                                 ),
                                                 decoration: BoxDecoration(
-                                                  color:
-                                                      widget.product['shop_tier'] ==
+                                                  color: widget.product[
+                                                              'shop_tier'] ==
                                                           'premium'
                                                       ? Colors.amber
-                                                            .withOpacity(0.8)
+                                                          .withOpacity(0.8)
                                                       : Colors.blueAccent
-                                                            .withOpacity(0.8),
+                                                          .withOpacity(0.8),
                                                   shape: BoxShape.circle,
                                                 ),
                                                 child: Icon(
@@ -2611,7 +2577,7 @@ $appDownloadLink
                                                           'premium'
                                                       ? Icons.diamond_rounded
                                                       : Icons
-                                                            .verified_user_rounded,
+                                                          .verified_user_rounded,
                                                   color: Colors.white,
                                                   size: 14,
                                                 ),
@@ -2641,31 +2607,29 @@ $appDownloadLink
                                     ),
                                     // ... កូដផ្នែកលេខទូរស័ព្ទ និងទីតាំងរបស់មេទុកដដែល
                                     SellerPhonePrivacyTile(
-                                      phone:
-                                          (widget.product['phone1'] ??
-                                                  widget
-                                                      .product['seller_phone'] ??
-                                                  '')
-                                              .toString(),
+                                      phone: (widget.product['phone1'] ??
+                                              widget.product['seller_phone'] ??
+                                              '')
+                                          .toString(),
                                       onReveal: () =>
                                           ProductDetailMarketplaceActions(
-                                            product: widget.product,
-                                            currentUserId: _currentUserId,
-                                          ).logPhoneReveal(),
+                                        product: widget.product,
+                                        currentUserId: _currentUserId,
+                                      ).logPhoneReveal(),
                                     ),
                                     if (widget.product['phone2'] != null &&
                                         widget.product['phone2']
                                             .toString()
                                             .isNotEmpty)
                                       SellerPhonePrivacyTile(
-                                        phone: widget.product['phone2']
-                                            .toString(),
+                                        phone:
+                                            widget.product['phone2'].toString(),
                                         secondary: true,
                                         onReveal: () =>
                                             ProductDetailMarketplaceActions(
-                                              product: widget.product,
-                                              currentUserId: _currentUserId,
-                                            ).logPhoneReveal(),
+                                          product: widget.product,
+                                          currentUserId: _currentUserId,
+                                        ).logPhoneReveal(),
                                       ),
                                     ListTile(
                                       contentPadding: EdgeInsets.zero,
@@ -2765,9 +2729,8 @@ $appDownloadLink
             Expanded(
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: isAddToCartDisabled
-                      ? Colors.grey
-                      : Colors.blue,
+                  backgroundColor:
+                      isAddToCartDisabled ? Colors.grey : Colors.blue,
                   foregroundColor: Colors.white,
                   minimumSize: const Size(0, 50),
                 ),
@@ -2784,9 +2747,8 @@ $appDownloadLink
             Expanded(
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: isAddToCartDisabled
-                      ? Colors.grey[400]
-                      : Colors.red,
+                  backgroundColor:
+                      isAddToCartDisabled ? Colors.grey[400] : Colors.red,
                   foregroundColor: Colors.white,
                   minimumSize: const Size(0, 50),
                 ),
@@ -2852,8 +2814,7 @@ $appDownloadLink
       await bookmarkRef.add({
         'userId': savedUid,
         'productId': widget.product['id'] ?? '',
-        'product_name':
-            widget.product['product_name'] ??
+        'product_name': widget.product['product_name'] ??
             _t('គ្មានឈ្មោះ', 'Unnamed product'),
         'price': widget.product['price'] ?? '0',
         'currency': widget.product['currency'] ?? '៛',
@@ -2946,8 +2907,7 @@ $appDownloadLink
 
   // ២. កូដ addToCart ដែលកែសម្រួលរួច
   Future<bool> _addToCart(Map<String, dynamic> product) async {
-    final String finalImageUrl =
-        product['image_url'] ??
+    final String finalImageUrl = product['image_url'] ??
         (product['image_urls'] != null &&
                 (product['image_urls'] as List).isNotEmpty
             ? product['image_urls'][0]
@@ -3002,8 +2962,8 @@ $appDownloadLink
         return false;
       }
 
-      final productId = (product['id'] ?? product['product_id'] ?? '')
-          .toString();
+      final productId =
+          (product['id'] ?? product['product_id'] ?? '').toString();
       if (productId.isEmpty) return false;
 
       final currentCart = await FirebaseFirestore.instance

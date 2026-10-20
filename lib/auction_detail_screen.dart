@@ -163,11 +163,16 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
   Future<void> _loadOwnerInfo(String ownerId) async {
     if (ownerId.isEmpty) return;
     try {
-      final doc = await FirebaseFirestore.instance.collection('users').doc(ownerId).get();
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(ownerId)
+          .get();
       if (doc.exists && mounted) {
         final data = doc.data() as Map<String, dynamic>;
         setState(() {
-          _ownerName = data['name'] ?? data['displayName'] ?? _t('គ្មានឈ្មោះ', 'Unnamed');
+          _ownerName = data['name'] ??
+              data['displayName'] ??
+              _t('គ្មានឈ្មោះ', 'Unnamed');
           _ownerPhotoUrl = data['photoUrl'] ?? data['photo'] ?? '';
           _sesanId = data['sesan_id'] ?? '';
         });
@@ -194,7 +199,8 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
                   color: _red.withOpacity(0.12),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.delete_outline_rounded, color: _red, size: 30),
+                child: const Icon(Icons.delete_outline_rounded,
+                    color: _red, size: 30),
               ),
               const SizedBox(height: 16),
               Text(
@@ -210,7 +216,8 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
               Text(
                 productName,
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: _textMuted, fontSize: 13, fontFamily: 'Siemreap'),
+                style: const TextStyle(
+                    color: _textMuted, fontSize: 13, fontFamily: 'Siemreap'),
               ),
               const SizedBox(height: 24),
               Row(
@@ -220,11 +227,13 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
                       style: OutlinedButton.styleFrom(
                         foregroundColor: _textMuted,
                         side: const BorderSide(color: _border),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
                         padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
                       onPressed: () => Navigator.pop(ctx),
-                      child: Text(_t('បោះបង់', 'Cancel'), style: TextStyle(fontFamily: 'Siemreap')),
+                      child: Text(_t('បោះបង់', 'Cancel'),
+                          style: TextStyle(fontFamily: 'Siemreap')),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -233,7 +242,8 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
                       style: ElevatedButton.styleFrom(
                         backgroundColor: _red,
                         elevation: 0,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
                         padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
                       onPressed: () async {
@@ -246,7 +256,10 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
                       },
                       child: Text(
                         _t('លុប', 'Delete'),
-                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontFamily: 'Siemreap'),
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                            fontFamily: 'Siemreap'),
                       ),
                     ),
                   ),
@@ -294,7 +307,8 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
     );
   }
 
-  Future<void> _placeBid(int currentPrice, int bidStep, String productName) async {
+  Future<void> _placeBid(
+      int currentPrice, int bidStep, String productName) async {
     print('DEBUG: _placeBid called');
     print('DEBUG: _currentUid = $_currentUid');
     print('DEBUG: _isLoggedIn = $_isLoggedIn');
@@ -304,7 +318,8 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
       _showSnack(_t('❌ សូម Login មុនសិន', '❌ Please log in first'), _red);
       return;
     }
-    final confirmed = await _showConfirmDialog(currentPrice + bidStep, productName);
+    final confirmed =
+        await _showConfirmDialog(currentPrice + bidStep, productName);
     if (!confirmed) return;
     setState(() => _isBidding = true);
     final newBid = currentPrice + bidStep;
@@ -312,14 +327,19 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
       final unknownName = _t('មិនស្គាល់', 'Unknown');
       String bidderName = _currentUserName ?? unknownName;
       if (bidderName == unknownName || bidderName.isEmpty) {
-        final userDoc = await FirebaseFirestore.instance.collection('users').doc(_currentUid).get();
+        final userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(_currentUid)
+            .get();
         if (userDoc.exists) {
           final u = userDoc.data() as Map<String, dynamic>;
           bidderName = u['name'] ?? u['displayName'] ?? unknownName;
         }
       }
       final batch = FirebaseFirestore.instance.batch();
-      final prodRef = FirebaseFirestore.instance.collection('auction_products').doc(widget.productId);
+      final prodRef = FirebaseFirestore.instance
+          .collection('auction_products')
+          .doc(widget.productId);
       batch.update(prodRef, {
         'current_price': newBid,
         'last_bidder': bidderName,
@@ -334,7 +354,9 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
       });
       await batch.commit();
       _bidPulseCtrl.forward().then((_) => _bidPulseCtrl.reverse());
-      _showSnack('${_t('🎉 ដេញថ្លៃជោគជ័យ!', '🎉 Bid placed successfully!')} ${NumberFormat('#,###').format(newBid)} ៛', _accent);
+      _showSnack(
+          '${_t('🎉 ដេញថ្លៃជោគជ័យ!', '🎉 Bid placed successfully!')} ${NumberFormat('#,###').format(newBid)} ៛',
+          _accent);
     } catch (e) {
       _showSnack(_t('❌ កំហុស៖ $e', '❌ Error: $e'), _red);
     } finally {
@@ -347,7 +369,8 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
           context: context,
           builder: (ctx) => Dialog(
             backgroundColor: _card,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
             child: Padding(
               padding: const EdgeInsets.all(24),
               child: Column(
@@ -355,20 +378,34 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
                 children: [
                   Container(
                     padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(color: _accent.withOpacity(0.12), shape: BoxShape.circle),
-                    child: const Icon(Icons.gavel_rounded, color: _accent, size: 32),
+                    decoration: BoxDecoration(
+                        color: _accent.withOpacity(0.12),
+                        shape: BoxShape.circle),
+                    child: const Icon(Icons.gavel_rounded,
+                        color: _accent, size: 32),
                   ),
                   const SizedBox(height: 16),
                   Text(
                     _t('បញ្ជាក់ការដេញថ្លៃ', 'Confirm bid'),
-                    style: TextStyle(color: _text, fontSize: 18, fontWeight: FontWeight.w700, fontFamily: 'Siemreap'),
+                    style: TextStyle(
+                        color: _text,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        fontFamily: 'Siemreap'),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     '${NumberFormat('#,###').format(amount)} ៛',
-                    style: const TextStyle(color: _gold, fontSize: 24, fontWeight: FontWeight.w800),
+                    style: const TextStyle(
+                        color: _gold,
+                        fontSize: 24,
+                        fontWeight: FontWeight.w800),
                   ),
-                  Text(name, style: const TextStyle(color: _textMuted, fontSize: 13, fontFamily: 'Siemreap')),
+                  Text(name,
+                      style: const TextStyle(
+                          color: _textMuted,
+                          fontSize: 13,
+                          fontFamily: 'Siemreap')),
                   const SizedBox(height: 24),
                   Row(
                     children: [
@@ -377,11 +414,13 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
                           style: OutlinedButton.styleFrom(
                             foregroundColor: _textMuted,
                             side: const BorderSide(color: _border),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
                             padding: const EdgeInsets.symmetric(vertical: 14),
                           ),
                           onPressed: () => Navigator.pop(ctx, false),
-                          child: Text(_t('បោះបង់', 'Cancel'), style: TextStyle(fontFamily: 'Siemreap')),
+                          child: Text(_t('បោះបង់', 'Cancel'),
+                              style: TextStyle(fontFamily: 'Siemreap')),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -390,13 +429,17 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
                           style: ElevatedButton.styleFrom(
                             backgroundColor: _accent,
                             elevation: 0,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
                             padding: const EdgeInsets.symmetric(vertical: 14),
                           ),
                           onPressed: () => Navigator.pop(ctx, true),
                           child: Text(
                             _t('យល់ព្រម', 'Confirm'),
-                            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontFamily: 'Siemreap'),
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w700,
+                                fontFamily: 'Siemreap'),
                           ),
                         ),
                       ),
@@ -413,7 +456,9 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
   void _showSnack(String msg, Color color) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(msg, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+        content: Text(msg,
+            style: const TextStyle(
+                color: Colors.white, fontWeight: FontWeight.w600)),
         backgroundColor: color,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -442,7 +487,11 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
             SizedBox(width: 5),
             Text(
               _t('ចប់ហើយ', 'Ended'),
-              style: TextStyle(color: _red, fontWeight: FontWeight.w700, fontSize: 12, fontFamily: 'Siemreap'),
+              style: TextStyle(
+                  color: _red,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 12,
+                  fontFamily: 'Siemreap'),
             ),
           ],
         ),
@@ -482,7 +531,10 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<DocumentSnapshot>(
-      stream: FirebaseFirestore.instance.collection('auction_products').doc(widget.productId).snapshots(),
+      stream: FirebaseFirestore.instance
+          .collection('auction_products')
+          .doc(widget.productId)
+          .snapshots(),
       builder: (context, snap) {
         if (!snap.hasData || !snap.data!.exists) {
           return const Scaffold(
@@ -491,12 +543,14 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
           );
         }
         final data = snap.data!.data() as Map<String, dynamic>;
-        final productName = data['product_name'] ?? _t('គ្មានឈ្មោះ', 'Unnamed product');
-        final currentPrice = int.tryParse(data['current_price']?.toString() ?? '0') ?? 0;
+        final productName =
+            data['product_name'] ?? _t('គ្មានឈ្មោះ', 'Unnamed product');
+        final currentPrice =
+            int.tryParse(data['current_price']?.toString() ?? '0') ?? 0;
         final bidStep = int.tryParse(data['bid_step']?.toString() ?? '0') ?? 0;
         final endTime = data['end_time'];
-        final isFinished =
-            endTime != null && (endTime as Timestamp).toDate().isBefore(DateTime.now());
+        final isFinished = endTime != null &&
+            (endTime as Timestamp).toDate().isBefore(DateTime.now());
         final lastBidder = data['last_bidder'] as String?;
         final lastBidderId = data['last_bidder_id'] as String?;
         final ownerId = data['owner_id'] as String? ?? '';
@@ -505,8 +559,10 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
         final isAdmin = _currentUid == _adminId;
         final isWinner = _currentUid == lastBidderId;
         final canDelete = isOwner || isAdmin;
-        final canChat =
-            isFinished && (isOwner || isWinner) && lastBidderId != null && lastBidderId.isNotEmpty;
+        final canChat = isFinished &&
+            (isOwner || isWinner) &&
+            lastBidderId != null &&
+            lastBidderId.isNotEmpty;
         if (ownerId.isNotEmpty && _ownerName.isEmpty) {
           _loadOwnerInfo(ownerId);
         }
@@ -521,8 +577,11 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
               onTap: () => Navigator.pop(context),
               child: Container(
                 margin: const EdgeInsets.all(8),
-                decoration: BoxDecoration(color: Colors.black45, borderRadius: BorderRadius.circular(10)),
-                child: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 18),
+                decoration: BoxDecoration(
+                    color: Colors.black45,
+                    borderRadius: BorderRadius.circular(10)),
+                child: const Icon(Icons.arrow_back_ios_new_rounded,
+                    color: Colors.white, size: 18),
               ),
             ),
           ),
@@ -536,16 +595,22 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
                       builder: (context) {
                         final videoUrl = data['video_url']?.toString() ?? '';
                         final images = (data['image_urls'] as List?) ?? [];
-                        List<Map<String, dynamic>> mediaItems = [];
-                        if (videoUrl.isNotEmpty) mediaItems.add({'type': 'video', 'url': videoUrl});
-                        for (var img in images) {
-                          mediaItems.add({'type': 'image', 'url': img.toString()});
+                        final List<Map<String, dynamic>> mediaItems = [];
+                        for (final img in images) {
+                          mediaItems.add({
+                            'type': 'image',
+                            'url': img.toString(),
+                          });
+                        }
+                        if (videoUrl.isNotEmpty) {
+                          mediaItems.add({'type': 'video', 'url': videoUrl});
                         }
                         if (mediaItems.isEmpty) return Container(color: _card);
                         return PageView.builder(
                           controller: _pageCtrl,
                           itemCount: mediaItems.length,
-                          onPageChanged: (i) => setState(() => _currentImageIndex = i),
+                          onPageChanged: (i) =>
+                              setState(() => _currentImageIndex = i),
                           itemBuilder: (_, i) {
                             final item = mediaItems[i];
                             if (item['type'] == 'video') {
@@ -556,7 +621,9 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
                                 },
                               );
                             }
-                            return CachedNetworkImage(imageUrl: item['url'] as String, fit: BoxFit.cover);
+                            return CachedNetworkImage(
+                                imageUrl: item['url'] as String,
+                                fit: BoxFit.cover);
                           },
                         );
                       },
@@ -567,14 +634,22 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
                         top: 60,
                         right: 16,
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                          decoration: BoxDecoration(color: _red, borderRadius: BorderRadius.circular(20)),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 5),
+                          decoration: BoxDecoration(
+                              color: _red,
+                              borderRadius: BorderRadius.circular(20)),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.circle, size: 7, color: Colors.white),
+                              const Icon(Icons.circle,
+                                  size: 7, color: Colors.white),
                               const SizedBox(width: 4),
-                              Text(_t('កំពុងដេញថ្លៃ', 'LIVE'), style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w800)),
+                              Text(_t('កំពុងដេញថ្លៃ', 'LIVE'),
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w800)),
                             ],
                           ),
                         ),
@@ -584,14 +659,20 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
                         top: 60,
                         left: 16,
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                          decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(20)),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 5),
+                          decoration: BoxDecoration(
+                              color: Colors.black54,
+                              borderRadius: BorderRadius.circular(20)),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.visibility, color: Colors.white, size: 14),
+                              const Icon(Icons.visibility,
+                                  color: Colors.white, size: 14),
                               const SizedBox(width: 4),
-                              Text('$_viewerCount ${_t('នាក់', 'viewers')}', style: const TextStyle(color: Colors.white, fontSize: 11)),
+                              Text('$_viewerCount ${_t('នាក់', 'viewers')}',
+                                  style: const TextStyle(
+                                      color: Colors.white, fontSize: 11)),
                             ],
                           ),
                         ),
@@ -600,7 +681,8 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
                       builder: (context) {
                         final images = (data['image_urls'] as List?) ?? [];
                         final videoUrl = data['video_url']?.toString() ?? '';
-                        final totalItems = (videoUrl.isNotEmpty ? 1 : 0) + images.length;
+                        final totalItems =
+                            (videoUrl.isNotEmpty ? 1 : 0) + images.length;
                         if (totalItems <= 1) return const SizedBox();
                         return Positioned(
                           bottom: 16,
@@ -609,10 +691,12 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: List.generate(totalItems, (i) {
-                              final isVideo = videoUrl.isNotEmpty && i == 0;
+                              final isVideo =
+                                  videoUrl.isNotEmpty && i == totalItems - 1;
                               return AnimatedContainer(
                                 duration: const Duration(milliseconds: 200),
-                                margin: const EdgeInsets.symmetric(horizontal: 3),
+                                margin:
+                                    const EdgeInsets.symmetric(horizontal: 3),
                                 width: _currentImageIndex == i ? 24 : 8,
                                 height: 8,
                                 decoration: BoxDecoration(
@@ -655,15 +739,18 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
                           if (canDelete) ...[
                             const SizedBox(width: 8),
                             GestureDetector(
-                              onTap: () => _showDeleteDialog(context, productName),
+                              onTap: () =>
+                                  _showDeleteDialog(context, productName),
                               child: Container(
                                 padding: const EdgeInsets.all(8),
                                 decoration: BoxDecoration(
                                   color: _red.withOpacity(0.12),
                                   borderRadius: BorderRadius.circular(10),
-                                  border: Border.all(color: _red.withOpacity(0.3)),
+                                  border:
+                                      Border.all(color: _red.withOpacity(0.3)),
                                 ),
-                                child: const Icon(Icons.delete_outline_rounded, color: _red, size: 20),
+                                child: const Icon(Icons.delete_outline_rounded,
+                                    color: _red, size: 20),
                               ),
                             ),
                           ],
@@ -675,7 +762,10 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
                         child: Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            gradient: LinearGradient(colors: [_accent.withOpacity(0.15), _accentBlue.withOpacity(0.08)]),
+                            gradient: LinearGradient(colors: [
+                              _accent.withOpacity(0.15),
+                              _accentBlue.withOpacity(0.08)
+                            ]),
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(color: _accent.withOpacity(0.3)),
                           ),
@@ -685,14 +775,22 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(_t('តម្លៃបច្ចុប្បន្ន', 'Current price'), style: TextStyle(color: _textMuted, fontSize: 12, fontFamily: 'Siemreap')),
+                                    Text(
+                                        _t('តម្លៃបច្ចុប្បន្ន', 'Current price'),
+                                        style: TextStyle(
+                                            color: _textMuted,
+                                            fontSize: 12,
+                                            fontFamily: 'Siemreap')),
                                     const SizedBox(height: 4),
                                     FittedBox(
                                       fit: BoxFit.scaleDown,
                                       alignment: Alignment.centerLeft,
                                       child: Text(
                                         '${fmt.format(currentPrice)} ៛',
-                                        style: const TextStyle(color: _accent, fontSize: 22, fontWeight: FontWeight.w800),
+                                        style: const TextStyle(
+                                            color: _accent,
+                                            fontSize: 22,
+                                            fontWeight: FontWeight.w800),
                                       ),
                                     ),
                                   ],
@@ -701,15 +799,26 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
-                                  Text(_t('ដេញបន្ទាប់', 'Next bid'), style: TextStyle(color: _textMuted, fontSize: 12, fontFamily: 'Siemreap')),
+                                  Text(_t('ដេញបន្ទាប់', 'Next bid'),
+                                      style: TextStyle(
+                                          color: _textMuted,
+                                          fontSize: 12,
+                                          fontFamily: 'Siemreap')),
                                   const SizedBox(height: 4),
-                                  Text('+${fmt.format(bidStep)} ៛', style: const TextStyle(color: _gold, fontSize: 16, fontWeight: FontWeight.w700)),
+                                  Text('+${fmt.format(bidStep)} ៛',
+                                      style: const TextStyle(
+                                          color: _gold,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w700)),
                                   FittedBox(
                                     fit: BoxFit.scaleDown,
                                     alignment: Alignment.centerRight,
                                     child: Text(
                                       '= ${fmt.format(currentPrice + bidStep)} ៛',
-                                      style: const TextStyle(color: _text, fontSize: 12, fontWeight: FontWeight.w600),
+                                      style: const TextStyle(
+                                          color: _text,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600),
                                     ),
                                   ),
                                 ],
@@ -718,19 +827,27 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
                           ),
                         ),
                       ),
-                      if ((data['description'] ?? '').toString().isNotEmpty) ...[
+                      if ((data['description'] ?? '')
+                          .toString()
+                          .isNotEmpty) ...[
                         const SizedBox(height: 16),
-                        _ExpandableDescription(text: data['description'].toString()),
+                        _ExpandableDescription(
+                            text: data['description'].toString()),
                       ],
                       if (lastBidder != null && lastBidderId != null) ...[
                         const SizedBox(height: 12),
                         FutureBuilder<DocumentSnapshot>(
-                          future: FirebaseFirestore.instance.collection('users').doc(lastBidderId).get(),
+                          future: FirebaseFirestore.instance
+                              .collection('users')
+                              .doc(lastBidderId)
+                              .get(),
                           builder: (ctx, winnerSnap) {
                             String? photoUrl;
                             if (winnerSnap.hasData && winnerSnap.data!.exists) {
-                              final u = winnerSnap.data!.data() as Map<String, dynamic>;
-                              photoUrl = u['photoUrl'] ?? u['photo'] ?? u['avatar'];
+                              final u = winnerSnap.data!.data()
+                                  as Map<String, dynamic>;
+                              photoUrl =
+                                  u['photoUrl'] ?? u['photo'] ?? u['avatar'];
                             }
                             return GestureDetector(
                               onTap: isOwner
@@ -742,11 +859,15 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
                                       )
                                   : null,
                               child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 14, vertical: 10),
                                 decoration: BoxDecoration(
                                   color: _card,
                                   borderRadius: BorderRadius.circular(14),
-                                  border: Border.all(color: isOwner ? _gold.withOpacity(0.4) : _gold.withOpacity(0.2)),
+                                  border: Border.all(
+                                      color: isOwner
+                                          ? _gold.withOpacity(0.4)
+                                          : _gold.withOpacity(0.2)),
                                 ),
                                 child: Row(
                                   children: [
@@ -755,7 +876,8 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
                                       height: 40,
                                       decoration: BoxDecoration(
                                         shape: BoxShape.circle,
-                                        border: Border.all(color: _gold, width: 2),
+                                        border:
+                                            Border.all(color: _gold, width: 2),
                                         color: _border,
                                       ),
                                       child: ClipOval(
@@ -763,26 +885,49 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
                                             ? CachedNetworkImage(
                                                 imageUrl: photoUrl,
                                                 fit: BoxFit.cover,
-                                                placeholder: (_, __) => const Icon(Icons.person_rounded, color: _textMuted, size: 22),
-                                                errorWidget: (_, __, ___) => const Icon(Icons.person_rounded, color: _textMuted, size: 22),
+                                                placeholder: (_, __) =>
+                                                    const Icon(
+                                                        Icons.person_rounded,
+                                                        color: _textMuted,
+                                                        size: 22),
+                                                errorWidget: (_, __, ___) =>
+                                                    const Icon(
+                                                        Icons.person_rounded,
+                                                        color: _textMuted,
+                                                        size: 22),
                                               )
-                                            : const Icon(Icons.person_rounded, color: _textMuted, size: 22),
+                                            : const Icon(Icons.person_rounded,
+                                                color: _textMuted, size: 22),
                                       ),
                                     ),
                                     const SizedBox(width: 12),
                                     Expanded(
                                       child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
                                           Row(
                                             children: [
-                                              const Icon(Icons.emoji_events_rounded, color: _gold, size: 13),
+                                              const Icon(
+                                                  Icons.emoji_events_rounded,
+                                                  color: _gold,
+                                                  size: 13),
                                               const SizedBox(width: 4),
-                                              Text(_t('អ្នកឈ្នះបច្ចុប្បន្ន', 'Current winner'), style: const TextStyle(color: _textMuted, fontSize: 11, fontFamily: 'Siemreap')),
+                                              Text(
+                                                  _t('អ្នកឈ្នះបច្ចុប្បន្ន',
+                                                      'Current winner'),
+                                                  style: const TextStyle(
+                                                      color: _textMuted,
+                                                      fontSize: 11,
+                                                      fontFamily: 'Siemreap')),
                                             ],
                                           ),
                                           const SizedBox(height: 2),
-                                          Text(lastBidder, style: const TextStyle(color: _gold, fontSize: 14, fontWeight: FontWeight.w700)),
+                                          Text(lastBidder,
+                                              style: const TextStyle(
+                                                  color: _gold,
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.w700)),
                                         ],
                                       ),
                                     ),
@@ -791,10 +936,16 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
                                         padding: const EdgeInsets.all(8),
                                         decoration: BoxDecoration(
                                           color: _accentBlue.withOpacity(0.15),
-                                          borderRadius: BorderRadius.circular(10),
-                                          border: Border.all(color: _accentBlue.withOpacity(0.3)),
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                          border: Border.all(
+                                              color:
+                                                  _accentBlue.withOpacity(0.3)),
                                         ),
-                                        child: const Icon(Icons.chat_bubble_outline_rounded, color: _accentBlue, size: 18),
+                                        child: const Icon(
+                                            Icons.chat_bubble_outline_rounded,
+                                            color: _accentBlue,
+                                            size: 18),
                                       ),
                                   ],
                                 ),
@@ -815,16 +966,21 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
                           builder: (ctx, userSnap) {
                             String? phone;
                             if (userSnap.hasData && userSnap.data!.exists) {
-                              final u = userSnap.data!.data() as Map<String, dynamic>;
+                              final u =
+                                  userSnap.data!.data() as Map<String, dynamic>;
                               phone = u['phone'] ?? u['phoneNumber'];
                             }
                             phone ??= data['customer_phone'] as String?;
                             return Container(
                               padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
-                                gradient: LinearGradient(colors: [_gold.withOpacity(0.12), _accent.withOpacity(0.08)]),
+                                gradient: LinearGradient(colors: [
+                                  _gold.withOpacity(0.12),
+                                  _accent.withOpacity(0.08)
+                                ]),
                                 borderRadius: BorderRadius.circular(16),
-                                border: Border.all(color: _gold.withOpacity(0.3)),
+                                border:
+                                    Border.all(color: _gold.withOpacity(0.3)),
                               ),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -833,21 +989,38 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
                                     children: [
                                       Container(
                                         padding: const EdgeInsets.all(10),
-                                        decoration: BoxDecoration(color: _gold.withOpacity(0.15), shape: BoxShape.circle),
-                                        child: const Icon(Icons.emoji_events_rounded, color: _gold, size: 22),
+                                        decoration: BoxDecoration(
+                                            color: _gold.withOpacity(0.15),
+                                            shape: BoxShape.circle),
+                                        child: const Icon(
+                                            Icons.emoji_events_rounded,
+                                            color: _gold,
+                                            size: 22),
                                       ),
                                       const SizedBox(width: 12),
                                       Expanded(
                                         child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
                                           children: [
                                             Text(
-                                              _t('ការដេញថ្លៃបានចប់!', 'Auction ended!'),
-                                              style: TextStyle(color: _gold, fontSize: 15, fontWeight: FontWeight.w700, fontFamily: 'Siemreap'),
+                                              _t('ការដេញថ្លៃបានចប់!',
+                                                  'Auction ended!'),
+                                              style: TextStyle(
+                                                  color: _gold,
+                                                  fontSize: 15,
+                                                  fontWeight: FontWeight.w700,
+                                                  fontFamily: 'Siemreap'),
                                             ),
                                             Text(
-                                              isOwner ? '${_t('អ្នកឈ្នះ', 'Winner')}: ${lastBidder ?? ''}' : _t('អ្នកឈ្នះហើយ!', 'You won!'),
-                                              style: const TextStyle(color: _textMuted, fontSize: 12, fontFamily: 'Siemreap'),
+                                              isOwner
+                                                  ? '${_t('អ្នកឈ្នះ', 'Winner')}: ${lastBidder ?? ''}'
+                                                  : _t('អ្នកឈ្នះហើយ!',
+                                                      'You won!'),
+                                              style: const TextStyle(
+                                                  color: _textMuted,
+                                                  fontSize: 12,
+                                                  fontFamily: 'Siemreap'),
                                             ),
                                           ],
                                         ),
@@ -857,7 +1030,8 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
                                   if (phone != null && phone.isNotEmpty) ...[
                                     const SizedBox(height: 14),
                                     Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 14, vertical: 12),
                                       decoration: BoxDecoration(
                                         color: _bg,
                                         borderRadius: BorderRadius.circular(12),
@@ -865,27 +1039,42 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
                                       ),
                                       child: Row(
                                         children: [
-                                          const Icon(Icons.phone_outlined, color: _accent, size: 18),
+                                          const Icon(Icons.phone_outlined,
+                                              color: _accent, size: 18),
                                           const SizedBox(width: 10),
                                           Expanded(
                                             child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
                                               children: [
                                                 Text(
-                                                  isOwner ? _t('លេខអ្នកឈ្នះ', 'Winner phone') : _t('លេខម្ចាស់ទំនិញ', 'Seller phone'),
-                                                  style: const TextStyle(color: _textMuted, fontSize: 11, fontFamily: 'Siemreap'),
+                                                  isOwner
+                                                      ? _t('លេខអ្នកឈ្នះ',
+                                                          'Winner phone')
+                                                      : _t('លេខម្ចាស់ទំនិញ',
+                                                          'Seller phone'),
+                                                  style: const TextStyle(
+                                                      color: _textMuted,
+                                                      fontSize: 11,
+                                                      fontFamily: 'Siemreap'),
                                                 ),
                                                 const SizedBox(height: 2),
                                                 Text(
-                                                  (isOwner || isWinner) ? phone : _maskPhoneNumber(phone),
+                                                  (isOwner || isWinner)
+                                                      ? phone
+                                                      : _maskPhoneNumber(phone),
                                                   maxLines: 1,
-                                                  overflow: TextOverflow.ellipsis,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
                                                   softWrap: false,
                                                   style: TextStyle(
                                                     color: _text,
                                                     fontSize: 13,
                                                     fontWeight: FontWeight.w600,
-                                                    letterSpacing: (isOwner || isWinner) ? 0.2 : 1,
+                                                    letterSpacing:
+                                                        (isOwner || isWinner)
+                                                            ? 0.2
+                                                            : 1,
                                                   ),
                                                 ),
                                               ],
@@ -894,31 +1083,52 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
                                           if (isOwner || isWinner) ...[
                                             GestureDetector(
                                               onTap: () async {
-                                                final uri = Uri.parse('tel:$phone');
-                                                if (await canLaunchUrl(uri)) await launchUrl(uri);
+                                                final uri =
+                                                    Uri.parse('tel:$phone');
+                                                if (await canLaunchUrl(uri))
+                                                  await launchUrl(uri);
                                               },
                                               child: Container(
-                                                padding: const EdgeInsets.all(10),
-                                                decoration: BoxDecoration(color: _accent, borderRadius: BorderRadius.circular(10)),
-                                                child: const Icon(Icons.call_rounded, color: Colors.white, size: 20),
+                                                padding:
+                                                    const EdgeInsets.all(10),
+                                                decoration: BoxDecoration(
+                                                    color: _accent,
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            10)),
+                                                child: const Icon(
+                                                    Icons.call_rounded,
+                                                    color: Colors.white,
+                                                    size: 20),
                                               ),
                                             ),
                                             const SizedBox(width: 8),
                                             GestureDetector(
                                               onTap: () async {
-                                                final cleaned = phone!.replaceAll('+', '').replaceAll(' ', '');
-                                                final uri = Uri.parse('https://t.me/+$cleaned');
+                                                final cleaned = phone!
+                                                    .replaceAll('+', '')
+                                                    .replaceAll(' ', '');
+                                                final uri = Uri.parse(
+                                                    'https://t.me/+$cleaned');
                                                 if (await canLaunchUrl(uri)) {
-                                                  await launchUrl(uri, mode: LaunchMode.externalApplication);
+                                                  await launchUrl(uri,
+                                                      mode: LaunchMode
+                                                          .externalApplication);
                                                 }
                                               },
                                               child: Container(
-                                                padding: const EdgeInsets.all(10),
+                                                padding:
+                                                    const EdgeInsets.all(10),
                                                 decoration: BoxDecoration(
-                                                  color: const Color(0xFF0088CC),
-                                                  borderRadius: BorderRadius.circular(10),
+                                                  color:
+                                                      const Color(0xFF0088CC),
+                                                  borderRadius:
+                                                      BorderRadius.circular(10),
                                                 ),
-                                                child: const Icon(Icons.send_rounded, color: Colors.white, size: 18),
+                                                child: const Icon(
+                                                    Icons.send_rounded,
+                                                    color: Colors.white,
+                                                    size: 18),
                                               ),
                                             ),
                                           ],
@@ -935,18 +1145,31 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
                                         style: ElevatedButton.styleFrom(
                                           backgroundColor: _accentBlue,
                                           elevation: 0,
-                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                          shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(12)),
                                         ),
                                         onPressed: () => _openAuctionChat(
                                           productName: productName,
                                           ownerId: ownerId,
                                           winnerId: lastBidderId,
-                                          winnerName: lastBidder ?? _t('មិនស្គាល់', 'Unknown'),
+                                          winnerName: lastBidder ??
+                                              _t('មិនស្គាល់', 'Unknown'),
                                         ),
-                                        icon: const Icon(Icons.chat_bubble_outline_rounded, color: Colors.white, size: 18),
+                                        icon: const Icon(
+                                            Icons.chat_bubble_outline_rounded,
+                                            color: Colors.white,
+                                            size: 18),
                                         label: Text(
-                                          isOwner ? _t('Chat ជាមួយអ្នកឈ្នះ', 'Chat with winner') : _t('Chat ជាមួយម្ចាស់ទំនិញ', 'Chat with seller'),
-                                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontFamily: 'Siemreap'),
+                                          isOwner
+                                              ? _t('Chat ជាមួយអ្នកឈ្នះ',
+                                                  'Chat with winner')
+                                              : _t('Chat ជាមួយម្ចាស់ទំនិញ',
+                                                  'Chat with seller'),
+                                          style: const TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.w700,
+                                              fontFamily: 'Siemreap'),
                                         ),
                                       ),
                                     ),
@@ -965,29 +1188,35 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
                           style: ElevatedButton.styleFrom(
                             backgroundColor: isFinished ? _border : _accentBlue,
                             elevation: 0,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14)),
                           ),
                           onPressed: (isFinished || _isBidding)
                               ? null
-                              : () => _placeBid(currentPrice, bidStep, productName),
+                              : () =>
+                                  _placeBid(currentPrice, bidStep, productName),
                           child: _isBidding
                               ? const SizedBox(
                                   width: 22,
                                   height: 22,
-                                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                                  child: CircularProgressIndicator(
+                                      color: Colors.white, strokeWidth: 2.5),
                                 )
                               : Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Icon(
-                                      isFinished ? Icons.lock_outline_rounded : Icons.gavel_rounded,
+                                      isFinished
+                                          ? Icons.lock_outline_rounded
+                                          : Icons.gavel_rounded,
                                       color: Colors.white,
                                       size: 20,
                                     ),
                                     const SizedBox(width: 8),
                                     Text(
                                       isFinished
-                                          ? _t('ការដេញថ្លៃបានបញ្ចប់', 'Auction ended')
+                                          ? _t('ការដេញថ្លៃបានបញ្ចប់',
+                                              'Auction ended')
                                           : '${_t('ដេញថ្លៃ', 'Bid')} ${fmt.format(currentPrice + bidStep)} ៛',
                                       style: const TextStyle(
                                         color: Colors.white,
@@ -1003,11 +1232,16 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
                       const SizedBox(height: 24),
                       Row(
                         children: [
-                          const Icon(Icons.history_rounded, color: _textMuted, size: 18),
+                          const Icon(Icons.history_rounded,
+                              color: _textMuted, size: 18),
                           SizedBox(width: 8),
                           Text(
                             _t('ប្រវត្តិដេញថ្លៃ', 'Bid history'),
-                            style: TextStyle(color: _text, fontSize: 16, fontWeight: FontWeight.w700, fontFamily: 'Siemreap'),
+                            style: TextStyle(
+                                color: _text,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                                fontFamily: 'Siemreap'),
                           ),
                         ],
                       ),
@@ -1021,7 +1255,9 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
                             .snapshots(),
                         builder: (ctx, bidSnap) {
                           if (!bidSnap.hasData) {
-                            return const Center(child: CircularProgressIndicator(color: _accentBlue));
+                            return const Center(
+                                child: CircularProgressIndicator(
+                                    color: _accentBlue));
                           }
                           final bids = bidSnap.data!.docs;
                           if (bids.isEmpty) {
@@ -1035,9 +1271,13 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
                               child: Center(
                                 child: Column(
                                   children: [
-                                    const Icon(Icons.gavel_rounded, color: _textMuted, size: 32),
+                                    const Icon(Icons.gavel_rounded,
+                                        color: _textMuted, size: 32),
                                     const SizedBox(height: 8),
-                                    Text(_t('មិនទាន់មានអ្នកដេញ', 'No bids yet'), style: TextStyle(color: _textMuted, fontFamily: 'Siemreap')),
+                                    Text(_t('មិនទាន់មានអ្នកដេញ', 'No bids yet'),
+                                        style: TextStyle(
+                                            color: _textMuted,
+                                            fontFamily: 'Siemreap')),
                                   ],
                                 ),
                               ),
@@ -1045,43 +1285,63 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
                           }
                           return Column(
                             children: List.generate(bids.length, (i) {
-                              final bid = bids[i].data() as Map<String, dynamic>;
+                              final bid =
+                                  bids[i].data() as Map<String, dynamic>;
                               final isTop = i == 0;
                               final bidTime = bid['bid_time'] != null
                                   ? (bid['bid_time'] as Timestamp).toDate()
                                   : null;
-                              final String? bidderId = bid['bidder_id'] as String?;
+                              final String? bidderId =
+                                  bid['bidder_id'] as String?;
                               return Container(
                                 margin: const EdgeInsets.only(bottom: 8),
                                 padding: const EdgeInsets.all(14),
                                 decoration: BoxDecoration(
-                                  color: isTop ? _gold.withOpacity(0.07) : _card,
+                                  color:
+                                      isTop ? _gold.withOpacity(0.07) : _card,
                                   borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: isTop ? _gold.withOpacity(0.3) : _border),
+                                  border: Border.all(
+                                      color: isTop
+                                          ? _gold.withOpacity(0.3)
+                                          : _border),
                                 ),
                                 child: Row(
                                   children: [
-                                    _buildBidderAvatar(bidderId: bidderId, isTop: isTop, rank: i + 1),
+                                    _buildBidderAvatar(
+                                        bidderId: bidderId,
+                                        isTop: isTop,
+                                        rank: i + 1),
                                     const SizedBox(width: 12),
                                     Expanded(
                                       child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
                                           Text(
-                                            bid['bidder_name'] ?? _t('មិនស្គាល់', 'Unknown'),
-                                            style: TextStyle(color: isTop ? _gold : _text, fontWeight: FontWeight.w600, fontSize: 14),
+                                            bid['bidder_name'] ??
+                                                _t('មិនស្គាល់', 'Unknown'),
+                                            style: TextStyle(
+                                                color: isTop ? _gold : _text,
+                                                fontWeight: FontWeight.w600,
+                                                fontSize: 14),
                                           ),
                                           if (bidTime != null)
                                             Text(
-                                              DateFormat('dd/MM · HH:mm:ss').format(bidTime),
-                                              style: const TextStyle(color: _textMuted, fontSize: 11),
+                                              DateFormat('dd/MM · HH:mm:ss')
+                                                  .format(bidTime),
+                                              style: const TextStyle(
+                                                  color: _textMuted,
+                                                  fontSize: 11),
                                             ),
                                         ],
                                       ),
                                     ),
                                     Text(
                                       '${fmt.format(bid['bid_amount'] ?? 0)} ៛',
-                                      style: TextStyle(color: isTop ? _gold : _accent, fontSize: 15, fontWeight: FontWeight.w800),
+                                      style: TextStyle(
+                                          color: isTop ? _gold : _accent,
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w800),
                                     ),
                                   ],
                                 ),
@@ -1103,7 +1363,9 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
   }
 
   Widget _buildOwnerBadge() {
-    final displayName = _ownerName.isNotEmpty ? _ownerName : _t('រកឈ្មោះ...', 'Loading name...');
+    final displayName = _ownerName.isNotEmpty
+        ? _ownerName
+        : _t('រកឈ្មោះ...', 'Loading name...');
     final displaySesanId = _sesanId.isNotEmpty ? _sesanId : '...';
     return Positioned(
       bottom: 40,
@@ -1132,10 +1394,17 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
                       ? CachedNetworkImage(
                           imageUrl: _ownerPhotoUrl,
                           fit: BoxFit.cover,
-                          placeholder: (_, __) => const Icon(Icons.person_rounded, color: _textMuted, size: 12),
-                          errorWidget: (_, __, ___) => const Icon(Icons.person_rounded, color: _textMuted, size: 12),
+                          placeholder: (_, __) => const Icon(
+                              Icons.person_rounded,
+                              color: _textMuted,
+                              size: 12),
+                          errorWidget: (_, __, ___) => const Icon(
+                              Icons.person_rounded,
+                              color: _textMuted,
+                              size: 12),
                         )
-                      : const Icon(Icons.person_rounded, color: _textMuted, size: 12),
+                      : const Icon(Icons.person_rounded,
+                          color: _textMuted, size: 12),
                 ),
               ),
               const SizedBox(width: 6),
@@ -1145,18 +1414,28 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
                 children: [
                   Text(
                     displayName,
-                    style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600, height: 1.1),
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        height: 1.1),
                   ),
                   Text(
                     'ID: $displaySesanId',
-                    style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 9, height: 1.1),
+                    style: TextStyle(
+                        color: Colors.white.withOpacity(0.7),
+                        fontSize: 9,
+                        height: 1.1),
                   ),
                 ],
               ),
               const SizedBox(width: 4),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 0.5),
-                decoration: BoxDecoration(color: _gold.withOpacity(0.2), borderRadius: BorderRadius.circular(3)),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 3, vertical: 0.5),
+                decoration: BoxDecoration(
+                    color: _gold.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(3)),
               ),
             ],
           ),
@@ -1183,7 +1462,10 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
               ? const Icon(Icons.emoji_events_rounded, color: _gold, size: 18)
               : Text(
                   '$rank',
-                  style: const TextStyle(color: _textMuted, fontWeight: FontWeight.w700, fontSize: 13),
+                  style: const TextStyle(
+                      color: _textMuted,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13),
                 ),
         ),
       );
@@ -1197,7 +1479,8 @@ class _AuctionDetailScreenState extends State<AuctionDetailScreen>
           ? const Icon(Icons.emoji_events_rounded, color: _gold, size: 18)
           : Text(
               '$rank',
-              style: const TextStyle(color: _textMuted, fontWeight: FontWeight.w700, fontSize: 13),
+              style: const TextStyle(
+                  color: _textMuted, fontWeight: FontWeight.w700, fontSize: 13),
             ),
     );
   }
@@ -1234,11 +1517,16 @@ class _ExpandableDescriptionState extends State<_ExpandableDescription> {
         children: [
           Row(
             children: [
-              const Icon(Icons.description_outlined, color: _accentBlue, size: 16),
+              const Icon(Icons.description_outlined,
+                  color: _accentBlue, size: 16),
               const SizedBox(width: 10),
               Text(
                 isEnglish ? 'Description' : 'ការរៀបរាប់',
-                style: const TextStyle(color: _text, fontSize: 14, fontWeight: FontWeight.w700, fontFamily: 'Siemreap'),
+                style: const TextStyle(
+                    color: _text,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    fontFamily: 'Siemreap'),
               ),
             ],
           ),
@@ -1248,13 +1536,23 @@ class _ExpandableDescriptionState extends State<_ExpandableDescription> {
               widget.text,
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(color: _textMuted, fontSize: 13, height: 1.7, fontFamily: 'Siemreap'),
+              style: const TextStyle(
+                  color: _textMuted,
+                  fontSize: 13,
+                  height: 1.7,
+                  fontFamily: 'Siemreap'),
             ),
             secondChild: Text(
               widget.text,
-              style: const TextStyle(color: _textMuted, fontSize: 13, height: 1.7, fontFamily: 'Siemreap'),
+              style: const TextStyle(
+                  color: _textMuted,
+                  fontSize: 13,
+                  height: 1.7,
+                  fontFamily: 'Siemreap'),
             ),
-            crossFadeState: _expanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+            crossFadeState: _expanded
+                ? CrossFadeState.showSecond
+                : CrossFadeState.showFirst,
             duration: const Duration(milliseconds: 250),
           ),
           const SizedBox(height: 8),
@@ -1267,10 +1565,16 @@ class _ExpandableDescriptionState extends State<_ExpandableDescription> {
                   _expanded
                       ? (isEnglish ? 'Show less' : 'លាក់វិញ')
                       : (isEnglish ? 'Read more' : 'អានបន្ថែម'),
-                  style: const TextStyle(color: _accentBlue, fontSize: 12, fontWeight: FontWeight.w600, fontFamily: 'Siemreap'),
+                  style: const TextStyle(
+                      color: _accentBlue,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      fontFamily: 'Siemreap'),
                 ),
                 Icon(
-                  _expanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
+                  _expanded
+                      ? Icons.keyboard_arrow_up_rounded
+                      : Icons.keyboard_arrow_down_rounded,
                   color: _accentBlue,
                   size: 16,
                 ),
@@ -1287,7 +1591,8 @@ class _ClickableBidderAvatar extends StatefulWidget {
   final String bidderId;
   final bool isTop;
   final int rank;
-  const _ClickableBidderAvatar({required this.bidderId, required this.isTop, required this.rank});
+  const _ClickableBidderAvatar(
+      {required this.bidderId, required this.isTop, required this.rank});
 
   @override
   State<_ClickableBidderAvatar> createState() => _ClickableBidderAvatarState();
@@ -1308,7 +1613,10 @@ class _ClickableBidderAvatarState extends State<_ClickableBidderAvatar> {
 
   Future<void> _loadPhoto() async {
     try {
-      final doc = await FirebaseFirestore.instance.collection('users').doc(widget.bidderId).get();
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(widget.bidderId)
+          .get();
       if (doc.exists && mounted) {
         final data = doc.data() as Map<String, dynamic>;
         setState(() {
@@ -1331,7 +1639,9 @@ class _ClickableBidderAvatarState extends State<_ClickableBidderAvatar> {
         onTap: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => UserProfileScreen(userId: widget.bidderId)),
+            MaterialPageRoute(
+                builder: (context) =>
+                    UserProfileScreen(userId: widget.bidderId)),
           );
         },
         borderRadius: BorderRadius.circular(19),
@@ -1341,7 +1651,9 @@ class _ClickableBidderAvatarState extends State<_ClickableBidderAvatar> {
           decoration: BoxDecoration(
             color: widget.isTop ? _gold.withOpacity(0.15) : _border,
             shape: BoxShape.circle,
-            border: widget.isTop ? Border.all(color: _gold.withOpacity(0.5), width: 2) : null,
+            border: widget.isTop
+                ? Border.all(color: _gold.withOpacity(0.5), width: 2)
+                : null,
           ),
           child: ClipOval(
             child: _photoUrl != null && _photoUrl!.isNotEmpty
@@ -1364,7 +1676,8 @@ class _ClickableBidderAvatarState extends State<_ClickableBidderAvatar> {
           ? const Icon(Icons.emoji_events_rounded, color: _gold, size: 18)
           : Text(
               '${widget.rank}',
-              style: const TextStyle(color: _textMuted, fontWeight: FontWeight.w700, fontSize: 13),
+              style: const TextStyle(
+                  color: _textMuted, fontWeight: FontWeight.w700, fontSize: 13),
             ),
     );
   }
