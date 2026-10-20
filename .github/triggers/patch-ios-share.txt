@@ -1,1 +1,1 @@
-trigger ios share patch
+trigger ios share patch v2
