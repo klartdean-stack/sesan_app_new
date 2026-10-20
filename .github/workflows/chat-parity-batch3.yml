@@ -1,31 +1,103 @@
-name: Chat Parity Batch 3
+name: One-time iOS Share Patch
+
 on:
   push:
+    branches:
+      - main
     paths:
       - '.github/workflows/chat-parity-batch3.yml'
+
 permissions:
   contents: write
+
 jobs:
   patch:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: main
-      - name: Apply Chat options translation
-        run: python tool/chat_parity_batch3.py
-      - name: Verify
+          ref: ios-sync-android46
+          fetch-depth: 0
+
+      - name: Patch iOS product share
         run: |
-          grep -q "Copy text" lib/chat_screen_legacy.dart
-          grep -q "Delete for everyone?" lib/chat_screen_legacy.dart
-          grep -q "Could not delete" lib/chat_screen_legacy.dart
-          grep -q "Today at" lib/chat_screen_legacy.dart
-          grep -q "Yesterday at" lib/chat_screen_legacy.dart
-          grep -q "Could not send message" lib/chat_screen_legacy.dart
-      - name: Commit
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          path = Path('lib/product_detail.dart')
+          text = path.read_text(encoding='utf-8')
+
+          replacement = r'''  Rect _sharePositionOrigin() {
+            final renderObject = context.findRenderObject();
+            if (renderObject is RenderBox &&
+                renderObject.hasSize &&
+                renderObject.size.width > 0 &&
+                renderObject.size.height > 0) {
+              final topLeft = renderObject.localToGlobal(Offset.zero);
+              return topLeft & renderObject.size;
+            }
+
+            final size = MediaQuery.sizeOf(context);
+            return Rect.fromLTWH(
+              size.width / 2,
+              size.height / 2,
+              1,
+              1,
+            );
+          }
+
+          Future<void> _shareProduct() async {
+            final String productId = (widget.product['id'] ?? '').toString().trim();
+            if (productId.isEmpty) return;
+
+            final Uri productUri = Uri.parse(
+              'https://sesanshop.com/product/$productId',
+            );
+
+            await Share.shareUri(
+              productUri,
+              sharePositionOrigin: _sharePositionOrigin(),
+            );
+          }
+
+'''
+
+          pattern = re.compile(
+              r"  Future<void> _shareProductWithWatermark\(\) async \{.*?\n  \}\n\n  void _showSaveOption",
+              re.S,
+          )
+          text, count = pattern.subn(replacement + '  void _showSaveOption', text, count=1)
+          if count != 1:
+              raise SystemExit(f'Expected one old share block, replaced {count}')
+
+          old_call = '_shareProductWithWatermark(); // ✅ ហៅ method ថ្មី'
+          if old_call not in text:
+              raise SystemExit('Old share callback not found')
+          text = text.replace(old_call, '_shareProduct();', 1)
+
+          old_subtitle = "'ផ្ញើរូបភាពមាន QR Code និង Link',\n                    'Send an image with QR code and link',"
+          if old_subtitle in text:
+              text = text.replace(
+                  old_subtitle,
+                  "'ចែករំលែក Link ទំនិញ',\n                    'Share the product link',",
+                  1,
+              )
+
+          path.write_text(text, encoding='utf-8')
+          PY
+
+      - name: Verify patch
+        run: |
+          grep -q "Future<void> _shareProduct()" lib/product_detail.dart
+          grep -q "Share.shareUri" lib/product_detail.dart
+          grep -q "sharePositionOrigin: _sharePositionOrigin()" lib/product_detail.dart
+          ! grep -q "_shareProductWithWatermark" lib/product_detail.dart
+
+      - name: Commit to iOS Build 65 branch
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add lib/chat_screen_legacy.dart
-          git commit -m "Translate iOS Chat message actions errors and dates"
-          git push origin main
+          git add lib/product_detail.dart
+          git commit -m "Fix iOS product sharing"
+          git push origin HEAD:ios-sync-android46
