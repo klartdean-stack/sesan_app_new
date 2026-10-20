@@ -1,0 +1,312 @@
+name: Patch iOS parity fixes
+
+on:
+  push:
+    branches:
+      - ios-sync-android46
+    paths:
+      - .github/triggers/patch-ios-parity.txt
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ios-sync-android46
+          fetch-depth: 0
+
+      - name: Apply iOS parity fixes
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+
+          # ---------------------------------------------------------
+          # 1) Product share: canonical URL + valid iOS source rect
+          # ---------------------------------------------------------
+          detail_path = Path('lib/product_detail.dart')
+          detail = detail_path.read_text(encoding='utf-8')
+
+          if 'Future<void> _shareProductWithWatermark()' in detail:
+              replacement = r'''  Rect _sharePositionOrigin() {
+            final renderObject = context.findRenderObject();
+            if (renderObject is RenderBox &&
+                renderObject.hasSize &&
+                renderObject.size.width > 0 &&
+                renderObject.size.height > 0) {
+              final topLeft = renderObject.localToGlobal(Offset.zero);
+              return topLeft & renderObject.size;
+            }
+
+            final size = MediaQuery.sizeOf(context);
+            return Rect.fromLTWH(
+              size.width / 2,
+              size.height / 2,
+              1,
+              1,
+            );
+          }
+
+          Future<void> _shareProduct() async {
+            final String productId = (widget.product['id'] ?? '').toString().trim();
+            if (productId.isEmpty) return;
+
+            final Uri productUri = Uri.parse(
+              'https://sesanshop.com/product/$productId',
+            );
+
+            await Share.shareUri(
+              productUri,
+              sharePositionOrigin: _sharePositionOrigin(),
+            );
+          }
+
+'''
+              pattern = re.compile(
+                  r"  Future<void> _shareProductWithWatermark\(\) async \{.*?\n  \}\n\n  void _showSaveOption",
+                  re.S,
+              )
+              detail, count = pattern.subn(replacement + '  void _showSaveOption', detail, count=1)
+              if count != 1:
+                  raise SystemExit(f'Product share block replacement failed: {count}')
+
+          detail = detail.replace(
+              '_shareProductWithWatermark(); // ✅ ហៅ method ថ្មី',
+              '_shareProduct();',
+              1,
+          )
+          detail = detail.replace(
+              "'ផ្ញើរូបភាពមាន QR Code និង Link',\n                    'Send an image with QR code and link',",
+              "'ចែករំលែក Link ទំនិញ',\n                    'Share the product link',",
+              1,
+          )
+          detail_path.write_text(detail, encoding='utf-8')
+
+          # ---------------------------------------------------------
+          # 2) Product list search: same Smart Scan + voice as Home
+          # ---------------------------------------------------------
+          list_path = Path('lib/product_list.dart')
+          text = list_path.read_text(encoding='utf-8')
+
+          if "import 'product_search_v51.dart';" not in text:
+              text = text.replace(
+                  "import 'product_detail.dart';\n",
+                  "import 'product_detail.dart';\nimport 'product_search_v51.dart';\n",
+                  1,
+              )
+
+          controller_anchor = "  final TextEditingController _searchController = TextEditingController();\n"
+          if 'ProductSearchV51Controller? _searchAiController;' not in text:
+              controller_block = controller_anchor + r'''  ProductSearchV51Controller? _searchAiController;
+
+          ProductSearchV51Controller get _searchAi =>
+              _searchAiController ??= ProductSearchV51Controller(
+                context,
+                onStateChanged: () {
+                  if (mounted) setState(() {});
+                },
+              );
+'''
+              if controller_anchor not in text:
+                  raise SystemExit('Search controller anchor not found')
+              text = text.replace(controller_anchor, controller_block, 1)
+
+          if 'Future<void> _applyHomeStyleSearchResult' not in text:
+              methods = r'''
+          Future<void> _applyHomeStyleSearchResult(String value) async {
+            if (!mounted || value.trim().isEmpty) return;
+            final primary = value.split('|').first.trim();
+            _searchController.text = primary;
+            _searchController.selection = TextSelection.collapsed(offset: primary.length);
+            setState(() => _currentSearch = value.toLowerCase());
+          }
+
+          Future<void> _smartScanLikeHome() async {
+            if (_searchAiController?.busy == true) return;
+            final image = await Navigator.push<XFile?>(
+              context,
+              MaterialPageRoute(builder: (_) => const SmartScanScreen()),
+            );
+            if (image == null || !mounted) return;
+            final result = await _searchAi.searchSelectedImage(image);
+            if (result != null) {
+              await _applyHomeStyleSearchResult(result);
+            }
+            if (mounted) setState(() {});
+          }
+
+          Future<void> _voiceSearchLikeHome() async {
+            final ai = _searchAi;
+            if (ai.recording || ai.busy) return;
+            await ai.startVoice(onResult: _applyHomeStyleSearchResult);
+            if (mounted) setState(() {});
+          }
+
+'''
+              anchor = '  Future<void> _showLocationFilter() async {'
+              if anchor not in text:
+                  raise SystemExit('Location filter anchor not found')
+              text = text.replace(anchor, methods + anchor, 1)
+
+          old_search_shell = '''                Container(
+                  height: 45,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                  ),'''
+          new_search_shell = '''                Container(
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                  ),'''
+          if old_search_shell in text:
+              text = text.replace(old_search_shell, new_search_shell, 1)
+
+          text = text.replace(
+              "                      hintStyle: const TextStyle(fontFamily: 'Siemreap', fontSize: 12),",
+              "                      hintStyle: const TextStyle(fontFamily: 'Siemreap', fontSize: 13),",
+              1,
+          )
+          text = text.replace(
+              '                      suffixIconConstraints: const BoxConstraints.tightFor(width: 94, height: 45),',
+              '                      suffixIconConstraints: const BoxConstraints.tightFor(width: 96, height: 48),',
+              1,
+          )
+
+          suffix_pattern = re.compile(
+              r"                      suffixIcon: Row\(\n.*?                      \),\n                      border: InputBorder.none,",
+              re.S,
+          )
+          suffix_replacement = r'''                      suffixIcon: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SizedBox(
+                            width: 48,
+                            height: 48,
+                            child: InkResponse(
+                              radius: 24,
+                              onTap: _searchAiController?.busy == true
+                                  ? null
+                                  : _smartScanLikeHome,
+                              child: Center(
+                                child: _searchAiController?.busy == true
+                                    ? const SizedBox(
+                                        width: 16,
+                                        height: 16,
+                                        child: CircularProgressIndicator(strokeWidth: 2),
+                                      )
+                                    : const Icon(
+                                        Icons.center_focus_strong_rounded,
+                                        color: Colors.blue,
+                                        size: 20,
+                                      ),
+                              ),
+                            ),
+                          ),
+                          SizedBox(
+                            width: 48,
+                            height: 48,
+                            child: InkResponse(
+                              radius: 24,
+                              onTap: (_searchAiController?.busy == true ||
+                                      _searchAiController?.recording == true)
+                                  ? null
+                                  : _voiceSearchLikeHome,
+                              child: Center(
+                                child: Icon(
+                                  Icons.mic_rounded,
+                                  color: _searchAiController?.recording == true
+                                      ? Colors.red
+                                      : Colors.green,
+                                  size: 20,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      border: InputBorder.none,'''
+          text, suffix_count = suffix_pattern.subn(suffix_replacement, text, count=1)
+          if suffix_count != 1:
+              raise SystemExit(f'Search suffix replacement failed: {suffix_count}')
+
+          text = text.replace(
+              '                      contentPadding: const EdgeInsets.symmetric(vertical: 10),',
+              '                      contentPadding: const EdgeInsets.symmetric(vertical: 9),',
+              1,
+          )
+          dispose_anchor = '''    _searchController.dispose();
+    _searchAudioRecorder.dispose();'''
+          if dispose_anchor in text and '_searchAiController?.dispose();' not in text:
+              text = text.replace(
+                  dispose_anchor,
+                  '''    _searchController.dispose();
+    _searchAiController?.dispose();
+    _searchAudioRecorder.dispose();''',
+                  1,
+              )
+
+          list_path.write_text(text, encoding='utf-8')
+
+          # ---------------------------------------------------------
+          # 3) Auction detail: images first, video last
+          # ---------------------------------------------------------
+          auction_path = Path('lib/auction_detail_screen.dart')
+          auction = auction_path.read_text(encoding='utf-8')
+          old_media = '''                        List<Map<String, dynamic>> mediaItems = [];
+                        if (videoUrl.isNotEmpty) mediaItems.add({'type': 'video', 'url': videoUrl});
+                        for (var img in images) {
+                          mediaItems.add({'type': 'image', 'url': img.toString()});
+                        }'''
+          new_media = '''                        final List<Map<String, dynamic>> mediaItems = [];
+                        for (final img in images) {
+                          mediaItems.add({
+                            'type': 'image',
+                            'url': img.toString(),
+                          });
+                        }
+                        if (videoUrl.isNotEmpty) {
+                          mediaItems.add({'type': 'video', 'url': videoUrl});
+                        }'''
+          if old_media in auction:
+              auction = auction.replace(old_media, new_media, 1)
+          elif "if (videoUrl.isNotEmpty) mediaItems.add({'type': 'video', 'url': videoUrl});" in auction:
+              raise SystemExit('Auction media block has unexpected formatting')
+
+          auction = auction.replace(
+              'final isVideo = videoUrl.isNotEmpty && i == 0;',
+              'final isVideo = videoUrl.isNotEmpty && i == totalItems - 1;',
+              1,
+          )
+          auction_path.write_text(auction, encoding='utf-8')
+
+      - name: Verify fixes
+        run: |
+          grep -q "Future<void> _shareProduct()" lib/product_detail.dart
+          grep -q "sharePositionOrigin: _sharePositionOrigin()" lib/product_detail.dart
+          grep -q "https://sesanshop.com/product/\$productId" lib/product_detail.dart
+          grep -q "ProductSearchV51Controller" lib/product_list.dart
+          grep -q "_smartScanLikeHome" lib/product_list.dart
+          grep -q "_voiceSearchLikeHome" lib/product_list.dart
+          grep -q "Icons.center_focus_strong_rounded" lib/product_list.dart
+          grep -q "i == totalItems - 1" lib/auction_detail_screen.dart
+
+      - name: Format changed Dart files
+        run: dart format lib/product_detail.dart lib/product_list.dart lib/auction_detail_screen.dart
+
+      - name: Commit fixes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add lib/product_detail.dart lib/product_list.dart lib/auction_detail_screen.dart
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+          git commit -m "Match iOS share search and auction behavior"
+          git push origin HEAD:ios-sync-android46
