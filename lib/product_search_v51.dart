@@ -9,7 +9,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 
-/// Android V51-compatible AI search controller used by the iOS product list.
+/// Android V51-compatible AI search controller shared by iOS Home and Product List.
 class ProductSearchV51Controller {
   ProductSearchV51Controller(this.context, {this.onStateChanged});
 
@@ -23,6 +23,7 @@ class ProductSearchV51Controller {
   DateTime? _voiceStartedAt;
   bool busy = false;
   bool recording = false;
+  bool _voiceSheetOpen = false;
 
   static const double _speechThresholdDb = -38;
   static const Duration _silenceAfterSpeech = Duration(milliseconds: 1200);
@@ -40,10 +41,12 @@ class ProductSearchV51Controller {
 
   bool _signedIn() {
     if (FirebaseAuth.instance.currentUser?.uid.isNotEmpty == true) return true;
-    _message(_t(
-      'សូមចូលគណនីជាមុន ដើម្បីស្វែងរកតាមរូប ឬសម្លេង',
-      'Please sign in to search with a photo or voice',
-    ));
+    _message(
+      _t(
+        'សូមចូលគណនីជាមុន ដើម្បីស្វែងរកតាមរូប ឬសម្លេង',
+        'Please sign in to search with a photo or voice',
+      ),
+    );
     return false;
   }
 
@@ -103,6 +106,7 @@ class ProductSearchV51Controller {
       return null;
     } finally {
       busy = false;
+      onStateChanged?.call();
     }
   }
 
@@ -124,31 +128,125 @@ class ProductSearchV51Controller {
       final mime = image.mimeType == 'image/png' || image.mimeType == 'image/webp'
           ? image.mimeType!
           : 'image/jpeg';
-      final data = await _analyze(image: 'data:$mime;base64,${base64Encode(bytes)}');
+      final data = await _analyze(
+        image: 'data:$mime;base64,${base64Encode(bytes)}',
+      );
       final result = _combined(data);
-      _message(_t('ស្វែងរកតាមរូបបានសម្រេច', 'Image search ready'), color: Colors.green);
+      _message(
+        _t('ស្វែងរកតាមរូបបានសម្រេច', 'Image search ready'),
+        color: Colors.green,
+      );
       return result;
     } on FirebaseFunctionsException catch (e) {
-      _message(e.message ?? _t('មិនអាចស្វែងរកតាមរូបបានទេ', 'Image search failed'));
+      _message(
+        e.message ??
+            _t('មិនអាចស្វែងរកតាមរូបបានទេ', 'Image search failed'),
+      );
       return null;
     } catch (e) {
       debugPrint('Product image search: $e');
-      _message(_t('រូបធំពេក ឬមិនអាចអានបាន', 'The image is too large or unreadable'));
+      _message(
+        _t('រូបធំពេក ឬមិនអាចអានបាន', 'The image is too large or unreadable'),
+      );
       return null;
     } finally {
       busy = false;
+      onStateChanged?.call();
     }
   }
 
-  Future<void> startVoice({required Future<void> Function(String query) onResult}) async {
+  void _showVoiceListeningSheet() {
+    if (_voiceSheetOpen || !context.mounted) return;
+    _voiceSheetOpen = true;
+
+    showModalBottomSheet<void>(
+      context: context,
+      isDismissible: false,
+      enableDrag: false,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) => SafeArea(
+        child: Container(
+          margin: const EdgeInsets.all(16),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(28),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 82,
+                height: 82,
+                decoration: BoxDecoration(
+                  color: Colors.red.shade50,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.mic_rounded,
+                  color: Colors.red,
+                  size: 44,
+                ),
+              ),
+              const SizedBox(height: 18),
+              Text(
+                _t('កំពុងស្តាប់...', 'Listening...'),
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontFamily: 'Siemreap',
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                  color: Colors.black,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                _t(
+                  'និយាយឈ្មោះទំនិញ—វានឹងស្វែងរកដោយស្វ័យប្រវត្តិ',
+                  'Say a product name—search starts automatically',
+                ),
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontFamily: 'Siemreap',
+                  fontSize: 13,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 18),
+              const LinearProgressIndicator(minHeight: 4),
+            ],
+          ),
+        ),
+      ),
+    ).whenComplete(() {
+      _voiceSheetOpen = false;
+    });
+  }
+
+  void _closeVoiceListeningSheet() {
+    if (!_voiceSheetOpen || !context.mounted) return;
+    _voiceSheetOpen = false;
+    Navigator.of(context, rootNavigator: true).maybePop();
+  }
+
+  Future<void> startVoice({
+    required Future<void> Function(String query) onResult,
+  }) async {
     if (busy || recording || !_signedIn()) return;
     if (!await _audioRecorder.hasPermission()) {
-      _message(_t('សូមអនុញ្ញាត Microphone ជាមុន', 'Please allow microphone access first'));
+      _message(
+        _t(
+          'សូមអនុញ្ញាត Microphone ជាមុន',
+          'Please allow microphone access first',
+        ),
+      );
       return;
     }
+
     final path = kIsWeb
         ? ''
         : '${(await getTemporaryDirectory()).path}/sesan_product_search_${DateTime.now().millisecondsSinceEpoch}.m4a';
+
     await _audioRecorder.start(
       RecordConfig(
         encoder: kIsWeb ? AudioEncoder.wav : AudioEncoder.aacLc,
@@ -160,9 +258,11 @@ class ProductSearchV51Controller {
       ),
       path: path,
     );
+
     recording = true;
     _voiceStartedAt = DateTime.now();
     onStateChanged?.call();
+    _showVoiceListeningSheet();
 
     _voiceTimer?.cancel();
     _voiceTimer = Timer(
@@ -198,37 +298,63 @@ class ProductSearchV51Controller {
     }
   }
 
-  Future<void> finishVoice({required Future<void> Function(String query) onResult}) async {
+  Future<void> finishVoice({
+    required Future<void> Function(String query) onResult,
+  }) async {
     if (!recording) return;
+
     recording = false;
     busy = true;
     _voiceTimer?.cancel();
     _voiceSilenceTimer?.cancel();
     await _voiceAmplitudeSubscription?.cancel();
     _voiceAmplitudeSubscription = null;
+    _closeVoiceListeningSheet();
     onStateChanged?.call();
+
     try {
       final path = await _audioRecorder.stop();
       if (path == null || path.isEmpty) throw StateError('Empty recording');
+
       Uint8List? bytes;
       for (var i = 0; i < 4; i++) {
-        await Future<void>.delayed(Duration(milliseconds: i == 0 ? 250 : 400));
+        await Future<void>.delayed(
+          Duration(milliseconds: i == 0 ? 250 : 400),
+        );
         try {
           final candidate = await XFile(path).readAsBytes();
-          if (candidate.isNotEmpty) { bytes = candidate; break; }
+          if (candidate.isNotEmpty) {
+            bytes = candidate;
+            break;
+          }
         } catch (_) {}
       }
+
       if (bytes == null || bytes.isEmpty || bytes.length > 7500000) {
         throw StateError('Audio unreadable');
       }
+
       final mime = kIsWeb ? 'audio/wav' : 'audio/m4a';
-      final data = await _analyze(audio: 'data:$mime;base64,${base64Encode(bytes)}');
+      final data = await _analyze(
+        audio: 'data:$mime;base64,${base64Encode(bytes)}',
+      );
       await onResult(_combined(data));
     } on FirebaseFunctionsException catch (e) {
-      _message(e.message ?? _t('មិនអាចយល់សម្លេងនេះបានទេ', 'Could not understand this recording'));
+      _message(
+        e.message ??
+            _t(
+              'មិនអាចយល់សម្លេងនេះបានទេ',
+              'Could not understand this recording',
+            ),
+      );
     } catch (e) {
       debugPrint('Product voice search: $e');
-      _message(_t('ការស្វែងរកតាមសម្លេងបរាជ័យ', 'Voice search failed'));
+      _message(
+        _t(
+          'ការស្វែងរកតាមសម្លេងបរាជ័យ',
+          'Voice search failed',
+        ),
+      );
     } finally {
       busy = false;
       onStateChanged?.call();
