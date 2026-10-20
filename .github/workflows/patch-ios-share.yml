@@ -1,0 +1,100 @@
+name: Patch iOS product share
+
+on:
+  push:
+    branches:
+      - ios-sync-android46
+    paths:
+      - .github/triggers/patch-ios-share.txt
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ios-sync-android46
+          fetch-depth: 0
+
+      - name: Patch product share
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+
+          path = Path('lib/product_detail.dart')
+          text = path.read_text(encoding='utf-8')
+
+          replacement = r'''  Rect _sharePositionOrigin() {
+    final renderObject = context.findRenderObject();
+    if (renderObject is RenderBox &&
+        renderObject.hasSize &&
+        renderObject.size.width > 0 &&
+        renderObject.size.height > 0) {
+      final topLeft = renderObject.localToGlobal(Offset.zero);
+      return topLeft & renderObject.size;
+    }
+
+    final size = MediaQuery.sizeOf(context);
+    return Rect.fromLTWH(
+      size.width / 2,
+      size.height / 2,
+      1,
+      1,
+    );
+  }
+
+  Future<void> _shareProduct() async {
+    final String productId = (widget.product['id'] ?? '').toString().trim();
+    if (productId.isEmpty) return;
+
+    final Uri productUri = Uri.parse(
+      'https://sesanshop.com/product/$productId',
+    );
+
+    // Share the canonical HTTPS product URL only. This lets Facebook/Messenger
+    // build the Open Graph preview and lets Universal Links/App Links open Sesan.
+    // iOS/iPadOS also requires a non-zero source rect for the share sheet.
+    await Share.shareUri(
+      productUri,
+      sharePositionOrigin: _sharePositionOrigin(),
+    );
+  }
+
+'''
+
+          pattern = re.compile(
+              r"  Future<void> _shareProductWithWatermark\(\) async \{.*?\n  \}\n\n  void _showSaveOption",
+              re.S,
+          )
+          new_text, count = pattern.subn(replacement + '  void _showSaveOption', text, count=1)
+          if count != 1:
+              raise SystemExit(f'Expected one share function block, replaced {count}')
+
+          new_text = new_text.replace(
+              '_shareProductWithWatermark(); // ✅ ហៅ method ថ្មី',
+              '_shareProduct();',
+              1,
+          )
+          new_text = new_text.replace(
+              "'ផ្ញើរូបភាពមាន QR Code និង Link',\n                    'Send an image with QR code and link',",
+              "'ចែករំលែក Link ទំនិញ',\n                    'Share the product link',",
+              1,
+          )
+
+          path.write_text(new_text, encoding='utf-8')
+
+      - name: Commit change
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add lib/product_detail.dart
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+          git commit -m "Fix iOS product sharing"
+          git push origin HEAD:ios-sync-android46
